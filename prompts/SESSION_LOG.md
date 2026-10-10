@@ -59,6 +59,32 @@ Append entries in chronological order. If a live repository session log already 
 - Milestone status after this session: M0 complete, including CI.
 - Next concrete task: WRL-01.
 
+## 2026-10-10 - WRL-01 world and asset records (contract 0.2.0)
+
+- Active milestone / issue IDs: M1 / WRL-01.
+- Starting branch and relevant commit: `main` at `d26f00f`, clean.
+- Goal and completion criteria: units, transforms, stable IDs and asset provenance round-trip; catalog assets with explicit source and rights; validated references; per-axis dimension evidence; a deliberate compatibility decision; minimal UI to show asset identity and evidence.
+- Work completed:
+  - Contract 0.2.0. Per-axis `Length` (ADR-015). Embedded `CatalogAsset` with `source` and `rights`, `SceneObject.asset_id` with reference and kind validation (ADR-016). Strict current model plus an explicit lossless 0.1.0 → 0.2.0 migration (`migrations.py`, `python -m replay_world_contracts.migrate`) (ADR-017).
+  - The API answers 0.1.0 documents with one actionable 422 issue and reports `asset_count`.
+  - Regenerated the JSON Schema and TypeScript.
+  - New synthetic fixture with three NOASSERTION placeholder assets. The packing station has a measured footprint (±10 mm) and an inferred height.
+  - Invalid samples rebuilt, a dangling-reference sample added, and the exact 0.1.0 fixture kept under `fixtures/legacy/`.
+  - The inspector shows per-axis evidence rows, a "Mixed" badge, the catalog asset (ID, visual, source, license, rights, terms, nominal size) and any instance-versus-nominal difference. The scene summary shows per-axis evidence tallies and catalog licenses.
+- Relevant files changed: packages/contracts/python/replay_world_contracts/{models,migrations,migrate,__init__}.py, packages/contracts/{schema,ts/generated} (generated), packages/contracts/tests/{test_models,test_migrations,test_transforms}.py, packages/contracts/ts/{index,validate.test}.ts, services/api/src/replay_world_api/app.py, services/api/tests/test_api.py, apps/web/src/{evidence.ts,evidence.test.ts,format.ts,components/*,scene/*,styles.css}, apps/web/e2e/foundation.spec.ts, fixtures/**, docs/contracts.md, README.md, assets/catalog/README.md, prompts/DECISIONS.md. Package versions bumped to 0.2.0 (uv.lock updated; pnpm-lock.yaml unchanged and verified with a frozen install).
+- Commands run and actual outcomes:
+  - `uv sync --locked` and `pnpm install --frozen-lockfile`: OK.
+  - `pnpm check`: exit 0. Contracts up to date; ESLint and Ruff clean; tsc and mypy strict clean (18 files); Vitest 10 + 17 passed; pytest 97 passed; build OK.
+  - `pnpm test:e2e`: 4 passed.
+  - CI run https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38023211602 on `a3b1328`: success, with the same counts.
+  - One test expectation was wrong and fixed: `licenseref-x` is syntactically a valid identifier, so the docs now state that only identifier syntax is checked.
+- Visual evidence: `apps/web/test-results/foundation-scene.png` (git-ignored, regenerated per run) was inspected. The packing station shows Width 1.20 m Measured (range 1.19–1.21 m), Height 1.40 m Inferred, Depth 1.00 m Measured, its asset section reads "Not asserted (NOASSERTION) · Redistribution unknown", and the list shows "Mixed" badges.
+- Decisions changed and rationale: ADR-015, ADR-016, ADR-017 (see DECISIONS.md); ADR-013's one-origin-per-box rule is superseded.
+- Known limitations / blockers: no blocker. The limitations are listed in PROJECT_STATE.md (no glTF visual, dimensions always known, license syntax-only check, Playwright not in CI).
+- Exact reproduction commands and working directories: repo root - `uv sync --locked && pnpm install --frozen-lockfile && pnpm check && pnpm test:e2e`; `uv run python -m replay_world_contracts.migrate fixtures/legacy/foundation-scene-0.1.0.json -o /tmp/upgraded.json`.
+- Milestone status after this session: M1 in progress (WRL-01 done).
+- Next concrete task: WRL-02 - an industrial scene and walk, top and orbit cameras with dimensioned catalog assets. Add the glTF visual type (model-unit scale, fit rules, hash) together with its loader and tests.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

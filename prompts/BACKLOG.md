@@ -36,9 +36,14 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 
 - Priority: P0
 - Dependencies: SET-03
-- Baseline status: planned; reconcile with actual repository
+- Status: **done** (2026-10-10, commit `a3b1328`)
 - Done when: Units, transforms, stable IDs and asset provenance round-trip correctly.
-- Evidence: not recorded by this package
+- Evidence:
+  - Contract 0.2.0 adds per-axis `Length` evidence, embedded `CatalogAsset` records with explicit source and SPDX-style rights, `SceneObject.asset_id` with validated references, and an explicit 0.1.0 → 0.2.0 migration with a CLI (ADR-015..017).
+  - Round-trip tests: exact fixture round-trip; awkward floats, `-0.0`, π/7 rotation and punctuated IDs survive bit-for-bit; asset provenance and rights round-trip; the legacy upgrade preserves every value.
+  - Rejection tests: non-positive or string lengths; missing per-axis evidence; the old flat shape; uncertainty outside the value or reaching 0; non-SI units; non-finite values; unstable object and asset IDs; dangling asset references; kind mismatches; duplicate asset IDs; free-text licenses; NOASSERTION claiming redistribution; uncited vendor sources; legacy version.
+  - Local: `pnpm check` exit 0 (pytest 97, Vitest 10 + 17); `pnpm test:e2e` 4 passed, including the inspector's per-axis evidence and asset rights and the legacy and dangling-reference rejections.
+  - CI run https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38023211602 succeeded on `a3b1328`.
 
 ### WRL-02 - Build industrial scene and cameras
 
