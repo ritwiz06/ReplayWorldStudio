@@ -40,7 +40,8 @@ test("renders nothing while the scene is idle, and renders again on interaction"
   const box = (await page.getByTestId("viewport").boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2 + 150, box.y + box.height / 2, { steps: 10 });
+  // A few pointer moves suffice: each one renders, and orbit damping keeps rendering after it.
+  await page.mouse.move(box.x + box.width / 2 + 150, box.y + box.height / 2, { steps: 4 });
   await page.mouse.up();
   await expect.poll(renders).toBeGreaterThan(before + 5);
 });

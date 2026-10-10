@@ -207,6 +207,7 @@ Append entries in chronological order. If a live repository session log already 
   - `pnpm test:e2e`: 15 passed.
   - `pnpm test:e2e:smoke`: 4 passed.
   - Committed `0a929ea` and pushed. CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38040882335: success for both jobs; browser smoke passed 4 tests in 1.1 min on the Linux runner (software WebGL).
+  - The records commit `06de497` (docs only) then failed the smoke job: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38041050579. The idle-render test hit the 30 s test timeout in its last drag (34.2 s on the runner; software rendering plus a parallel worker). Fix: a 60 s test timeout under `CI` and a 4-step drag; the result is recorded below.
 - Visual evidence: docs/visual-review/*-{before,after}.jpg (7 pairs) and the full sets in `bench-results/review-{before,after}/shots/` (22 each, git-ignored).
 - Decisions changed and rationale: ADR-027 (on-demand rendering, stable shaders), ADR-028 (benchmark method and M1 target), ADR-029 (CI browser smoke), ADR-021 updated (per-document camera memory, knob offsets).
 - Known limitations / blockers: no blocker.

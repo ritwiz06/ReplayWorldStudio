@@ -12,6 +12,9 @@ export default defineConfig({
   // Headless Chromium renders WebGL in software; two workers keep frames (and the React
   // commits behind each assertion) responsive, and WebGL-heavy checks get extra time.
   workers: 2,
+  // CI runners have no GPU: every frame is rendered in software, so a test that drives the
+  // camera takes several times longer there than locally.
+  timeout: process.env.CI ? 60_000 : 30_000,
   expect: { timeout: 15_000 },
   forbidOnly: Boolean(process.env.CI),
   retries: 0,

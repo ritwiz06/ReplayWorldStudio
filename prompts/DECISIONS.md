@@ -310,7 +310,8 @@ For a new decision, append: ID, date, status, context, options considered, decis
   There are no retries, and traces are uploaded on failure. The full suite stays local (`pnpm test:e2e`).
 - Rationale: a separate job distinguishes a browser failure from contract or unit failures. The subset covers the workflows that matter most while keeping CI time and flakiness low.
 - Consequences: CI checks behaviour in software WebGL only; frame rates come from `pnpm bench` on the reference machine.
-- Revisit when: the smoke job flakes, or the full suite proves stable enough on CI to run entirely.
+- Update (same day): the second CI run (`06de497`, docs only) failed. The idle-render test hit Playwright's default 30 s test timeout during its final drag, because every frame is rendered in software on the runner while another worker runs the edit test. It had passed the first time at 31.5 s, already at the limit. Fix: a 60 s test timeout when `CI` is set, and a 4-step drag. Damping still provides the renders the assertion needs.
+- Revisit when: the smoke job flakes again, or the full suite proves stable enough on CI to run entirely.
 
 ### Update to ADR-021 (2026-10-10, WRL-04)
 
