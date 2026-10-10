@@ -18,11 +18,10 @@ export function useHealth(client: ApiClient, intervalMs = 10_000): HealthState {
     async function poll() {
       try {
         const result = await client.getHealth(controller.signal);
-        setState(
-          result.ok
-            ? { status: "online", health: result.value }
-            : { status: "offline", error: result.error },
-        );
+        const next: HealthState = result.ok ? { status: "online", health: result.value } : { status: "offline", error: result.error };
+        // Keep the same state object when nothing changed: a new one re-renders the whole app,
+        // and with it the 3D scene, every poll.
+        setState((current) => (JSON.stringify(current) === JSON.stringify(next) ? current : next));
       } catch {
         if (controller.signal.aborted) return;
       }

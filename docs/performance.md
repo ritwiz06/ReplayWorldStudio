@@ -134,11 +134,11 @@ Default demo and an edited layout (demo + 15, one conveyor stretched to 3.6 m), 
 
 ## Changes made (WRL-04)
 
-1. **On-demand rendering** (ADR-027). The canvas renders only when the camera, scene, selection or handles change. Camera animations, walking, commands and lighting changes request frames, and probes report the final state.
+1. **On-demand rendering** (ADR-027). The canvas renders only when the camera, scene, selection or handles change. Camera animations, walking, commands and lighting changes request frames, and probes report the final state. After the benchmark, CI exposed one remaining idle frame every 10 s: each API health poll stored a new state object, re-rendering the whole app. The hook now keeps the previous state when nothing changed. That is at most one frame per 10 s, below the resolution of the 4 s idle windows, so the after numbers stand.
 2. **Stable shaders across views.** The plan view hides shadows with `shadow.intensity = 0`, pauses shadow-map updates, and keeps fog attached with its range pushed out, so switching views never recompiles materials. Cost: the plan view samples a hidden shadow map, about +0.6 ms per frame at 260 objects with vsync off and invisible at 120 Hz.
 3. **Per-document camera memory**, separated resize knobs, a responsive top bar and overlays, a stretched-model badge, a compact object list, and two-line plan labels.
 4. **Regression tests** for the four defects that had a precise failure (`e2e/regressions.spec.ts`), each confirmed to fail on the old code and pass on the new one:
-   - an idle scene is not re-rendered;
+   - an idle scene is not re-rendered: an 11 s window that spans a health poll, after waiting for rendering to settle;
    - camera framing after opening another document;
    - knob separation;
    - the 1280 px layout.

@@ -14,6 +14,7 @@ const camera = async (page: Page) =>
   JSON.parse((await page.getByTestId("viewport").getAttribute("data-camera")) ?? "null") as { mode: string; pixelsPerMetre: number | null } | null;
 
 test("renders nothing while the scene is idle, and renders again on interaction", { tag: "@smoke" }, async ({ page }) => {
+  test.setTimeout(90_000);
   // Count WebGL renders through the hook three.js offers developer tools.
   await page.addInitScript(() => {
     const page = window as unknown as { __renders: number; __THREE_DEVTOOLS__: EventTarget };
@@ -47,8 +48,9 @@ test("renders nothing while the scene is idle, and renders again on interaction"
       { intervals: [1000], timeout: 30_000 },
     )
     .toBe(true);
+  // 11 s spans one 10 s API health poll, which used to re-render the app and draw one frame.
   const before = await renders();
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(11_000);
   expect(await renders()).toBe(before); // continuous rendering used to redraw ~120 times a second
 
   const box = (await page.getByTestId("viewport").boundingBox())!;
