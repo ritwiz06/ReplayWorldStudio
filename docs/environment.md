@@ -27,7 +27,7 @@ Recorded 2026-10-09 (America/Phoenix) by the M0 session. Re-record when the refe
 | Tool | Version | Source |
 | --- | --- | --- |
 | Node.js | 22.23.1 | pinned in `.node-version` |
-| pnpm | 11.12.0 | pinned in `package.json` `packageManager` |
+| pnpm | 11.11.0 (pinned); 11.12.0 installed globally | pinned in `package.json` `packageManager`; the global pnpm switches to the pin automatically |
 | uv | 0.12.18 | `pyproject.toml` requires ≥ 0.12 |
 | Python | 3.14.7 (Homebrew) | `.python-version` = 3.14 |
 | Docker | 29.8.0 | available, not used |
@@ -46,6 +46,9 @@ Full trees are locked in `pnpm-lock.yaml` and `uv.lock`. Direct versions are exa
 | CI actions | actions/checkout@v7, pnpm/action-setup@v6, actions/setup-node@v7, astral-sh/setup-uv@v10 |
 
 ## Compatibility notes
+
+- **pnpm 11.12.0 is a broken upstream release** (`ERR_PNPM_BROKEN_PNPM_RELEASE`: its `@pnpm/exe` build shipped without a binary; npm marks it deprecated). `pnpm/action-setup` refused to install it in CI, so the project pins **11.11.0**. Upstream recommends 11.13.1 or newer; moving forward is a separate, deliberate bump.
+- **`astral-sh/setup-uv` publishes no floating major tag**: `@v10` cannot be resolved; the workflow pins `@v10.3.0`.
 
 - **TypeScript 7.0.2** (the native compiler) was the newest release, but typescript-eslint 8.71.1 supports `typescript >=4.8.4 <6.1.0`. TypeScript is pinned to **6.0.3** (ADR-011).
 - **Starlette 1.7** deprecates `httpx` for its test client in favour of `httpx2`; the dev group uses `httpx2`.

@@ -22,7 +22,7 @@ The scene you see is the **foundation fixture**: labelled placeholder boxes that
 | Tool | Version used | Notes |
 | --- | --- | --- |
 | Node.js | 22.23.1 (`.node-version`; ≥ 22.12 required by Vite 8 / Vitest 5) | |
-| pnpm | 11.12.0 (pinned via `packageManager`) | `corepack enable` will provide it |
+| pnpm | 11.11.0 (pinned via `packageManager`) | Any pnpm ≥ 10 switches to the pinned version automatically; `corepack enable` also works. 11.12.0 is a broken upstream release - do not use it. |
 | uv | 0.12.18 (≥ 0.12 required) | Manages Python and the virtual environment |
 | Python | 3.14 (`.python-version`) | uv downloads it if missing |
 | Chromium for Playwright | build 1248 (headless shell) | Only for the browser smoke test |
