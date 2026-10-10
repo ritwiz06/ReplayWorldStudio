@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.2.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.3.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -15,7 +15,7 @@ export interface ReplayWorldContracts {
   ValidationErrorResponse: ValidationErrorResponse;
 }
 export interface Project {
-  schema_version: "0.2.0";
+  schema_version: "0.3.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -43,7 +43,7 @@ export interface WorldFrame {
  * Marks development data so it is never mistaken for a real project.
  */
 export interface FixtureLabel {
-  kind: "foundation";
+  kind: "foundation" | "demonstration";
   note: string;
 }
 export interface SourceDocument {
@@ -97,8 +97,8 @@ export interface CatalogAsset {
    */
   id: string;
   name: string;
-  kind: "structure" | "equipment" | "reference";
-  visual: PlaceholderBoxVisual;
+  kind: "structure" | "equipment" | "reference" | "walkway" | "keep_clear";
+  visual: PlaceholderBoxVisual | GltfVisual;
   nominal_dimensions: Dimensions;
   source: AssetSource;
   rights: UsageRights;
@@ -108,6 +108,50 @@ export interface CatalogAsset {
  */
 export interface PlaceholderBoxVisual {
   type: "placeholder_box";
+}
+/**
+ * A binary glTF (.glb) file from the catalog library, drawn at an instance's dimensions.
+ *
+ * Authoring conventions, checked against ``model_bounds_m``:
+ *
+ * * units: file coordinates times ``metres_per_model_unit`` are metres (glTF's unit is 1 m);
+ * * orientation: +Y is up and the equipment's front faces +Z, as glTF recommends;
+ * * origin: the bottom-centre of the model's bounding box is at (0, 0, 0).
+ *
+ * Fit: the renderer scales the model on each axis so its bounds equal the instance's recorded
+ * ``dimensions``. Physical dimensions are never derived from the model. When a per-axis scale
+ * departs from 1 by more than ``max_fit_distortion``, the visual is flagged as stretched.
+ */
+export interface GltfVisual {
+  type: "gltf";
+  /**
+   * Path of a .glb file relative to the catalog library root.
+   */
+  uri: string;
+  /**
+   * SHA-256 of the exact file bytes, lowercase hex.
+   */
+  sha256: string;
+  /**
+   * Metres per model unit.
+   */
+  metres_per_model_unit: number;
+  up_axis: "+Y";
+  front_axis: "+Z";
+  origin: "bottom_centre";
+  model_bounds_m: ModelBounds;
+  fit: "scale_to_dimensions";
+  /**
+   * Largest per-axis scale departure from 1 still shown as faithful.
+   */
+  max_fit_distortion: number;
+}
+/**
+ * Axis-aligned bounds of a model in metres, in its own authored frame.
+ */
+export interface ModelBounds {
+  min: Vec3;
+  max: Vec3;
 }
 /**
  * Physical bounding-box extents along the object's local axes, each with its own evidence.
@@ -185,7 +229,7 @@ export interface SceneObject {
    */
   id: string;
   name: string;
-  kind: "structure" | "equipment" | "reference";
+  kind: "structure" | "equipment" | "reference" | "walkway" | "keep_clear";
   /**
    * Catalog asset this object instantiates; null for scene geometry.
    */
@@ -241,20 +285,24 @@ export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.2.0";
+  schema_version: "0.3.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.2.0";
+  schema_version: "0.3.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
   project_id: string;
   object_count: number;
   asset_count: number;
+  /**
+   * glTF files found with matching sha256.
+   */
+  model_file_count: number;
   known_parameter_count: number;
   unknown_parameter_count: number;
 }

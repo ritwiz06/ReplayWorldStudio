@@ -1,0 +1,136 @@
+{
+  "generator": "apps/web/scripts/catalog/build.ts",
+  "three_revision": "186",
+  "conventions": {
+    "units": "metres",
+    "up_axis": "+Y",
+    "front_axis": "+Z",
+    "origin": "bottom_centre"
+  },
+  "models": [
+    {
+      "key": "belt-conveyor-3m",
+      "name": "Belt conveyor, 3 m",
+      "uri": "models/belt-conveyor-3m.glb",
+      "sha256": "2c6a063242c43a984ddce21555b174592a6b5ea8a5a02b3c8b13aece167fd83e",
+      "bytes": 160944,
+      "triangles": 6948,
+      "materials": [
+        "aluminium",
+        "rubber_black",
+        "steel_dark",
+        "motor_blue",
+        "paint_anthracite",
+        "safety_yellow",
+        "estop_red"
+      ],
+      "bounds_m": {
+        "min": {
+          "x": -1.5,
+          "y": 0,
+          "z": -0.415
+        },
+        "max": {
+          "x": 1.5,
+          "y": 0.95,
+          "z": 0.415
+        }
+      }
+    },
+    {
+      "key": "guarded-machine-cell",
+      "name": "Guarded machine cell",
+      "uri": "models/guarded-machine-cell.glb",
+      "sha256": "6883c6c7fd58d531a6ae946005440e4f2dde9cdcd80451b0fe051063699c94f9",
+      "bytes": 271064,
+      "triangles": 14260,
+      "materials": [
+        "paint_anthracite",
+        "rubber_black",
+        "steel_dark",
+        "paint_light_grey",
+        "aluminium",
+        "safety_yellow",
+        "polycarbonate",
+        "hmi_screen",
+        "signal_green",
+        "estop_red",
+        "label_black",
+        "signal_amber",
+        "signal_red"
+      ],
+      "bounds_m": {
+        "min": {
+          "x": -1.005,
+          "y": 0,
+          "z": -0.94625
+        },
+        "max": {
+          "x": 1.005,
+          "y": 2.47,
+          "z": 0.94625
+        }
+      }
+    },
+    {
+      "key": "electrical-cabinet-800",
+      "name": "Electrical cabinet, 800 mm",
+      "uri": "models/electrical-cabinet-800.glb",
+      "sha256": "955e8b369905ee6d95671db98ce0d323d1bc397e6469f1fa655d2c4cb5b0d2ae",
+      "bytes": 79984,
+      "triangles": 3340,
+      "materials": [
+        "paint_anthracite",
+        "paint_light_grey",
+        "aluminium",
+        "safety_yellow",
+        "estop_red",
+        "signal_white",
+        "signal_green",
+        "signal_amber",
+        "rubber_black",
+        "label_black",
+        "steel_dark"
+      ],
+      "bounds_m": {
+        "min": {
+          "x": -0.4,
+          "y": 0,
+          "z": -0.2705
+        },
+        "max": {
+          "x": 0.4,
+          "y": 2.078,
+          "z": 0.2705
+        }
+      }
+    },
+    {
+      "key": "pallet-cartons",
+      "name": "Pallet with cartons",
+      "uri": "models/pallet-cartons.glb",
+      "sha256": "5a73f5cc79e078f3c70388cebe362f9839db6318aa715882e3b662dcbd2f3f3a",
+      "bytes": 158880,
+      "triangles": 6456,
+      "materials": [
+        "pallet_wood",
+        "cardboard",
+        "packing_tape",
+        "edge_protector",
+        "label_black"
+      ],
+      "bounds_m": {
+        "min": {
+          "x": -0.601,
+          "y": 0,
+          "z": -0.402
+        },
+        "max": {
+          "x": 0.601,
+          "y": 1.022,
+          "z": 0.402
+        }
+      }
+    }
+  ]
+}

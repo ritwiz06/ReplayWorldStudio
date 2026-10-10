@@ -9,6 +9,10 @@ const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: false,
+  // Headless Chromium renders WebGL in software; two workers keep frames (and the React
+  // commits behind each assertion) responsive, and WebGL-heavy checks get extra time.
+  workers: 2,
+  expect: { timeout: 15_000 },
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
   reporter: [["list"]],

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.2.0",
+  "$id": "urn:replay-world:contracts:0.3.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.2.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.3.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -84,12 +84,25 @@
           "enum": [
             "structure",
             "equipment",
-            "reference"
+            "reference",
+            "walkway",
+            "keep_clear"
           ],
           "type": "string"
         },
         "visual": {
-          "$ref": "#/$defs/PlaceholderBoxVisual"
+          "discriminator": {
+            "propertyName": "type"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/PlaceholderBoxVisual"
+            },
+            {
+              "$ref": "#/$defs/GltfVisual"
+            }
+          ],
+          "type": "object"
         },
         "nominal_dimensions": {
           "$ref": "#/$defs/Dimensions"
@@ -167,7 +180,10 @@
       "description": "Marks development data so it is never mistaken for a real project.",
       "properties": {
         "kind": {
-          "const": "foundation",
+          "enum": [
+            "foundation",
+            "demonstration"
+          ],
           "type": "string"
         },
         "note": {
@@ -181,6 +197,70 @@
         "note"
       ],
       "title": "FixtureLabel",
+      "type": "object"
+    },
+    "GltfVisual": {
+      "additionalProperties": false,
+      "description": "A binary glTF (.glb) file from the catalog library, drawn at an instance's dimensions.\n\nAuthoring conventions, checked against ``model_bounds_m``:\n\n* units: file coordinates times ``metres_per_model_unit`` are metres (glTF's unit is 1 m);\n* orientation: +Y is up and the equipment's front faces +Z, as glTF recommends;\n* origin: the bottom-centre of the model's bounding box is at (0, 0, 0).\n\nFit: the renderer scales the model on each axis so its bounds equal the instance's recorded\n``dimensions``. Physical dimensions are never derived from the model. When a per-axis scale\ndeparts from 1 by more than ``max_fit_distortion``, the visual is flagged as stretched.",
+      "properties": {
+        "type": {
+          "const": "gltf",
+          "type": "string"
+        },
+        "uri": {
+          "description": "Path of a .glb file relative to the catalog library root.",
+          "pattern": "^(?:[a-z0-9][a-z0-9_-]{0,63}/){0,4}[a-z0-9][a-z0-9_-]{0,63}\\.glb$",
+          "type": "string"
+        },
+        "sha256": {
+          "description": "SHA-256 of the exact file bytes, lowercase hex.",
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "metres_per_model_unit": {
+          "description": "Metres per model unit.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "up_axis": {
+          "const": "+Y",
+          "type": "string"
+        },
+        "front_axis": {
+          "const": "+Z",
+          "type": "string"
+        },
+        "origin": {
+          "const": "bottom_centre",
+          "type": "string"
+        },
+        "model_bounds_m": {
+          "$ref": "#/$defs/ModelBounds"
+        },
+        "fit": {
+          "const": "scale_to_dimensions",
+          "type": "string"
+        },
+        "max_fit_distortion": {
+          "description": "Largest per-axis scale departure from 1 still shown as faithful.",
+          "maximum": 0.5,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "uri",
+        "sha256",
+        "metres_per_model_unit",
+        "up_axis",
+        "front_axis",
+        "origin",
+        "model_bounds_m",
+        "fit",
+        "max_fit_distortion"
+      ],
+      "title": "GltfVisual",
       "type": "object"
     },
     "HealthResponse": {
@@ -200,7 +280,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.2.0",
+          "const": "0.3.0",
           "type": "string"
         }
       },
@@ -357,6 +437,24 @@
       "title": "Length",
       "type": "object"
     },
+    "ModelBounds": {
+      "additionalProperties": false,
+      "description": "Axis-aligned bounds of a model in metres, in its own authored frame.",
+      "properties": {
+        "min": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "max": {
+          "$ref": "#/$defs/Vec3"
+        }
+      },
+      "required": [
+        "min",
+        "max"
+      ],
+      "title": "ModelBounds",
+      "type": "object"
+    },
     "PlaceholderBoxVisual": {
       "additionalProperties": false,
       "description": "A plain labelled box sized from each instance's dimensions. Always provisional.",
@@ -376,7 +474,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.2.0",
+          "const": "0.3.0",
           "type": "string"
         },
         "id": {
@@ -486,7 +584,9 @@
           "enum": [
             "structure",
             "equipment",
-            "reference"
+            "reference",
+            "walkway",
+            "keep_clear"
           ],
           "type": "string"
         },
@@ -866,7 +966,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.2.0",
+          "const": "0.3.0",
           "type": "string"
         },
         "project_id": {
@@ -879,6 +979,11 @@
           "type": "integer"
         },
         "asset_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "model_file_count": {
+          "description": "glTF files found with matching sha256.",
           "minimum": 0,
           "type": "integer"
         },
@@ -897,6 +1002,7 @@
         "project_id",
         "object_count",
         "asset_count",
+        "model_file_count",
         "known_parameter_count",
         "unknown_parameter_count"
       ],

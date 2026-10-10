@@ -17,7 +17,7 @@ const BASE = "http://api.test";
 
 describe("api client", () => {
   it("returns a contract-checked project", async () => {
-    const result = await createApiClient(BASE, respond(200, fixture)).getFoundationFixture();
+    const result = await createApiClient(BASE, respond(200, fixture)).getFixture("foundation");
     expect(result.ok && result.value.scene.objects.length).toBe(6);
   });
 
@@ -36,7 +36,7 @@ describe("api client", () => {
     const result = await createApiClient(
       BASE,
       respond(200, JSON.stringify(broken)),
-    ).getFoundationFixture();
+    ).getFixture("foundation");
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error).toMatchObject({
@@ -83,7 +83,7 @@ describe("api client", () => {
     const result = await createApiClient(
       BASE,
       respond(500, JSON.stringify({ detail: "Fixture 'foundation' failed contract validation" })),
-    ).getFoundationFixture();
+    ).getFixture("foundation");
     expect(!result.ok && result.error).toMatchObject({
       kind: "http",
       status: 500,

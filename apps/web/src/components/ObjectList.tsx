@@ -1,6 +1,6 @@
 import type { Project } from "@replay-world/contracts";
 import { dimensionEvidence } from "../evidence";
-import { formatFootprint } from "../format";
+import { formatFootprint, KIND_LABEL } from "../format";
 import { EvidenceBadge } from "./EvidenceBadge";
 
 interface Props {
@@ -9,7 +9,6 @@ interface Props {
   onSelect: (id: string | null) => void;
 }
 
-const KIND_LABEL = { structure: "Structure", equipment: "Equipment", reference: "Reference" };
 
 export function ObjectList({ project, selectedId, onSelect }: Props) {
   if (!project) return <p className="muted panel-pad">No scene loaded.</p>;

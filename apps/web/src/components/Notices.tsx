@@ -1,15 +1,6 @@
-import type { ContractIssue, FixtureLabel } from "@replay-world/contracts";
+import type { ContractIssue } from "@replay-world/contracts";
 import type { ApiFailure } from "../api/client";
 import type { LoadFailure } from "../hooks/useScene";
-
-export function FixtureBanner({ fixture }: { fixture: FixtureLabel }) {
-  return (
-    <div className="fixture-banner" role="note" data-testid="fixture-banner">
-      <strong>Foundation fixture</strong>
-      <span>{fixture.note}</span>
-    </div>
-  );
-}
 
 const TITLE: Record<LoadFailure["kind"], string> = {
   network: "Can't reach the API",

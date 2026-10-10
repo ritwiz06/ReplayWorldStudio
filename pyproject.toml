@@ -29,7 +29,7 @@ replay-world-contracts = { workspace = true }
 replay-world-api = { workspace = true }
 
 [tool.pytest.ini_options]
-testpaths = ["packages/contracts/tests", "services/api/tests"]
+testpaths = ["packages/contracts/tests", "services/api/tests", "tests"]
 addopts = ["--import-mode=importlib", "--strict-markers"]
 
 [tool.ruff]
@@ -44,6 +44,8 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
 strict = true
 plugins = ["pydantic.mypy"]
 files = [
+    "scripts",
+    "tests",
     "packages/contracts/python",
     "packages/contracts/tests",
     "services/api/src",

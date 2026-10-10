@@ -1,15 +1,20 @@
 import { useRef, type ChangeEvent } from "react";
+import type { FixtureName } from "../api/client";
 import type { HealthState } from "../hooks/useHealth";
-import type { FileCheck, SceneState } from "../hooks/useScene";
+import { FIXTURE_LABEL, type FileCheck, type SceneState } from "../hooks/useScene";
 import { HealthIndicator } from "./HealthIndicator";
 
 interface Props {
   scene: SceneState;
+  /** The fixture shown or being loaded; null when a local file is open. */
+  fixtureName: FixtureName | null;
   health: HealthState;
   fileCheck: FileCheck;
   onOpenFile: (file: File) => void;
-  onReloadFixture: () => void;
+  onLoadFixture: (name: FixtureName) => void;
 }
+
+const FIXTURES: FixtureName[] = ["industrial-demo", "foundation"];
 
 function sceneStatus(scene: SceneState): [tone: string, text: string] {
   switch (scene.status) {
@@ -22,7 +27,7 @@ function sceneStatus(scene: SceneState): [tone: string, text: string] {
   }
 }
 
-export function TopBar({ scene, health, fileCheck, onOpenFile, onReloadFixture }: Props) {
+export function TopBar({ scene, fixtureName, health, fileCheck, onOpenFile, onLoadFixture }: Props) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [tone, text] = sceneStatus(scene);
   const checking = fileCheck.status === "checking";
@@ -50,9 +55,19 @@ export function TopBar({ scene, health, fileCheck, onOpenFile, onReloadFixture }
         <HealthIndicator state={health} />
       </div>
       <div className="topbar-actions">
-        <button type="button" className="button" onClick={onReloadFixture}>
-          Reload fixture
-        </button>
+        <div className="segmented scene-picker" role="group" aria-label="Scene">
+          {FIXTURES.map((name) => (
+            <button
+              key={name}
+              type="button"
+              aria-pressed={fixtureName === name}
+              title={fixtureName === name ? "Reload this scene from the API" : `Load the ${FIXTURE_LABEL[name].toLowerCase()} from the API`}
+              onClick={() => onLoadFixture(name)}
+            >
+              {FIXTURE_LABEL[name]}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
           className="button button-primary"

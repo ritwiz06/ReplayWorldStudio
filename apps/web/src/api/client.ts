@@ -22,6 +22,8 @@ export type ApiFailure =
   /** The API answered 2xx with JSON that does not match the contract. */
   | { kind: "contract"; message: string; issues: ContractIssue[] };
 
+export type FixtureName = "industrial-demo" | "foundation";
+
 export type ApiResult<T> = { ok: true; value: T } | { ok: false; error: ApiFailure };
 
 interface RequestOptions {
@@ -84,8 +86,10 @@ export function createApiClient(
   return {
     baseUrl,
     getHealth: (signal?: AbortSignal) => request("/health", validateHealthResponse, { signal }),
-    getFoundationFixture: (signal?: AbortSignal) =>
-      request("/api/v1/fixtures/foundation", validateProject, { signal }),
+    getFixture: (name: FixtureName, signal?: AbortSignal) =>
+      request(`/api/v1/fixtures/${name}`, validateProject, { signal }),
+    /** Where the API serves a catalog-library file; the path is validated server-side too. */
+    catalogFileUrl: (uri: string) => `${baseUrl}/api/v1/catalog/files/${uri}`,
     /** Sends the document text unchanged so the API remains the authority on validity. */
     validateProjectDocument: (text: string, signal?: AbortSignal) =>
       request("/api/v1/projects/validate", validateValidationReport, {

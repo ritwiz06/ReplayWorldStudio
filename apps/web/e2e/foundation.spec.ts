@@ -1,5 +1,5 @@
-// Browser smoke path for M0: the app loads, reaches the API, renders the contract-checked
-// fixture with its units and evidence, and keeps failures visible and recoverable.
+// Browser smoke path for the foundation fixture: the app reaches the API, renders the
+// contract-checked fixture with its units and evidence, and keeps failures recoverable.
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 
@@ -10,10 +10,13 @@ test("loads the fixture from the API and shows units, placeholders and evidence"
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Foundation fixture" }).click();
 
   await expect(page.getByTestId("api-health")).toHaveText("API online");
   await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 6 objects");
   await expect(page.getByTestId("viewport")).toHaveAttribute("data-renderer", "ready");
+  await expect(page.getByTestId("fixture-banner")).toContainText("Foundation fixture");
+  await page.getByTestId("fixture-banner").getByRole("button", { name: "Details" }).click();
   await expect(page.getByTestId("fixture-banner")).toContainText("not the realistic factory scene");
   await expect(page.getByTestId("status-bar")).toContainText("Units m · s · kg · rad");
   await expect(page.getByTestId("status-bar")).toContainText("right-handed · +Y up · floor XZ");
@@ -47,7 +50,7 @@ test("loads the fixture from the API and shows units, placeholders and evidence"
 });
 
 test("explains a contract-breaking fixture response and recovers on retry", async ({ page }) => {
-  await page.route("**/api/v1/fixtures/foundation", (route) =>
+  await page.route("**/api/v1/fixtures/**", (route) =>
     route.fulfill({ json: { schema_version: "0.1.0", id: "broken" } }),
   );
   await page.goto("/");
@@ -56,15 +59,15 @@ test("explains a contract-breaking fixture response and recovers on retry", asyn
   await expect(error).toContainText("The data does not match the contract");
   await expect(error).toContainText("must have required property 'scene'");
 
-  await page.unroute("**/api/v1/fixtures/foundation");
+  await page.unroute("**/api/v1/fixtures/**");
   await error.getByRole("button", { name: "Retry" }).click();
-  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 6 objects");
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 15 objects");
   await expect(error).toBeHidden();
 });
 
 test("reports an unreachable API instead of failing silently", async ({ page }) => {
   await page.route("**/health", (route) => route.abort("connectionrefused"));
-  await page.route("**/api/v1/fixtures/foundation", (route) => route.abort("connectionrefused"));
+  await page.route("**/api/v1/fixtures/**", (route) => route.abort("connectionrefused"));
   await page.goto("/");
 
   await expect(page.getByTestId("api-health")).toHaveText("API unreachable");
@@ -74,7 +77,7 @@ test("reports an unreachable API instead of failing silently", async ({ page }) 
 
 test("rejects malformed scene files and keeps the current scene", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 6 objects");
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 15 objects");
   const fileInput = page.getByTestId("scene-file-input");
   const rejected = page.getByTestId("file-rejected");
 
@@ -83,7 +86,7 @@ test("rejects malformed scene files and keeps the current scene", async ({ page 
   await expect(rejected).toContainText("/scene/objects/4/dimensions/width/value_m");
   await expect(rejected).toContainText("Input should be greater than 0");
   await expect(rejected).toContainText("The current scene is unchanged.");
-  await expect(page.getByTestId("scene-source")).toHaveText("API foundation fixture");
+  await expect(page.getByTestId("scene-source")).toHaveText("API industrial demo");
 
   // Uniqueness is a cross-field rule that only the API's models can check.
   await fileInput.setInputFiles(fixture("invalid/duplicate-object-id.json"));

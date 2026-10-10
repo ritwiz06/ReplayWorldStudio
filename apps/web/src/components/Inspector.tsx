@@ -7,6 +7,7 @@ import {
   redistributionLabel,
 } from "../evidence";
 import {
+  KIND_LABEL,
   ORIGIN_LABEL,
   REVIEW_LABEL,
   formatFootprint,
@@ -15,20 +16,23 @@ import {
   formatRadians,
   formatValue,
 } from "../format";
+import type { ModelState, ModelStates } from "../hooks/useCatalogModels";
 import type { SceneSource } from "../hooks/useScene";
+import { fitDistortion, fitScale, isStretched } from "../scene/fit";
 import { EvidenceBadge } from "./EvidenceBadge";
 
 interface Props {
   project: Project | null;
   source: SceneSource | null;
   selected: SceneObject | null;
+  models: ModelStates;
 }
 
-export function Inspector({ project, source, selected }: Props) {
+export function Inspector({ project, source, selected, models }: Props) {
   if (!project) return <p className="muted panel-pad">Inspector is empty until a scene loads.</p>;
   if (!selected) return <SceneSummary project={project} source={source} />;
   const asset = project.catalog.find((a) => a.id === selected.asset_id) ?? null;
-  return <ObjectDetails object={selected} asset={asset} />;
+  return <ObjectDetails object={selected} asset={asset} model={asset ? models.get(asset.id) : undefined} />;
 }
 
 function tally(labels: string[]): [string, number][] {
@@ -52,7 +56,11 @@ function SceneSummary({ project, source }: { project: Project; source: SceneSour
         <dd>{project.scene.revision}</dd>
         <dt>Loaded from</dt>
         <dd data-testid="scene-source">
-          {source?.kind === "file" ? `${source.filename} (accepted by API)` : "API foundation fixture"}
+          {source?.kind === "file"
+            ? `${source.filename} (accepted by API)`
+            : source?.name === "industrial-demo"
+              ? "API industrial demo"
+              : "API foundation fixture"}
         </dd>
         <dt>Objects</dt>
         <dd>{objects.length}</dd>
@@ -125,7 +133,52 @@ function DimensionRows({ dimensions }: { dimensions: Dimensions }) {
   );
 }
 
-function AssetDetails({ object, asset }: { object: SceneObject; asset: CatalogAsset }) {
+function VisualDetails({ object, asset, model }: { object: SceneObject; asset: CatalogAsset; model: ModelState | undefined }) {
+  const visual = asset.visual;
+  if (visual.type !== "gltf") {
+    return (
+      <>
+        <dt>Visual</dt>
+        <dd>Placeholder box (provisional)</dd>
+      </>
+    );
+  }
+  const scale = fitScale(visual, object.dimensions);
+  const stretched = isStretched(visual, object.dimensions);
+  return (
+    <>
+      <dt>Visual</dt>
+      <dd>
+        glTF model <span className="mono">{visual.uri}</span>
+      </dd>
+      <dt>File hash</dt>
+      <dd className="mono" title={visual.sha256}>
+        sha256 {visual.sha256.slice(0, 12)}…
+      </dd>
+      <dt>Authored</dt>
+      <dd>
+        {visual.metres_per_model_unit === 1 ? "metres" : `${visual.metres_per_model_unit} m per unit`}, {visual.up_axis} up,
+        front {visual.front_axis}, origin at bottom-centre
+      </dd>
+      <dt>Fit</dt>
+      <dd data-testid="model-fit" className={stretched ? "status-warn" : undefined}>
+        Scaled ×{scale.map((v) => v.toFixed(3)).join(" × ")} to the recorded dimensions
+        {stretched &&
+          ` - stretched ${(fitDistortion(visual, object.dimensions) * 100).toFixed(0)} % beyond the ${(visual.max_fit_distortion * 100).toFixed(0)} % tolerance; proportions may mislead`}
+      </dd>
+      <dt>Model</dt>
+      <dd data-testid="model-state" className={model?.status === "failed" ? "status-error" : undefined}>
+        {model?.status === "ready"
+          ? "Loaded; hash and bounds verified"
+          : model?.status === "failed"
+            ? `Unavailable - ${model.failure.message}`
+            : "Loading…"}
+      </dd>
+    </>
+  );
+}
+
+function AssetDetails({ object, asset, model }: { object: SceneObject; asset: CatalogAsset; model: ModelState | undefined }) {
   const differing = axesDifferingFromNominal(object.dimensions, asset);
   const { source, rights } = asset;
   return (
@@ -133,8 +186,7 @@ function AssetDetails({ object, asset }: { object: SceneObject; asset: CatalogAs
       <p className="asset-name">{asset.name}</p>
       <p className="muted mono">{asset.id}</p>
       <dl className="facts">
-        <dt>Visual</dt>
-        <dd>Placeholder box (provisional)</dd>
+        <VisualDetails object={object} asset={asset} model={model} />
         <dt>Source</dt>
         <dd>
           {source.kind.replace("_", "-")} · {source.author}
@@ -170,17 +222,14 @@ function AssetDetails({ object, asset }: { object: SceneObject; asset: CatalogAs
   );
 }
 
-function ObjectDetails({ object, asset }: { object: SceneObject; asset: CatalogAsset | null }) {
+function ObjectDetails({ object, asset, model }: { object: SceneObject; asset: CatalogAsset | null; model: ModelState | undefined }) {
   const { position_m: p, rotation_rad: r } = object.transform;
   return (
     <section aria-label="Object inspector" className="panel-pad" data-testid="object-inspector">
       <h2 className="panel-title">{object.name}</h2>
       <p className="muted mono">{object.id}</p>
-      <p className="placeholder-note">
-        {asset
-          ? "Instance of a provisional catalog asset, drawn as a placeholder box."
-          : "Scene geometry with no catalog asset, drawn as a placeholder box."}
-      </p>
+      <p className="muted">{KIND_LABEL[object.kind]}</p>
+      <p className="placeholder-note">{representationNote(object, asset, model)}</p>
 
       <h3 className="section-title">
         Dimensions <EvidenceBadge evidence={dimensionEvidence(object.dimensions)} />
@@ -189,7 +238,7 @@ function ObjectDetails({ object, asset }: { object: SceneObject; asset: CatalogA
 
       <h3 className="section-title">Catalog asset</h3>
       {asset ? (
-        <AssetDetails object={object} asset={asset} />
+        <AssetDetails object={object} asset={asset} model={model} />
       ) : (
         <p className="muted">None - this object is scene geometry.</p>
       )}
@@ -242,4 +291,12 @@ function ObjectDetails({ object, asset }: { object: SceneObject; asset: CatalogA
       )}
     </section>
   );
+}
+
+function representationNote(object: SceneObject, asset: CatalogAsset | null, model: ModelState | undefined): string {
+  if (object.kind === "walkway" || object.kind === "keep_clear") return "Floor marking drawn at its recorded size.";
+  if (!asset) return "Scene geometry with no catalog asset, drawn as a plain solid.";
+  if (asset.visual.type === "placeholder_box") return "Instance of a provisional catalog asset, drawn as a placeholder box.";
+  if (model?.status === "failed") return "Its glTF model could not be shown; drawn as a labelled fallback box at the recorded size.";
+  return "Original illustrative glTF model, scaled to the recorded dimensions - not a vendor model.";
 }

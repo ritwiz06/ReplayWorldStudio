@@ -11,7 +11,7 @@ import type {
 
 export type * from "./generated/contracts";
 
-export const SCHEMA_VERSION: Project["schema_version"] = "0.2.0";
+export const SCHEMA_VERSION: Project["schema_version"] = "0.3.0";
 
 /** One structural problem, located by a JSON Pointer such as `/scene/objects/2/dimensions`. */
 export interface ContractIssue {

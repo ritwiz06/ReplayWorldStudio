@@ -41,7 +41,7 @@ def test_health_reports_service_and_schema_version(client: TestClient) -> None:
     assert response.status_code == 200
     health = HealthResponse.model_validate_json(response.content)
     assert health.status == "ok"
-    assert health.schema_version == "0.2.0"
+    assert health.schema_version == "0.3.0"
 
 
 def test_foundation_fixture_is_served_as_a_valid_project(client: TestClient) -> None:
@@ -72,7 +72,7 @@ def test_valid_project_is_accepted_with_evidence_counts(client: TestClient) -> N
     )
     assert status == 200
     report = ValidationReport.model_validate(body)
-    assert (report.schema_version, report.object_count, report.asset_count) == ("0.2.0", 6, 3)
+    assert (report.schema_version, report.object_count, report.asset_count) == ("0.3.0", 6, 3)
     assert (report.known_parameter_count, report.unknown_parameter_count) == (3, 3)
 
 
@@ -107,8 +107,19 @@ def test_legacy_schema_gets_one_actionable_rejection(client: TestClient) -> None
     assert status == 422
     [issue] = ValidationErrorResponse.model_validate(body).detail
     assert (issue.loc, issue.type) == (["body", "schema_version"], "schema_version_outdated")
-    assert "Schema 0.1.0 is an older contract; this API accepts 0.2.0" in issue.msg
+    assert "Schema 0.1.0 is an older contract; this API accepts 0.3.0" in issue.msg
     assert "python -m replay_world_contracts.migrate" in issue.msg
+
+
+def test_union_variant_tags_are_not_reported_as_document_keys(client: TestClient) -> None:
+    doc = json.loads((FIXTURES / "scenes" / "industrial-demo.json").read_text())
+    doc["catalog"][0]["visual"]["uri"] = "../escape.glb"
+    doc["scene"]["objects"][4]["parameters"][0]["value"] = "fast"
+    status, body = _post_project(client, json.dumps(doc))
+    assert status == 422
+    locs = [issue.loc for issue in ValidationErrorResponse.model_validate(body).detail]
+    assert ["body", "catalog", 0, "visual", "uri"] in locs
+    assert ["body", "scene", "objects", 4, "parameters", 0, "value"] in locs
 
 
 def test_openapi_still_documents_the_project_request_body(client: TestClient) -> None:

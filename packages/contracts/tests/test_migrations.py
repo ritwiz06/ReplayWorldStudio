@@ -66,12 +66,29 @@ def test_upgrade_does_not_modify_its_input(legacy: dict[str, Any]) -> None:
     assert legacy == before
 
 
+def test_0_2_0_documents_only_change_version(fixture_data: dict[str, Any]) -> None:
+    old = {**fixture_data, "schema_version": "0.2.0"}
+    upgrade = upgrade_document(old)
+    assert upgrade.document == fixture_data
+    assert upgrade.from_version == "0.2.0"
+    assert upgrade.notes == [
+        "schema_version 0.2.0 -> 0.3.0 (additive: glTF visuals, walkway/keep_clear kinds, "
+        "demonstration fixtures; no values changed)"
+    ]
+
+
+def test_legacy_upgrade_runs_every_step_in_order(legacy: dict[str, Any]) -> None:
+    notes = upgrade_document(legacy).notes
+    assert notes[0] == "schema_version 0.1.0 -> 0.2.0"
+    assert notes[-1].startswith("schema_version 0.2.0 -> 0.3.0")
+
+
 def test_current_documents_pass_through_unchanged(fixture_data: dict[str, Any]) -> None:
     upgrade = upgrade_document(fixture_data)
     assert (upgrade.document, upgrade.changed, upgrade.notes) == (fixture_data, False, [])
 
 
-@pytest.mark.parametrize("version", ["0.0.1", "0.3.0", None])
+@pytest.mark.parametrize("version", ["0.0.1", "0.4.0", "1.0.0", None])
 def test_unknown_versions_are_refused(legacy: dict[str, Any], version: str | None) -> None:
     legacy["schema_version"] = version
     with pytest.raises(MigrationError, match="unsupported schema_version"):
@@ -99,7 +116,8 @@ def test_migrate_command_writes_a_validated_upgrade(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert "note: schema_version 0.1.0 -> 0.2.0" in result.stderr
     project = Project.model_validate_json(out.read_text())
-    assert project.schema_version == "0.2.0"
+    assert project.schema_version == "0.3.0"
+    assert "note: schema_version 0.2.0 -> 0.3.0" in result.stderr
     assert LEGACY.read_text().startswith('{\n  "schema_version": "0.1.0"')  # input untouched
 
 

@@ -482,3 +482,193 @@ nav .panel-title {
   background: #2c1a1a;
   font-size: 12px;
 }
+
+/* ---------- WRL-02: camera controls, plan overlay, walk HUD, model states ---------- */
+kbd {
+  display: inline-block;
+  min-width: 1.4em;
+  padding: 0 4px;
+  border: 1px solid #47505a;
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  background: #15181c;
+  color: var(--muted);
+  font: 500 10px/1.5 "JetBrains Mono", ui-monospace, monospace;
+  text-align: center;
+}
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel-raised);
+}
+.segmented button {
+  padding: 6px 10px;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.segmented button:last-child {
+  border-right: 0;
+}
+.segmented button[aria-pressed="true"] {
+  background: #1d4f7a;
+  color: #fff;
+}
+.segmented button[aria-pressed="true"] kbd {
+  color: #cfe6fb;
+  border-color: #3a76a8;
+  background: #163d5f;
+}
+.segmented button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.view-toolbar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(24, 27, 31, 0.92);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+.viewport-overlays {
+  right: auto;
+  max-width: min(560px, calc(100% - 520px));
+  min-width: 280px;
+}
+.fixture-banner {
+  padding: 6px 10px;
+}
+.fixture-banner-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+.fixture-banner p {
+  margin: 4px 0 0;
+}
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.viewport-hint kbd {
+  margin: 0 1px;
+}
+.plan-overlay {
+  position: absolute;
+  left: 12px;
+  bottom: 34px;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  pointer-events: none;
+}
+.plan-orientation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(24, 27, 31, 0.88);
+  font-size: 12px;
+  pointer-events: auto;
+}
+.scale-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(24, 27, 31, 0.88);
+  font-size: 12px;
+}
+.scale-bar-line {
+  height: 8px;
+  border: 2px solid #f2f4f6;
+  border-top: 0;
+}
+.walk-hud {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(24, 27, 31, 0.9);
+  font-size: 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+.walk-hud kbd {
+  margin: 0 1px;
+}
+.walk-hud-actions {
+  display: flex;
+  gap: 8px;
+}
+.scene-label-strong {
+  border-color: var(--accent);
+}
+.model-fallback-label {
+  padding: 3px 8px;
+  border: 1px solid #ff9a62;
+  border-radius: 4px;
+  background: rgba(60, 24, 10, 0.92);
+  color: #ffd2b8;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.status-warn {
+  color: var(--warn);
+}
+.status-error {
+  color: #f08080;
+}
+.scene-picker button {
+  padding: 5px 10px;
+}
+.statusbar {
+  gap: 16px;
+}
+.scene-label-plan {
+  padding: 2px 6px;
+  font-size: 11px;
+  background: rgba(17, 19, 22, 0.78);
+  border-color: #3a4048;
+}
+.scene-label-plan strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.scene-label-plan strong {
+  max-width: 100%;
+}

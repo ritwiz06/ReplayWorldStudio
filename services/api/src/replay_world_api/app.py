@@ -8,7 +8,7 @@ from typing import Annotated, Any, Final
 from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import ValidationError
 from replay_world_contracts import (
     SCHEMA_VERSION,
@@ -22,12 +22,16 @@ from replay_world_contracts import (
 from replay_world_contracts.migrations import LEGACY_SCHEMA_VERSIONS
 
 from . import __version__
+from .catalog_files import CatalogFileError, check_model_files, resolve_catalog_file
 from .settings import Settings
 
 logger = logging.getLogger(__name__)
 
 # Fixture names map to fixed files; request paths are never joined onto the filesystem.
-FIXTURES: Final = {"foundation": "scenes/foundation-scene.json"}
+FIXTURES: Final = {
+    "foundation": "scenes/foundation-scene.json",
+    "industrial-demo": "scenes/industrial-demo.json",
+}
 
 MIGRATE_COMMAND: Final = "uv run python -m replay_world_contracts.migrate FILE -o UPGRADED.json"
 
@@ -88,6 +92,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 status_code=500, detail=f"Fixture '{name}' failed contract validation"
             ) from None
 
+    @app.get("/api/v1/catalog/files/{uri:path}", response_class=FileResponse)
+    def get_catalog_file(uri: str) -> FileResponse:
+        try:
+            path = resolve_catalog_file(settings.catalog_dir, uri)
+        except CatalogFileError as exc:
+            raise HTTPException(
+                status_code=404 if exc.kind == "missing" else 400, detail=exc.message
+            ) from None
+        return FileResponse(
+            path, media_type="model/gltf-binary", headers={"Cache-Control": "no-cache"}
+        )
+
     @app.post("/api/v1/projects/validate", openapi_extra=_PROJECT_BODY_DOC)
     def validate_project(document: Annotated[Any, Body()]) -> ValidationReport:
         version = document.get("schema_version") if isinstance(document, dict) else None
@@ -109,8 +125,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             project = Project.model_validate(document)
         except ValidationError as exc:
             raise RequestValidationError(
-                [{**e, "loc": ("body", *e["loc"])} for e in exc.errors()]
+                [{**e, "loc": ("body", *document_path(document, e["loc"]))} for e in exc.errors()]
             ) from None
+        model_files, file_issues = check_model_files(project, settings.catalog_dir)
+        if file_issues:
+            raise RequestValidationError(file_issues)
         params = [p for o in project.scene.objects for p in o.parameters]
         known = sum(isinstance(p, KnownParameter) for p in params)
         return ValidationReport(
@@ -119,11 +138,39 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             project_id=project.id,
             object_count=len(project.scene.objects),
             asset_count=len(project.catalog),
+            model_file_count=model_files,
             known_parameter_count=known,
             unknown_parameter_count=len(params) - known,
         )
 
     return app
+
+
+def document_path(document: Any, loc: tuple[str | int, ...]) -> list[str | int]:
+    """Turn a Pydantic error location into a path through the submitted document.
+
+    For tagged unions Pydantic inserts the variant tag (for example ``gltf`` or ``known``) as
+    if it were a key; such a step is dropped when the document has no key of that name and the
+    node's ``type`` or ``state`` field holds that tag, so the UI can show a real JSON Pointer.
+    """
+    node: Any = document
+    path: list[str | int] = []
+    for part in loc:
+        if (
+            isinstance(node, dict)
+            and isinstance(part, str)
+            and part not in node
+            and part in (node.get("type"), node.get("state"))
+        ):
+            continue
+        path.append(part)
+        if isinstance(node, dict) and isinstance(part, str):
+            node = node.get(part)
+        elif isinstance(node, list) and isinstance(part, int) and 0 <= part < len(node):
+            node = node[part]
+        else:
+            node = None
+    return path
 
 
 def _issue(error: Any) -> ValidationIssue:

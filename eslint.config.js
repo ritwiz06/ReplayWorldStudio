@@ -41,4 +41,10 @@ export default defineConfig(
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
     },
   },
+  {
+    // React Three Fiber code drives Three.js cameras, controls and scenes imperatively; these
+    // are external mutable objects, not React state, which is what this rule protects.
+    files: ["apps/web/src/scene/**/*.tsx"],
+    rules: { "react-hooks/immutability": "off" },
+  },
 );

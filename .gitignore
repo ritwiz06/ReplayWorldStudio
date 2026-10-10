@@ -42,7 +42,8 @@ drawings/
 customer-data/
 
 # --- Model weights and large binary artefacts ---
-models/
+# Root-level only: assets/catalog/models/ holds the committed catalog glTF files.
+/models/
 *.safetensors
 *.gguf
 *.ckpt

@@ -13,6 +13,9 @@ Conventions (see docs/contracts.md):
   or ``unknown`` (with a reason). Nothing substitutes a silent default.
 * Catalog assets record where they came from and what rights apply. Scene objects reference
   them by stable ID, and every reference must resolve.
+* A glTF visual is a representation, never a measurement: it is authored in metres, +Y up,
+  front +Z, origin at its bounding-box bottom-centre, and scaled to each instance's recorded
+  dimensions. Its file is named by a catalog-library-relative path and pinned by sha256.
 
 JSON Schema and TypeScript types are generated from these models by
 ``scripts/contracts.mjs``; never edit the generated files by hand. Older documents are
@@ -32,7 +35,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.2.0"]
+SchemaVersion = Literal["0.3.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -55,12 +58,27 @@ LicenseId = Annotated[
     ),
 ]
 NO_ASSERTION: Final = "NOASSERTION"
+Sha256Hex = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
+CATALOG_PATH_PATTERN: Final = r"^(?:[a-z0-9][a-z0-9_-]{0,63}/){0,4}[a-z0-9][a-z0-9_-]{0,63}\.glb$"
+"""Catalog-library-relative .glb path. Lowercase segments only: no '..', absolute paths, URL
+schemes, backslashes or query strings. Servers must still confine the resolved file to the
+library root, because a symbolic link inside the library could point elsewhere."""
+CatalogPath = Annotated[
+    str,
+    StringConstraints(pattern=CATALOG_PATH_PATTERN),
+    Field(description="Path of a .glb file relative to the catalog library root."),
+]
+MODEL_ORIGIN_TOLERANCE_M: Final = 1e-4
+"""How far a model's bounding-box bottom-centre may sit from (0, 0, 0)."""
+NOMINAL_MATCH_TOLERANCE_M: Final = 1e-3
+"""How far a glTF asset's nominal dimensions may differ from its model's extents."""
 
 Origin = Literal["measured", "user_supplied", "supplier", "inferred", "default"]
 """Where a known value came from. 'default' and 'inferred' values must stay visibly distinct."""
 
 ReviewStatus = Literal["unreviewed", "confirmed"]
-ObjectKind = Literal["structure", "equipment", "reference"]
+ObjectKind = Literal["structure", "equipment", "reference", "walkway", "keep_clear"]
+"""'walkway' marks circulation space; 'keep_clear' marks floor area that must stay unobstructed."""
 LengthUnit = Literal["m", "cm", "mm", "in", "ft"]
 ParameterUnit = Literal["m", "s", "kg", "rad", "m/s", "1"]
 """SI units used internally. '1' marks a dimensionless quantity."""
@@ -194,6 +212,67 @@ class PlaceholderBoxVisual(ContractModel):
     type: Literal["placeholder_box"]
 
 
+class ModelBounds(ContractModel):
+    """Axis-aligned bounds of a model in metres, in its own authored frame."""
+
+    min: Vec3
+    max: Vec3
+
+    @model_validator(mode="after")
+    def _non_empty(self) -> ModelBounds:
+        for axis in ("x", "y", "z"):
+            if getattr(self.min, axis) >= getattr(self.max, axis):
+                raise ValueError(f"model bounds must have min < max on {axis}")
+        return self
+
+
+class GltfVisual(ContractModel):
+    """A binary glTF (.glb) file from the catalog library, drawn at an instance's dimensions.
+
+    Authoring conventions, checked against ``model_bounds_m``:
+
+    * units: file coordinates times ``metres_per_model_unit`` are metres (glTF's unit is 1 m);
+    * orientation: +Y is up and the equipment's front faces +Z, as glTF recommends;
+    * origin: the bottom-centre of the model's bounding box is at (0, 0, 0).
+
+    Fit: the renderer scales the model on each axis so its bounds equal the instance's recorded
+    ``dimensions``. Physical dimensions are never derived from the model. When a per-axis scale
+    departs from 1 by more than ``max_fit_distortion``, the visual is flagged as stretched.
+    """
+
+    type: Literal["gltf"]
+    uri: CatalogPath
+    sha256: Sha256Hex = Field(description="SHA-256 of the exact file bytes, lowercase hex.")
+    metres_per_model_unit: PositiveLength = Field(description="Metres per model unit.")
+    up_axis: Literal["+Y"]
+    front_axis: Literal["+Z"]
+    origin: Literal["bottom_centre"]
+    model_bounds_m: ModelBounds
+    fit: Literal["scale_to_dimensions"]
+    max_fit_distortion: float = Field(
+        ge=0, le=0.5, description="Largest per-axis scale departure from 1 still shown as faithful."
+    )
+
+    @model_validator(mode="after")
+    def _origin_is_bottom_centre(self) -> GltfVisual:
+        lo, hi = self.model_bounds_m.min, self.model_bounds_m.max
+        offsets = {
+            "y (bottom)": lo.y,
+            "x (centre)": (lo.x + hi.x) / 2,
+            "z (centre)": (lo.z + hi.z) / 2,
+        }
+        for label, offset in offsets.items():
+            if abs(offset) > MODEL_ORIGIN_TOLERANCE_M:
+                raise ValueError(
+                    f"model origin must be the bounding-box bottom-centre; {label} is offset "
+                    f"by {offset} m"
+                )
+        return self
+
+
+Visual = Annotated[PlaceholderBoxVisual | GltfVisual, Field(discriminator="type")]
+
+
 class AssetSource(ContractModel):
     """Where an asset definition came from. Vendor and third-party assets must cite it."""
 
@@ -238,10 +317,25 @@ class CatalogAsset(ContractModel):
     id: StableId
     name: NonEmptyText
     kind: ObjectKind
-    visual: PlaceholderBoxVisual
+    visual: Visual
     nominal_dimensions: Dimensions
     source: AssetSource
     rights: UsageRights
+
+    @model_validator(mode="after")
+    def _nominal_matches_model(self) -> CatalogAsset:
+        if not isinstance(self.visual, GltfVisual):
+            return self
+        lo, hi = self.visual.model_bounds_m.min, self.visual.model_bounds_m.max
+        extents = {"width": hi.x - lo.x, "height": hi.y - lo.y, "depth": hi.z - lo.z}
+        for axis, extent in extents.items():
+            nominal = getattr(self.nominal_dimensions, axis).value_m
+            if abs(nominal - extent) > NOMINAL_MATCH_TOLERANCE_M:
+                raise ValueError(
+                    f"asset '{self.id}' nominal {axis} {nominal} m does not match its model's "
+                    f"extent {extent:.4f} m"
+                )
+        return self
 
 
 class SceneObject(ContractModel):
@@ -294,7 +388,7 @@ class SourceDocument(ContractModel):
     id: StableId
     kind: Literal["synthetic", "dxf", "pdf", "png"]
     filename: NonEmptyText | None
-    sha256: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")] | None
+    sha256: Sha256Hex | None
     source_to_world: SourceToWorldTransform
     import_warnings: list[NonEmptyText]
 
@@ -315,7 +409,7 @@ class WorldFrame(ContractModel):
 class FixtureLabel(ContractModel):
     """Marks development data so it is never mistaken for a real project."""
 
-    kind: Literal["foundation"]
+    kind: Literal["foundation", "demonstration"]
     note: NonEmptyText
 
 
@@ -367,6 +461,7 @@ class ValidationReport(ContractModel):
     project_id: StableId
     object_count: int = Field(ge=0)
     asset_count: int = Field(ge=0)
+    model_file_count: int = Field(ge=0, description="glTF files found with matching sha256.")
     known_parameter_count: int = Field(ge=0)
     unknown_parameter_count: int = Field(ge=0)
 

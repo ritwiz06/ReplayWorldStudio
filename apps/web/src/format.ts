@@ -47,3 +47,12 @@ export function formatRadians(value: number): string {
 export function formatFootprint(d: Dimensions): string {
   return `${formatNumber(d.width.value_m)} × ${formatNumber(d.depth.value_m)} m · ${formatNumber(d.height.value_m)} m high`;
 }
+
+/** Display name of each object kind. */
+export const KIND_LABEL = {
+  structure: "Structure",
+  equipment: "Equipment",
+  reference: "Reference",
+  walkway: "Walkway",
+  keep_clear: "Keep-clear zone",
+} as const;

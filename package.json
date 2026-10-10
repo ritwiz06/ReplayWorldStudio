@@ -13,13 +13,17 @@
     "dev:web": "pnpm --filter @replay-world/web dev",
     "contracts:generate": "node scripts/contracts.mjs",
     "contracts:check": "node scripts/contracts.mjs --check",
+    "assets:build": "pnpm --filter @replay-world/web exec node scripts/catalog/build.ts",
+    "assets:check": "pnpm --filter @replay-world/web exec node scripts/catalog/build.ts --check",
+    "fixtures:build": "uv run python scripts/build_demo_fixture.py",
+    "fixtures:check": "uv run python scripts/build_demo_fixture.py --check",
     "lint": "eslint . && uv run ruff check && uv run ruff format --check",
     "typecheck": "pnpm -r typecheck && uv run mypy",
     "test": "pnpm -r test && uv run pytest",
     "test:e2e": "pnpm --filter @replay-world/web test:e2e",
     "test:e2e:install": "pnpm --filter @replay-world/web exec playwright install chromium --only-shell",
     "build": "pnpm --filter @replay-world/web build",
-    "check": "pnpm contracts:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "check": "pnpm contracts:check && pnpm assets:check && pnpm fixtures:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

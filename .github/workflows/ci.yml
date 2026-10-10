@@ -40,6 +40,11 @@ jobs:
       - name: Generated contracts match the Pydantic source
         run: pnpm contracts:check
 
+      - name: Catalog models and demo fixture rebuild byte-for-byte
+        run: |
+          pnpm assets:check
+          pnpm fixtures:check
+
       - name: Lint
         run: pnpm lint
 

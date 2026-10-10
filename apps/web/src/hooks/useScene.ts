@@ -1,11 +1,11 @@
 import { validateProject, type Project, type ValidationReport } from "@replay-world/contracts";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ApiClient, ApiFailure } from "../api/client";
+import type { ApiClient, ApiFailure, FixtureName } from "../api/client";
 
 export type LoadFailure = ApiFailure | { kind: "file"; message: string };
 
 export type SceneSource =
-  | { kind: "fixture" }
+  | { kind: "fixture"; name: FixtureName }
   | { kind: "file"; filename: string; report: ValidationReport };
 
 export type SceneState =
@@ -20,35 +20,46 @@ export type FileCheck =
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
+export const FIXTURE_LABEL: Record<FixtureName, string> = {
+  "industrial-demo": "Industrial demo",
+  foundation: "Foundation fixture",
+};
+
 /**
- * Loads the foundation fixture from the API, and opens local project files only after the API
- * accepts them. A rejected file never replaces the scene that is already loaded.
+ * Loads a fixture scene from the API (the industrial demo first), and opens local project files
+ * only after the API accepts them. A rejected file never replaces the scene already loaded.
  */
-export function useScene(client: ApiClient) {
+export function useScene(client: ApiClient, initial: FixtureName = "industrial-demo") {
   const [scene, setScene] = useState<SceneState>({ status: "loading" });
   const [fileCheck, setFileCheck] = useState<FileCheck>({ status: "idle" });
-  const [fixtureRequest, setFixtureRequest] = useState(0);
+  const [fixture, setFixture] = useState<{ name: FixtureName; request: number }>({ name: initial, request: 0 });
   const pendingFixture = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
     pendingFixture.current = controller;
-    client.getFoundationFixture(controller.signal).then(
+    client.getFixture(fixture.name, controller.signal).then(
       (result) =>
         setScene(
           result.ok
-            ? { status: "loaded", project: result.value, source: { kind: "fixture" } }
+            ? { status: "loaded", project: result.value, source: { kind: "fixture", name: fixture.name } }
             : { status: "error", error: result.error },
         ),
       () => undefined, // aborted because a newer request replaced this one
     );
     return () => controller.abort();
-  }, [client, fixtureRequest]);
+  }, [client, fixture]);
+
+  const loadFixture = useCallback((name: FixtureName) => {
+    setScene({ status: "loading" });
+    setFileCheck({ status: "idle" });
+    setFixture((current) => ({ name, request: current.request + 1 }));
+  }, []);
 
   const reloadFixture = useCallback(() => {
     setScene({ status: "loading" });
     setFileCheck({ status: "idle" });
-    setFixtureRequest((n) => n + 1);
+    setFixture((current) => ({ ...current, request: current.request + 1 }));
   }, []);
 
   const openFile = useCallback(
@@ -100,5 +111,5 @@ export function useScene(client: ApiClient) {
 
   const dismissFileCheck = useCallback(() => setFileCheck({ status: "idle" }), []);
 
-  return { scene, fileCheck, reloadFixture, openFile, dismissFileCheck };
+  return { scene, fixtureName: fixture.name, fileCheck, loadFixture, reloadFixture, openFile, dismissFileCheck };
 }

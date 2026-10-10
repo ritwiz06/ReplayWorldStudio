@@ -25,6 +25,7 @@ class Settings:
     port: int = 8000
     cors_origins: tuple[str, ...] = DEFAULT_CORS_ORIGINS
     fixtures_dir: Path = _REPO_ROOT / "fixtures"
+    catalog_dir: Path = _REPO_ROOT / "assets" / "catalog"
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> Settings:
@@ -41,9 +42,11 @@ class Settings:
         except ValueError:
             raise ValueError(f"RWS_API_PORT must be an integer, got {port_text!r}") from None
         fixtures = env.get("RWS_FIXTURES_DIR", "").strip()
+        catalog = env.get("RWS_CATALOG_DIR", "").strip()
         return cls(
             host=env.get("RWS_API_HOST", defaults.host),
             port=port,
             cors_origins=origins,
             fixtures_dir=Path(fixtures) if fixtures else defaults.fixtures_dir,
+            catalog_dir=Path(catalog) if catalog else defaults.catalog_dir,
         )

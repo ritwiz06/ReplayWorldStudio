@@ -125,3 +125,60 @@ For a new decision, append: ID, date, status, context, options considered, decis
 - Rationale: one current shape keeps every consumer simple, and upgrades stay visible and auditable. Option 4 would hide a transformation behind an endpoint before persistence exists to justify it.
 - Evidence: `packages/contracts/tests/test_migrations.py` (validity, value preservation, no input mutation, refusal cases, CLI) and the API legacy test; `fixtures/legacy/foundation-scene-0.1.0.json`.
 - Revisit when: WRL-03 adds save/reload. The loader should then call `upgrade_document` and show its notes before the first save.
+
+### ADR-018 - glTF visuals declare their conventions and are scaled to recorded dimensions
+
+- Date: 2026-10-10. Status: adopted (contract 0.3.0, WRL-02).
+- Context: equipment must look like equipment, yet the physical dimensions must stay the recorded evidence. A model's own size must never become the dimension.
+- Options considered:
+  - fit: render the model at its authored size (instances that differ would misstate their footprint); scale uniformly (footprint wrong on at least one axis); scale per axis to the recorded box.
+  - conventions: infer them from the file, or declare and check them.
+- Decision: `GltfVisual` declares `uri`, `sha256`, `metres_per_model_unit`, `up_axis: +Y`, `front_axis: +Z`, `origin: bottom_centre`, `model_bounds_m`, `fit: scale_to_dimensions` and `max_fit_distortion`. Validators require the bottom-centre origin (0.1 mm) and nominal dimensions equal to the model extents (1 mm). The renderer scales per axis so the drawn bounds equal the instance's recorded dimensions, and the inspector flags distortion beyond the tolerance.
+- Rationale: footprint fidelity is what spatial review needs. Declared, checked conventions make each model's relation to metres auditable.
+- Consequences: large dimension differences stretch the model, which is shown, not hidden. Models must be authored or re-exported to the conventions.
+- Evidence: `apps/web/src/scene/modelLoader.test.ts` (every demo instance fills its recorded box to 0.1 mm; rotation; stretch flag), `packages/contracts/tests/test_gltf_visual.py`, and the screenshots.
+- Revisit when: a non-box footprint (L-shaped cells) or articulated models are needed.
+
+### ADR-019 - One catalog library, content-pinned references, no silent substitutes
+
+- Date: 2026-10-10. Status: adopted.
+- Context: a project file opened from elsewhere names model files, and a path must not reach outside the library or load a different file.
+- Options considered: URLs; embedding models in the project (data URIs); library-relative paths with a hash.
+- Decision:
+  - Visuals name a library-relative `.glb` path, restricted by pattern, plus a sha256.
+  - The API serves `GET /api/v1/catalog/files/{uri}` only for pattern-valid paths that resolve, after following symlinks, inside `RWS_CATALOG_DIR`.
+  - `POST /api/v1/projects/validate` rejects missing files and hash mismatches with located issues.
+  - The browser re-hashes the bytes and checks parse and bounds before drawing; failures show a labelled fallback at the recorded size plus an actionable notice.
+  - Validation error paths drop Pydantic union tags so they point into the submitted document.
+- Rationale: content pinning makes "the same model" verifiable, and failures are visible and fixable instead of silently substituted.
+- Consequences: project JSON is not self-contained (the portability limits are documented in docs/contracts.md); an export bundle (REL-01) must package models. Rebuilding models changes their hashes, so fixtures must be regenerated.
+- Evidence: `services/api/tests/test_catalog_files.py` (symlink escape, unsafe paths, missing file, hash mismatch) and the e2e failed-load and unsafe-path tests.
+- Revisit when: shared libraries or remote asset stores are introduced.
+
+### ADR-020 - Original, procedurally generated, reproducible equipment models
+
+- Date: 2026-10-10. Status: adopted.
+- Context: the demo needs at least three recognisable models with clear authorship and rights. No license has been chosen for the project, and none may be assigned on the owner's behalf.
+- Options considered: download CC0 or vendor models (third-party terms, provenance burden); hand-model in Blender (not reproducible in CI); generate procedurally in-repo with three.js and `GLTFExporter`.
+- Decision: `apps/web/scripts/catalog` builds 4 models (belt conveyor, guarded machine cell, electrical cabinet, pallet with cartons). Each is made of rounded solids and cylinders with PBR materials, merged into one mesh per material, and recentred to the bottom-centre. The script writes deterministic GLBs and a manifest; `pnpm assets:check` in CI requires byte-identical rebuilds. The demo fixture is generated from the manifest (`pnpm fixtures:build`). Catalog rights are `NOASSERTION` / `unknown`, with authorship recorded as in-house procedural (AI-assisted).
+- Rationale: no third-party rights questions; fully reproducible; hashes are stable.
+- Consequences: the models are illustrative, not photoreal or vendor-accurate (no textures or bevelled CAD detail), and three.js upgrades may change hashes. A real project needs vendor or measured models with recorded licenses.
+- Revisit when: the owner chooses a license, or vendor models are supplied.
+
+### ADR-021 - Three camera modes with per-mode memory and a stable selection
+
+- Date: 2026-10-10. Status: adopted.
+- Decision:
+  - **Orbit:** drei OrbitControls. Framing uses a binary search for the closest distance at which every box corner stays within the margin of the view, and transitions are animated.
+  - **Top:** an orthographic camera with up = world −Z (plan up) and +X right, using MapControls with rotation disabled. It shows a scale bar from the live zoom and an orientation dial that explicitly is not geographic north. Shadows are off. Labels are clamped to each object's on-screen footprint so they never overlap.
+  - **Walk:** a custom controller at 1.60 m eye height, 1.4 m/s (×2.5 with Shift). It stays on floor slabs and slides along equipment and structure footprints (0.25 m body radius). Drag to look, with no pointer lock, so `Esc` and the UI always work. `R` resets and `F` stands in front of the selection.
+  - The selection lives outside the camera. Each mode keeps its last pose per project, and commands issued before a mode mounted are ignored, so returning to a mode restores it.
+- Options considered: pointer-lock first-person controls (unreliable in tests and harder to exit); camera-controls (less control over the plan orientation and framing tests).
+- Evidence: `cameras.test.ts`, `walk.test.ts`, and the e2e camera-mode test (framing, plan, walk movement, collision, reset, exit, restored orbit view).
+- Revisit when: WRL-03 editing needs gizmo-aware controls, or WRL-04 profiling shows frame-time problems.
+
+### ADR-022 - Schema 0.3.0 is additive; migrations chain
+
+- Date: 2026-10-10. Status: adopted.
+- Decision: 0.3.0 adds the glTF visual, the `walkway`/`keep_clear` kinds, the `demonstration` fixture label and `ValidationReport.model_file_count`. ADR-017 still applies: the model is strict about the current version. Migration steps run in sequence (0.1.0 → 0.2.0 → 0.3.0), and the 0.2.0 → 0.3.0 step changes only the version. The API answers 0.1.0 and 0.2.0 documents with one actionable upgrade message.
+- Evidence: `test_migrations.py` (step order, 0.2.0 version-only step, CLI notes).
