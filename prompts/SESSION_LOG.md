@@ -287,7 +287,8 @@ Append entries in chronological order. If a live repository session log already 
   - With `VOYAGER_API_KEY` in `.env`: `pnpm dev:api` and `pnpm dev:web`, then open http://127.0.0.1:5173 and choose **Describe an object**.
   - `uv run python scripts/evaluate_assist.py --record` (live; refreshes recordings).
   - `pnpm --filter @replay-world/web exec node scripts/assist/tasks.ts` (live timings and screenshots).
-- Milestone status after this session: M2 in progress; GEN-01 done locally (CI recorded below once available).
+- CI: committed `8a3f70e` and pushed to `main`. https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38070077194 succeeded: the main job (Vitest 10 + 107; pytest 332, whose pinned generated-model sha256 values matched on Linux; build) and browser smoke (6 passed, 1.8 min).
+- Milestone status after this session: M2 in progress; GEN-01 done.
 - Next concrete task: IMG-01 (user-designated). Start with a feasibility timebox testing `qwen3-vl-32b-instruct` on real, permissioned images.
 
 ## Copy this template for a coding session

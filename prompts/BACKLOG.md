@@ -144,7 +144,7 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P0
 - Dependencies: WRL-03
-- Status: **done locally** (2026-10-10); CI evidence recorded below when the run completes
+- Status: **done** (2026-10-10, commit `8a3f70e`; CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38070077194 passed)
 - Done when:
   - A guided entry offers Explore demo, Describe an object and Open a project; the detailed editor stays available; image import is shown as upcoming, not as a working action.
   - An ordinary-language description returns a typed proposal (name, parts, approximate appearance, width/height/depth) that marks which facts the user stated and which were inferred; stated values are checked against the user's words; dimensions that matter are confirmed before placement; mass, strength, chemistry and operating behaviour stay unknown.
@@ -165,6 +165,7 @@ After M1 the user approved guided creation and described custom objects as the n
   - **Builder.** The object builder works with the assistant off (e2e).
   - **Timed tasks** (observations): describe and place 6–8 steps, 65–75 s (58–72 s of it the model); language move 4 steps, 7.5 s; builder 6 steps, 6.8 s.
   - **Checks:** `pnpm check` exit 0 (Vitest 10 + 107, pytest 332, build); `pnpm test:e2e` 20 passed; `pnpm test:e2e:smoke` 6 passed (with `CI=1`).
+  - **CI** https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38070077194 succeeded on `8a3f70e`. The main job ran Vitest 10 + 107 and pytest 332; its pinned sha256 values for the three described models matched on Linux, so the generator is byte-identical across platforms. Browser smoke passed 6 tests in software WebGL (1.8 min).
 
 ### GEN-02 - Correct and reuse generated objects after placement
 
