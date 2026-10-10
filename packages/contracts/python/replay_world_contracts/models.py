@@ -18,6 +18,11 @@ Conventions (see docs/contracts.md):
   dimensions. Its file is named by a catalog-library-relative path and pinned by sha256.
 * Edits are recorded, not just applied: the scene's ``edit_log`` keeps every edit in effect
   with the previous transform and the previous value and evidence of each changed axis.
+* A generated asset is an original, provisional model built by the project's own generator
+  from a bounded geometry specification (approved shapes, parts, placements and materials),
+  never from code a language model wrote. It records the specification, the words it was
+  described with, which facts were stated and which inferred, and the properties it leaves
+  unknown (mass, strength, chemical composition, operating behaviour).
 
 JSON Schema and TypeScript types are generated from these models by
 ``scripts/contracts.mjs``; never edit the generated files by hand. Older documents are
@@ -37,7 +42,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.4.0"]
+SchemaVersion = Literal["0.5.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -277,9 +282,13 @@ Visual = Annotated[PlaceholderBoxVisual | GltfVisual, Field(discriminator="type"
 
 
 class AssetSource(ContractModel):
-    """Where an asset definition came from. Vendor and third-party assets must cite it."""
+    """Where an asset definition came from. Vendor and third-party assets must cite it.
 
-    kind: Literal["synthetic", "in_house", "vendor", "third_party"]
+    ``generated`` marks an original provisional model built by the object generator from a
+    recorded geometry specification; such an asset carries a ``generation`` record.
+    """
+
+    kind: Literal["synthetic", "in_house", "vendor", "third_party", "generated"]
     author: NonEmptyText
     reference: NonEmptyText | None = Field(
         description="URL, catalogue number or document that identifies the original."
@@ -309,6 +318,237 @@ class UsageRights(ContractModel):
         return self
 
 
+# --- Generated objects -------------------------------------------------------------------
+
+GEOMETRY_FORMAT: Final = "rws-geometry/1"
+GENERATOR_VERSION: Final = "rws-object-generator/1"
+GEOMETRY_MAX_PARTS: Final = 40
+GEOMETRY_MIN_PART_M: Final = 0.002
+GEOMETRY_MIN_ENVELOPE_M: Final = 0.02
+GEOMETRY_MAX_ENVELOPE_M: Final = 30.0
+ENVELOPE_FIT_TOLERANCE_M: Final = 1e-4
+"""How far the union of a specification's parts may differ from its envelope on any side. Equal
+to the model-origin tolerance, so every valid specification yields a valid glTF visual."""
+GEOMETRY_MAX_COORDINATE_M: Final = 100.0
+"""Largest part centre coordinate or extent accepted in a draft (before fitting)."""
+GENERATED_MODEL_PREFIX: Final = "generated/"
+"""Catalog-library folder that holds generated models, named by their sha256."""
+
+GeometryShape = Literal["box", "rounded_box", "cylinder", "frustum", "sphere"]
+"""Approved part shapes. Every part fills its own axis-aligned box ``size_m``: a cylinder or
+frustum is round across its axis, a sphere becomes an ellipsoid when the sides differ."""
+
+GeometryMaterial = Literal[
+    "paint_light_grey",
+    "paint_anthracite",
+    "paint_white",
+    "paint_blue",
+    "paint_red",
+    "paint_green",
+    "paint_orange",
+    "safety_yellow",
+    "aluminium",
+    "stainless_steel",
+    "steel_dark",
+    "copper",
+    "rubber_black",
+    "plastic_black",
+    "plastic_grey",
+    "polycarbonate",
+    "glass_clear",
+    "hmi_screen",
+    "signal_green",
+    "signal_amber",
+    "signal_red",
+    "signal_white",
+    "estop_red",
+    "motor_blue",
+    "cardboard",
+    "wood",
+    "pallet_wood",
+    "concrete",
+    "fabric_grey",
+    "label_black",
+]
+"""Approved surface materials for generated models (physically based colour, metalness and
+roughness). A material is an appearance, not a statement about the real object's chemistry."""
+
+PartId = Annotated[str, StringConstraints(pattern=r"^[a-z0-9][a-z0-9_-]{0,39}$")]
+ShortText = Annotated[str, StringConstraints(min_length=1, max_length=80)]
+PartBasis = Literal["stated", "inferred", "entered"]
+"""Where a part came from: named in the user's words, assumed while proposing, or added in
+the object builder."""
+
+
+class Extent3(ContractModel):
+    """Strictly positive extents in metres along X (width), Y (height) and Z (depth)."""
+
+    x: PositiveLength
+    y: PositiveLength
+    z: PositiveLength
+
+
+class GeometryPart(ContractModel):
+    """One solid of a generated model, axis-aligned in the object frame.
+
+    The object frame is the catalog convention: metres, +Y up, front facing +Z, origin at the
+    bottom-centre of the whole object. ``center_m`` is the centre of the part's box and
+    ``size_m`` its extents. ``axis`` (cylinder only) is the direction the round body runs;
+    a frustum always stands upright and narrows to ``taper`` times its width at
+    ``narrow_end``.
+    """
+
+    id: PartId
+    label: ShortText
+    shape: GeometryShape
+    material: GeometryMaterial
+    center_m: Vec3
+    size_m: Extent3
+    axis: Literal["x", "y", "z"] | None
+    taper: float | None = Field(ge=0, le=1)
+    narrow_end: Literal["top", "bottom"] | None
+    basis: PartBasis
+
+    @model_validator(mode="after")
+    def _shape_fields(self) -> GeometryPart:
+        if self.shape == "cylinder" and self.axis is None:
+            raise ValueError(f"cylinder part '{self.id}' needs an axis (x, y or z)")
+        if self.shape != "cylinder" and self.axis is not None:
+            raise ValueError(f"only a cylinder has an axis; part '{self.id}' is a {self.shape}")
+        frustum = self.shape == "frustum"
+        if frustum != (self.taper is not None) or frustum != (self.narrow_end is not None):
+            raise ValueError(
+                f"part '{self.id}': taper and narrow_end are required for a frustum, and only "
+                "for one"
+            )
+        for name, vec in (("centre", self.center_m), ("size", self.size_m)):
+            if max(abs(vec.x), abs(vec.y), abs(vec.z)) > GEOMETRY_MAX_COORDINATE_M:
+                raise ValueError(
+                    f"part '{self.id}' {name} exceeds {GEOMETRY_MAX_COORDINATE_M:g} m on some axis"
+                )
+        smallest = min(self.size_m.x, self.size_m.y, self.size_m.z)
+        if smallest < GEOMETRY_MIN_PART_M:
+            raise ValueError(
+                f"part '{self.id}' is thinner than {GEOMETRY_MIN_PART_M * 1000:g} mm ({smallest} m)"
+            )
+        return self
+
+
+class GeometryDraft(ContractModel):
+    """A geometry specification that may not fit its envelope yet (an editor's working copy).
+
+    The API fits the parts to the envelope, which turns a draft into a :class:`GeometrySpec`.
+    """
+
+    format: Literal["rws-geometry/1"]
+    envelope_m: Extent3
+    parts: list[GeometryPart] = Field(min_length=1, max_length=GEOMETRY_MAX_PARTS)
+
+    @model_validator(mode="after")
+    def _bounded(self) -> GeometryDraft:
+        _require_unique((p.id for p in self.parts), "part id")
+        for axis in ("x", "y", "z"):
+            value = getattr(self.envelope_m, axis)
+            if not GEOMETRY_MIN_ENVELOPE_M <= value <= GEOMETRY_MAX_ENVELOPE_M:
+                raise ValueError(
+                    f"envelope {axis} {value} m is outside {GEOMETRY_MIN_ENVELOPE_M}-"
+                    f"{GEOMETRY_MAX_ENVELOPE_M} m"
+                )
+        return self
+
+
+def parts_bounds(parts: Iterable[GeometryPart]) -> tuple[Vec3, Vec3]:
+    """The axis-aligned box that contains every part, in the object frame."""
+    items = list(parts)
+    lo = {a: min(getattr(p.center_m, a) - getattr(p.size_m, a) / 2 for p in items) for a in "xyz"}
+    hi = {a: max(getattr(p.center_m, a) + getattr(p.size_m, a) / 2 for p in items) for a in "xyz"}
+    return Vec3(**lo), Vec3(**hi)
+
+
+class GeometrySpec(GeometryDraft):
+    """A bounded, data-only description of a generated model.
+
+    The union of the parts is exactly the envelope (within 0.1 mm): centred on X and Z and
+    standing on the floor (Y from 0 to the height). The generator therefore produces a model
+    whose bounds are the envelope, with its origin at the bottom-centre.
+    """
+
+    @model_validator(mode="after")
+    def _parts_fill_envelope(self) -> GeometrySpec:
+        lo, hi = parts_bounds(self.parts)
+        e = self.envelope_m
+        expected = {
+            "x": (-e.x / 2, e.x / 2),
+            "y": (0.0, e.y),
+            "z": (-e.z / 2, e.z / 2),
+        }
+        for axis, (low, high) in expected.items():
+            got = (getattr(lo, axis), getattr(hi, axis))
+            if abs(got[0] - low) > ENVELOPE_FIT_TOLERANCE_M or abs(got[1] - high) > (
+                ENVELOPE_FIT_TOLERANCE_M
+            ):
+                raise ValueError(
+                    f"parts span {got[0]:.4f}..{got[1]:.4f} m on {axis}, but the envelope is "
+                    f"{low:.4f}..{high:.4f} m; fit the parts to the envelope first"
+                )
+        return self
+
+
+class LanguageModelRef(ContractModel):
+    """The language model that drafted a proposal: service, endpoint and exact model ID."""
+
+    service: NonEmptyText
+    base_url: NonEmptyText
+    model: NonEmptyText
+
+
+UnknownPropertyName = Literal["mass", "strength", "chemical_composition", "operating_behaviour"]
+UNKNOWN_PROPERTIES: Final[tuple[UnknownPropertyName, ...]] = get_args(UnknownPropertyName)
+
+
+class UnknownProperty(ContractModel):
+    """A physical or behavioural property the generated model does not establish."""
+
+    property: UnknownPropertyName
+    reason: NonEmptyText
+
+
+class AssetGeneration(ContractModel):
+    """How a generated asset was made, so it can be reviewed, rebuilt and never mistaken for
+    a measured or vendor model.
+
+    ``described``: drafted by ``language_model`` from ``description`` and reviewed by a person.
+    ``builder``: assembled by a person in the object builder; no language model was involved.
+    """
+
+    method: Literal["described", "builder"]
+    description: NonEmptyText | None
+    language_model: LanguageModelRef | None
+    generator: Literal["rws-object-generator/1"]
+    spec: GeometrySpec
+    stated_facts: list[NonEmptyText]
+    inferred_facts: list[NonEmptyText]
+    not_modelled: list[NonEmptyText] = Field(
+        description="Things the description mentioned that the model does not represent."
+    )
+    unknown_properties: list[UnknownProperty]
+
+    @model_validator(mode="after")
+    def _consistent(self) -> AssetGeneration:
+        described = self.method == "described"
+        if described and (self.description is None or self.language_model is None):
+            raise ValueError("a described asset records its description and language model")
+        if not described and self.language_model is not None:
+            raise ValueError("a builder asset was not drafted by a language model")
+        named = [u.property for u in self.unknown_properties]
+        if sorted(named) != sorted(UNKNOWN_PROPERTIES):
+            raise ValueError(
+                "a generated asset lists mass, strength, chemical_composition and "
+                "operating_behaviour as unknown, once each"
+            )
+        return self
+
+
 class CatalogAsset(ContractModel):
     """A reusable definition that scene objects instantiate by referencing its ``id``.
 
@@ -324,6 +564,36 @@ class CatalogAsset(ContractModel):
     nominal_dimensions: Dimensions
     source: AssetSource
     rights: UsageRights
+    # How a generated asset was made; null for every other source. (No Field description: a
+    # description beside a $ref makes the TypeScript generator emit duplicate interfaces.)
+    generation: AssetGeneration | None
+
+    @model_validator(mode="after")
+    def _generated_assets_record_their_generation(self) -> CatalogAsset:
+        generated = self.source.kind == "generated"
+        if generated != (self.generation is not None):
+            raise ValueError(
+                f"asset '{self.id}': a generation record belongs to, and only to, a "
+                "source of kind 'generated'"
+            )
+        if self.generation is None:
+            return self
+        if not isinstance(self.visual, GltfVisual) or not self.visual.uri.startswith(
+            GENERATED_MODEL_PREFIX
+        ):
+            raise ValueError(
+                f"generated asset '{self.id}' must use a glTF model under "
+                f"'{GENERATED_MODEL_PREFIX}'"
+            )
+        envelope = self.generation.spec.envelope_m
+        for axis, extent in (("width", envelope.x), ("height", envelope.y), ("depth", envelope.z)):
+            nominal = getattr(self.nominal_dimensions, axis).value_m
+            if abs(nominal - extent) > NOMINAL_MATCH_TOLERANCE_M:
+                raise ValueError(
+                    f"generated asset '{self.id}' nominal {axis} {nominal} m differs from its "
+                    f"specification envelope {extent} m"
+                )
+        return self
 
     @model_validator(mode="after")
     def _nominal_matches_model(self) -> CatalogAsset:

@@ -244,6 +244,7 @@ function AssetDetails({ object, asset, model }: { object: SceneObject; asset: Ca
         <dt>Nominal size</dt>
         <dd>{formatFootprint(asset.nominal_dimensions)}</dd>
       </dl>
+      {asset.generation && <GenerationDetails generation={asset.generation} />}
       {differing.length === 0 ? (
         <p className="muted">This instance uses the catalog nominal size.</p>
       ) : (
@@ -251,6 +252,41 @@ function AssetDetails({ object, asset, model }: { object: SceneObject; asset: Ca
           This instance differs from the catalog nominal size on: {differing.join(", ")}.
         </p>
       )}
+    </div>
+  );
+}
+
+/** How a generated asset was made: the words, the model, what was stated or assumed, unknowns. */
+function GenerationDetails({ generation }: { generation: NonNullable<CatalogAsset["generation"]> }) {
+  const lm = generation.language_model;
+  return (
+    <div className="generation-details" data-testid="generation-details">
+      <p className="placeholder-note">
+        Provisional generated model ({generation.generator}) built from {generation.spec.parts.length} parts of a recorded specification - an
+        illustration at the confirmed size, not a product model.
+      </p>
+      <dl className="facts">
+        <dt>Made by</dt>
+        <dd>{generation.method === "described" && lm ? `Described by the user; drafted by ${lm.service} ${lm.model}` : "Built in the object builder"}</dd>
+        {generation.description && (
+          <>
+            <dt>Words</dt>
+            <dd>“{generation.description}”</dd>
+          </>
+        )}
+        <dt>Stated</dt>
+        <dd>{generation.stated_facts.join("; ") || "-"}</dd>
+        <dt>Assumed</dt>
+        <dd>{generation.inferred_facts.join("; ") || "-"}</dd>
+        {generation.not_modelled.length > 0 && (
+          <>
+            <dt>Not modelled</dt>
+            <dd>{generation.not_modelled.join("; ")}</dd>
+          </>
+        )}
+        <dt>Unknown</dt>
+        <dd>{generation.unknown_properties.map((u) => u.property.replaceAll("_", " ")).join(", ")}</dd>
+      </dl>
     </div>
   );
 }
@@ -344,5 +380,6 @@ function representationNote(object: SceneObject, asset: CatalogAsset | null, mod
   if (!asset) return "Scene geometry with no catalog asset, drawn as a plain solid.";
   if (asset.visual.type === "placeholder_box") return "Instance of a provisional catalog asset, drawn as a placeholder box.";
   if (model?.status === "failed") return "Its glTF model could not be shown; drawn as a labelled fallback box at the recorded size.";
+  if (asset.generation) return "Provisional generated model at the confirmed size - an illustration, not a product model; mass, strength, chemistry and behaviour are unknown.";
   return "Original illustrative glTF model, scaled to the recorded dimensions - not a vendor model.";
 }

@@ -88,6 +88,7 @@ def catalog_asset(asset_id: str, name: str, model: dict[str, Any]) -> dict[str, 
                 "The project owner has not chosen a license."
             ),
         },
+        "generation": None,
     }
 
 

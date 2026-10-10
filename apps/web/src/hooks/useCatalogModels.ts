@@ -1,5 +1,5 @@
 import type { GltfVisual, Project } from "@replay-world/contracts";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 import type { ApiClient } from "../api/client";
 import { loadCatalogModel, type ModelFailure } from "../scene/modelLoader";
@@ -48,22 +48,26 @@ export function useCatalogModels(client: ApiClient, project: Project | null) {
   const catalog = project?.catalog ?? null;
   const assets = useMemo(() => gltfAssets(catalog), [catalog]);
 
+  // Each (asset, file hash, attempt) is downloaded once per session: adding a generated asset
+  // to the catalog (or undoing that) must not download the other models again. A result for an
+  // asset no longer in the catalog is simply never shown. (Downloads are not cancelled: the
+  // editor lives as long as the page, and a cancel-on-cleanup would lose loads under StrictMode's
+  // double-mounted effects.)
+  const requested = useRef(new Set<string>());
   useEffect(() => {
-    const controller = new AbortController();
     for (const [id, visual] of assets) {
       const key = keyOf(id, visual, attempt);
-      loadCatalogModel(client.catalogFileUrl(visual.uri), visual, undefined, controller.signal).then(
-        (result) =>
-          setResults((current) =>
-            new Map(current).set(
-              key,
-              result.ok ? { status: "ready", template: result.scene } : { status: "failed", failure: result.failure },
-            ),
+      if (requested.current.has(key)) continue;
+      requested.current.add(key);
+      void loadCatalogModel(client.catalogFileUrl(visual.uri), visual).then((result) =>
+        setResults((current) =>
+          new Map(current).set(
+            key,
+            result.ok ? { status: "ready", template: result.scene } : { status: "failed", failure: result.failure },
           ),
-        () => undefined, // aborted: the project changed or a retry started
+        ),
       );
     }
-    return () => controller.abort();
   }, [client, assets, attempt]);
 
   const models: ModelStates = useMemo(

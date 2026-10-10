@@ -30,6 +30,10 @@ pnpm assets:check    # CI: committed models must rebuild byte-for-byte
 
 Output depends on the three.js revision (r186 now). Upgrading three.js may change bytes and therefore hashes; rebuild and commit both commands' output together.
 
+## Generated models (GEN-01)
+
+`generated/` (git-ignored) holds models that users create by describing an object or with the object builder. The API's own generator (`services/api/src/replay_world_api/objects/`) builds them from a bounded geometry specification recorded in the project. Each file is named by its sha256 (`generated/<sha256>.glb`) and follows the conventions above: metres, +Y up, front +Z, bottom-centre origin, bounds equal to the confirmed size. They are original, provisional illustrations with `source.kind = generated` and `license: NOASSERTION`. A project that uses them can rebuild a missing file from its own record; the rebuilt file is kept only if its hash matches. See docs/contracts.md#generated-objects-050-gen-01.
+
 ## Adding licensed third-party assets later
 
 Record `source.kind` (`vendor` or `third_party`), a `reference` to the original, and the actual SPDX license or `LicenseRef-…`. Large or restricted vendor files belong outside version control in a separate library directory pointed to by `RWS_CATALOG_DIR`.

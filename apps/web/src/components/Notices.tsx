@@ -50,10 +50,14 @@ interface FileRejectedProps {
   filename: string;
   error: LoadFailure;
   sceneKept: boolean;
+  /** Generated models are missing but can be rebuilt from the file's own specifications. */
+  restorable: boolean;
+  restore: { busy: boolean; messages: string[] } | undefined;
+  onRestore: () => void;
   onDismiss: () => void;
 }
 
-export function FileRejectedPanel({ filename, error, sceneKept, onDismiss }: FileRejectedProps) {
+export function FileRejectedPanel({ filename, error, sceneKept, restorable, restore, onRestore, onDismiss }: FileRejectedProps) {
   return (
     <div className="notice notice-warning" role="alert" data-testid="file-rejected">
       <h2>{filename} was rejected</h2>
@@ -62,9 +66,29 @@ export function FileRejectedPanel({ filename, error, sceneKept, onDismiss }: Fil
         {sceneKept ? " The current scene is unchanged." : ""}
       </p>
       <IssueList issues={issuesOf(error)} />
-      <button type="button" className="button" onClick={onDismiss}>
-        Dismiss
-      </button>
+      {restorable && (
+        <p className="muted">
+          This project uses generated models that are not in this computer&apos;s catalog library. They can be rebuilt from the
+          specifications saved in the project; a rebuilt file is used only if its sha256 matches the recorded one.
+        </p>
+      )}
+      {restore && restore.messages.length > 0 && (
+        <ul className="issues" data-testid="restore-messages">
+          {restore.messages.map((m, i) => (
+            <li key={i}>{m}</li>
+          ))}
+        </ul>
+      )}
+      <div className="modal-actions">
+        {restorable && (
+          <button type="button" className="button button-primary" disabled={restore?.busy} data-testid="restore-models" onClick={onRestore}>
+            {restore?.busy ? "Rebuilding…" : "Rebuild generated models and open"}
+          </button>
+        )}
+        <button type="button" className="button" onClick={onDismiss}>
+          Dismiss
+        </button>
+      </div>
     </div>
   );
 }

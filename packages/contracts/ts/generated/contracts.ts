@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.4.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.5.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -14,9 +14,19 @@ export interface ReplayWorldContracts {
   ValidationReport: ValidationReport;
   UpgradeReport: UpgradeReport;
   ValidationErrorResponse: ValidationErrorResponse;
+  CatalogAsset: CatalogAsset;
+  AssistStatus: AssistStatus;
+  ObjectProposalRequest: ObjectProposalRequest;
+  ObjectProposalResult: ObjectProposalResult;
+  EditProposalRequest: EditProposalRequest;
+  EditProposalResult: EditProposalResult;
+  GeneratedModelRequest: GeneratedModelRequest;
+  GeneratedModel: GeneratedModel;
+  GeneratedAssetRequest: GeneratedAssetRequest;
+  GeneratedModelRestoreReport: GeneratedModelRestoreReport;
 }
 export interface Project {
-  schema_version: "0.4.0";
+  schema_version: "0.5.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -103,6 +113,7 @@ export interface CatalogAsset {
   nominal_dimensions: Dimensions;
   source: AssetSource;
   rights: UsageRights;
+  generation: AssetGeneration | null;
 }
 /**
  * A plain labelled box sized from each instance's dimensions. Always provisional.
@@ -188,9 +199,12 @@ export interface UncertaintyBounds {
 }
 /**
  * Where an asset definition came from. Vendor and third-party assets must cite it.
+ *
+ * ``generated`` marks an original provisional model built by the object generator from a
+ * recorded geometry specification; such an asset carries a ``generation`` record.
  */
 export interface AssetSource {
-  kind: "synthetic" | "in_house" | "vendor" | "third_party";
+  kind: "synthetic" | "in_house" | "vendor" | "third_party" | "generated";
   author: string;
   /**
    * URL, catalogue number or document that identifies the original.
@@ -211,6 +225,126 @@ export interface UsageRights {
    * Where the governing terms are recorded (URL, agreement or note).
    */
   terms_ref: string | null;
+}
+/**
+ * How a generated asset was made, so it can be reviewed, rebuilt and never mistaken for
+ * a measured or vendor model.
+ *
+ * ``described``: drafted by ``language_model`` from ``description`` and reviewed by a person.
+ * ``builder``: assembled by a person in the object builder; no language model was involved.
+ */
+export interface AssetGeneration {
+  method: "described" | "builder";
+  description: string | null;
+  language_model: LanguageModelRef | null;
+  generator: "rws-object-generator/1";
+  spec: GeometrySpec;
+  stated_facts: string[];
+  inferred_facts: string[];
+  /**
+   * Things the description mentioned that the model does not represent.
+   */
+  not_modelled: string[];
+  unknown_properties: UnknownProperty[];
+}
+/**
+ * The language model that drafted a proposal: service, endpoint and exact model ID.
+ */
+export interface LanguageModelRef {
+  service: string;
+  base_url: string;
+  model: string;
+}
+/**
+ * A bounded, data-only description of a generated model.
+ *
+ * The union of the parts is exactly the envelope (within 0.1 mm): centred on X and Z and
+ * standing on the floor (Y from 0 to the height). The generator therefore produces a model
+ * whose bounds are the envelope, with its origin at the bottom-centre.
+ */
+export interface GeometrySpec {
+  format: "rws-geometry/1";
+  envelope_m: Extent3;
+  /**
+   * @minItems 1
+   * @maxItems 40
+   */
+  parts: [GeometryPart, ...GeometryPart[]];
+}
+/**
+ * Strictly positive extents in metres along X (width), Y (height) and Z (depth).
+ */
+export interface Extent3 {
+  /**
+   * Strictly positive length in metres.
+   */
+  x: number;
+  /**
+   * Strictly positive length in metres.
+   */
+  y: number;
+  /**
+   * Strictly positive length in metres.
+   */
+  z: number;
+}
+/**
+ * One solid of a generated model, axis-aligned in the object frame.
+ *
+ * The object frame is the catalog convention: metres, +Y up, front facing +Z, origin at the
+ * bottom-centre of the whole object. ``center_m`` is the centre of the part's box and
+ * ``size_m`` its extents. ``axis`` (cylinder only) is the direction the round body runs;
+ * a frustum always stands upright and narrows to ``taper`` times its width at
+ * ``narrow_end``.
+ */
+export interface GeometryPart {
+  id: string;
+  label: string;
+  shape: "box" | "rounded_box" | "cylinder" | "frustum" | "sphere";
+  material:
+    | "paint_light_grey"
+    | "paint_anthracite"
+    | "paint_white"
+    | "paint_blue"
+    | "paint_red"
+    | "paint_green"
+    | "paint_orange"
+    | "safety_yellow"
+    | "aluminium"
+    | "stainless_steel"
+    | "steel_dark"
+    | "copper"
+    | "rubber_black"
+    | "plastic_black"
+    | "plastic_grey"
+    | "polycarbonate"
+    | "glass_clear"
+    | "hmi_screen"
+    | "signal_green"
+    | "signal_amber"
+    | "signal_red"
+    | "signal_white"
+    | "estop_red"
+    | "motor_blue"
+    | "cardboard"
+    | "wood"
+    | "pallet_wood"
+    | "concrete"
+    | "fabric_grey"
+    | "label_black";
+  center_m: Vec3;
+  size_m: Extent3;
+  axis: ("x" | "y" | "z") | null;
+  taper: number | null;
+  narrow_end: ("top" | "bottom") | null;
+  basis: "stated" | "inferred" | "entered";
+}
+/**
+ * A physical or behavioural property the generated model does not establish.
+ */
+export interface UnknownProperty {
+  property: "mass" | "strength" | "chemical_composition" | "operating_behaviour";
+  reason: string;
 }
 /**
  * Placed objects plus the record of every edit in effect.
@@ -359,14 +493,14 @@ export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.4.0";
+  schema_version: "0.5.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.4.0";
+  schema_version: "0.5.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -395,7 +529,7 @@ export interface UpgradeReport {
    * Schema version of the submitted document.
    */
   from_version: string;
-  to_version: "0.4.0";
+  to_version: "0.5.0";
   notes: string[];
   project: Project;
   validation: ValidationReport;
@@ -413,4 +547,255 @@ export interface ValidationIssue {
   loc: (string | number)[];
   msg: string;
   type: string;
+}
+/**
+ * Whether language assistance is available, and where requests would be sent.
+ */
+export interface AssistStatus {
+  available: boolean;
+  /**
+   * live: requests go to the configured provider. recorded: an offline test provider replays saved responses (never live AI). off: no provider is configured.
+   */
+  mode: "live" | "recorded" | "off";
+  service: string | null;
+  base_url: string | null;
+  model: string | null;
+  message: string;
+}
+export interface ObjectProposalRequest {
+  description: string;
+}
+/**
+ * The API's answer to a description: a proposal, a question, or a refusal.
+ */
+export interface ObjectProposalResult {
+  outcome: "proposal" | "clarification" | "unsupported";
+  proposal: ObjectProposal | null;
+  question: string | null;
+  message: string | null;
+  /**
+   * Corrections the API made to the model's answer, in plain words.
+   */
+  checks: string[];
+  provider: ProviderRun;
+}
+/**
+ * A described object, ready for review. ``spec`` already fits ``dimensions``.
+ */
+export interface ObjectProposal {
+  name: string;
+  category: string;
+  appearance: string;
+  dimensions: ProposedDimensions;
+  spec: GeometrySpec;
+  stated_facts: string[];
+  inferred_facts: string[];
+  not_modelled: string[];
+  unknown_properties: UnknownProperty[];
+}
+export interface ProposedDimensions {
+  width: ProposedLength;
+  height: ProposedLength;
+  depth: ProposedLength;
+}
+/**
+ * One proposed dimension and where it came from.
+ */
+export interface ProposedLength {
+  /**
+   * Strictly positive length in metres.
+   */
+  value_m: number;
+  basis: "stated" | "inferred";
+  /**
+   * The user's words the value came from.
+   */
+  quote: string | null;
+  needs_confirmation: boolean;
+}
+/**
+ * Which model answered, how, and how often it had to be asked.
+ */
+export interface ProviderRun {
+  service: string;
+  base_url: string;
+  model: string;
+  mode: "live" | "recorded";
+  attempts: number;
+  /**
+   * The first answer was valid JSON matching the requested schema.
+   */
+  first_attempt_valid: boolean;
+  latency_ms: number;
+}
+export interface EditProposalRequest {
+  request: string;
+  context: EditContext;
+}
+export interface EditContext {
+  revision: number;
+  selected_object_id: string | null;
+  /**
+   * @maxItems 500
+   */
+  objects: ContextObject[];
+}
+/**
+ * What the model is told about one object when interpreting an edit request.
+ */
+export interface ContextObject {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  id: string;
+  name: string;
+  kind: "structure" | "equipment" | "reference" | "walkway" | "keep_clear";
+  position_m: Vec3;
+  rotation_y_rad: number;
+  size_m: Extent3;
+}
+export interface EditProposalResult {
+  outcome: "proposal" | "clarification" | "unsupported";
+  intent: EditIntent | null;
+  question: string | null;
+  /**
+   * Objects a clarification is choosing between, if it is about the target.
+   *
+   * Items: Stable, lowercase identifier. Never reused for a different entity.
+   */
+  candidates: string[];
+  message: string | null;
+  checks: string[];
+  provider: ProviderRun;
+}
+/**
+ * One bounded edit. The browser turns it into an exact command and shows the change.
+ */
+export interface EditIntent {
+  action: "move" | "rotate";
+  target: EditTarget;
+  move: MoveIntent | null;
+  rotate: RotateIntent | null;
+}
+export interface EditTarget {
+  reference: "selected" | "named";
+  /**
+   * @minItems 1
+   * @maxItems 1
+   *
+   * Items: Stable, lowercase identifier. Never reused for a different entity.
+   */
+  object_ids: [string];
+  /**
+   * How the user referred to the object.
+   */
+  phrase: string;
+}
+export interface MoveIntent {
+  direction: "left" | "right" | "forward" | "back" | "up" | "down";
+  /**
+   * In ``unit``, exactly as the user said it.
+   */
+  distance: number;
+  unit: "km" | "m" | "cm" | "mm" | "ft" | "in";
+  /**
+   * The user's words that give the distance.
+   */
+  quote: string;
+}
+export interface RotateIntent {
+  /**
+   * As seen from above (the top view).
+   */
+  direction: "clockwise" | "counterclockwise";
+  angle_deg: number;
+  /**
+   * The user's words that give the angle.
+   */
+  quote: string;
+}
+/**
+ * Build (and optionally store) the model for a geometry draft.
+ */
+export interface GeneratedModelRequest {
+  spec: GeometryDraft;
+}
+/**
+ * A geometry specification that may not fit its envelope yet (an editor's working copy).
+ *
+ * The API fits the parts to the envelope, which turns a draft into a :class:`GeometrySpec`.
+ */
+export interface GeometryDraft {
+  format: "rws-geometry/1";
+  envelope_m: Extent3;
+  /**
+   * @minItems 1
+   * @maxItems 40
+   */
+  parts: [GeometryPart, ...GeometryPart[]];
+}
+/**
+ * A model built from a specification, with the record a catalog asset would use.
+ *
+ * ``glb_base64`` is set for previews; a stored model omits it and is served from the
+ * catalog library at ``visual.uri``.
+ */
+export interface GeneratedModel {
+  spec: GeometrySpec;
+  visual: GltfVisual;
+  scale_applied: Vec3;
+  triangles: number;
+  bytes: number;
+  materials: string[];
+  notes: string[];
+  stored: boolean;
+  glb_base64: string | null;
+}
+/**
+ * Turn a reviewed proposal (or a builder result) into a catalog asset with a stored model.
+ */
+export interface GeneratedAssetRequest {
+  name: string;
+  kind: "equipment" | "structure" | "reference";
+  method: "described" | "builder";
+  description: string | null;
+  language_model: LanguageModelRef | null;
+  spec: GeometryDraft;
+  dimensions: ReviewedDimensions;
+  stated_facts: string[];
+  inferred_facts: string[];
+  not_modelled: string[];
+}
+export interface ReviewedDimensions {
+  width: ReviewedLength;
+  height: ReviewedLength;
+  depth: ReviewedLength;
+}
+/**
+ * A dimension as the user left it after review.
+ */
+export interface ReviewedLength {
+  /**
+   * stated: in the description; inferred: estimated; entered: typed by the user.
+   */
+  basis: "stated" | "inferred" | "entered";
+  quote: string | null;
+  confirmed: boolean;
+}
+/**
+ * Result of rebuilding a project's missing generated models from their specifications.
+ *
+ * A rebuilt file is kept only when its sha256 equals the one the project records.
+ */
+export interface GeneratedModelRestoreReport {
+  results: RestoredModel[];
+}
+export interface RestoredModel {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  asset_id: string;
+  uri: string;
+  status: "present" | "restored" | "mismatch";
+  message: string;
 }

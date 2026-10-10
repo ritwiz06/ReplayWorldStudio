@@ -18,6 +18,10 @@ each change, and the result is then validated like any other document.
     * an empty ``scene.edit_log`` is added. A file saved before the editor existed has no
       recorded edits; its values and evidence are carried over unchanged.
 
+0.4.0 -> 0.5.0
+    * every catalog asset gains ``generation: null``. Generated assets (and the ``generated``
+      source kind) did not exist before 0.5.0, so no asset changes meaning.
+
 Steps run in sequence, so a 0.1.0 document passes through 0.2.0 on its way to the current
 version and its notes describe every step.
 """
@@ -136,9 +140,26 @@ def _from_0_3_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     return upgraded, [note]
 
 
+def _from_0_4_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    catalog = []
+    for asset in old["catalog"]:
+        if "generation" in asset:
+            raise MigrationError(
+                "malformed 0.4.0 document: catalog generation records only exist from 0.5.0"
+            )
+        catalog.append({**copy.deepcopy(dict(asset)), "generation": None})
+    upgraded = {**copy.deepcopy(dict(old)), "schema_version": "0.5.0", "catalog": catalog}
+    note = (
+        f"schema_version 0.4.0 -> 0.5.0 (adds 'generation: null' to {len(catalog)} catalog "
+        f"asset{'' if len(catalog) == 1 else 's'}; no values or evidence changed)"
+    )
+    return upgraded, [note]
+
+
 _STEPS: Final[dict[str, Step]] = {
     "0.1.0": _from_0_1_0,
     "0.2.0": _from_0_2_0,
     "0.3.0": _from_0_3_0,
+    "0.4.0": _from_0_4_0,
 }
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)

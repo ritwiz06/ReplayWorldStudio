@@ -56,3 +56,6 @@ customer-data/
 .DS_Store
 .idea/
 *.swp
+
+# --- Generated object models (GEN-01): built locally from specifications recorded in projects ---
+assets/catalog/generated/

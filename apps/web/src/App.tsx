@@ -1,18 +1,24 @@
 import type { CatalogAsset, SceneObject, Transform } from "@replay-world/contracts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createApiClient } from "./api/client";
+import type { ResolvedEdit } from "./assist/editIntent";
 import { CatalogPanel } from "./components/CatalogPanel";
+import { ChangeBar } from "./components/ChangeBar";
+import { CreateObject } from "./components/CreateObject";
 import { UnsavedChangesDialog, UpgradeReviewDialog } from "./components/Dialogs";
 import { Inspector } from "./components/Inspector";
 import { EditRejectedNotice, FileRejectedPanel, LoadErrorPanel, PlacementBanner } from "./components/Notices";
 import { ObjectList } from "./components/ObjectList";
+import { StartPanel } from "./components/StartPanel";
 import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
 import { FixtureBanner, ModelNotice, PlanOverlay, ViewToolbar, WalkHud } from "./components/ViewControls";
 import type { Axis, CommandRequest, EditCommand } from "./editing/commands";
 import type { Outcome } from "./editing/history";
 import { copyId, copyName, instanceId, instanceName } from "./editing/newObjects";
+import { serializeProject } from "./editing/projectFile";
 import { quantizeMetres } from "./editing/units";
+import { useAssistStatus } from "./hooks/useAssistStatus";
 import { summarise, useCatalogModels } from "./hooks/useCatalogModels";
 import { useHealth } from "./hooks/useHealth";
 import { useProject } from "./hooks/useProject";
@@ -27,7 +33,31 @@ import { SceneViewport } from "./scene/SceneViewport";
 
 const client = createApiClient();
 
-type Placement = { nonce: number; loadId: number } & ({ kind: "add"; assetId: string } | { kind: "duplicate"; sourceId: string });
+type Placement = { nonce: number; loadId: number } & (
+  | { kind: "add"; assetId: string }
+  | { kind: "duplicate"; sourceId: string }
+  /** A generated asset not yet in the catalog: placing it adds both, as one undo step. */
+  | { kind: "generated"; asset: CatalogAsset }
+);
+
+const START_SEEN_KEY = "rws.start.seen";
+
+/** The guided start panel opens on a first visit; afterwards only from the Start button. */
+function startSeen(): boolean {
+  try {
+    return window.localStorage.getItem(START_SEEN_KEY) === "1";
+  } catch {
+    return false; // storage unavailable (private mode): show it, nothing else depends on it
+  }
+}
+
+function rememberStartSeen() {
+  try {
+    window.localStorage.setItem(START_SEEN_KEY, "1");
+  } catch {
+    // Not remembered; the panel simply opens again next time.
+  }
+}
 
 const TOOL_KEYS: Record<string, EditTool> = { v: "select", m: "move", r: "rotate", s: "resize" };
 
@@ -50,6 +80,14 @@ export function App() {
   const project = scene.status === "loaded" ? scene.project : null;
   const source = scene.status === "loaded" ? scene.source : null;
   const { models, retry } = useCatalogModels(client, project);
+  const { state: assist } = useAssistStatus(client);
+  const assistOn = assist.status === "known" && assist.assist.available;
+  const assistNote =
+    assist.status === "known" ? assist.assist.message : assist.status === "checking" ? "Checking the assistant…" : assist.message;
+  const [start, setStart] = useState(() => !startSeen());
+  const [create, setCreate] = useState<"describe" | "builder" | null>(null);
+  const [rebuild, setRebuild] = useState<{ busy: boolean; message: string | null }>({ busy: false, message: null });
+  const overlayOpen = start || create !== null;
   // Selection and placement belong to the project they were made in.
   const [selection, setSelection] = useState<{ loadId: number; id: string | null }>({ loadId: 0, id: null });
   const [placement, setPlacement] = useState<Placement | null>(null);
@@ -67,7 +105,7 @@ export function App() {
   const selected = project?.scene.objects.find((o) => o.id === selectedId) ?? null;
   const activePlacement = placement?.loadId === loadId ? placement : null;
   const summary = summarise(models);
-  const editable = project !== null && mode !== "walk" && prompt === null;
+  const editable = project !== null && mode !== "walk" && prompt === null && !overlayOpen;
   const snap = snapOn ? SNAP_ON : SNAP_OFF;
 
   const select = useCallback((id: string | null) => setSelection({ loadId, id }), [loadId]);
@@ -98,7 +136,7 @@ export function App() {
       if (outcome?.ok) {
         setRejection(null);
         const c = request.command;
-        if (c.type === "add_instance" || c.type === "duplicate_object") select(c.objectId);
+        if (c.type === "add_instance" || c.type === "duplicate_object" || c.type === "add_generated_instance") select(c.objectId);
         else if (c.type === "remove_object") select(null);
       }
       return outcome;
@@ -153,6 +191,55 @@ export function App() {
     [loadId],
   );
 
+  /** A reviewed generated asset is ready: place it (adding it to the catalog if it is new). */
+  const startGenerated = useCallback(
+    (asset: CatalogAsset) => {
+      setCreate(null);
+      if (mode === "walk") setMode("orbit");
+      const known = project?.catalog.some((a) => a.id === asset.id) ?? false;
+      setPlacement((p) => ({
+        nonce: (p?.nonce ?? 0) + 1,
+        loadId,
+        ...(known ? { kind: "add" as const, assetId: asset.id } : { kind: "generated" as const, asset }),
+      }));
+    },
+    [loadId, mode, project],
+  );
+
+  const closeStart = useCallback(() => {
+    rememberStartSeen();
+    setStart(false);
+  }, []);
+
+  /** Apply a language edit that the user has seen; the engine checks it against its revision. */
+  const applyLanguageEdit = useCallback(
+    (edit: ResolvedEdit): string | null => {
+      // The change card reports a refusal itself, so no separate notice is raised.
+      const outcome = run({ baseRevision: edit.baseRevision, command: edit.command });
+      if (!outcome) return "No project is loaded.";
+      if (!outcome.ok) return outcome.rejection.message;
+      if (edit.command.type === "set_transform") select(edit.command.objectId);
+      return null;
+    },
+    [run, select],
+  );
+
+  const rebuildModels = useCallback(async () => {
+    if (!project) return;
+    setRebuild({ busy: true, message: null });
+    const report = await client.restoreGeneratedModels(serializeProject(project));
+    if (!report.ok) return setRebuild({ busy: false, message: report.error.message });
+    const mismatched = report.value.results.filter((r) => r.status === "mismatch");
+    const restored = report.value.results.filter((r) => r.status === "restored").length;
+    setRebuild({
+      busy: false,
+      message: mismatched.length
+        ? mismatched.map((r) => `${r.asset_id}: ${r.message}`).join(" ")
+        : `Rebuilt ${restored} generated model${restored === 1 ? "" : "s"} from the recorded specifications; hashes match.`,
+    });
+    retry();
+  }, [project, retry]);
+
   const remove = useCallback(() => {
     if (!selected || !project || !editable) return;
     runAndReport({ baseRevision: project.scene.revision, command: { type: "remove_object", objectId: selected.id } });
@@ -160,8 +247,8 @@ export function App() {
 
   const ghost: GhostSpec | null = useMemo(() => {
     if (!activePlacement || !project) return null;
-    if (activePlacement.kind === "add") {
-      const asset = project.catalog.find((a) => a.id === activePlacement.assetId);
+    if (activePlacement.kind === "add" || activePlacement.kind === "generated") {
+      const asset = activePlacement.kind === "generated" ? activePlacement.asset : project.catalog.find((a) => a.id === activePlacement.assetId);
       if (!asset) return null;
       const d = asset.nominal_dimensions;
       return { nonce: activePlacement.nonce, label: asset.name, size: [d.width.value_m, d.height.value_m, d.depth.value_m], rotation: [0, 0, 0, "XYZ"], y: 0, start: null };
@@ -184,7 +271,11 @@ export function App() {
     ([x, y, z]: Vec3Tuple) => {
       if (!project || !activePlacement) return;
       let cmd: EditCommand;
-      if (activePlacement.kind === "add") {
+      if (activePlacement.kind === "generated") {
+        const asset = activePlacement.asset;
+        const transform: Transform = { position_m: { x, y, z }, rotation_rad: { order: "XYZ", x: 0, y: 0, z: 0 } };
+        cmd = { type: "add_generated_instance", asset, objectId: instanceId(project, asset), name: instanceName(project, asset), transform };
+      } else if (activePlacement.kind === "add") {
         const asset = project.catalog.find((a) => a.id === activePlacement.assetId);
         if (!asset) return;
         const transform: Transform = { position_m: { x, y, z }, rotation_rad: { order: "XYZ", x: 0, y: 0, z: 0 } };
@@ -202,7 +293,7 @@ export function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (prompt || isTyping(e.target)) return;
+      if (prompt || overlayOpen || isTyping(e.target)) return;
       if ((e.metaKey || e.ctrlKey) && !e.altKey) {
         const key = e.key.toLowerCase();
         if (key === "z") {
@@ -242,7 +333,7 @@ export function App() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [activePlacement, dragging, editable, issue, mode, prompt, remove, save, select, selected, startDuplicate, step]);
+  }, [activePlacement, dragging, editable, issue, mode, overlayOpen, prompt, remove, save, select, selected, startDuplicate, step]);
 
   const help = MODES.find((m) => m.id === mode)!.help;
   const hint = mode !== "walk" && tool !== "select" && selected ? TOOL_HELP[tool](snapOn) : help;
@@ -263,6 +354,7 @@ export function App() {
         onSave={() => save()}
         onOpenFile={(file) => void session.openFile(file)}
         onLoadFixture={session.loadFixture}
+        onStart={() => setStart(true)}
       />
       <aside className="panel panel-left">
         <ObjectList project={project} selectedId={selected?.id ?? null} onSelect={select} />
@@ -273,6 +365,8 @@ export function App() {
             editable={editable}
             onPlace={startPlace}
             onCancel={() => setPlacement(null)}
+            onDescribe={() => setCreate("describe")}
+            onBuild={() => setCreate("builder")}
           />
         )}
       </aside>
@@ -312,11 +406,21 @@ export function App() {
           {project?.fixture && <FixtureBanner fixture={project.fixture} edited={project.scene.edit_log.length > 0} />}
           {ghost && editable && <PlacementBanner label={ghost.label} onCancel={() => setPlacement(null)} />}
           {rejection && <EditRejectedNotice message={rejection} onDismiss={() => setRejection(null)} />}
-          {project && <ModelNotice catalog={project.catalog} models={models} onRetry={retry} />}
+          {project && (
+            <ModelNotice catalog={project.catalog} models={models} onRetry={retry} onRebuild={() => void rebuildModels()} rebuild={rebuild} />
+          )}
           {scene.status === "loading" && <div className="notice">Loading scene from the API…</div>}
           {scene.status === "error" && <LoadErrorPanel error={scene.error} onRetry={session.reloadFixture} />}
           {fileCheck.status === "rejected" && (
-            <FileRejectedPanel filename={fileCheck.filename} error={fileCheck.error} sceneKept={project !== null} onDismiss={session.dismissFileCheck} />
+            <FileRejectedPanel
+              filename={fileCheck.filename}
+              error={fileCheck.error}
+              sceneKept={project !== null}
+              restorable={fileCheck.restorable !== null}
+              restore={fileCheck.restore}
+              onRestore={() => void session.restoreAndReopen()}
+              onDismiss={session.dismissFileCheck}
+            />
           )}
         </div>
         {project && (
@@ -330,6 +434,18 @@ export function App() {
         )}
         {project && mode === "top" && <PlanOverlay pixelsPerMetre={pixelsPerMetre} />}
         {project && mode === "walk" && <WalkHud onReset={() => issue("reset-walk")} onExit={() => setMode("orbit")} />}
+        {project && mode !== "walk" && !activePlacement && (
+          <ChangeBar
+            key={loadId}
+            client={client}
+            project={project}
+            selectedId={selected?.id ?? null}
+            available={assistOn && editable}
+            note={assistNote}
+            onApply={applyLanguageEdit}
+            onSelect={select}
+          />
+        )}
         {project && mode !== "walk" && (
           <p className="viewport-hint" data-testid="viewport-hint">
             {hint} · <kbd>F</kbd> frame selection · <kbd>H</kbd> frame all
@@ -365,6 +481,32 @@ export function App() {
           onDiscard={() => session.resolveUnsaved("discard")}
           onCancel={() => session.resolveUnsaved("cancel")}
         />
+      )}
+      {start && !prompt && (
+        <StartPanel
+          apiOnline={health.status === "online"}
+          onExplore={() => {
+            closeStart();
+            if (source?.kind !== "fixture" || source.name !== "industrial-demo") session.loadFixture("industrial-demo");
+            else issue("frame-all");
+          }}
+          onDescribe={() => {
+            closeStart();
+            setCreate("describe");
+          }}
+          onBuild={() => {
+            closeStart();
+            setCreate("builder");
+          }}
+          onOpenFile={(file) => {
+            closeStart();
+            void session.openFile(file);
+          }}
+          onClose={closeStart}
+        />
+      )}
+      {create && !prompt && (
+        <CreateObject client={client} assist={assist} startWith={create} onPlace={startGenerated} onClose={() => setCreate(null)} />
       )}
       {prompt?.kind === "upgrade" && (
         <UpgradeReviewDialog

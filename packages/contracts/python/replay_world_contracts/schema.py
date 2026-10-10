@@ -13,8 +13,20 @@ from pydantic import BaseModel
 from pydantic.json_schema import GenerateJsonSchema, models_json_schema
 from pydantic_core import CoreSchema
 
+from .assist import (
+    AssistStatus,
+    EditProposalRequest,
+    EditProposalResult,
+    GeneratedAssetRequest,
+    GeneratedModel,
+    GeneratedModelRequest,
+    GeneratedModelRestoreReport,
+    ObjectProposalRequest,
+    ObjectProposalResult,
+)
 from .models import (
     SCHEMA_VERSION,
+    CatalogAsset,
     HealthResponse,
     Project,
     UpgradeReport,
@@ -28,6 +40,16 @@ ROOT_MODELS: Final[tuple[type[BaseModel], ...]] = (
     ValidationReport,
     UpgradeReport,
     ValidationErrorResponse,
+    CatalogAsset,
+    AssistStatus,
+    ObjectProposalRequest,
+    ObjectProposalResult,
+    EditProposalRequest,
+    EditProposalResult,
+    GeneratedModelRequest,
+    GeneratedModel,
+    GeneratedAssetRequest,
+    GeneratedModelRestoreReport,
 )
 BUNDLE_ID: Final = f"urn:replay-world:contracts:{SCHEMA_VERSION}"
 

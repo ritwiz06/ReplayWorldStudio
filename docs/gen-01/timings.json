@@ -1,0 +1,44 @@
+[
+  {
+    "task": "conveyor",
+    "steps": 6,
+    "totalS": 75.2,
+    "modelWaitS": 71.5,
+    "outcome": "Guarded conveyor with control screen"
+  },
+  {
+    "task": "tank",
+    "steps": 8,
+    "totalS": 65.2,
+    "modelWaitS": 58.1,
+    "outcome": "Cylindrical tank with conical bottom"
+  },
+  {
+    "task": "workbench",
+    "steps": 6,
+    "totalS": 75.2,
+    "modelWaitS": 67.8,
+    "outcome": "Workbench with monitor and drawer unit"
+  },
+  {
+    "task": "language-move",
+    "steps": 4,
+    "totalS": 7.5,
+    "modelWaitS": 6.5,
+    "outcome": "Control cabinet 1 at x = -3.000 m"
+  },
+  {
+    "task": "language-ambiguous",
+    "steps": 2,
+    "totalS": 12,
+    "modelWaitS": 8.5,
+    "outcome": "“cabinet” could be Control cabinet 1, Control cabinet 2, Cabinet access - keep clear. Which one?"
+  },
+  {
+    "task": "builder",
+    "steps": 6,
+    "totalS": 6.8,
+    "modelWaitS": 0,
+    "outcome": "Cabinet placed"
+  }
+]

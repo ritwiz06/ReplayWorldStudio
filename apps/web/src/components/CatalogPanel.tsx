@@ -9,15 +9,26 @@ interface Props {
   editable: boolean;
   onPlace: (asset: CatalogAsset) => void;
   onCancel: () => void;
+  /** Create a new catalog asset by describing it, or in the object builder. */
+  onDescribe: () => void;
+  onBuild: () => void;
 }
 
 /** The project's catalog: place a new instance of any asset at its nominal size and evidence. */
-export function CatalogPanel({ project, placingAssetId, editable, onPlace, onCancel }: Props) {
+export function CatalogPanel({ project, placingAssetId, editable, onPlace, onCancel, onDescribe, onBuild }: Props) {
   return (
     <section aria-label="Catalog" className="catalog-panel">
       <h2 className="panel-title">
         Add from catalog <span className="count">{project.catalog.length}</span>
       </h2>
+      <div className="catalog-create">
+        <button type="button" className="button button-small button-primary" disabled={!editable} data-testid="catalog-describe" onClick={onDescribe}>
+          Describe a new object…
+        </button>
+        <button type="button" className="button button-small" disabled={!editable} data-testid="catalog-build" onClick={onBuild}>
+          Build one…
+        </button>
+      </div>
       {project.catalog.length === 0 ? (
         <p className="muted panel-pad">This project has no catalog assets.</p>
       ) : (
@@ -29,7 +40,9 @@ export function CatalogPanel({ project, placingAssetId, editable, onPlace, onCan
                 <div>
                   <span className="object-name">{asset.name}</span>
                   <span className="object-meta">
-                    {KIND_LABEL[asset.kind]} · {asset.visual.type === "gltf" ? "glTF model" : "placeholder box"} · {licenseLabel(asset.rights)}
+                    {KIND_LABEL[asset.kind]} ·{" "}
+                    {asset.generation ? "generated, provisional" : asset.visual.type === "gltf" ? "glTF model" : "placeholder box"} ·{" "}
+                    {licenseLabel(asset.rights)}
                   </span>
                   <span className="object-meta">{formatFootprint(asset.nominal_dimensions)}</span>
                 </div>

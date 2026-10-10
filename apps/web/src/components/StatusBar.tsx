@@ -29,7 +29,7 @@ export function StatusBar({ project, mode, models, savedAs, dirty }: Props) {
           <span data-testid="revision-status">Scene revision {project.scene.revision}</span>
           <span data-testid="edit-count">{project.scene.edit_log.length} edits recorded</span>
           {project.scene.edit_log.length > 0 && (
-            <span className="status-warn" data-testid="unchecked-status" title="Spatial clearance and engineering checks arrive in M3">
+            <span className="status-warn" data-testid="unchecked-status" title="Spatial clearance checks arrive in M5">
               Edited layout · not checked for clearance, collisions or feasibility
             </span>
           )}

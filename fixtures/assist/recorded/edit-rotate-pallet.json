@@ -1,0 +1,12 @@
+{
+  "task": "edit",
+  "key": "rotate the staged pallet 90 degrees clockwise | selected=none",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-01.5",
+  "recorded_at": "2026-10-10",
+  "note": "Raw answers from the live provider, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"action\": \"rotate\",\n  \"candidates\": [],\n  \"message\": null,\n  \"move\": null,\n  \"outcome\": \"proposal\",\n  \"question\": null,\n  \"rotate\": {\n    \"angle_deg\": 90,\n    \"direction\": \"clockwise\",\n    \"quote\": \"90 degrees clockwise\"\n  },\n  \"target\": {\n    \"object_id\": \"obj-pallet-staged\",\n    \"phrase\": \"the staged pallet\",\n    \"reference\": \"named\"\n  }\n}"
+  ]
+}

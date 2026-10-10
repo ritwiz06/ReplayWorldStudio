@@ -1,0 +1,12 @@
+{
+  "task": "edit",
+  "key": "move the infeed conveyor 500 mm forward | selected=none",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-01.5",
+  "recorded_at": "2026-10-10",
+  "note": "Raw answers from the live provider, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"action\": \"move\",\n  \"candidates\": [],\n  \"message\": null,\n  \"move\": {\n    \"direction\": \"forward\",\n    \"distance\": 500,\n    \"quote\": \"500 mm\",\n    \"unit\": \"mm\"\n  },\n  \"outcome\": \"proposal\",\n  \"question\": null,\n  \"rotate\": null,\n  \"target\": {\n    \"object_id\": \"obj-conveyor-infeed\",\n    \"phrase\": \"the infeed conveyor\",\n    \"reference\": \"named\"\n  }\n}"
+  ]
+}

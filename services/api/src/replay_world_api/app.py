@@ -1,9 +1,11 @@
-"""FastAPI application: health, fixture delivery, project validation and upgrades."""
+"""FastAPI application: health, fixtures, project validation and upgrades, generated objects and
+language-assisted proposals."""
 
 from __future__ import annotations
 
+import base64
 import logging
-from typing import Annotated, Any, Final
+from typing import Annotated, Any, Final, NoReturn
 
 from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -12,8 +14,18 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import ValidationError
 from replay_world_contracts import (
     SCHEMA_VERSION,
+    AssistStatus,
+    CatalogAsset,
+    EditProposalRequest,
+    EditProposalResult,
+    GeneratedAssetRequest,
+    GeneratedModel,
+    GeneratedModelRequest,
+    GeneratedModelRestoreReport,
     HealthResponse,
     KnownParameter,
+    ObjectProposalRequest,
+    ObjectProposalResult,
     Project,
     UpgradeReport,
     ValidationErrorResponse,
@@ -27,7 +39,12 @@ from replay_world_contracts.migrations import (
 )
 
 from . import __version__
+from .assist.edits import propose_edit
+from .assist.proposals import AssistError, propose_object
+from .assist.provider import Provider, ProviderError, provider_from_settings
 from .catalog_files import CatalogFileError, check_model_files, resolve_catalog_file
+from .generated_assets import create_generated_asset, restore_generated_models
+from .objects import GeneratorError, build_model, fit_to_envelope, gltf_visual, store_model
 from .settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -176,6 +193,118 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             project=project,
             validation=_report(project, _checked_model_files(project)),
         )
+
+    provider = provider_from_settings(settings.assist)
+
+    @app.get("/api/v1/assist/status")
+    def assist_status() -> AssistStatus:
+        """Whether language proposals are available and where they would be sent. No secrets."""
+        if provider is None:
+            return AssistStatus(
+                available=False,
+                mode="off",
+                service=None,
+                base_url=None,
+                model=None,
+                message=(
+                    "Language proposals are off: no provider is configured. Set VOYAGER_API_KEY "
+                    "in the repository's .env and restart the API, or use the object builder."
+                ),
+            )
+        recorded = provider.mode == "recorded"
+        return AssistStatus(
+            available=True,
+            mode=provider.mode,
+            service=provider.service,
+            base_url=provider.base_url,
+            model=provider.model,
+            message=(
+                "Offline test provider: replays recorded answers. Not live AI."
+                if recorded
+                else f"Descriptions and edit requests are sent to {provider.service} "
+                f"({provider.base_url}, model {provider.model}) to draft proposals."
+            ),
+        )
+
+    def _provider() -> Provider:
+        if provider is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Language proposals are off (no provider configured). Use the object "
+                "builder, or set VOYAGER_API_KEY in .env and restart the API.",
+            )
+        return provider
+
+    def _assist_failure(exc: ProviderError | AssistError) -> NoReturn:
+        if isinstance(exc, AssistError):
+            raise HTTPException(status_code=exc.status, detail=exc.message) from None
+        status = {"timeout": 504, "unavailable": 503, "not_recorded": 503}.get(exc.kind, 502)
+        raise HTTPException(status_code=status, detail=exc.message) from None
+
+    @app.post("/api/v1/assist/object-proposals")
+    def object_proposals(body: ObjectProposalRequest) -> ObjectProposalResult:
+        """Draft a typed proposal for a described object. Nothing is created or stored."""
+        try:
+            return propose_object(_provider(), body.description)
+        except (ProviderError, AssistError) as exc:
+            _assist_failure(exc)
+
+    @app.post("/api/v1/assist/edit-proposals")
+    def edit_proposals(body: EditProposalRequest) -> EditProposalResult:
+        """Interpret one edit request against the described scene. Nothing is changed."""
+        try:
+            return propose_edit(_provider(), body)
+        except (ProviderError, AssistError) as exc:
+            _assist_failure(exc)
+
+    def _generated_model(body: GeneratedModelRequest, store: bool) -> GeneratedModel:
+        try:
+            spec, scale, notes = fit_to_envelope(body.spec)
+            model = build_model(spec)
+            if store:
+                store_model(model, settings.catalog_dir)
+        except GeneratorError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from None
+        return GeneratedModel(
+            spec=spec,
+            visual=gltf_visual(model),
+            scale_applied=scale,
+            triangles=model.triangles,
+            bytes=len(model.glb),
+            materials=list(model.materials),
+            notes=notes,
+            stored=store,
+            glb_base64=None if store else base64.b64encode(model.glb).decode("ascii"),
+        )
+
+    @app.post("/api/v1/catalog/generated-models/preview")
+    def preview_generated_model(body: GeneratedModelRequest) -> GeneratedModel:
+        """Build a model from a geometry draft and return its bytes; nothing is stored."""
+        return _generated_model(body, store=False)
+
+    @app.post("/api/v1/catalog/generated-models")
+    def store_generated_model(body: GeneratedModelRequest) -> GeneratedModel:
+        """Build a model and store it in the catalog library under generated/<sha256>.glb."""
+        return _generated_model(body, store=True)
+
+    @app.post("/api/v1/catalog/generated-assets")
+    def generated_asset(body: GeneratedAssetRequest) -> CatalogAsset:
+        """Turn a reviewed proposal into a catalog asset whose model file is stored and pinned."""
+        try:
+            return create_generated_asset(body, settings.catalog_dir)
+        except AssistError as exc:
+            _assist_failure(exc)
+        except GeneratorError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from None
+
+    @app.post("/api/v1/catalog/generated-models/restore", openapi_extra=_PROJECT_BODY_DOC)
+    def restore_models(document: Annotated[Any, Body()]) -> GeneratedModelRestoreReport:
+        """Rebuild a project's missing generated models from their recorded specifications."""
+        project = _validated(document)
+        try:
+            return restore_generated_models(project, settings.catalog_dir)
+        except GeneratorError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from None
 
     def _checked_model_files(project: Project) -> int:
         model_files, file_issues = check_model_files(project, settings.catalog_dir)

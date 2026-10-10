@@ -317,3 +317,104 @@ For a new decision, append: ID, date, status, context, options considered, decis
 
 - Camera memory (the last orbit, plan and walk pose) is now kept per loaded document, not per project ID. Opening a saved or edited copy of the same project, or a different layout with the same ID, frames it afresh instead of reusing the previous document's views (regression test: "frames a newly opened document afresh").
 - Resize knobs sit 20 px outside their faces on a short stem, so the knobs of small or distant objects no longer merge into one cluster.
+
+### ADR-030 - Guided creation before drawing import; simulation split into supported models
+
+- Date: 2026-10-10. Status: adopted (user-approved product direction).
+- Context: M1 is complete. The user broadened the direction: factory planning is the first example of a general editable-world platform, and the most important gap is that people without CAD skills cannot add or change objects that the catalog lacks. The previous plan went straight to DXF import (old M2, 32-48 h).
+- Options considered:
+  1. Keep DXF import as M2 and add guided creation later (serves CAD users first; a project lead still cannot add a missing object).
+  2. Guided creation and described custom objects first, then general image import, then DXF (chosen).
+  3. Image import first (the most general source, but it needs the object review and generation path that guided creation builds, and its feasibility is unknown).
+- Decision: new M2 = guided creation and described objects (GEN-01..03); M3 = one image to an editable world (IMG-01..03); M4 = drawing import (IMP-01..03, unchanged scope, same world model); M5 spatial checks; simulation is split into explicit supported models, each a gate of its own: production events (M6, SIM-01..04), rigid-body interactions (M7, PHY-01..02), and later validated structural (ENG-01) and chemical (CHEM-01) cases; M8 AI across the workflow (AI-01 re-scoped, because GEN-01 builds the provider boundary); M9 evaluation and release. Completed M0/M1 records and all existing issue IDs are preserved; milestones were re-estimated (MILESTONES.md) and the old DXF-only M2 and its estimate are kept only as a superseded baseline.
+- Rationale: an object proposed from words, an image or a drawing needs the same typed proposal, review of stated versus inferred facts, provisional model and command path. Building that once, for the simplest input (text), de-risks IMG and IMP. Splitting simulation by model keeps each claim tied to a model that can support it.
+- Consequences: the M2-M9 estimate is 296-468 h (355-560 h with contingency), uncalibrated because M0/M1 hours were not tracked. M3 needs a feasibility timebox before its estimate is trusted. ADR-004 ("DXF first") is superseded for ordering; its reasoning (deterministic geometry before uncertain perception) still governs how imported geometry is reviewed.
+- Revisit when: GEN-03 or the IMG-01 feasibility study shows that proposal quality cannot meet a usable gate, or the user changes the priority.
+
+### ADR-031 - Generated objects come from a bounded geometry specification built by our own generator
+
+- Date: 2026-10-10. Status: adopted (GEN-01, contract 0.5.0).
+- Context: users must be able to add an object the catalog lacks, from a description or by hand, without CAD skills. Any model must still follow the catalog rules: metres, bottom-centre origin, verified bounds, content hash, provenance. Language-model output must never run as code.
+- Options considered:
+  - representation: let the model write three.js or Python code (fast to prototype, but executes model output); have the model pick one of a few parametric templates (safe but narrow); a bounded, data-only specification of approved shapes, parts, placements and materials (chosen).
+  - where to build: in the browser with the existing three.js kit (instant preview, but the server would have to accept and validate client-made GLBs); on the server in Python (the server is the only author of model files; one generator for preview, storage and rebuilds).
+- Decision:
+  - **Specification.** `GeometrySpec` / `GeometryDraft` (`rws-geometry/1`):
+    - up to 40 axis-aligned parts, each filling its own box;
+    - 5 approved shapes and 30 approved PBR materials;
+    - parts' union equal to the envelope within 0.1 mm (the same as the glTF origin tolerance);
+    - coordinates bounded to 100 m.
+  - **Generator.** `replay_world_api.objects` (`rws-object-generator/1`): pure standard-library Python; meshes on a micron grid; a deterministic GLB writer; an independent reader that rejects anything else.
+  - **Storage.** Models are stored content-addressed at `generated/<sha256>.glb` in the catalog library (git-ignored).
+  - **Fitting.** The API fits drafts by scaling parts per axis, so a typed size never distorts the record.
+  - **Previews.** A preview returns the bytes; the browser verifies them like any catalog model.
+- Rationale: data cannot do anything except describe geometry, so prompt injection cannot reach code execution. One server-side author means one set of bytes per specification. That makes the hash meaningful and lets a project rebuild a missing model from its own record.
+- Consequences:
+  - Generated models are coarse: axis-aligned solids, no curves beyond cylinders, frustums and spheres, no slanted or articulated parts, no textures.
+  - The appearance depends on how well the model lays out parts.
+  - Generator changes alter hashes. The restore endpoint then reports `mismatch` and writes nothing.
+  - The curated catalog keeps its three.js generator (ADR-020); the two are deliberately separate.
+- Evidence: `services/api/tests/test_object_generator.py` (76 tests: watertight primitives with exact bounds, winding, determinism, reader rejections, safe storage); the three.js cross-check (Box3 equals the envelope to < 1e-7 m).
+- Revisit when: GEN-02 needs editable versions, or real objects need slanted or curved parts.
+
+### ADR-032 - ASU Voyager behind the local API; validated, grounded proposals; key only on the server
+
+- Date: 2026-10-10. Status: adopted (user-selected provider).
+- Context: the user approved ASU Voyager (OpenAI-compatible, `https://openai.rc.asu.edu/v1`) and asked to start with `qwen3-235b-a22b-instruct-2507`, keep the model configurable, test schema adherence for real, and keep the key out of the browser, Git, fixtures and logs.
+- Options considered: call the provider from the browser (exposes the key); a local model (not selected by the user); the local API as the only caller (chosen). For structure: free text plus parsing; `json_object`; strict `json_schema` with vLLM's guided decoding; tool calls. All four were probed live; all returned valid JSON for a small schema.
+- Decision:
+  - **Request.** The API sends `response_format: json_schema` (strict, temperature 0), with self-contained schemas generated from Pydantic.
+  - **Validation.** It validates every answer with Pydantic (`extra="forbid"`) and retries once, listing the problems.
+  - **Checks.** It then applies deterministic checks:
+    - a "stated" size must be found, with its unit, in the user's words, otherwise it becomes an estimate to confirm;
+    - an estimate follows the model's own parts (no stretching to a second guess);
+    - a move needs its distance, unit and direction in the request, and a turn its angle and direction, otherwise the user is asked;
+    - a target must exist; "the selected …" must fit the selection; words that fit several objects get a question.
+  - **Unknowns.** Mass, strength, chemical composition and operating behaviour are always recorded as unknown; mentioned masses and rates are listed as not modelled.
+  - **Configuration.** The key is read from the process environment or the root `.env` (`RWS_*`/`VOYAGER_*` names only), kept in a `repr=False` field, and sent only in the `Authorization` header. `VOYAGER_MODEL` and `VOYAGER_BASE_URL` are configurable.
+  - **Offline tests.** A `recorded` provider replays saved live answers (`fixtures/assist/recorded/`, refreshed by `scripts/evaluate_assist.py --record`) for tests and the browser suite. It is labelled "recorded … not live AI" everywhere it appears.
+- Rationale: guided decoding made every live answer schema-valid, but the live runs showed it does not make answers *true*. The model converted "2 km" into "2 m" when its unit list lacked km, picked one of two cabinets for "the cabinet", marked a cylinder without an axis, and gave a depth its own parts did not match. Each of these was caught by a deterministic check, not by the schema.
+- Consequences:
+  - A detailed object proposal takes about 50-85 s with this model (about 1,500 output tokens at about 20 tokens/s, measured with and without guidance), so the provider timeout is 150 s; edits take about 4-10 s. Without schema guidance, 0 of 9 edit answers matched the schema even after a retry (objects stayed valid thanks to the prompt's complete example), so guidance stays on. The UI shows progress and can cancel.
+  - Requests send the description, or the edit request plus object IDs, names, kinds, positions and sizes; nothing else.
+  - CI never calls the provider.
+- Evidence: docs/assist.md, docs/assist-evaluation/, `services/api/tests/test_assist.py` and `test_assist_recorded.py`.
+- Revisit when: GEN-03 compares models (a faster model may suffice), Voyager changes the model, or the provider is unavailable for long periods.
+
+### ADR-033 - Schema 0.5.0: generated assets record how they were made
+
+- Date: 2026-10-10. Status: adopted.
+- Decision:
+  - `AssetSource.kind` gains `generated`.
+  - `CatalogAsset.generation` records the method (described or builder), description, language model, generator version, specification, stated and inferred facts, mentions that are not modelled, and the four unknown properties. It is required exactly for generated sources.
+  - A generated asset's visual must live under `generated/`, and its nominal dimensions must equal the specification envelope.
+  - Dimension evidence is assigned by the API: stated → `user_supplied`/confirmed, citing the user's words; confirmed estimate → `inferred`/confirmed; typed → `user_supplied`/confirmed. Unconfirmed estimates are refused.
+  - Migration 0.4.0 → 0.5.0 adds `generation: null`.
+  - The assist request and response models are in the contract bundle, so the browser validates them with Ajv.
+- Rationale: a saved project must say that an object is a provisional picture, what the user said, which model inferred the rest, and what is unknown. It must also be able to rebuild its own model files.
+- Evidence: `test_migrations.py` (0.4.0 step and refusal), `test_assist.py` (asset evidence, restore), `test_object_generator.py` (a generated asset validates).
+
+### ADR-034 - Language edits resolve in the browser through the command engine
+
+- Date: 2026-10-10. Status: adopted (GEN-01). Partly realises ADR-007.
+- Context: an edit request must show the exact change before it applies, use the existing validation (target, units, limits, revision), and leave the project unchanged when rejected. The command engine is TypeScript-only (ADR-023).
+- Options considered: let the model output coordinates (it would do arithmetic and could fabricate); move the command engine to the API (a large change before AI-01 needs it); have the model output a typed *intent* (action, target, direction, distance and unit as written) and resolve it in the browser (chosen).
+- Decision:
+  - The API returns an `EditIntent`.
+  - The browser converts units, maps plan directions to world axes (left −X, right +X, back −Z, forward +Z, up/down ±Y) and computes the new transform on the 1 mm / 0.1° grid.
+  - It then dry-runs `applyCommand` against the revision the request was made for and shows the exact before and after values.
+  - **Apply** executes the same command with that base revision, so an intervening change is a conflict. Undo works as for any edit.
+  - In GEN-01 only move and turn are supported; anything else is refused with a message.
+- Consequences: "left" means −X in the plan, not the camera's left; the card says so. The command schema is still not part of the API contract (ADR-023's revisit trigger remains for AI-01).
+- Evidence: `editIntent.test.ts`, the e2e "changing the scene with words" tests.
+
+### ADR-035 - A guided start for first-time users; the editor stays one click away
+
+- Date: 2026-10-10. Status: adopted (GEN-01).
+- Decision:
+  - **Start panel.** A modal start panel opens on the first visit (remembered in `localStorage`, reopened with **Start**). It offers Explore the demo, Describe an object and Open a project, plus a **Build an object by hand** link and **Go to the full editor**. Image import is shown as "Coming next (IMG-01)" without any action.
+  - **Describe flow.** It shows a name, a sentence, a verified preview, a size list (stated, estimated or entered, with confirmation), part chips (mentioned ones highlighted) and one "Not known" line. Schema, provenance and file details sit behind **Details**.
+  - **Change bar.** A change bar at the bottom of the viewport handles language edits.
+  - **Tests.** Existing browser tests start with the panel dismissed (Playwright `storageState`), and the benchmark scripts set the same flag.
+- Rationale: a project lead can describe, inspect and place an object without learning the inspector, while every value stays traceable.
+- Evidence: e2e "first visit" tests; timed task observations in docs/assist.md (not a usability study).

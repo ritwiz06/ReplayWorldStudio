@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.4.0",
+  "$id": "urn:replay-world:contracts:0.5.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.4.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.5.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -19,6 +19,36 @@
     },
     "ValidationErrorResponse": {
       "$ref": "#/$defs/ValidationErrorResponse"
+    },
+    "CatalogAsset": {
+      "$ref": "#/$defs/CatalogAsset"
+    },
+    "AssistStatus": {
+      "$ref": "#/$defs/AssistStatus"
+    },
+    "ObjectProposalRequest": {
+      "$ref": "#/$defs/ObjectProposalRequest"
+    },
+    "ObjectProposalResult": {
+      "$ref": "#/$defs/ObjectProposalResult"
+    },
+    "EditProposalRequest": {
+      "$ref": "#/$defs/EditProposalRequest"
+    },
+    "EditProposalResult": {
+      "$ref": "#/$defs/EditProposalResult"
+    },
+    "GeneratedModelRequest": {
+      "$ref": "#/$defs/GeneratedModelRequest"
+    },
+    "GeneratedModel": {
+      "$ref": "#/$defs/GeneratedModel"
+    },
+    "GeneratedAssetRequest": {
+      "$ref": "#/$defs/GeneratedAssetRequest"
+    },
+    "GeneratedModelRestoreReport": {
+      "$ref": "#/$defs/GeneratedModelRestoreReport"
     }
   },
   "required": [
@@ -26,20 +56,117 @@
     "HealthResponse",
     "ValidationReport",
     "UpgradeReport",
-    "ValidationErrorResponse"
+    "ValidationErrorResponse",
+    "CatalogAsset",
+    "AssistStatus",
+    "ObjectProposalRequest",
+    "ObjectProposalResult",
+    "EditProposalRequest",
+    "EditProposalResult",
+    "GeneratedModelRequest",
+    "GeneratedModel",
+    "GeneratedAssetRequest",
+    "GeneratedModelRestoreReport"
   ],
   "additionalProperties": false,
   "$defs": {
+    "AssetGeneration": {
+      "additionalProperties": false,
+      "description": "How a generated asset was made, so it can be reviewed, rebuilt and never mistaken for\na measured or vendor model.\n\n``described``: drafted by ``language_model`` from ``description`` and reviewed by a person.\n``builder``: assembled by a person in the object builder; no language model was involved.",
+      "properties": {
+        "method": {
+          "enum": [
+            "described",
+            "builder"
+          ],
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "language_model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LanguageModelRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "generator": {
+          "const": "rws-object-generator/1",
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/$defs/GeometrySpec"
+        },
+        "stated_facts": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "inferred_facts": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "not_modelled": {
+          "description": "Things the description mentioned that the model does not represent.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "unknown_properties": {
+          "items": {
+            "$ref": "#/$defs/UnknownProperty"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "method",
+        "description",
+        "language_model",
+        "generator",
+        "spec",
+        "stated_facts",
+        "inferred_facts",
+        "not_modelled",
+        "unknown_properties"
+      ],
+      "title": "AssetGeneration",
+      "type": "object"
+    },
     "AssetSource": {
       "additionalProperties": false,
-      "description": "Where an asset definition came from. Vendor and third-party assets must cite it.",
+      "description": "Where an asset definition came from. Vendor and third-party assets must cite it.\n\n``generated`` marks an original provisional model built by the object generator from a\nrecorded geometry specification; such an asset carries a ``generation`` record.",
       "properties": {
         "kind": {
           "enum": [
             "synthetic",
             "in_house",
             "vendor",
-            "third_party"
+            "third_party",
+            "generated"
           ],
           "type": "string"
         },
@@ -68,6 +195,75 @@
         "reference"
       ],
       "title": "AssetSource",
+      "type": "object"
+    },
+    "AssistStatus": {
+      "additionalProperties": false,
+      "description": "Whether language assistance is available, and where requests would be sent.",
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "mode": {
+          "description": "live: requests go to the configured provider. recorded: an offline test provider replays saved responses (never live AI). off: no provider is configured.",
+          "enum": [
+            "live",
+            "recorded",
+            "off"
+          ],
+          "type": "string"
+        },
+        "service": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "base_url": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "available",
+        "mode",
+        "service",
+        "base_url",
+        "model",
+        "message"
+      ],
+      "title": "AssistStatus",
       "type": "object"
     },
     "AxisChange": {
@@ -143,6 +339,16 @@
         },
         "rights": {
           "$ref": "#/$defs/UsageRights"
+        },
+        "generation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AssetGeneration"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -152,9 +358,55 @@
         "visual",
         "nominal_dimensions",
         "source",
-        "rights"
+        "rights",
+        "generation"
       ],
       "title": "CatalogAsset",
+      "type": "object"
+    },
+    "ContextObject": {
+      "additionalProperties": false,
+      "description": "What the model is told about one object when interpreting an edit request.",
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "structure",
+            "equipment",
+            "reference",
+            "walkway",
+            "keep_clear"
+          ],
+          "type": "string"
+        },
+        "position_m": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "rotation_y_rad": {
+          "type": "number"
+        },
+        "size_m": {
+          "$ref": "#/$defs/Extent3"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "position_m",
+        "rotation_y_rad",
+        "size_m"
+      ],
+      "title": "ContextObject",
       "type": "object"
     },
     "Dimensions": {
@@ -177,6 +429,217 @@
         "depth"
       ],
       "title": "Dimensions",
+      "type": "object"
+    },
+    "EditContext": {
+      "additionalProperties": false,
+      "properties": {
+        "revision": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "selected_object_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/ContextObject"
+          },
+          "maxItems": 500,
+          "type": "array"
+        }
+      },
+      "required": [
+        "revision",
+        "selected_object_id",
+        "objects"
+      ],
+      "title": "EditContext",
+      "type": "object"
+    },
+    "EditIntent": {
+      "additionalProperties": false,
+      "description": "One bounded edit. The browser turns it into an exact command and shows the change.",
+      "properties": {
+        "action": {
+          "enum": [
+            "move",
+            "rotate"
+          ],
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/EditTarget"
+        },
+        "move": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoveIntent"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rotate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RotateIntent"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "action",
+        "target",
+        "move",
+        "rotate"
+      ],
+      "title": "EditIntent",
+      "type": "object"
+    },
+    "EditProposalRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "maxLength": 300,
+          "minLength": 3,
+          "type": "string"
+        },
+        "context": {
+          "$ref": "#/$defs/EditContext"
+        }
+      },
+      "required": [
+        "request",
+        "context"
+      ],
+      "title": "EditProposalRequest",
+      "type": "object"
+    },
+    "EditProposalResult": {
+      "additionalProperties": false,
+      "properties": {
+        "outcome": {
+          "enum": [
+            "proposal",
+            "clarification",
+            "unsupported"
+          ],
+          "type": "string"
+        },
+        "intent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EditIntent"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "question": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "candidates": {
+          "description": "Objects a clarification is choosing between, if it is about the target.",
+          "items": {
+            "description": "Stable, lowercase identifier. Never reused for a different entity.",
+            "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checks": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "provider": {
+          "$ref": "#/$defs/ProviderRun"
+        }
+      },
+      "required": [
+        "outcome",
+        "intent",
+        "question",
+        "candidates",
+        "message",
+        "checks",
+        "provider"
+      ],
+      "title": "EditProposalResult",
+      "type": "object"
+    },
+    "EditTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "reference": {
+          "enum": [
+            "selected",
+            "named"
+          ],
+          "type": "string"
+        },
+        "object_ids": {
+          "items": {
+            "description": "Stable, lowercase identifier. Never reused for a different entity.",
+            "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+            "type": "string"
+          },
+          "maxItems": 1,
+          "minItems": 1,
+          "type": "array"
+        },
+        "phrase": {
+          "description": "How the user referred to the object.",
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "reference",
+        "object_ids",
+        "phrase"
+      ],
+      "title": "EditTarget",
       "type": "object"
     },
     "EulerRotation": {
@@ -206,6 +669,34 @@
       "title": "EulerRotation",
       "type": "object"
     },
+    "Extent3": {
+      "additionalProperties": false,
+      "description": "Strictly positive extents in metres along X (width), Y (height) and Z (depth).",
+      "properties": {
+        "x": {
+          "description": "Strictly positive length in metres.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "y": {
+          "description": "Strictly positive length in metres.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "z": {
+          "description": "Strictly positive length in metres.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "title": "Extent3",
+      "type": "object"
+    },
     "FixtureLabel": {
       "additionalProperties": false,
       "description": "Marks development data so it is never mistaken for a real project.",
@@ -228,6 +719,379 @@
         "note"
       ],
       "title": "FixtureLabel",
+      "type": "object"
+    },
+    "GeneratedAssetRequest": {
+      "additionalProperties": false,
+      "description": "Turn a reviewed proposal (or a builder result) into a catalog asset with a stored model.",
+      "properties": {
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "equipment",
+            "structure",
+            "reference"
+          ],
+          "type": "string"
+        },
+        "method": {
+          "enum": [
+            "described",
+            "builder"
+          ],
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "language_model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LanguageModelRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "spec": {
+          "$ref": "#/$defs/GeometryDraft"
+        },
+        "dimensions": {
+          "$ref": "#/$defs/ReviewedDimensions"
+        },
+        "stated_facts": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "inferred_facts": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "not_modelled": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "method",
+        "description",
+        "language_model",
+        "spec",
+        "dimensions",
+        "stated_facts",
+        "inferred_facts",
+        "not_modelled"
+      ],
+      "title": "GeneratedAssetRequest",
+      "type": "object"
+    },
+    "GeneratedModel": {
+      "additionalProperties": false,
+      "description": "A model built from a specification, with the record a catalog asset would use.\n\n``glb_base64`` is set for previews; a stored model omits it and is served from the\ncatalog library at ``visual.uri``.",
+      "properties": {
+        "spec": {
+          "$ref": "#/$defs/GeometrySpec"
+        },
+        "visual": {
+          "$ref": "#/$defs/GltfVisual"
+        },
+        "scale_applied": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "triangles": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "bytes": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "materials": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "notes": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "stored": {
+          "type": "boolean"
+        },
+        "glb_base64": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "spec",
+        "visual",
+        "scale_applied",
+        "triangles",
+        "bytes",
+        "materials",
+        "notes",
+        "stored",
+        "glb_base64"
+      ],
+      "title": "GeneratedModel",
+      "type": "object"
+    },
+    "GeneratedModelRequest": {
+      "additionalProperties": false,
+      "description": "Build (and optionally store) the model for a geometry draft.",
+      "properties": {
+        "spec": {
+          "$ref": "#/$defs/GeometryDraft"
+        }
+      },
+      "required": [
+        "spec"
+      ],
+      "title": "GeneratedModelRequest",
+      "type": "object"
+    },
+    "GeneratedModelRestoreReport": {
+      "additionalProperties": false,
+      "description": "Result of rebuilding a project's missing generated models from their specifications.\n\nA rebuilt file is kept only when its sha256 equals the one the project records.",
+      "properties": {
+        "results": {
+          "items": {
+            "$ref": "#/$defs/RestoredModel"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "results"
+      ],
+      "title": "GeneratedModelRestoreReport",
+      "type": "object"
+    },
+    "GeometryDraft": {
+      "additionalProperties": false,
+      "description": "A geometry specification that may not fit its envelope yet (an editor's working copy).\n\nThe API fits the parts to the envelope, which turns a draft into a :class:`GeometrySpec`.",
+      "properties": {
+        "format": {
+          "const": "rws-geometry/1",
+          "type": "string"
+        },
+        "envelope_m": {
+          "$ref": "#/$defs/Extent3"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/$defs/GeometryPart"
+          },
+          "maxItems": 40,
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "format",
+        "envelope_m",
+        "parts"
+      ],
+      "title": "GeometryDraft",
+      "type": "object"
+    },
+    "GeometryPart": {
+      "additionalProperties": false,
+      "description": "One solid of a generated model, axis-aligned in the object frame.\n\nThe object frame is the catalog convention: metres, +Y up, front facing +Z, origin at the\nbottom-centre of the whole object. ``center_m`` is the centre of the part's box and\n``size_m`` its extents. ``axis`` (cylinder only) is the direction the round body runs;\na frustum always stands upright and narrows to ``taper`` times its width at\n``narrow_end``.",
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "shape": {
+          "enum": [
+            "box",
+            "rounded_box",
+            "cylinder",
+            "frustum",
+            "sphere"
+          ],
+          "type": "string"
+        },
+        "material": {
+          "enum": [
+            "paint_light_grey",
+            "paint_anthracite",
+            "paint_white",
+            "paint_blue",
+            "paint_red",
+            "paint_green",
+            "paint_orange",
+            "safety_yellow",
+            "aluminium",
+            "stainless_steel",
+            "steel_dark",
+            "copper",
+            "rubber_black",
+            "plastic_black",
+            "plastic_grey",
+            "polycarbonate",
+            "glass_clear",
+            "hmi_screen",
+            "signal_green",
+            "signal_amber",
+            "signal_red",
+            "signal_white",
+            "estop_red",
+            "motor_blue",
+            "cardboard",
+            "wood",
+            "pallet_wood",
+            "concrete",
+            "fabric_grey",
+            "label_black"
+          ],
+          "type": "string"
+        },
+        "center_m": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "size_m": {
+          "$ref": "#/$defs/Extent3"
+        },
+        "axis": {
+          "anyOf": [
+            {
+              "enum": [
+                "x",
+                "y",
+                "z"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "taper": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "narrow_end": {
+          "anyOf": [
+            {
+              "enum": [
+                "top",
+                "bottom"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "basis": {
+          "enum": [
+            "stated",
+            "inferred",
+            "entered"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "shape",
+        "material",
+        "center_m",
+        "size_m",
+        "axis",
+        "taper",
+        "narrow_end",
+        "basis"
+      ],
+      "title": "GeometryPart",
+      "type": "object"
+    },
+    "GeometrySpec": {
+      "additionalProperties": false,
+      "description": "A bounded, data-only description of a generated model.\n\nThe union of the parts is exactly the envelope (within 0.1 mm): centred on X and Z and\nstanding on the floor (Y from 0 to the height). The generator therefore produces a model\nwhose bounds are the envelope, with its origin at the bottom-centre.",
+      "properties": {
+        "format": {
+          "const": "rws-geometry/1",
+          "type": "string"
+        },
+        "envelope_m": {
+          "$ref": "#/$defs/Extent3"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/$defs/GeometryPart"
+          },
+          "maxItems": 40,
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "format",
+        "envelope_m",
+        "parts"
+      ],
+      "title": "GeometrySpec",
       "type": "object"
     },
     "GltfVisual": {
@@ -311,7 +1175,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.4.0",
+          "const": "0.5.0",
           "type": "string"
         }
       },
@@ -409,6 +1273,34 @@
       "title": "KnownParameter",
       "type": "object"
     },
+    "LanguageModelRef": {
+      "additionalProperties": false,
+      "description": "The language model that drafted a proposal: service, endpoint and exact model ID.",
+      "properties": {
+        "service": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "base_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "model": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "service",
+        "base_url",
+        "model"
+      ],
+      "title": "LanguageModelRef",
+      "type": "object"
+    },
     "Length": {
       "additionalProperties": false,
       "description": "A strictly positive length in metres that carries its own evidence.",
@@ -484,6 +1376,52 @@
         "max"
       ],
       "title": "ModelBounds",
+      "type": "object"
+    },
+    "MoveIntent": {
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "enum": [
+            "left",
+            "right",
+            "forward",
+            "back",
+            "up",
+            "down"
+          ],
+          "type": "string"
+        },
+        "distance": {
+          "description": "In ``unit``, exactly as the user said it.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "unit": {
+          "enum": [
+            "km",
+            "m",
+            "cm",
+            "mm",
+            "ft",
+            "in"
+          ],
+          "type": "string"
+        },
+        "quote": {
+          "description": "The user's words that give the distance.",
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "direction",
+        "distance",
+        "unit",
+        "quote"
+      ],
+      "title": "MoveIntent",
       "type": "object"
     },
     "ObjectAdded": {
@@ -585,6 +1523,161 @@
       "title": "ObjectEdited",
       "type": "object"
     },
+    "ObjectProposal": {
+      "additionalProperties": false,
+      "description": "A described object, ready for review. ``spec`` already fits ``dimensions``.",
+      "properties": {
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "category": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "appearance": {
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        },
+        "dimensions": {
+          "$ref": "#/$defs/ProposedDimensions"
+        },
+        "spec": {
+          "$ref": "#/$defs/GeometrySpec"
+        },
+        "stated_facts": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "inferred_facts": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "not_modelled": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "unknown_properties": {
+          "items": {
+            "$ref": "#/$defs/UnknownProperty"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "category",
+        "appearance",
+        "dimensions",
+        "spec",
+        "stated_facts",
+        "inferred_facts",
+        "not_modelled",
+        "unknown_properties"
+      ],
+      "title": "ObjectProposal",
+      "type": "object"
+    },
+    "ObjectProposalRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "maxLength": 500,
+          "minLength": 3,
+          "type": "string"
+        }
+      },
+      "required": [
+        "description"
+      ],
+      "title": "ObjectProposalRequest",
+      "type": "object"
+    },
+    "ObjectProposalResult": {
+      "additionalProperties": false,
+      "description": "The API's answer to a description: a proposal, a question, or a refusal.",
+      "properties": {
+        "outcome": {
+          "enum": [
+            "proposal",
+            "clarification",
+            "unsupported"
+          ],
+          "type": "string"
+        },
+        "proposal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ObjectProposal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "question": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checks": {
+          "description": "Corrections the API made to the model's answer, in plain words.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "provider": {
+          "$ref": "#/$defs/ProviderRun"
+        }
+      },
+      "required": [
+        "outcome",
+        "proposal",
+        "question",
+        "message",
+        "checks",
+        "provider"
+      ],
+      "title": "ObjectProposalResult",
+      "type": "object"
+    },
     "ObjectRemoved": {
       "additionalProperties": false,
       "description": "An object was removed. Its last state, evidence included, is kept here.",
@@ -629,7 +1722,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.4.0",
+          "const": "0.5.0",
           "type": "string"
         },
         "id": {
@@ -686,6 +1779,246 @@
         "scene"
       ],
       "title": "Project",
+      "type": "object"
+    },
+    "ProposedDimensions": {
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "$ref": "#/$defs/ProposedLength"
+        },
+        "height": {
+          "$ref": "#/$defs/ProposedLength"
+        },
+        "depth": {
+          "$ref": "#/$defs/ProposedLength"
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "depth"
+      ],
+      "title": "ProposedDimensions",
+      "type": "object"
+    },
+    "ProposedLength": {
+      "additionalProperties": false,
+      "description": "One proposed dimension and where it came from.",
+      "properties": {
+        "value_m": {
+          "description": "Strictly positive length in metres.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "basis": {
+          "enum": [
+            "stated",
+            "inferred"
+          ],
+          "type": "string"
+        },
+        "quote": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The user's words the value came from."
+        },
+        "needs_confirmation": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "value_m",
+        "basis",
+        "quote",
+        "needs_confirmation"
+      ],
+      "title": "ProposedLength",
+      "type": "object"
+    },
+    "ProviderRun": {
+      "additionalProperties": false,
+      "description": "Which model answered, how, and how often it had to be asked.",
+      "properties": {
+        "service": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "base_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "model": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "live",
+            "recorded"
+          ],
+          "type": "string"
+        },
+        "attempts": {
+          "maximum": 3,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "first_attempt_valid": {
+          "description": "The first answer was valid JSON matching the requested schema.",
+          "type": "boolean"
+        },
+        "latency_ms": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "service",
+        "base_url",
+        "model",
+        "mode",
+        "attempts",
+        "first_attempt_valid",
+        "latency_ms"
+      ],
+      "title": "ProviderRun",
+      "type": "object"
+    },
+    "RestoredModel": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "uri": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "present",
+            "restored",
+            "mismatch"
+          ],
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "asset_id",
+        "uri",
+        "status",
+        "message"
+      ],
+      "title": "RestoredModel",
+      "type": "object"
+    },
+    "ReviewedDimensions": {
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "$ref": "#/$defs/ReviewedLength"
+        },
+        "height": {
+          "$ref": "#/$defs/ReviewedLength"
+        },
+        "depth": {
+          "$ref": "#/$defs/ReviewedLength"
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "depth"
+      ],
+      "title": "ReviewedDimensions",
+      "type": "object"
+    },
+    "ReviewedLength": {
+      "additionalProperties": false,
+      "description": "A dimension as the user left it after review.",
+      "properties": {
+        "basis": {
+          "description": "stated: in the description; inferred: estimated; entered: typed by the user.",
+          "enum": [
+            "stated",
+            "inferred",
+            "entered"
+          ],
+          "type": "string"
+        },
+        "quote": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "basis",
+        "quote",
+        "confirmed"
+      ],
+      "title": "ReviewedLength",
+      "type": "object"
+    },
+    "RotateIntent": {
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "description": "As seen from above (the top view).",
+          "enum": [
+            "clockwise",
+            "counterclockwise"
+          ],
+          "type": "string"
+        },
+        "angle_deg": {
+          "exclusiveMinimum": 0,
+          "maximum": 360,
+          "type": "number"
+        },
+        "quote": {
+          "description": "The user's words that give the angle.",
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "direction",
+        "angle_deg",
+        "quote"
+      ],
+      "title": "RotateIntent",
       "type": "object"
     },
     "Scene": {
@@ -1047,6 +2380,32 @@
       "title": "UnknownParameter",
       "type": "object"
     },
+    "UnknownProperty": {
+      "additionalProperties": false,
+      "description": "A physical or behavioural property the generated model does not establish.",
+      "properties": {
+        "property": {
+          "enum": [
+            "mass",
+            "strength",
+            "chemical_composition",
+            "operating_behaviour"
+          ],
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "property",
+        "reason"
+      ],
+      "title": "UnknownProperty",
+      "type": "object"
+    },
     "UpgradeReport": {
       "additionalProperties": false,
       "description": "An older project document upgraded to the current contract and validated, for review.\n\nNothing is saved or replaced by producing this report; the client shows ``notes`` and lets\nthe user decide whether to open or download the upgraded ``project``.",
@@ -1058,7 +2417,7 @@
           "type": "string"
         },
         "to_version": {
-          "const": "0.4.0",
+          "const": "0.5.0",
           "type": "string"
         },
         "notes": {
@@ -1200,7 +2559,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.4.0",
+          "const": "0.5.0",
           "type": "string"
         },
         "project_id": {

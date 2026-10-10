@@ -58,10 +58,13 @@ jobs:
         run: pnpm build
 
   browser-smoke:
-    # Four Playwright tests against the real API and Vite servers: the demo loads with verified
-    # models, the edit -> undo/redo -> save -> reopen path, unsaved-change protection, and that
-    # an idle scene is not re-rendered. CI has no GPU, so WebGL runs in software (SwiftShader):
-    # this checks behaviour, never frame rate. The full suite runs locally with `pnpm test:e2e`.
+    # Six Playwright tests against the real API and Vite servers: the demo loads with verified
+    # models, the edit -> undo/redo -> save -> reopen path, unsaved-change protection, an idle
+    # scene is not re-rendered, a described object is checked, placed, saved, reopened and its
+    # missing model rebuilt, and a language edit is shown exactly before it is applied. Language
+    # answers are recorded live answers replayed offline (never a call to the provider). CI has
+    # no GPU, so WebGL runs in software (SwiftShader): this checks behaviour, never frame rate.
+    # The full suite runs locally with `pnpm test:e2e`.
     name: Browser smoke test (Playwright, software WebGL)
     runs-on: ubuntu-latest
     timeout-minutes: 15

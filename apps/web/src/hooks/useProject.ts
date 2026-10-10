@@ -20,7 +20,26 @@ export type SceneState =
 export type FileCheck =
   | { status: "idle" }
   | { status: "checking"; filename: string }
-  | { status: "rejected"; filename: string; error: LoadFailure };
+  | {
+      status: "rejected";
+      filename: string;
+      error: LoadFailure;
+      /** The file's text, kept when its only problem may be missing generated models. */
+      restorable: string | null;
+      restore?: { busy: boolean; messages: string[] };
+    };
+
+/** True when the API rejected the file because a generated model file is missing or damaged:
+ * such models can be rebuilt from the specification recorded in the project itself. */
+function generatedModelProblem(data: unknown, error: LoadFailure): boolean {
+  if (error.kind !== "http" || typeof data !== "object" || data === null || !("catalog" in data)) return false;
+  const catalog = Array.isArray(data.catalog) ? (data.catalog as unknown[]) : [];
+  return error.issues.some((issue) => {
+    const match = /^\/catalog\/(\d+)\/visual\/(?:uri|sha256)$/.exec(issue.path);
+    const asset = match ? catalog[Number(match[1])] : undefined;
+    return typeof asset === "object" && asset !== null && "generation" in asset && asset.generation !== null;
+  });
+}
 
 /** A decision the user must make before anything is replaced. */
 export type Prompt =
@@ -120,7 +139,7 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
   const openFile = useCallback(
     async (file: File) => {
       const filename = file.name;
-      const reject = (error: LoadFailure) => setFileCheck({ status: "rejected", filename, error });
+      const reject = (error: LoadFailure, restorable: string | null = null) => setFileCheck({ status: "rejected", filename, error, restorable });
       if (file.size > MAX_FILE_BYTES) {
         reject({ kind: "file", message: "The file is larger than the 5 MB limit for a project." });
         return;
@@ -155,7 +174,7 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
 
       const verdict = await client.validateProjectDocument(text);
       if (!verdict.ok) {
-        reject(verdict.error);
+        reject(verdict.error, generatedModelProblem(data, verdict.error) ? text : null);
         return;
       }
       // The API accepted the document; recheck the same text locally before rendering it.
@@ -172,6 +191,25 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
   );
 
   const dismissFileCheck = useCallback(() => setFileCheck({ status: "idle" }), []);
+
+  /** Rebuild the rejected file's missing generated models from its recorded specifications,
+   * then open it again (through the same API checks) if every model could be restored. */
+  const restoreAndReopen = useCallback(async () => {
+    if (fileCheck.status !== "rejected" || fileCheck.restorable === null) return;
+    const { filename, restorable: text } = fileCheck;
+    setFileCheck({ ...fileCheck, restore: { busy: true, messages: [] } });
+    const report = await client.restoreGeneratedModels(text);
+    if (!report.ok) {
+      setFileCheck({ ...fileCheck, restore: { busy: false, messages: [report.error.message] } });
+      return;
+    }
+    const failed = report.value.results.filter((r) => r.status === "mismatch");
+    if (failed.length > 0) {
+      setFileCheck({ ...fileCheck, restore: { busy: false, messages: failed.map((r) => `${r.asset_id}: ${r.message}`) } });
+      return;
+    }
+    await openFile(new File([text], filename, { type: "application/json" }));
+  }, [client, fileCheck, openFile]);
 
   const update = useCallback(
     (outcome: Outcome): Outcome => {
@@ -268,6 +306,7 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
     reloadFixture,
     openFile,
     dismissFileCheck,
+    restoreAndReopen,
     execute,
     undo,
     redo,

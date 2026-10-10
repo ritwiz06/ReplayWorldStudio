@@ -3,7 +3,14 @@
 import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
 import bundle from "../schema/contracts.schema.json";
 import type {
+  AssistStatus,
+  CatalogAsset,
+  EditProposalResult,
+  GeneratedModel,
+  GeneratedModelRestoreReport,
+  GeometryDraft,
   HealthResponse,
+  ObjectProposalResult,
   Project,
   UpgradeReport,
   ValidationErrorResponse,
@@ -12,7 +19,7 @@ import type {
 
 export type * from "./generated/contracts";
 
-export const SCHEMA_VERSION: Project["schema_version"] = "0.4.0";
+export const SCHEMA_VERSION: Project["schema_version"] = "0.5.0";
 
 /** One structural problem, located by a JSON Pointer such as `/scene/objects/2/dimensions`. */
 export interface ContractIssue {
@@ -55,3 +62,11 @@ export const validateValidationReport = validatorFor<ValidationReport>("Validati
 export const validateUpgradeReport = validatorFor<UpgradeReport>("UpgradeReport");
 export const validateValidationErrorResponse =
   validatorFor<ValidationErrorResponse>("ValidationErrorResponse");
+export const validateCatalogAsset = validatorFor<CatalogAsset>("CatalogAsset");
+export const validateAssistStatus = validatorFor<AssistStatus>("AssistStatus");
+export const validateObjectProposalResult = validatorFor<ObjectProposalResult>("ObjectProposalResult");
+export const validateEditProposalResult = validatorFor<EditProposalResult>("EditProposalResult");
+export const validateGeneratedModel = validatorFor<GeneratedModel>("GeneratedModel");
+export const validateGeneratedModelRestoreReport =
+  validatorFor<GeneratedModelRestoreReport>("GeneratedModelRestoreReport");
+export const validateGeometryDraft = validatorFor<GeometryDraft>("GeometryDraft");

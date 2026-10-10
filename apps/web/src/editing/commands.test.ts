@@ -1,6 +1,6 @@
 import { validateProject, type Project, type Transform } from "@replay-world/contracts";
 import { describe, expect, it } from "vitest";
-import { fixture, objectOf } from "../testing/fixtures";
+import { fixture, generatedAsset, objectOf } from "../testing/fixtures";
 import { applyCommand, EDIT_SOURCE_REF, reapplyChange, revertChange, type EditCommand } from "./commands";
 import { copyId, copyName, instanceId, instanceName } from "./newObjects";
 import { degToRad } from "./units";
@@ -186,5 +186,48 @@ describe("inverses", () => {
     const applied = apply(project, { type: "remove_object", objectId: "obj-cabinet-1" });
     const stale = revertChange(applied.project, applied.change, 1, 0);
     expect(stale.ok ? null : stale.rejection.kind).toBe("conflict");
+  });
+});
+
+describe("generated objects", () => {
+  const at = (x: number, z: number): Transform => ({ position_m: { x, y: 0, z }, rotation_rad: { order: "XYZ", x: 0, y: 0, z: 0 } });
+
+  it("add the asset to the catalog and place one instance, as one reversible step", () => {
+    const project = demo();
+    const asset = generatedAsset();
+    const command: EditCommand = { type: "add_generated_instance", asset, objectId: instanceId(project, asset), name: instanceName(project, asset), transform: at(4, 3) };
+    const { project: next, change } = apply(project, command);
+    expect(next.catalog.map((a) => a.id)).toEqual([...project.catalog.map((a) => a.id), asset.id]);
+    const placed = objectOf(next, "obj-gen-guarded-conveyor-0a1b2c3d");
+    // The instance starts at the reviewed nominal size and evidence, and references the asset.
+    expect([placed.asset_id, placed.dimensions]).toEqual([asset.id, asset.nominal_dimensions]);
+    expect(next.scene.edit_log.at(-1)).toEqual({ type: "object_added", revision: 1, object_id: placed.id, asset_id: asset.id, duplicate_of: null });
+    expect(validateProject(next).ok).toBe(true);
+
+    const undone = revertChange(next, change, 1, 1);
+    if (!undone.ok) throw new Error(undone.rejection.message);
+    // Undo removes both the instance and the catalog entry; the revision still advances.
+    expect([undone.project.catalog, undone.project.scene.objects, undone.project.scene.revision]).toEqual([project.catalog, project.scene.objects, 2]);
+    const redone = reapplyChange(undone.project, change, 2);
+    if (!redone.ok) throw new Error(redone.rejection.message);
+    expect(redone.project.catalog.at(-1)).toEqual(asset);
+    expect(redone.project.scene.edit_log.at(-1)?.revision).toBe(3);
+  });
+
+  it("refuse an asset that is not generated, or one already in the catalog", () => {
+    const project = demo();
+    const curated = { ...project.catalog[0]!, id: "asset-copy" };
+    const notGenerated = applyCommand(project, {
+      baseRevision: 0,
+      command: { type: "add_generated_instance", asset: curated, objectId: "obj-x", name: "X", transform: at(0, 0) },
+    });
+    expect(notGenerated).toMatchObject({ ok: false, rejection: { kind: "invalid", message: "Only a generated asset can be added to the catalog this way." } });
+    const { project: once } = apply(project, { type: "add_generated_instance", asset: generatedAsset(), objectId: "obj-a", name: "A", transform: at(0, 0) });
+    const twice = applyCommand(once, {
+      baseRevision: once.scene.revision,
+      command: { type: "add_generated_instance", asset: generatedAsset(), objectId: "obj-b", name: "B", transform: at(1, 0) },
+    });
+    expect(twice).toMatchObject({ ok: false, rejection: { kind: "invalid" } });
+    expect(twice.ok ? null : twice.rejection.message).toMatch(/already has an asset/);
   });
 });

@@ -116,7 +116,16 @@ export function FixtureBanner({ fixture, edited }: { fixture: FixtureLabel; edit
   );
 }
 
-export function ModelNotice({ catalog, models, onRetry }: { catalog: readonly CatalogAsset[]; models: ModelStates; onRetry: () => void }) {
+interface ModelNoticeProps {
+  catalog: readonly CatalogAsset[];
+  models: ModelStates;
+  onRetry: () => void;
+  /** Rebuild failed generated models from their recorded specifications, then retry. */
+  onRebuild: () => void;
+  rebuild: { busy: boolean; message: string | null };
+}
+
+export function ModelNotice({ catalog, models, onRetry, onRebuild, rebuild }: ModelNoticeProps) {
   const failed = catalog.flatMap((asset) => {
     const state = models.get(asset.id);
     return state?.status === "failed" ? [{ asset, message: state.failure.message }] : [];
@@ -137,9 +146,17 @@ export function ModelNotice({ catalog, models, onRetry }: { catalog: readonly Ca
       <p className="muted">
         Affected equipment is drawn as an orange box labelled “Model unavailable” at its recorded size.
       </p>
-      <button type="button" className="button" onClick={onRetry}>
-        Retry models
-      </button>
+      {rebuild.message && <p className="muted">{rebuild.message}</p>}
+      <div className="modal-actions">
+        <button type="button" className="button" onClick={onRetry}>
+          Retry models
+        </button>
+        {failed.some(({ asset }) => asset.generation !== null) && (
+          <button type="button" className="button button-primary" disabled={rebuild.busy} data-testid="rebuild-models" onClick={onRebuild}>
+            {rebuild.busy ? "Rebuilding…" : "Rebuild generated models"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

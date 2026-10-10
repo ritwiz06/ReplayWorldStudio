@@ -4,7 +4,7 @@
 
 Each scene is what the editor would produce: the demo's floor slab is resized and moved so
 every new instance stands on it, and each instance is added from the catalog at its nominal
-size and evidence. Every change has its edit record (contract 0.4.0), so the files open
+size and evidence. Every change has its edit record (contract 0.5.0), so the files open
 through the normal API check. The scenes keep the demonstration label: they exist to measure
 rendering, not to describe a real layout, and nothing in them is engineering data.
 """

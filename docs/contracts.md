@@ -1,6 +1,6 @@
 # Contracts: units, frames, provenance and the schema pipeline
 
-Contract version **0.4.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, all 2026-10-10). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
+Contract version **0.5.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, 0.4.0 → 0.5.0 in GEN-01, all 2026-10-10). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
 
 ## One source of truth
 
@@ -88,8 +88,9 @@ Worked example (foundation fixture): the plan is in mm with translation (−10, 
 - 0.2.0 → 0.3.0 changes only `schema_version`, because 0.3.0 is additive. Steps run in sequence, so a 0.1.0 file passes through every version and the notes list each step.
 - `POST /api/v1/projects/validate` answers a 0.1.0, 0.2.0 or 0.3.0 document with a single 422 issue at `/schema_version` that points to the editor's upgrade review and the migrate command, instead of a cascade of field errors.
 - 0.3.0 → 0.4.0 adds an empty `scene.edit_log` and changes nothing else. A 0.3.0 document that already has an `edit_log` is refused as malformed.
+- 0.4.0 → 0.5.0 adds `generation: null` to every catalog asset and changes nothing else. A 0.4.0 document whose assets already have `generation` is refused as malformed.
 - `fixtures/legacy/foundation-scene-0.1.0.json` is the exact 0.1.0 fixture, kept to test this path.
-- **In the editor (WRL-03).** Opening a file whose `schema_version` is any other string sends it to `POST /api/v1/projects/upgrade`. That endpoint runs the same `upgrade_document`, validates the result (contract and model files), and returns an `UpgradeReport` (`from_version`, `to_version`, `notes`, `project`, `validation`) without storing anything. The browser shows the notes and offers **Open upgraded project**, **Download upgraded file** (`<name>-0.4.0.json`) or **Cancel**; nothing is replaced or written before that choice. An unknown version gets one 422 issue at `/schema_version`, a malformed legacy file one issue at the document level, and errors after a successful upgrade are located in the upgraded document. In each case the current scene stays.
+- **In the editor (WRL-03).** Opening a file whose `schema_version` is any other string sends it to `POST /api/v1/projects/upgrade`. That endpoint runs the same `upgrade_document`, validates the result (contract and model files), and returns an `UpgradeReport` (`from_version`, `to_version`, `notes`, `project`, `validation`) without storing anything. The browser shows the notes and offers **Open upgraded project**, **Download upgraded file** (`<name>-0.5.0.json`) or **Cancel**; nothing is replaced or written before that choice. An unknown version gets one 422 issue at `/schema_version`, a malformed legacy file one issue at the document level, and errors after a successful upgrade are located in the upgraded document. In each case the current scene stays.
 
 ## Edits, revisions and the edit log (0.4.0)
 
@@ -155,3 +156,38 @@ A `GltfVisual` names a binary glTF file and states exactly how it is authored, s
 ## Rendering tolerance
 
 The contract is float64, but Three.js geometry buffers are float32 (about 1e-7 relative precision). Renderer placement tests therefore use a 1 µm tolerance. Never read numeric results back from rendered geometry.
+
+## Generated objects (0.5.0, GEN-01)
+
+A **generated asset** is an original, provisional model that the project's own generator builds from a bounded, data-only **geometry specification**. A language model may *propose* the specification; it never writes code that runs, and the API refuses anything outside the specification's rules.
+
+**Geometry specification** (`GeometrySpec`, format `rws-geometry/1`):
+
+- `envelope_m`: the overall width (X), height (Y) and depth (Z), 0.02–30 m each.
+- `parts`: 1–40 solids. Each has an `id`, a short `label`, an approved `shape` (`box`, `rounded_box`, `cylinder` with an `axis`, upright `frustum` with `taper` and `narrow_end`, `sphere`), an approved `material` (30 physically based appearances such as `paint_blue`, `stainless_steel`, `hmi_screen`; appearance only, never chemistry), `center_m` and `size_m` in the object frame (metres, +Y up, front +Z, origin at the bottom-centre), and a `basis` (`stated`, `inferred` or `entered`).
+- Every part is axis-aligned and fills its own box. The union of the parts equals the envelope within 0.1 mm, which is the same tolerance as a glTF model's origin. `GeometryDraft` is the same record without that last rule, and is what an editor sends. `POST /api/v1/catalog/generated-models[/preview]` fits a draft (scaling parts per axis onto the envelope, snapped to a micron grid) and returns the strict specification, the model record and any fit notes.
+
+**Generator** (`services/api/src/replay_world_api/objects/`, `rws-object-generator/1`): pure Python, standard library only. It meshes each part (a rounded box ported from three.js, 32-segment cylinders and frustums, a UV sphere), merges per material, and writes a deterministic GLB 2.0 with linear-space PBR materials and no textures, extensions or node transforms. An independent reader then checks the bytes (layout, no external buffers or images, triangles only, min/max recomputed from the vertex data) and that the bounds equal the envelope with a bottom-centre origin. The same specification always gives the same bytes. Limits: 200,000 triangles and 8 MB.
+
+**Storage and verification**: models are stored content-addressed at `generated/<sha256>.glb` inside the catalog library (`assets/catalog/generated/`, git-ignored). The record is an ordinary `GltfVisual`, so every existing rule applies: the API checks the file and its hash on validate, and the browser re-hashes and re-measures it before drawing.
+
+**`CatalogAsset.generation`** (`AssetGeneration`, null for every other asset): `method` (`described` or `builder`), the user's `description` and the exact `language_model` (service, base URL, model ID) for described objects, the `generator` version, the `spec`, `stated_facts`, `inferred_facts`, `not_modelled` (things mentioned but not represented, such as a mass or a rate), and `unknown_properties`, which always lists **mass, strength, chemical_composition and operating_behaviour** as unknown. `source.kind` is `generated` exactly when `generation` is present. The visual must live under `generated/`, and the nominal dimensions must equal the specification envelope.
+
+**Dimension evidence** (set by the API in `generated_assets.py`):
+
+| How the size was settled | `origin` | `review_status` | `source_ref` |
+| --- | --- | --- | --- |
+| Stated in the description, and found there by the API | `user_supplied` | `confirmed` | `Stated in the description: “<the user's words>”` |
+| Estimated by the model and confirmed by the user | `inferred` | `confirmed` | `Estimated by <service> <model> from the description; confirmed by the user before placement` |
+| Typed by the user while reviewing, or built in the builder | `user_supplied` | `confirmed` | `Entered by the user while reviewing the generated object` |
+
+An unconfirmed estimate is refused (422), so nothing is created until every estimated dimension has been confirmed.
+
+**Placement and undo**: the browser places a new generated asset with the `add_generated_instance` command. It adds the asset to the catalog and one instance to the scene as one reversible change, recorded as `object_added`; one undo removes both. Later instances use `add_instance`.
+
+**Missing models**: a project that names a generated model absent from the library is refused at `/catalog/<i>/visual/uri`, like any missing model. `POST /api/v1/catalog/generated-models/restore` rebuilds such files from their recorded specifications and keeps a file **only if its sha256 equals the recorded one**. Otherwise it reports `mismatch` and writes nothing, for example after a generator change. The editor offers this as **Rebuild generated models and open** on the rejection panel, and **Rebuild generated models** on the model notice.
+
+## Language proposals (GEN-01)
+
+`ObjectProposalResult` and `EditProposalResult` are API responses, not project records. Each carries an `outcome` (`proposal`, `clarification` or `unsupported`), its content, the API's `checks` (corrections in plain words), and a `ProviderRun`: the service, base URL, exact model ID, `live` or `recorded`, the number of attempts, whether the first answer was valid, and the latency. `EditIntent` holds one `move` (direction in plan terms, distance and unit as written, with a quote) or one `rotate` (clockwise or counterclockwise seen from above, angle in degrees). The browser turns it into an exact `set_transform` command and dry-runs that command with the engine before showing it. See [docs/assist.md](assist.md).
+

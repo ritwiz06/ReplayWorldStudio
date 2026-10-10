@@ -224,6 +224,8 @@ async function main() {
     for (let run = 1; run <= RUNS; run++) {
       const context = await browser.newContext({ viewport: { width: WIDTH, height: HEIGHT }, deviceScaleFactor: DPR });
       await context.addInitScript(instrument);
+      // Skip the guided start panel (GEN-01): the benchmark measures the editor.
+      await context.addInitScript(() => window.localStorage.setItem("rws.start.seen", "1"));
       const page = await context.newPage();
       await page.bringToFront();
       const session = await context.newCDPSession(page);

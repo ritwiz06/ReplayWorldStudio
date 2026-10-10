@@ -21,6 +21,8 @@ interface Props {
   onSave: () => void;
   onOpenFile: (file: File) => void;
   onLoadFixture: (name: FixtureName) => void;
+  /** Show the guided start panel. */
+  onStart: () => void;
 }
 
 const FIXTURES: FixtureName[] = ["industrial-demo", "foundation"];
@@ -37,7 +39,7 @@ function sceneStatus(scene: SceneState): [tone: string, text: string] {
   }
 }
 
-export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel, redoLabel, busy, onUndo, onRedo, onSave, onOpenFile, onLoadFixture }: Props) {
+export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel, redoLabel, busy, onUndo, onRedo, onSave, onOpenFile, onLoadFixture, onStart }: Props) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [tone, text] = sceneStatus(scene);
   const checking = fileCheck.status === "checking";
@@ -86,6 +88,9 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
         <HealthIndicator state={health} />
       </div>
       <div className="topbar-actions">
+        <button type="button" className="button" onClick={onStart} disabled={busy} data-testid="open-start" title="Explore, describe an object, or open a project">
+          Start
+        </button>
         <div className="segmented history-buttons" role="group" aria-label="History">
           <button
             type="button"

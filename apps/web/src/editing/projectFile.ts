@@ -12,7 +12,7 @@ export function projectFileName(project: Project): string {
   return `${project.id}-r${project.scene.revision}.json`;
 }
 
-/** File name for an upgraded copy of `filename`, e.g. `plan.json` → `plan-0.4.0.json`. */
+/** File name for an upgraded copy of `filename`, e.g. `plan.json` → `plan-0.5.0.json`. */
 export function upgradedFileName(filename: string, version: string): string {
   const stem = filename.replace(/\.json$/i, "");
   return `${stem}-${version}.json`;

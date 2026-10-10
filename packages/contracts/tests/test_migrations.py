@@ -67,9 +67,13 @@ def test_upgrade_does_not_modify_its_input(legacy: dict[str, Any]) -> None:
 
 
 def as_version(current: dict[str, Any], version: str) -> dict[str, Any]:
-    """A 0.2.0 or 0.3.0 document with the same content: before 0.4.0 there was no edit log."""
-    scene = {k: v for k, v in current["scene"].items() if k != "edit_log"}
-    return {**current, "schema_version": version, "scene": scene}
+    """An older document with the same content: before 0.4.0 there was no edit log, and before
+    0.5.0 catalog assets had no generation record."""
+    catalog = [{k: v for k, v in a.items() if k != "generation"} for a in current["catalog"]]
+    scene = current["scene"]
+    if version != "0.4.0":
+        scene = {k: v for k, v in scene.items() if k != "edit_log"}
+    return {**current, "schema_version": version, "catalog": catalog, "scene": scene}
 
 
 NOTE_0_3_0: str = (
@@ -81,13 +85,21 @@ NOTE_0_4_0: str = (
 )
 
 
+def note_0_5_0(assets: int) -> str:
+    plural = "" if assets == 1 else "s"
+    return (
+        f"schema_version 0.4.0 -> 0.5.0 (adds 'generation: null' to {assets} catalog "
+        f"asset{plural}; no values or evidence changed)"
+    )
+
+
 def test_0_2_0_documents_gain_only_the_version_and_an_empty_edit_log(
     fixture_data: dict[str, Any],
 ) -> None:
     upgrade = upgrade_document(as_version(fixture_data, "0.2.0"))
     assert upgrade.document == fixture_data
     assert upgrade.from_version == "0.2.0"
-    assert upgrade.notes == [NOTE_0_3_0, NOTE_0_4_0]
+    assert upgrade.notes == [NOTE_0_3_0, NOTE_0_4_0, note_0_5_0(3)]
 
 
 def test_0_3_0_documents_gain_an_empty_edit_log(fixture_data: dict[str, Any]) -> None:
@@ -95,8 +107,26 @@ def test_0_3_0_documents_gain_an_empty_edit_log(fixture_data: dict[str, Any]) ->
     upgrade = upgrade_document(old)
     assert upgrade.document == fixture_data
     assert upgrade.document["scene"]["edit_log"] == []
-    assert (upgrade.from_version, upgrade.notes) == ("0.3.0", [NOTE_0_4_0])
+    assert (upgrade.from_version, upgrade.notes) == ("0.3.0", [NOTE_0_4_0, note_0_5_0(3)])
     assert "edit_log" not in old["scene"]  # input untouched
+
+
+def test_0_4_0_documents_gain_a_null_generation_on_each_asset(
+    fixture_data: dict[str, Any],
+) -> None:
+    old = as_version(fixture_data, "0.4.0")
+    upgrade = upgrade_document(old)
+    assert upgrade.document == fixture_data
+    assert all(asset["generation"] is None for asset in upgrade.document["catalog"])
+    assert (upgrade.from_version, upgrade.notes) == ("0.4.0", [note_0_5_0(3)])
+    assert all("generation" not in asset for asset in old["catalog"])  # input untouched
+
+
+def test_a_0_4_0_document_claiming_a_generation_record_is_refused(
+    fixture_data: dict[str, Any],
+) -> None:
+    with pytest.raises(MigrationError, match=r"generation records only exist from 0\.5\.0"):
+        upgrade_document({**fixture_data, "schema_version": "0.4.0"})
 
 
 def test_a_0_3_0_document_claiming_an_edit_log_is_refused(fixture_data: dict[str, Any]) -> None:
@@ -107,7 +137,7 @@ def test_a_0_3_0_document_claiming_an_edit_log_is_refused(fixture_data: dict[str
 def test_legacy_upgrade_runs_every_step_in_order(legacy: dict[str, Any]) -> None:
     notes = upgrade_document(legacy).notes
     assert notes[0] == "schema_version 0.1.0 -> 0.2.0"
-    assert notes[-2:] == [NOTE_0_3_0, NOTE_0_4_0]
+    assert notes[-3:] == [NOTE_0_3_0, NOTE_0_4_0, note_0_5_0(0)]
     upgraded = Project.model_validate(upgrade_document(legacy).document)
     assert upgraded.scene.edit_log == []
 
@@ -117,7 +147,7 @@ def test_current_documents_pass_through_unchanged(fixture_data: dict[str, Any]) 
     assert (upgrade.document, upgrade.changed, upgrade.notes) == (fixture_data, False, [])
 
 
-@pytest.mark.parametrize("version", ["0.0.1", "0.5.0", "1.0.0", None])
+@pytest.mark.parametrize("version", ["0.0.1", "0.6.0", "1.0.0", None])
 def test_unknown_versions_are_refused(legacy: dict[str, Any], version: str | None) -> None:
     legacy["schema_version"] = version
     with pytest.raises(MigrationError, match="unsupported schema_version"):
@@ -145,9 +175,10 @@ def test_migrate_command_writes_a_validated_upgrade(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert "note: schema_version 0.1.0 -> 0.2.0" in result.stderr
     project = Project.model_validate_json(out.read_text())
-    assert project.schema_version == "0.4.0"
+    assert project.schema_version == "0.5.0"
     assert "note: schema_version 0.2.0 -> 0.3.0" in result.stderr
     assert "note: schema_version 0.3.0 -> 0.4.0" in result.stderr
+    assert "note: schema_version 0.4.0 -> 0.5.0" in result.stderr
     assert LEGACY.read_text().startswith('{\n  "schema_version": "0.1.0"')  # input untouched
 
 

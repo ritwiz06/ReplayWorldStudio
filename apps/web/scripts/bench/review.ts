@@ -41,6 +41,8 @@ async function main() {
     const [size, dpr] = spec.split("@");
     const [width, height] = size!.split("x").map(Number) as [number, number];
     const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: Number(dpr ?? 1) });
+    // Skip the guided start panel (GEN-01); the review screenshots show the editor.
+    await context.addInitScript(() => window.localStorage.setItem("rws.start.seen", "1"));
     const page = await context.newPage();
     await page.bringToFront();
     const shot = async (name: string, settle = 1400) => {

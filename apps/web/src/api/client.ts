@@ -2,12 +2,21 @@
 // schema before the UI sees it, and every failure is classified so it can be explained.
 import {
   SCHEMA_VERSION,
+  validateAssistStatus,
+  validateCatalogAsset,
+  validateEditProposalResult,
+  validateGeneratedModel,
+  validateGeneratedModelRestoreReport,
   validateHealthResponse,
+  validateObjectProposalResult,
   validateProject,
   validateUpgradeReport,
   validateValidationErrorResponse,
   validateValidationReport,
   type ContractIssue,
+  type EditProposalRequest,
+  type GeneratedAssetRequest,
+  type GeometryDraft,
   type ValidationIssue,
   type ValidationResult,
 } from "@replay-world/contracts";
@@ -31,9 +40,13 @@ interface RequestOptions {
   method?: "GET" | "POST";
   body?: string;
   signal?: AbortSignal | undefined;
+  timeoutMs?: number;
 }
 
 const TIMEOUT_MS = 8_000;
+/** A language model can take a minute or more to draft a structured proposal. */
+export const ASSIST_TIMEOUT_MS = 180_000;
+const GENERATE_TIMEOUT_MS = 30_000;
 
 export function createApiClient(
   baseUrl: string = API_BASE_URL,
@@ -42,9 +55,9 @@ export function createApiClient(
   async function request<T>(
     path: string,
     validate: (data: unknown) => ValidationResult<T>,
-    { method = "GET", body, signal }: RequestOptions = {},
+    { method = "GET", body, signal, timeoutMs = TIMEOUT_MS }: RequestOptions = {},
   ): Promise<ApiResult<T>> {
-    const timeout = AbortSignal.timeout(TIMEOUT_MS);
+    const timeout = AbortSignal.timeout(timeoutMs);
     let response: Response;
     try {
       response = await fetchImpl(`${baseUrl}${path}`, {
@@ -56,7 +69,7 @@ export function createApiClient(
     } catch (err) {
       if (isAbortError(err)) throw err; // the caller cancelled; not a failure to report
       const message = isTimeoutError(err)
-        ? `The API at ${baseUrl} did not respond within ${TIMEOUT_MS / 1000} s.`
+        ? `The API at ${baseUrl} did not respond within ${timeoutMs / 1000} s.`
         : `Could not reach the API at ${baseUrl}.`;
       return failure({ kind: "network", message });
     }
@@ -104,6 +117,48 @@ export function createApiClient(
         method: "POST",
         body: text,
         signal,
+      }),
+    /** Whether language proposals are available, and where requests would go. */
+    getAssistStatus: (signal?: AbortSignal) => request("/api/v1/assist/status", validateAssistStatus, { signal }),
+    /** Draft a typed proposal for a described object (sent to the configured provider). */
+    proposeObject: (description: string, signal?: AbortSignal) =>
+      request("/api/v1/assist/object-proposals", validateObjectProposalResult, {
+        method: "POST",
+        body: JSON.stringify({ description }),
+        signal,
+        timeoutMs: ASSIST_TIMEOUT_MS,
+      }),
+    /** Interpret one edit request against a summary of the scene; nothing is changed. */
+    proposeEdit: (body: EditProposalRequest, signal?: AbortSignal) =>
+      request("/api/v1/assist/edit-proposals", validateEditProposalResult, {
+        method: "POST",
+        body: JSON.stringify(body),
+        signal,
+        timeoutMs: ASSIST_TIMEOUT_MS,
+      }),
+    /** Build a model from a geometry draft for preview (returned as bytes; nothing stored). */
+    previewGeneratedModel: (spec: GeometryDraft, signal?: AbortSignal) =>
+      request("/api/v1/catalog/generated-models/preview", validateGeneratedModel, {
+        method: "POST",
+        body: JSON.stringify({ spec }),
+        signal,
+        timeoutMs: GENERATE_TIMEOUT_MS,
+      }),
+    /** Create a catalog asset from a reviewed proposal; its model is stored and hash-pinned. */
+    createGeneratedAsset: (body: GeneratedAssetRequest, signal?: AbortSignal) =>
+      request("/api/v1/catalog/generated-assets", validateCatalogAsset, {
+        method: "POST",
+        body: JSON.stringify(body),
+        signal,
+        timeoutMs: GENERATE_TIMEOUT_MS,
+      }),
+    /** Rebuild a project's missing generated models from their recorded specifications. */
+    restoreGeneratedModels: (projectText: string, signal?: AbortSignal) =>
+      request("/api/v1/catalog/generated-models/restore", validateGeneratedModelRestoreReport, {
+        method: "POST",
+        body: projectText,
+        signal,
+        timeoutMs: GENERATE_TIMEOUT_MS,
       }),
   };
 }

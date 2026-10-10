@@ -1,0 +1,12 @@
+{
+  "task": "edit",
+  "key": "move the cabinet 1 m left | selected=none",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-01.5",
+  "recorded_at": "2026-10-10",
+  "note": "Raw answers from the live provider, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"action\": \"move\",\n  \"candidates\": [],\n  \"message\": null,\n  \"move\": {\n    \"direction\": \"left\",\n    \"distance\": 1,\n    \"quote\": \"1 m\",\n    \"unit\": \"m\"\n  },\n  \"outcome\": \"proposal\",\n  \"question\": null,\n  \"rotate\": null,\n  \"target\": {\n    \"object_id\": \"obj-cabinet-1\",\n    \"phrase\": \"cabinet\",\n    \"reference\": \"named\"\n  }\n}"
+  ]
+}

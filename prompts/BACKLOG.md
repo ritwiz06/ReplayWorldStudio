@@ -1,6 +1,6 @@
 # Backlog
 
-Baseline copied from the project plan. Rows marked "Baseline status: planned" are not started; rows with a "Status" line record verified progress. If a newer live backlog exists, use it and record its path in PROJECT_STATE.md.
+Baseline copied from the project plan and revised on 2026-10-10 (ADR-030). Rows marked "Baseline status: planned" are not started; rows with a "Status" line record verified progress. If a newer live backlog exists, use it and record its path in PROJECT_STATE.md.
 
 P0 is required for its milestone; P1 is negotiable while preserving the workflow; P2 is expansion. Dependencies are planning prerequisites, not evidence that a gate has passed.
 
@@ -133,7 +133,82 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
     - local `pnpm check` exit 0 (Vitest 10 + 93, pytest 198) and `pnpm test:e2e` 15 passed.
   - **CI.** New `browser-smoke` job: 4 `@smoke` Playwright tests in software WebGL (ADR-029). CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38040882335 succeeded on `0a929ea`: the main job (Vitest 10 + 93, pytest 198, build) and browser smoke (4 passed in 1.1 min). The smoke job then exposed a software-WebGL timeout, a settle race, and a real idle frame every 10 s from health polls (fixed). The final commit `d84599b` passed CI three times in a row (https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38042331665, attempts 1–3).
 
-## M2
+
+## Reprioritisation (2026-10-10, ADR-030)
+
+After M1 the user approved guided creation and described custom objects as the next priority, then general image-to-editable-world import. DXF import (IMP-01) stays planned and feeds the same world model. Simulation is split into explicit supported models: production events (SIM), rigid-body interactions (PHY), and later validated structural (ENG) and chemical (CHEM) cases. Issue IDs and acceptance definitions below are unchanged except where a row says "Re-scoped"; new issues have new IDs. Milestone numbers follow MILESTONES.md.
+
+## M2 - Guided creation and described objects
+
+### GEN-01 - Describe, generate and place a custom object; one language edit
+
+- Priority: P0
+- Dependencies: WRL-03
+- Status: **done locally** (2026-10-10); CI evidence recorded below when the run completes
+- Done when:
+  - A guided entry offers Explore demo, Describe an object and Open a project; the detailed editor stays available; image import is shown as upcoming, not as a working action.
+  - An ordinary-language description returns a typed proposal (name, parts, approximate appearance, width/height/depth) that marks which facts the user stated and which were inferred; stated values are checked against the user's words; dimensions that matter are confirmed before placement; mass, strength, chemistry and operating behaviour stay unknown.
+  - An original provisional model is generated from a bounded geometry specification (approved shapes, parts, placements, materials; no executed model output), with verified metre bounds, bottom-centre origin, catalog hash and file checks; meaningfully different descriptions give visibly different models; preview, correction, placement through the edit-command path, undo, save, reopen and missing-model handling work.
+  - ASU Voyager is the server-side provider (key only in a local environment variable; model ID configurable); its output quality and schema adherence are tested live; a manual builder uses the same specification when the provider is unavailable.
+  - One bounded language edit (for example "move the selected cabinet 1 metre left") shows the exact change before it is applied, resolves target, units and revision through the command validation, asks for clarification when ambiguous, and leaves the project unchanged when rejected.
+  - A first-time user can describe, inspect and place an object without opening schema or provenance panels; evidence stays behind "Details". Representative tasks are timed and reported as observations only.
+- Evidence (details: docs/assist.md, ADR-031..035):
+  - **Guided entry.** A start panel with Explore the demo, Describe an object and Open a project (all working, e2e), Build by hand, Go to the full editor, and "Start from a photo - Coming next (IMG-01)" with no action. It reopens from **Start**.
+  - **Proposals.** `POST /api/v1/assist/object-proposals` returns a typed `ObjectProposalResult` (contract 0.5.0) with:
+    - name, category, appearance, parts and W/H/D, each marked stated (and found in the words) or inferred, with confirmation required;
+    - stated, inferred and not-modelled facts;
+    - mass, strength, chemical composition and operating behaviour always unknown.
+  - **Generator.** A bounded geometry specification (40 parts, 5 shapes, 30 materials) is built by the API's deterministic pure-Python generator and stored as `generated/<sha256>.glb`. It is verified by an independent GLB reader, by the existing hash and file checks on validate, and by the browser's hash and bounds check before drawing. Placement uses `add_generated_instance` (one undo step). Save, reopen, and rebuilding a missing model from the project's own record (hash must match) are covered in e2e.
+  - **Live provider.** ASU Voyager `qwen3-235b-a22b-instruct-2507`, live on 2026-10-10. Three guided runs: the final prompt `gen-01.5` gave 16/16 outcomes as expected and 16/16 first answers schema-valid (median 59.5 s per object, 8.8 s per edit). Without guidance, 0/9 edit answers were valid. Three substantially different descriptions (conveyor, tank, workbench) gave three different, valid, hash-pinned models.
+  - **Key handling.** The key is server-only (`.env`; never in the bundle, the repo, logs or responses, checked by searching for its value).
+  - **Language edit.** "move the selected cabinet 1 metre left" shows `x -2.000 → -3.000 m` before Apply. "the cabinet" asks which one; a selection mismatch asks; "2 km" is refused by the command engine with the project unchanged (e2e). One undo reverts it.
+  - **Builder.** The object builder works with the assistant off (e2e).
+  - **Timed tasks** (observations): describe and place 6–8 steps, 65–75 s (58–72 s of it the model); language move 4 steps, 7.5 s; builder 6 steps, 6.8 s.
+  - **Checks:** `pnpm check` exit 0 (Vitest 10 + 107, pytest 332, build); `pnpm test:e2e` 20 passed; `pnpm test:e2e:smoke` 6 passed (with `CI=1`).
+
+### GEN-02 - Correct and reuse generated objects after placement
+
+- Priority: P1
+- Dependencies: GEN-01
+- Baseline status: planned
+- Done when: A placed generated object's specification can be reopened, corrected (size, parts, materials) and rebuilt as a new asset version; instances can be switched to the new version with one undoable command; the previous version and its record remain in the project.
+- Evidence: not recorded
+
+### GEN-03 - Evaluate described objects and language edits
+
+- Priority: P0
+- Dependencies: GEN-01
+- Baseline status: planned
+- Done when: A held-out set (at least 30 descriptions and 30 edit requests, including ambiguous, unsupported, missing-value and hostile-text cases) reports schema adherence, grounding of stated values, correct clarifications, unintended changes, visual distinctness review and manual correction time, for at least two candidate models; failures are categorised; the chosen default model is justified by the results.
+- Evidence: not recorded
+
+## M3 - Image to editable world
+
+### IMG-01 - One image to a reviewed, editable world
+
+- Priority: P0
+- Dependencies: GEN-01
+- Baseline status: planned (next after GEN-01)
+- Done when: A user supplies one permitted image; a vision-capable model (candidate `qwen3-vl-32b-instruct`, tested on actual image inputs at the start of the issue) proposes the objects it can see with approximate floor positions and sizes; the user sets scale from one known dimension; each object is accepted, corrected or rejected and becomes a generated or catalog instance placed through the command path, with "inferred from image" evidence and occluded or unseen parts labelled; the image is stored as a source with its hash. Text-to-image or video-generation models are not used as image-to-3D services.
+- Evidence: not recorded
+
+### IMG-02 - Multi-object layout and occlusion review
+
+- Priority: P1
+- Dependencies: IMG-01
+- Baseline status: planned
+- Done when: Several objects from one image keep their relative layout; overlaps and occlusions are listed for review; corrections are recorded; nothing hidden is presented as seen.
+- Evidence: not recorded
+
+### IMG-03 - Evaluate image import on held-out images
+
+- Priority: P0
+- Dependencies: IMG-01
+- Baseline status: planned
+- Done when: Object precision and recall, scale error against measured references, and manual correction time are reported on held-out, permissioned images, split by scene type; failure cases are kept.
+- Evidence: not recorded
+
+## M4 - Drawing import
 
 ### IMP-01 - Build DXF geometry adapter
 
@@ -141,6 +216,7 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 - Dependencies: WRL-01
 - Baseline status: planned; reconcile with actual repository
 - Done when: Parse declared entity subset; warn on unsupported data and nested-unit conflicts.
+- Note (2026-10-10): unchanged in scope; it feeds the same world model and source records that described and image objects use.
 - Evidence: not recorded by this package
 
 ### IMP-02 - Review scale and map equipment
@@ -149,6 +225,7 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 - Dependencies: IMP-01,WRL-03
 - Baseline status: planned; reconcile with actual repository
 - Done when: Overlay aligns with known measurements; user can correct mappings and dimensions.
+- Note (2026-10-10): mapped equipment can use catalog assets or GEN-01 generated objects; reuse the GEN-01 review flow where it fits.
 - Evidence: not recorded by this package
 
 ### IMP-03 - Add calibrated PDF/PNG reference
@@ -159,7 +236,7 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 - Done when: Manual scale and object placement persist; inferred values remain labeled.
 - Evidence: not recorded by this package
 
-## M3
+## M5 - Spatial checks
 
 ### GEO-01 - Check footprints and service areas
 
@@ -177,7 +254,9 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 - Done when: Seeded route obstruction is highlighted; unmodeled vehicle kinematics remain explicit.
 - Evidence: not recorded by this package
 
-## M4
+## M6 - Production-event simulation and comparison
+
+Supported model: production events (discrete-event queues and resources). It does not model motion, contact or forces.
 
 ### SIM-01 - Define process graph and templates
 
@@ -211,13 +290,33 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 - Done when: Independent revisions, paired assumptions and changed metrics export correctly.
 - Evidence: not recorded by this package
 
-## M5
+## M7 - Rigid-body interactions
+
+Supported model: rigid bodies with stated mass, friction and restitution at a fixed step. It does not model deformation, stress, failure or production output.
+
+### PHY-01 - Bounded rigid-body experiment
+
+- Priority: P1 (re-scoped 2026-10-10: moved from Later/P2 into M7)
+- Dependencies: REL-01 → re-scoped: WRL-03 and PHY-02
+- Baseline status: planned; reconcile with actual repository
+- Done when: Model scope, contact fixtures and integration limits are documented.
+- Evidence: not recorded by this package
+
+### PHY-02 - Rigid-body inputs with evidence
+
+- Priority: P0
+- Dependencies: WRL-01
+- Baseline status: planned
+- Done when: Mass, friction and restitution are entered, supplied or measured with provenance; generated or image objects never receive them by inference from appearance; an experiment refuses to run while a required input is unknown and says which.
+- Evidence: not recorded
+
+## M8 - AI assistance across the workflow
 
 ### AI-01 - Implement provider and command boundary
 
 - Priority: P0
-- Dependencies: SIM-04
-- Baseline status: planned; reconcile with actual repository
+- Dependencies: SIM-04 → re-scoped: GEN-01
+- Baseline status: re-scoped (2026-10-10). GEN-01 implements the provider boundary (ASU Voyager, server-side key, typed and validated proposals) for object proposals and one move/rotate edit. AI-01 remains for the rest of the command set (resize, add, duplicate, remove, scenario actions) and its held-out evaluation.
 - Done when: Real provider emits typed proposals; invalid or unsupported actions cannot mutate state.
 - Evidence: not recorded by this package
 
@@ -237,7 +336,7 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 - Done when: Compare candidate layouts against explicit constraints without claiming global optimality.
 - Evidence: not recorded by this package
 
-## M6
+## M9 - Evaluation and release
 
 ### QA-01 - Run held-out benchmark and user tasks
 
@@ -265,18 +364,10 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 - Done when: Authentication, roles, version conflicts, backup/restore and remote data routing are verified.
 - Evidence: not recorded by this package
 
-### PHY-01 - Bounded rigid-body experiment
-
-- Priority: P2
-- Dependencies: REL-01
-- Baseline status: planned; reconcile with actual repository
-- Done when: Model scope, contact fixtures and integration limits are documented.
-- Evidence: not recorded by this package
-
 ### CAP-01 - Multi-view reconstruction investigation
 
 - Priority: P2
-- Dependencies: REL-01
+- Dependencies: REL-01 → re-scoped: IMG-03
 - Baseline status: planned; reconcile with actual repository
 - Done when: Geometry, separability and scale are evaluated on held-out captures.
 - Evidence: not recorded by this package
@@ -287,4 +378,13 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 - Dependencies: PHY-01
 - Baseline status: planned; reconcile with actual repository
 - Done when: A specific solver/model is compared with analytical and measured reference cases.
+- Note (2026-10-10): this is the "validated structural" simulation case; it can also start from verified CAD without M7.
 - Evidence: not recorded by this package
+
+### CHEM-01 - One validated chemical or aging mechanism
+
+- Priority: P2
+- Dependencies: ENG-01 (a domain model and evidence, not merely its completion)
+- Baseline status: planned
+- Done when: One mechanism on one material under defined exposure conditions is calibrated against data, with uncertainty and sensitivity reported; no general "years later" prediction is offered.
+- Evidence: not recorded
