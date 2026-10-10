@@ -32,7 +32,21 @@ test("renders nothing while the scene is idle, and renders again on interaction"
   });
   await openDemo(page);
   const renders = () => page.evaluate(() => (window as unknown as { __renders: number }).__renders);
-  await page.waitForTimeout(1500); // let the first frames and any settling finish
+  // Wait until rendering has stopped: without a GPU (CI) the first frames, which compile shaders
+  // in software, can take seconds. Continuous rendering (the old behaviour) never stops, so
+  // this wait fails there.
+  let previous = -1;
+  await expect
+    .poll(
+      async () => {
+        const now = await renders();
+        const settled = now === previous;
+        previous = now;
+        return settled;
+      },
+      { intervals: [1000], timeout: 30_000 },
+    )
+    .toBe(true);
   const before = await renders();
   await page.waitForTimeout(1500);
   expect(await renders()).toBe(before); // continuous rendering used to redraw ~120 times a second
