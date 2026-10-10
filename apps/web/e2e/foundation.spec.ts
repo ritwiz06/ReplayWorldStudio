@@ -96,12 +96,12 @@ test("rejects malformed scene files and keeps the current scene", async ({ page 
   await fileInput.setInputFiles(fixture("invalid/dangling-asset-reference.json"));
   await expect(rejected).toContainText("'asset-not-in-catalog', which is not in the catalog");
 
-  // An older contract gets one actionable message instead of a cascade of field errors.
+  // An older contract is offered as a reviewed upgrade instead of a cascade of field errors
+  // (editing.spec.ts covers the upgrade itself); cancelling keeps the current scene.
   await fileInput.setInputFiles(fixture("legacy/foundation-scene-0.1.0.json"));
-  await expect(rejected).toContainText("/schema_version");
-  await expect(rejected).toContainText("Schema 0.1.0 is an older contract");
-  await expect(rejected).toContainText("python -m replay_world_contracts.migrate");
-  await expect(rejected.locator(".issues li")).toHaveCount(1);
+  await expect(page.getByTestId("upgrade-dialog")).toContainText("This file uses contract 0.1.0");
+  await page.getByTestId("upgrade-dialog").getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByTestId("scene-source")).toHaveText("API industrial demo");
 
   await fileInput.setInputFiles({
     name: "not-json.json",

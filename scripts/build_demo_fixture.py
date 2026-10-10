@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 from typing import Any, Final
 
-from replay_world_contracts import Project
+from replay_world_contracts import SCHEMA_VERSION, Project
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 MANIFEST: Final = ROOT / "assets" / "catalog" / "models" / "manifest.json"
@@ -219,7 +219,7 @@ def build() -> Project:
         ),
     ]
     document = {
-        "schema_version": "0.3.0",
+        "schema_version": SCHEMA_VERSION,
         "id": "proj-industrial-demo",
         "name": "Industrial demo - packaging line (synthetic)",
         "units": {"length": "m", "time": "s", "mass": "kg", "angle": "rad"},
@@ -239,6 +239,7 @@ def build() -> Project:
             "name": "Packaging line (synthetic demonstration)",
             "revision": 0,
             "objects": objects,
+            "edit_log": [],
         },
     }
     return Project.model_validate(document)

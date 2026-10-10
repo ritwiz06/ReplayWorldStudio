@@ -97,7 +97,8 @@ export function WalkHud({ onReset, onExit }: { onReset: () => void; onExit: () =
   );
 }
 
-export function FixtureBanner({ fixture }: { fixture: FixtureLabel }) {
+/** Development data stays labelled as such, including every project edited or saved from it. */
+export function FixtureBanner({ fixture, edited }: { fixture: FixtureLabel; edited: boolean }) {
   const [open, setOpen] = useState(false);
   const title = fixture.kind === "demonstration" ? "Synthetic demonstration" : "Foundation fixture";
   return (
@@ -105,6 +106,7 @@ export function FixtureBanner({ fixture }: { fixture: FixtureLabel }) {
       <div className="fixture-banner-head">
         <strong>{title}</strong>
         <span>not verified engineering data</span>
+        {edited && <span className="banner-edited">Edited layout - not checked for clearance or feasibility</span>}
         <button type="button" className="link-button" aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? "Hide details" : "Details"}
         </button>

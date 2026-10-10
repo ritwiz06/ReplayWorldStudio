@@ -672,3 +672,251 @@ kbd {
 .scene-label-plan strong {
   max-width: 100%;
 }
+
+/* ---------- WRL-03: editing, history, save and dialogs ---------- */
+.topbar {
+  gap: 12px;
+}
+.topbar-actions {
+  gap: 6px;
+}
+.history-buttons button {
+  padding: 5px 10px;
+}
+.segmented button:disabled,
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.button-small {
+  padding: 3px 9px;
+  font-size: 12px;
+}
+.button-danger {
+  border-color: #7a2f2f;
+  color: #f4b4b0;
+}
+.button-danger:hover:not(:disabled) {
+  background: #3a1d1d;
+}
+
+.panel-left {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.panel-left > nav {
+  flex: 1 1 auto;
+  min-height: 120px;
+  overflow-y: auto;
+}
+.catalog-panel {
+  flex: 0 1 auto;
+  max-height: 45%;
+  overflow-y: auto;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+}
+.banner-edited {
+  flex-basis: 100%;
+}
+.catalog-panel .panel-title {
+  padding: 12px 16px 8px;
+}
+.catalog-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+}
+.catalog-item > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.edit-panel {
+  margin-top: 12px;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-raised);
+}
+.edit-panel .section-title {
+  margin-top: 0;
+}
+.edit-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.edit-tools .segmented button {
+  padding: 4px 7px;
+  font-size: 12px;
+}
+.snap-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.num-group {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 0;
+}
+.num-group legend {
+  padding: 0;
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.num-field {
+  position: relative;
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  align-items: center;
+  gap: 3px;
+}
+.num-label {
+  color: var(--muted);
+  font-size: 11px;
+}
+.num-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 3px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #15181c;
+  color: var(--text);
+  font: 12px/1.4 "JetBrains Mono", ui-monospace, monospace;
+  text-align: right;
+}
+.num-field input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+.num-field input[aria-invalid="true"] {
+  border-color: var(--error);
+}
+.num-field input:disabled {
+  opacity: 0.6;
+}
+.field-error {
+  grid-column: 1 / -1;
+  color: #f08080;
+  font-size: 11px;
+}
+.edit-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.edit-log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+.edit-log > li {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 4px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.edit-log ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.edit-log ul li + li {
+  margin-top: 3px;
+}
+.edit-rev {
+  color: var(--accent);
+  font: 11px/1.6 "JetBrains Mono", ui-monospace, monospace;
+}
+.axis-edited {
+  margin-top: 2px;
+  color: #c7b8ff;
+  font-size: 11px;
+}
+.banner-edited {
+  color: #f0c46a;
+}
+.placement-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-color: var(--accent);
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.placement-banner p {
+  margin: 0;
+}
+.placement-label {
+  white-space: nowrap;
+}
+
+.modal {
+  max-width: 560px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+.modal::backdrop {
+  background: rgba(8, 10, 12, 0.6);
+}
+.modal h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.modal p {
+  margin: 6px 0;
+}
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.upgrade-notes {
+  max-height: 220px;
+  margin: 0;
+  padding-left: 20px;
+  overflow-y: auto;
+  font-size: 12px;
+}
+.upgrade-notes li + li {
+  margin-top: 3px;
+}
+.viewport-hint {
+  max-width: calc(100% - 200px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(17, 19, 22, 0.78);
+  color: #c3cad2;
+}
+.drag-readout {
+  transform: translateY(-42px);
+}

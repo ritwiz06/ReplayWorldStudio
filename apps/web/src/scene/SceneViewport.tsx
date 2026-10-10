@@ -1,12 +1,18 @@
-import type { Project } from "@replay-world/contracts";
-import { GizmoHelper, GizmoViewport, Grid, useCursor } from "@react-three/drei";
+import type { Project, SceneObject } from "@replay-world/contracts";
+import { GizmoHelper, GizmoViewport, Grid, Html, useCursor } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
-import { type Box3, type DirectionalLight, PMREMGenerator, Vector3 } from "three";
+import { type Box3, type DirectionalLight, type Intersection, PMREMGenerator, Vector3 } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { AXIS_ORDER, type CommandRequest } from "../editing/commands";
+import { formatFixed, radToDeg } from "../editing/units";
 import type { ModelStates } from "../hooks/useCatalogModels";
 import { type CameraMemory, type CameraMode, type CameraProbe, CameraRig, type ViewCommand } from "./CameraRig";
+import type { EditTool, Snap } from "./drag";
+import { EditHandles, type HandleProbe } from "./EditHandles";
+import type { Vec3Tuple } from "./fit";
 import { ObjectVisual } from "./ObjectVisuals";
+import { type GhostSpec, PlacementGhost } from "./PlacementGhost";
 import { worldBounds } from "./placement";
 import { isFloorMarking, sceneBounds, walkWorldOf } from "./sceneBounds";
 
@@ -21,6 +27,16 @@ interface Props {
   onProbe: (probe: CameraProbe) => void;
   /** Top view scale (screen pixels per metre), used to size plan labels. */
   planPixelsPerMetre: number | null;
+  /** Editing is possible (not in walk view, no dialog open). */
+  editable: boolean;
+  tool: EditTool;
+  snap: Snap;
+  /** A pending placement: the ghost to show, or null. */
+  placement: GhostSpec | null;
+  onPlace: (position: Vec3Tuple) => void;
+  onCommand: (request: CommandRequest) => void;
+  onDragChange: (dragging: boolean) => void;
+  onHandleProbe: (probe: HandleProbe | null) => void;
 }
 
 const BACKGROUND = "#1f2329";
@@ -28,17 +44,59 @@ const BACKGROUND = "#1f2329";
 /** Plan labels narrower than this (px) would be unreadable, so they are hidden. */
 const MIN_PLAN_LABEL_PX = 44;
 
-export function SceneViewport({ project, models, mode, command, selectedId, onSelect, onReady, onProbe, planPixelsPerMetre }: Props) {
+/** Pointer hits on edit handles come first, so a handle drawn over equipment is what gets grabbed. */
+function handlesFirst(hits: Intersection[]): Intersection[] {
+  const isHandle = (hit: Intersection) => {
+    for (let o: Intersection["object"] | null = hit.object; o; o = o.parent) if (o.userData.editHandle) return true;
+    return false;
+  };
+  return [...hits.filter(isHandle), ...hits.filter((h) => !isHandle(h))];
+}
+
+function HandlesFirst() {
+  const setEvents = useThree((s) => s.setEvents);
+  useEffect(() => setEvents({ filter: handlesFirst }), [setEvents]);
+  return null;
+}
+
+export function SceneViewport({
+  project,
+  models,
+  mode,
+  command,
+  selectedId,
+  onSelect,
+  onReady,
+  onProbe,
+  planPixelsPerMetre,
+  editable,
+  tool,
+  snap,
+  placement,
+  onPlace,
+  onCommand,
+  onDragChange,
+  onHandleProbe,
+}: Props) {
   const objects = project.scene.objects;
+  // While a handle is dragged, the object is drawn from this preview; the scene is unchanged
+  // until the drag is released and its single command is accepted.
+  const [draft, setDraft] = useState<SceneObject | null>(null);
+  const [handleHover, setHandleHover] = useState(false);
   const sceneBox = useMemo(() => sceneBounds(objects), [objects]);
   const walkWorld = useMemo(() => walkWorldOf(objects), [objects]);
   const assets = useMemo(() => new Map(project.catalog.map((a) => [a.id, a])), [project.catalog]);
-  const selected = objects.find((o) => o.id === selectedId) ?? null;
+  const committed = objects.find((o) => o.id === selectedId) ?? null;
+  const selected = draft && committed && draft.id === committed.id ? draft : committed;
   const selectedBox = useMemo(() => (selected ? worldBounds(selected) : null), [selected]);
   // One camera memory per project, so opening another scene frames it afresh.
   const memory: RefObject<CameraMemory> = useMemo(() => ({ current: { orbit: null, top: null, walk: null } }), [project.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const radius = sceneBox.getSize(new Vector3()).length() / 2;
+  const showHandles = editable && tool !== "select" && !placement && mode !== "walk";
+  useEffect(() => {
+    if (!showHandles || !committed) onHandleProbe(null);
+  }, [showHandles, committed, onHandleProbe]);
   const footprintWidths = useMemo(() => new Map(objects.map((o) => [o.id, worldBounds(o).getSize(new Vector3()).x])), [objects]);
 
   // In the top view each label fits inside its object's on-screen width, so labels of adjacent
@@ -74,20 +132,39 @@ export function SceneViewport({ project, models, mode, command, selectedId, onSe
         fadeStrength={1.2}
         infiniteGrid
       />
+      <HandlesFirst />
       {objects.map((o) => (
         <ObjectVisual
           key={o.id}
-          object={o}
+          object={selected && o.id === selected.id ? selected : o}
           asset={o.asset_id ? (assets.get(o.asset_id) ?? null) : null}
           model={o.asset_id ? models.get(o.asset_id) : undefined}
           selected={o.id === selectedId}
-          hovered={o.id === hoveredId && mode !== "walk"}
+          hovered={o.id === hoveredId && mode !== "walk" && !placement}
           planLabelWidth={planLabelWidth(o.id, o.kind === "equipment" || isFloorMarking(o))}
+          interactive={!placement}
+          hideLabel={showHandles && o.id === selectedId}
           onSelect={onSelect}
           onHover={setHoveredId}
         />
       ))}
-      <HoverCursor active={hoveredId !== null && mode !== "walk"} />
+      {showHandles && selected && (
+        <EditHandles
+          object={selected}
+          tool={tool as Exclude<EditTool, "select">}
+          snap={snap}
+          revision={project.scene.revision}
+          vertical={mode !== "top"}
+          onPreview={setDraft}
+          onCommit={onCommand}
+          onDragChange={onDragChange}
+          onHover={setHandleHover}
+          onProbe={onHandleProbe}
+        />
+      )}
+      {showHandles && selected && draft && committed && <DragReadout before={committed} after={draft} />}
+      {placement && editable && <PlacementGhost key={placement.nonce} spec={placement} stepMm={snap.lengthMm} onPlace={onPlace} />}
+      <HoverCursor active={((hoveredId !== null && !placement) || handleHover) && mode !== "walk"} />
       <CameraRig
         key={`${project.id}:${mode}`}
         mode={mode}
@@ -104,6 +181,28 @@ export function SceneViewport({ project, models, mode, command, selectedId, onSe
         </GizmoHelper>
       )}
     </Canvas>
+  );
+}
+
+/** The values a drag would commit, shown above the object while the handle is held. */
+function DragReadout({ before, after }: { before: SceneObject; after: SceneObject }) {
+  const p = after.transform.position_m;
+  const parts: string[] = [];
+  const b = before.transform.position_m;
+  if (p.x !== b.x || p.y !== b.y || p.z !== b.z) parts.push(`x ${formatFixed(p.x, 3)} · y ${formatFixed(p.y, 3)} · z ${formatFixed(p.z, 3)} m`);
+  if (after.transform.rotation_rad.y !== before.transform.rotation_rad.y) parts.push(`rotation Y ${formatFixed(radToDeg(after.transform.rotation_rad.y), 1)}°`);
+  for (const axis of AXIS_ORDER) {
+    if (after.dimensions[axis].value_m !== before.dimensions[axis].value_m) parts.push(`${axis} ${formatFixed(after.dimensions[axis].value_m, 3)} m`);
+  }
+  if (parts.length === 0) return null;
+  return (
+    <Html position={[p.x, p.y + after.dimensions.height.value_m + 0.35, p.z]} center zIndexRange={[30, 0]} pointerEvents="none">
+      <div className="scene-label scene-label-strong drag-readout" data-testid="drag-readout">
+        {parts.map((part) => (
+          <span key={part}>{part}</span>
+        ))}
+      </div>
+    </Html>
   );
 }
 

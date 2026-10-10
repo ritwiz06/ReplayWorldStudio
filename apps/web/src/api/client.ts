@@ -4,6 +4,7 @@ import {
   SCHEMA_VERSION,
   validateHealthResponse,
   validateProject,
+  validateUpgradeReport,
   validateValidationErrorResponse,
   validateValidationReport,
   type ContractIssue,
@@ -93,6 +94,13 @@ export function createApiClient(
     /** Sends the document text unchanged so the API remains the authority on validity. */
     validateProjectDocument: (text: string, signal?: AbortSignal) =>
       request("/api/v1/projects/validate", validateValidationReport, {
+        method: "POST",
+        body: text,
+        signal,
+      }),
+    /** Upgrades an older document through the API's migration chain, for review; nothing is stored. */
+    upgradeProjectDocument: (text: string, signal?: AbortSignal) =>
+      request("/api/v1/projects/upgrade", validateUpgradeReport, {
         method: "POST",
         body: text,
         signal,

@@ -1,6 +1,6 @@
 # Contracts: units, frames, provenance and the schema pipeline
 
-Contract version **0.3.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, both 2026-10-10). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
+Contract version **0.4.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, all 2026-10-10). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
 
 ## One source of truth
 
@@ -38,6 +38,8 @@ packages/contracts/ts/generated/contracts.ts       (TypeScript types, committed)
 | glTF path pattern, sha256 format, declared axes/origin/fit, distortion range | yes | yes |
 | Model bounds have their origin at the bottom-centre; nominal size equals model extents | yes | **no** |
 | Model file exists in the catalog library, stays inside it and has the recorded sha256 | API (on open) | browser re-checks the downloaded bytes |
+| Edit-record shapes (`object_edited` / `object_added` / `object_removed`), revision ≥ 1 | yes | yes |
+| Edit log describes the scene: increasing revisions ≤ scene revision, real changes only, edited axes `user_supplied`, removed IDs not reused, latest recorded values equal the scene's | yes | **no** (the browser's command engine produces consistent logs; the API checks every opened file) |
 
 The browser only renders data that passed Ajv, and opens a local file only after the API accepted it. Python's `json.loads` accepts a bare `NaN` token, so the API's finite-number rule is what rejects `fixtures/invalid/nonfinite-coordinate.json`.
 
@@ -83,10 +85,44 @@ Worked example (foundation fixture): the plan is in mm with translation (−10, 
 - Older documents are upgraded explicitly by `replay_world_contracts.migrations.upgrade_document`, or from the command line:
   `uv run python -m replay_world_contracts.migrate OLD.json -o NEW.json`. The command validates the result, writes notes describing every change to stderr, and never modifies the input.
 - 0.1.0 → 0.2.0 is lossless and never strengthens evidence. The single box origin, source and review status are copied to all three axes; `representation: placeholder_box` becomes `asset_id: null`; an empty `catalog` is added. Unknown or newer versions are refused.
-- 0.2.0 → 0.3.0 changes only `schema_version`, because 0.3.0 is additive. Steps run in sequence, so a 0.1.0 file passes through 0.2.0 and the notes list both steps.
-- `POST /api/v1/projects/validate` answers a 0.1.0 or 0.2.0 document with a single 422 issue at `/schema_version` that names the migrate command, instead of a cascade of field errors.
+- 0.2.0 → 0.3.0 changes only `schema_version`, because 0.3.0 is additive. Steps run in sequence, so a 0.1.0 file passes through every version and the notes list each step.
+- `POST /api/v1/projects/validate` answers a 0.1.0, 0.2.0 or 0.3.0 document with a single 422 issue at `/schema_version` that points to the editor's upgrade review and the migrate command, instead of a cascade of field errors.
+- 0.3.0 → 0.4.0 adds an empty `scene.edit_log` and changes nothing else. A 0.3.0 document that already has an `edit_log` is refused as malformed.
 - `fixtures/legacy/foundation-scene-0.1.0.json` is the exact 0.1.0 fixture, kept to test this path.
-- When projects are persisted (WRL-03), loading will call the same `upgrade_document` and show its notes before the first save.
+- **In the editor (WRL-03).** Opening a file whose `schema_version` is any other string sends it to `POST /api/v1/projects/upgrade`. That endpoint runs the same `upgrade_document`, validates the result (contract and model files), and returns an `UpgradeReport` (`from_version`, `to_version`, `notes`, `project`, `validation`) without storing anything. The browser shows the notes and offers **Open upgraded project**, **Download upgraded file** (`<name>-0.4.0.json`) or **Cancel**; nothing is replaced or written before that choice. An unknown version gets one 422 issue at `/schema_version`, a malformed legacy file one issue at the document level, and errors after a successful upgrade are located in the upgraded document. In each case the current scene stays.
+
+## Edits, revisions and the edit log (0.4.0)
+
+Every change the editor makes goes through one typed command engine (`apps/web/src/editing/commands.ts`): `set_transform`, `set_dimensions`, `add_instance`, `duplicate_object`, `remove_object`. Numeric fields, handles, catalog placement and duplication all produce these commands.
+
+- **Revisions.** `scene.revision` advances by exactly one for every accepted command, **undo and redo**. Each command, undo and redo states the revision it was prepared against; a mismatch is refused as a conflict and nothing changes. The revision therefore counts transitions, not distinct states: after an edit and its undo the objects are back where they were, but the revision is 2.
+- **All or nothing.** A command is checked completely before anything is built (finite values; |coordinate| ≤ 1000 m; |angle| ≤ 360°; lengths 1 mm – 1000 m; new IDs match the ID pattern, are unique and were never used before in the project, including in its edit log). A multi-axis resize with one bad axis changes no axis. The resulting project must also pass the contract schema. These editor limits are stricter than the contract, which only requires finite values and positive lengths.
+- **Units.** The UI shows metres (1 mm resolution) and degrees (0.1°); the contract stores metres and radians. Fields refuse more decimals than their resolution rather than rounding. Handles snap to 10 mm and 15° (1 mm and 1° with snap off). Both paths use the same conversion functions (`apps/web/src/editing/units.ts`), so a handle stopped at 2.35 m stores exactly the double that typing `2.35` stores. Width and depth handles resize symmetrically about the vertical axis and height grows upwards, so the bottom-centre position is unchanged, which is exactly what typing a new size does.
+- **`scene.edit_log`** lists, oldest first, the edits in effect:
+  - `object_edited` records the transform `{before, after}` and/or each changed axis `{axis, before, after}`, where `before` is the complete previous `Length` with its origin, source, review status and uncertainty;
+  - `object_added` records `asset_id` and `duplicate_of`;
+  - `object_removed` keeps the removed object, evidence included.
+
+  An undone edit leaves the log (so record revisions can have gaps) and redo puts it back at the new revision. The undo history itself lives only in the browser session and is not saved.
+- **Evidence of edited values.** An edited axis becomes `origin: user_supplied`, `review_status: unreviewed`, `uncertainty_m: null`, `source_ref: "Entered in the editor; the previous value and its evidence are in the scene edit log"`. Untouched axes keep their evidence. A new catalog instance starts with the asset's nominal dimensions and their evidence; a duplicate copies its source's dimensions, evidence, asset and parameters. Transforms have no evidence fields; their history is the `transform` part of the records.
+- **Consistency (API).** The log must describe the scene:
+  - revisions strictly increase and do not exceed the scene revision;
+  - every record changes something;
+  - an edited axis is `user_supplied`;
+  - removed IDs do not reappear;
+  - an added instance keeps its asset, and that asset is in the catalog;
+  - an edited or added object either exists or was removed later;
+  - the latest recorded transform and axis values equal the scene's.
+
+  A value changed outside the editor without a record therefore makes the file invalid.
+- **Not checked.** Edits are not checked for overlap, clearance, collisions or physical feasibility (M3). An edited layout is labelled "Edited layout - not checked for clearance or feasibility", and development fixtures keep their `fixture` label through every edit and save.
+- **Worked example.** `fixtures/edited/foundation-edited.json` is the foundation fixture after nine transitions: move, resize (measured ±10 mm width → user-supplied 1.35 m), rotate, add, duplicate, remove, **undo** of that removal, resize and remove. Its log holds revisions 1–5, 8 and 9. The browser engine regenerates it byte-for-byte (`sample.test.ts`), and pytest validates it with the Pydantic models.
+
+## Saved project files
+
+- **Save** downloads the complete project as pretty-printed JSON named `<project-id>-r<revision>.json`. Reopening goes through the normal file check (API validation including model files, then the browser's schema check). The reopened project has the same model, IDs, transforms, dimensions, evidence and edit log, and saving it again produces identical text.
+- Numbers are written in JavaScript's shortest round-trip form (`-6` rather than Python's `-6.0`; the values are equal). JSON cannot represent `-0`, so the editor normalises `-0` to `0` before storing it.
+- A project is **unsaved** whenever its revision differs from the revision last loaded or saved, including after undoing back to the loaded state, and an opened upgrade is unsaved until saved. Loading a fixture or opening another valid file while unsaved first asks: save then continue, discard, or cancel.
 
 ## glTF visuals (0.3.0)
 

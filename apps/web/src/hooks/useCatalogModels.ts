@@ -29,8 +29,8 @@ export function summarise(states: ModelStates): ModelSummary {
   };
 }
 
-function gltfAssets(project: Project | null): [string, GltfVisual][] {
-  return (project?.catalog ?? []).flatMap((a) => (a.visual.type === "gltf" ? [[a.id, a.visual]] : []));
+function gltfAssets(catalog: Project["catalog"] | null): [string, GltfVisual][] {
+  return (catalog ?? []).flatMap((a) => (a.visual.type === "gltf" ? [[a.id, a.visual]] : []));
 }
 
 const keyOf = (id: string, visual: GltfVisual, attempt: number) => `${id}|${visual.sha256}|${attempt}`;
@@ -43,7 +43,10 @@ const keyOf = (id: string, visual: GltfVisual, attempt: number) => `${id}|${visu
 export function useCatalogModels(client: ApiClient, project: Project | null) {
   const [results, setResults] = useState<ReadonlyMap<string, ModelState>>(new Map());
   const [attempt, setAttempt] = useState(0);
-  const assets = useMemo(() => gltfAssets(project), [project]);
+  // Keyed on the catalog, not the project: scene edits create a new project value but keep the
+  // same catalog, and must not download the models again.
+  const catalog = project?.catalog ?? null;
+  const assets = useMemo(() => gltfAssets(catalog), [catalog]);
 
   useEffect(() => {
     const controller = new AbortController();

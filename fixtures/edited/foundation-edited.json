@@ -1,0 +1,723 @@
+{
+  "schema_version": "0.4.0",
+  "id": "proj-foundation-fixture",
+  "name": "Foundation fixture - packaging area",
+  "units": {
+    "length": "m",
+    "time": "s",
+    "mass": "kg",
+    "angle": "rad"
+  },
+  "world_frame": {
+    "handedness": "right",
+    "up_axis": "+Y",
+    "floor_plane": "XZ"
+  },
+  "fixture": {
+    "kind": "foundation",
+    "note": "Synthetic basic geometry that proves units, coordinates, evidence and schema handling. It is not the realistic factory scene, its values are not engineering data, and its catalog assets are synthetic placeholders with no asserted license."
+  },
+  "sources": [
+    {
+      "id": "src-synthetic-plan",
+      "kind": "synthetic",
+      "filename": null,
+      "sha256": null,
+      "source_to_world": {
+        "convention": "plan_xy_to_world_x_neg_z",
+        "source_unit": "mm",
+        "metres_per_source_unit": 0.001,
+        "rotation_about_world_y_rad": 0,
+        "translation_m": {
+          "x": -10,
+          "y": 0,
+          "z": 6
+        }
+      },
+      "import_warnings": []
+    }
+  ],
+  "catalog": [
+    {
+      "id": "asset-generic-belt-conveyor",
+      "name": "Generic belt conveyor, 3 m (provisional)",
+      "kind": "equipment",
+      "visual": {
+        "type": "placeholder_box"
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 3,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 0.9,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 0.8,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "synthetic",
+        "author": "Replay World Studio foundation fixture",
+        "reference": null
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "No project license has been chosen yet (see README)"
+      }
+    },
+    {
+      "id": "asset-generic-processing-station",
+      "name": "Generic processing station (provisional)",
+      "kind": "equipment",
+      "visual": {
+        "type": "placeholder_box"
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 1.6,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 1.8,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 1.2,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "synthetic",
+        "author": "Replay World Studio foundation fixture",
+        "reference": null
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "No project license has been chosen yet (see README)"
+      }
+    },
+    {
+      "id": "asset-generic-packing-station",
+      "name": "Generic packing station (provisional)",
+      "kind": "equipment",
+      "visual": {
+        "type": "placeholder_box"
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 1.2,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 1.4,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 1,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "synthetic",
+        "author": "Replay World Studio foundation fixture",
+        "reference": null
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "No project license has been chosen yet (see README)"
+      }
+    }
+  ],
+  "scene": {
+    "id": "scene-foundation",
+    "name": "Packaging area (foundation fixture)",
+    "revision": 9,
+    "objects": [
+      {
+        "id": "obj-floor",
+        "name": "Floor slab",
+        "kind": "structure",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 0,
+            "y": -0.2,
+            "z": 0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 20,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#floor-outline: 20000 mm along plan X",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.2,
+            "origin": "default",
+            "source_ref": "Slab thickness is not on the plan; placeholder value",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 12,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#floor-outline: 12000 mm along plan Y",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-column-c1",
+        "name": "Column C1",
+        "kind": "structure",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 4,
+            "y": 0,
+            "z": -3
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.4,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#C1 centre (14000,9000) mm, 400 mm square",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 6,
+            "origin": "default",
+            "source_ref": "Column height is not on the plan; placeholder value",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.4,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#C1 centre (14000,9000) mm, 400 mm square",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-infeed-conveyor",
+        "name": "Infeed conveyor (placeholder)",
+        "kind": "equipment",
+        "asset_id": "asset-generic-belt-conveyor",
+        "transform": {
+          "position_m": {
+            "x": -6.5,
+            "y": 0,
+            "z": 0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 3,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-belt-conveyor (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.9,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-belt-conveyor (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.8,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-belt-conveyor (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": [
+          {
+            "state": "known",
+            "id": "belt-speed",
+            "label": "Belt speed",
+            "unit": "m/s",
+            "value": 0.25,
+            "origin": "user_supplied",
+            "source_ref": "Foundation fixture value entered by developer",
+            "review_status": "unreviewed",
+            "uncertainty": null
+          },
+          {
+            "state": "unknown",
+            "id": "mass",
+            "label": "Mass",
+            "unit": "kg",
+            "reason": "Not established by layout geometry; needs supplier or measured data"
+          }
+        ]
+      },
+      {
+        "id": "obj-packing-station",
+        "name": "Packing station (placeholder)",
+        "kind": "equipment",
+        "asset_id": "asset-generic-packing-station",
+        "transform": {
+          "position_m": {
+            "x": 2.5,
+            "y": 0,
+            "z": 0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 3.141592653589793,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.35,
+            "origin": "user_supplied",
+            "source_ref": "Entered in the editor; the previous value and its evidence are in the scene edit log",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.4,
+            "origin": "inferred",
+            "source_ref": "Inferred from the catalog nominal height of asset-generic-packing-station",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#PK1 outline, 1000 mm side",
+            "review_status": "unreviewed",
+            "uncertainty_m": {
+              "lower": 0.99,
+              "upper": 1.01
+            }
+          }
+        },
+        "parameters": [
+          {
+            "state": "unknown",
+            "id": "cycle-time",
+            "label": "Cycle time",
+            "unit": "s",
+            "reason": "Not established; a drawing cannot provide cycle times"
+          },
+          {
+            "state": "known",
+            "id": "service-clearance-front",
+            "label": "Front service clearance",
+            "unit": "m",
+            "value": 0.8,
+            "origin": "user_supplied",
+            "source_ref": "Foundation fixture requirement entered by developer",
+            "review_status": "unreviewed",
+            "uncertainty": null
+          }
+        ]
+      },
+      {
+        "id": "obj-reference-cube",
+        "name": "1 m reference cube",
+        "kind": "reference",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 7,
+            "y": 0,
+            "z": 4
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1,
+            "origin": "user_supplied",
+            "source_ref": "Scale reference defined by the foundation fixture",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1,
+            "origin": "user_supplied",
+            "source_ref": "Scale reference defined by the foundation fixture",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1,
+            "origin": "user_supplied",
+            "source_ref": "Scale reference defined by the foundation fixture",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-reference-cube-2",
+        "name": "1 m reference cube (copy)",
+        "kind": "reference",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 7,
+            "y": 0,
+            "z": 2
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1,
+            "origin": "user_supplied",
+            "source_ref": "Scale reference defined by the foundation fixture",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.5,
+            "origin": "user_supplied",
+            "source_ref": "Entered in the editor; the previous value and its evidence are in the scene edit log",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1,
+            "origin": "user_supplied",
+            "source_ref": "Scale reference defined by the foundation fixture",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-generic-processing-station",
+        "name": "Generic processing station (provisional)",
+        "kind": "equipment",
+        "asset_id": "asset-generic-processing-station",
+        "transform": {
+          "position_m": {
+            "x": 2,
+            "y": 0,
+            "z": 3.5
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.6,
+            "origin": "default",
+            "source_ref": "Synthetic placeholder size, not from a datasheet",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.8,
+            "origin": "default",
+            "source_ref": "Synthetic placeholder size, not from a datasheet",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1.2,
+            "origin": "default",
+            "source_ref": "Synthetic placeholder size, not from a datasheet",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      }
+    ],
+    "edit_log": [
+      {
+        "type": "object_edited",
+        "revision": 1,
+        "object_id": "obj-infeed-conveyor",
+        "transform": {
+          "before": {
+            "position_m": {
+              "x": -6,
+              "y": 0,
+              "z": 0
+            },
+            "rotation_rad": {
+              "order": "XYZ",
+              "x": 0,
+              "y": 0,
+              "z": 0
+            }
+          },
+          "after": {
+            "position_m": {
+              "x": -6.5,
+              "y": 0,
+              "z": 0
+            },
+            "rotation_rad": {
+              "order": "XYZ",
+              "x": 0,
+              "y": 0,
+              "z": 0
+            }
+          }
+        },
+        "dimensions": []
+      },
+      {
+        "type": "object_edited",
+        "revision": 2,
+        "object_id": "obj-packing-station",
+        "transform": null,
+        "dimensions": [
+          {
+            "axis": "width",
+            "before": {
+              "value_m": 1.2,
+              "origin": "measured",
+              "source_ref": "src-synthetic-plan#PK1 outline, 1200 mm side",
+              "review_status": "unreviewed",
+              "uncertainty_m": {
+                "lower": 1.19,
+                "upper": 1.21
+              }
+            },
+            "after": {
+              "value_m": 1.35,
+              "origin": "user_supplied",
+              "source_ref": "Entered in the editor; the previous value and its evidence are in the scene edit log",
+              "review_status": "unreviewed",
+              "uncertainty_m": null
+            }
+          }
+        ]
+      },
+      {
+        "type": "object_edited",
+        "revision": 3,
+        "object_id": "obj-packing-station",
+        "transform": {
+          "before": {
+            "position_m": {
+              "x": 2.5,
+              "y": 0,
+              "z": 0
+            },
+            "rotation_rad": {
+              "order": "XYZ",
+              "x": 0,
+              "y": 1.5707963267948966,
+              "z": 0
+            }
+          },
+          "after": {
+            "position_m": {
+              "x": 2.5,
+              "y": 0,
+              "z": 0
+            },
+            "rotation_rad": {
+              "order": "XYZ",
+              "x": 0,
+              "y": 3.141592653589793,
+              "z": 0
+            }
+          }
+        },
+        "dimensions": []
+      },
+      {
+        "type": "object_added",
+        "revision": 4,
+        "object_id": "obj-generic-processing-station",
+        "asset_id": "asset-generic-processing-station",
+        "duplicate_of": null
+      },
+      {
+        "type": "object_added",
+        "revision": 5,
+        "object_id": "obj-reference-cube-2",
+        "asset_id": null,
+        "duplicate_of": "obj-reference-cube"
+      },
+      {
+        "type": "object_edited",
+        "revision": 8,
+        "object_id": "obj-reference-cube-2",
+        "transform": null,
+        "dimensions": [
+          {
+            "axis": "height",
+            "before": {
+              "value_m": 1,
+              "origin": "user_supplied",
+              "source_ref": "Scale reference defined by the foundation fixture",
+              "review_status": "confirmed",
+              "uncertainty_m": null
+            },
+            "after": {
+              "value_m": 1.5,
+              "origin": "user_supplied",
+              "source_ref": "Entered in the editor; the previous value and its evidence are in the scene edit log",
+              "review_status": "unreviewed",
+              "uncertainty_m": null
+            }
+          }
+        ]
+      },
+      {
+        "type": "object_removed",
+        "revision": 9,
+        "object": {
+          "id": "obj-process-station",
+          "name": "Processing station (placeholder)",
+          "kind": "equipment",
+          "asset_id": "asset-generic-processing-station",
+          "transform": {
+            "position_m": {
+              "x": -2,
+              "y": 0,
+              "z": 0
+            },
+            "rotation_rad": {
+              "order": "XYZ",
+              "x": 0,
+              "y": 0,
+              "z": 0
+            }
+          },
+          "dimensions": {
+            "width": {
+              "value_m": 1.6,
+              "origin": "default",
+              "source_ref": "Catalog nominal of asset-generic-processing-station (placeholder)",
+              "review_status": "unreviewed",
+              "uncertainty_m": null
+            },
+            "height": {
+              "value_m": 1.8,
+              "origin": "default",
+              "source_ref": "Catalog nominal of asset-generic-processing-station (placeholder)",
+              "review_status": "unreviewed",
+              "uncertainty_m": null
+            },
+            "depth": {
+              "value_m": 1.2,
+              "origin": "default",
+              "source_ref": "Catalog nominal of asset-generic-processing-station (placeholder)",
+              "review_status": "unreviewed",
+              "uncertainty_m": null
+            }
+          },
+          "parameters": [
+            {
+              "state": "known",
+              "id": "cycle-time",
+              "label": "Cycle time",
+              "unit": "s",
+              "value": 45,
+              "origin": "user_supplied",
+              "source_ref": "Foundation fixture value entered by developer",
+              "review_status": "unreviewed",
+              "uncertainty": {
+                "lower": 40,
+                "upper": 50
+              }
+            },
+            {
+              "state": "unknown",
+              "id": "mass",
+              "label": "Mass",
+              "unit": "kg",
+              "reason": "Not established by layout geometry; needs supplier or measured data"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

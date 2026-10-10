@@ -5,13 +5,14 @@ import bundle from "../schema/contracts.schema.json";
 import type {
   HealthResponse,
   Project,
+  UpgradeReport,
   ValidationErrorResponse,
   ValidationReport,
 } from "./generated/contracts";
 
 export type * from "./generated/contracts";
 
-export const SCHEMA_VERSION: Project["schema_version"] = "0.3.0";
+export const SCHEMA_VERSION: Project["schema_version"] = "0.4.0";
 
 /** One structural problem, located by a JSON Pointer such as `/scene/objects/2/dimensions`. */
 export interface ContractIssue {
@@ -45,10 +46,12 @@ function toIssues(errors: ErrorObject[] | null | undefined): ContractIssue[] {
 
 /**
  * Structural checks only (types, required fields, units, ranges, closed objects).
- * Cross-field rules such as unique IDs are enforced by the API's Pydantic models.
+ * Cross-field rules such as unique IDs and edit-log consistency are enforced by the API's
+ * Pydantic models.
  */
 export const validateProject = validatorFor<Project>("Project");
 export const validateHealthResponse = validatorFor<HealthResponse>("HealthResponse");
 export const validateValidationReport = validatorFor<ValidationReport>("ValidationReport");
+export const validateUpgradeReport = validatorFor<UpgradeReport>("UpgradeReport");
 export const validateValidationErrorResponse =
   validatorFor<ValidationErrorResponse>("ValidationErrorResponse");

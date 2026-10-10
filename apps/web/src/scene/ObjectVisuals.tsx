@@ -4,7 +4,7 @@
 import type { CatalogAsset, GltfVisual, SceneObject } from "@replay-world/contracts";
 import { Edges, Html } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { type ReactNode, useMemo } from "react";
+import { memo, type ReactNode, useMemo } from "react";
 import { BoxGeometry, CanvasTexture, EdgesGeometry, type Group, RepeatWrapping, SRGBColorSpace } from "three";
 import { formatFootprint } from "../format";
 import type { ModelState } from "../hooks/useCatalogModels";
@@ -24,11 +24,15 @@ interface Props {
   hovered: boolean;
   /** Top view: maximum label width in px; undefined hides the plan label. */
   planLabelWidth: number | undefined;
+  /** False while a placement is pending: the pointer then belongs to the placement. */
+  interactive: boolean;
+  /** Hide the floating name label (the edit handles and their readout are shown instead). */
+  hideLabel: boolean;
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
 }
 
-export function ObjectVisual({ object, asset, model, selected, hovered, planLabelWidth, onSelect, onHover }: Props) {
+export const ObjectVisual = memo(function ObjectVisual({ object, asset, model, selected, hovered, planLabelWidth, interactive, hideLabel, onSelect, onHover }: Props) {
   const handlers = {
     onClick: (e: ThreeEvent<MouseEvent>) => {
       e.stopPropagation();
@@ -51,13 +55,13 @@ export function ObjectVisual({ object, asset, model, selected, hovered, planLabe
   else body = <PlaceholderBox object={object} />;
 
   return (
-    <group name={object.id} {...handlers}>
+    <group name={object.id} {...(interactive ? handlers : {})}>
       {body}
       {(selected || hovered) && <SelectionBox object={object} strong={selected} />}
-      {(selected || planLabelWidth !== undefined) && <ObjectLabel object={object} emphasis={selected} planWidth={planLabelWidth} />}
+      {!hideLabel && (selected || planLabelWidth !== undefined) && <ObjectLabel object={object} emphasis={selected} planWidth={planLabelWidth} />}
     </group>
   );
-}
+});
 
 function GltfInstance({ template, visual, object }: { template: Group; visual: GltfVisual; object: SceneObject }) {
   const placed = useMemo(() => instanceModel(template, visual, object), [template, visual, object]);
@@ -119,7 +123,7 @@ function FallbackBox({ object }: { object: SceneObject }) {
         <meshStandardMaterial color="#c0562b" roughness={0.9} transparent opacity={0.55} />
         <Edges color="#ff9a62" />
       </PlacedBox>
-      <Html position={[p.position[0], p.position[1] + p.size[1] / 2, p.position[2]]} center zIndexRange={[20, 0]}>
+      <Html position={[p.position[0], p.position[1] + p.size[1] / 2, p.position[2]]} center zIndexRange={[20, 0]} pointerEvents="none">
         <div className="model-fallback-label" data-testid={`model-fallback-${object.id}`}>
           Model unavailable
         </div>
@@ -221,7 +225,7 @@ function ObjectLabel({ object, emphasis, planWidth }: { object: SceneObject; emp
   const height = flat ? 0.2 : p.size[1] + 0.35;
   const plan = planWidth !== undefined;
   return (
-    <Html position={[p.position[0], p.position[1] + height, p.position[2]]} center zIndexRange={[10, 0]}>
+    <Html position={[p.position[0], p.position[1] + height, p.position[2]]} center zIndexRange={[10, 0]} pointerEvents="none">
       <div
         className={`scene-label${emphasis ? " scene-label-strong" : ""}${plan ? " scene-label-plan" : ""}`}
         style={plan ? { maxWidth: `${planWidth}px` } : undefined}

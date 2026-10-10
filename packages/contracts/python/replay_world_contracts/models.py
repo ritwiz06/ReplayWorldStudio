@@ -16,6 +16,8 @@ Conventions (see docs/contracts.md):
 * A glTF visual is a representation, never a measurement: it is authored in metres, +Y up,
   front +Z, origin at its bounding-box bottom-centre, and scaled to each instance's recorded
   dimensions. Its file is named by a catalog-library-relative path and pinned by sha256.
+* Edits are recorded, not just applied: the scene's ``edit_log`` keeps every edit in effect
+  with the previous transform and the previous value and evidence of each changed axis.
 
 JSON Schema and TypeScript types are generated from these models by
 ``scripts/contracts.mjs``; never edit the generated files by hand. Older documents are
@@ -35,7 +37,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.3.0"]
+SchemaVersion = Literal["0.4.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -77,6 +79,7 @@ Origin = Literal["measured", "user_supplied", "supplier", "inferred", "default"]
 """Where a known value came from. 'default' and 'inferred' values must stay visibly distinct."""
 
 ReviewStatus = Literal["unreviewed", "confirmed"]
+Axis = Literal["width", "height", "depth"]
 ObjectKind = Literal["structure", "equipment", "reference", "walkway", "keep_clear"]
 """'walkway' marks circulation space; 'keep_clear' marks floor area that must stay unobstructed."""
 LengthUnit = Literal["m", "cm", "mm", "in", "ft"]
@@ -355,15 +358,166 @@ class SceneObject(ContractModel):
         return self
 
 
+class TransformChange(ContractModel):
+    """An object's placement before and after an edit."""
+
+    before: Transform
+    after: Transform
+
+
+class AxisChange(ContractModel):
+    """One dimension axis before and after an edit. ``before`` keeps the replaced evidence."""
+
+    axis: Axis
+    before: Length
+    after: Length
+
+
+class ObjectEdited(ContractModel):
+    """An existing object was moved, rotated or resized in the editor.
+
+    A changed axis always becomes ``user_supplied`` and unreviewed, because a person typed or
+    dragged the new value; the previous value and its evidence stay in ``before``.
+    """
+
+    type: Literal["object_edited"]
+    revision: int = Field(ge=1, description="Scene revision this edit produced.")
+    object_id: StableId
+    transform: TransformChange | None
+    dimensions: list[AxisChange]
+
+    @model_validator(mode="after")
+    def _records_a_real_change(self) -> ObjectEdited:
+        if self.transform is None and not self.dimensions:
+            raise ValueError(
+                f"edit at revision {self.revision} changes neither the transform nor a dimension"
+            )
+        if self.transform is not None and self.transform.before == self.transform.after:
+            raise ValueError(f"edit at revision {self.revision} records an unchanged transform")
+        _require_unique((c.axis for c in self.dimensions), f"axis in edit {self.revision}")
+        for change in self.dimensions:
+            if change.after.origin != "user_supplied":
+                raise ValueError(
+                    f"edit at revision {self.revision}: an edited {change.axis} must be "
+                    f"'user_supplied', not '{change.after.origin}'"
+                )
+            if change.before == change.after:
+                raise ValueError(
+                    f"edit at revision {self.revision} records an unchanged {change.axis}"
+                )
+        return self
+
+
+class ObjectAdded(ContractModel):
+    """A new object was placed: an instance of a catalog asset or a copy of another object."""
+
+    type: Literal["object_added"]
+    revision: int = Field(ge=1, description="Scene revision this edit produced.")
+    object_id: StableId
+    asset_id: StableId | None
+    duplicate_of: StableId | None = Field(
+        description="Object this one was copied from; null for a new catalog instance."
+    )
+
+    @model_validator(mode="after")
+    def _has_an_origin(self) -> ObjectAdded:
+        if self.asset_id is None and self.duplicate_of is None:
+            raise ValueError(
+                f"added object '{self.object_id}' must name a catalog asset or the object it copies"
+            )
+        return self
+
+
+class ObjectRemoved(ContractModel):
+    """An object was removed. Its last state, evidence included, is kept here."""
+
+    type: Literal["object_removed"]
+    revision: int = Field(ge=1, description="Scene revision this edit produced.")
+    object: SceneObject
+
+
+EditRecord = Annotated[ObjectEdited | ObjectAdded | ObjectRemoved, Field(discriminator="type")]
+
+
 class Scene(ContractModel):
+    """Placed objects plus the record of every edit in effect.
+
+    ``revision`` advances by one for every accepted edit, undo and redo, so a command prepared
+    against an older revision is always detected. ``edit_log`` lists, oldest first, the edits
+    that produced the current objects. An undone edit leaves the log, so the revisions of its
+    records may have gaps; the log never describes values the scene does not hold.
+    """
+
     id: StableId
     name: NonEmptyText
-    revision: int = Field(ge=0, description="Incremented by every accepted edit.")
+    revision: int = Field(
+        ge=0, description="Advanced by one for every accepted edit, undo and redo."
+    )
     objects: list[SceneObject]
+    edit_log: list[EditRecord]
 
     @model_validator(mode="after")
     def _unique_object_ids(self) -> Scene:
         _require_unique((o.id for o in self.objects), "object id")
+        return self
+
+    @model_validator(mode="after")
+    def _edit_log_describes_the_scene(self) -> Scene:
+        previous = 0
+        for record in self.edit_log:
+            if record.revision <= previous:
+                raise ValueError(
+                    f"edit_log revisions must increase; {record.revision} follows {previous}"
+                )
+            previous = record.revision
+        if previous > self.revision:
+            raise ValueError(
+                f"edit_log has a record at revision {previous}, after the scene revision "
+                f"{self.revision}"
+            )
+
+        live = {o.id: o for o in self.objects}
+        removed = {r.object.id: r.revision for r in self.edit_log if isinstance(r, ObjectRemoved)}
+        for object_id, revision in removed.items():
+            if object_id in live:
+                raise ValueError(
+                    f"object id '{object_id}' was removed at revision {revision}; IDs are never "
+                    "reused"
+                )
+
+        latest: dict[tuple[str, str], tuple[int, Transform | Length]] = {}
+        for record in self.edit_log:
+            if isinstance(record, ObjectRemoved):
+                continue
+            object_id = record.object_id
+            if object_id not in live and removed.get(object_id, -1) < record.revision:
+                raise ValueError(
+                    f"edit_log revision {record.revision} refers to object '{object_id}', which "
+                    "is not in the scene and was not removed later"
+                )
+            if isinstance(record, ObjectAdded):
+                obj = live.get(object_id)
+                if obj is not None and obj.asset_id != record.asset_id:
+                    raise ValueError(
+                        f"object '{object_id}' was added at revision {record.revision} from "
+                        f"asset {record.asset_id!r} but now references {obj.asset_id!r}"
+                    )
+                continue
+            if record.transform is not None:
+                latest[(object_id, "transform")] = (record.revision, record.transform.after)
+            for change in record.dimensions:
+                latest[(object_id, change.axis)] = (record.revision, change.after)
+
+        for (object_id, field), (revision, after) in latest.items():
+            obj = live.get(object_id)
+            if obj is None:
+                continue
+            current = obj.transform if field == "transform" else getattr(obj.dimensions, field)
+            if current != after:
+                raise ValueError(
+                    f"edit_log revision {revision} records a {field} for object '{object_id}' "
+                    "that differs from the scene; the log no longer describes the scene"
+                )
         return self
 
 
@@ -443,6 +597,12 @@ class Project(ContractModel):
                     f"object '{obj.id}' (kind '{obj.kind}') references asset "
                     f"'{asset.id}' of kind '{asset.kind}'"
                 )
+        for record in self.scene.edit_log:
+            if isinstance(record, ObjectAdded) and record.asset_id not in (None, *assets):
+                raise ValueError(
+                    f"edit_log revision {record.revision} adds an instance of asset "
+                    f"'{record.asset_id}', which is not in the catalog"
+                )
         return self
 
 
@@ -464,6 +624,21 @@ class ValidationReport(ContractModel):
     model_file_count: int = Field(ge=0, description="glTF files found with matching sha256.")
     known_parameter_count: int = Field(ge=0)
     unknown_parameter_count: int = Field(ge=0)
+    edit_record_count: int = Field(ge=0, description="Records in the scene edit log.")
+
+
+class UpgradeReport(ContractModel):
+    """An older project document upgraded to the current contract and validated, for review.
+
+    Nothing is saved or replaced by producing this report; the client shows ``notes`` and lets
+    the user decide whether to open or download the upgraded ``project``.
+    """
+
+    from_version: NonEmptyText = Field(description="Schema version of the submitted document.")
+    to_version: SchemaVersion
+    notes: list[NonEmptyText]
+    project: Project
+    validation: ValidationReport
 
 
 class ValidationIssue(ContractModel):

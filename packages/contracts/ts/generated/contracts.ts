@@ -6,16 +6,17 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.3.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.4.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
   HealthResponse: HealthResponse;
   ValidationReport: ValidationReport;
+  UpgradeReport: UpgradeReport;
   ValidationErrorResponse: ValidationErrorResponse;
 }
 export interface Project {
-  schema_version: "0.3.0";
+  schema_version: "0.4.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -211,6 +212,14 @@ export interface UsageRights {
    */
   terms_ref: string | null;
 }
+/**
+ * Placed objects plus the record of every edit in effect.
+ *
+ * ``revision`` advances by one for every accepted edit, undo and redo, so a command prepared
+ * against an older revision is always detected. ``edit_log`` lists, oldest first, the edits
+ * that produced the current objects. An undone edit leaves the log, so the revisions of its
+ * records may have gaps; the log never describes values the scene does not hold.
+ */
 export interface Scene {
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
@@ -218,10 +227,11 @@ export interface Scene {
   id: string;
   name: string;
   /**
-   * Incremented by every accepted edit.
+   * Advanced by one for every accepted edit, undo and redo.
    */
   revision: number;
   objects: SceneObject[];
+  edit_log: (ObjectEdited | ObjectAdded | ObjectRemoved)[];
 }
 export interface SceneObject {
   /**
@@ -281,18 +291,82 @@ export interface UnknownParameter {
   unit: "m" | "s" | "kg" | "rad" | "m/s" | "1";
   reason: string;
 }
+/**
+ * An existing object was moved, rotated or resized in the editor.
+ *
+ * A changed axis always becomes ``user_supplied`` and unreviewed, because a person typed or
+ * dragged the new value; the previous value and its evidence stay in ``before``.
+ */
+export interface ObjectEdited {
+  type: "object_edited";
+  /**
+   * Scene revision this edit produced.
+   */
+  revision: number;
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  object_id: string;
+  transform: TransformChange | null;
+  dimensions: AxisChange[];
+}
+/**
+ * An object's placement before and after an edit.
+ */
+export interface TransformChange {
+  before: Transform;
+  after: Transform;
+}
+/**
+ * One dimension axis before and after an edit. ``before`` keeps the replaced evidence.
+ */
+export interface AxisChange {
+  axis: "width" | "height" | "depth";
+  before: Length;
+  after: Length;
+}
+/**
+ * A new object was placed: an instance of a catalog asset or a copy of another object.
+ */
+export interface ObjectAdded {
+  type: "object_added";
+  /**
+   * Scene revision this edit produced.
+   */
+  revision: number;
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  object_id: string;
+  asset_id: string | null;
+  /**
+   * Object this one was copied from; null for a new catalog instance.
+   */
+  duplicate_of: string | null;
+}
+/**
+ * An object was removed. Its last state, evidence included, is kept here.
+ */
+export interface ObjectRemoved {
+  type: "object_removed";
+  /**
+   * Scene revision this edit produced.
+   */
+  revision: number;
+  object: SceneObject;
+}
 export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.3.0";
+  schema_version: "0.4.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.3.0";
+  schema_version: "0.4.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -305,6 +379,26 @@ export interface ValidationReport {
   model_file_count: number;
   known_parameter_count: number;
   unknown_parameter_count: number;
+  /**
+   * Records in the scene edit log.
+   */
+  edit_record_count: number;
+}
+/**
+ * An older project document upgraded to the current contract and validated, for review.
+ *
+ * Nothing is saved or replaced by producing this report; the client shows ``notes`` and lets
+ * the user decide whether to open or download the upgraded ``project``.
+ */
+export interface UpgradeReport {
+  /**
+   * Schema version of the submitted document.
+   */
+  from_version: string;
+  to_version: "0.4.0";
+  notes: string[];
+  project: Project;
+  validation: ValidationReport;
 }
 /**
  * Body of every HTTP 422 response. Rejected input is not echoed back.

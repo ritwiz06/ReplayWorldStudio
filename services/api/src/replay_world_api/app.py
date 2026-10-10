@@ -1,4 +1,4 @@
-"""FastAPI application: health, fixture delivery and project validation."""
+"""FastAPI application: health, fixture delivery, project validation and upgrades."""
 
 from __future__ import annotations
 
@@ -15,11 +15,16 @@ from replay_world_contracts import (
     HealthResponse,
     KnownParameter,
     Project,
+    UpgradeReport,
     ValidationErrorResponse,
     ValidationIssue,
     ValidationReport,
 )
-from replay_world_contracts.migrations import LEGACY_SCHEMA_VERSIONS
+from replay_world_contracts.migrations import (
+    LEGACY_SCHEMA_VERSIONS,
+    MigrationError,
+    upgrade_document,
+)
 
 from . import __version__
 from .catalog_files import CatalogFileError, check_model_files, resolve_catalog_file
@@ -41,6 +46,14 @@ _PROJECT_BODY_DOC: Final[dict[str, Any]] = {
     "requestBody": {
         "required": True,
         "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Project"}}},
+    }
+}
+# The upgrade endpoint takes a project document of any supported schema version.
+_ANY_PROJECT_BODY_DOC: Final[dict[str, Any]] = {
+    "requestBody": {
+        "required": True,
+        "description": "A project document of any supported schema version.",
+        "content": {"application/json": {"schema": {"type": "object"}}},
     }
 }
 
@@ -115,35 +128,96 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                         "loc": ("body", "schema_version"),
                         "msg": (
                             f"Schema {version} is an older contract; this API accepts "
-                            f"{SCHEMA_VERSION}. Upgrade the file with `{MIGRATE_COMMAND}`, "
-                            "then open the upgraded file."
+                            f"{SCHEMA_VERSION}. Open the file in the editor to review the "
+                            f"upgrade, or upgrade it with `{MIGRATE_COMMAND}`."
                         ),
                     }
                 ]
             )
-        try:
-            project = Project.model_validate(document)
-        except ValidationError as exc:
+        project = _validated(document)
+        return _report(project, _checked_model_files(project))
+
+    @app.post("/api/v1/projects/upgrade", openapi_extra=_ANY_PROJECT_BODY_DOC)
+    def upgrade_project(document: Annotated[Any, Body()]) -> UpgradeReport:
+        """Upgrade an older document through the migration chain and validate the result.
+
+        Nothing is stored. The notes describe every change so the client can show them before
+        the user decides to open or save the upgraded project.
+        """
+        if not isinstance(document, dict):
             raise RequestValidationError(
-                [{**e, "loc": ("body", *document_path(document, e["loc"]))} for e in exc.errors()]
+                [
+                    {
+                        "type": "document_not_object",
+                        "loc": ("body",),
+                        "msg": "A project document must be a JSON object.",
+                    }
+                ]
+            )
+        version = document.get("schema_version")
+        try:
+            upgrade = upgrade_document(document)
+        except MigrationError as exc:
+            known = version in (*LEGACY_SCHEMA_VERSIONS, SCHEMA_VERSION)
+            raise RequestValidationError(
+                [
+                    {
+                        "type": "upgrade_failed",
+                        "loc": ("body",) if known else ("body", "schema_version"),
+                        "msg": f"The document could not be upgraded: {exc}",
+                    }
+                ]
             ) from None
+        project = _validated(upgrade.document, upgraded_from=upgrade.from_version)
+        return UpgradeReport(
+            from_version=upgrade.from_version,
+            to_version=SCHEMA_VERSION,
+            notes=upgrade.notes,
+            project=project,
+            validation=_report(project, _checked_model_files(project)),
+        )
+
+    def _checked_model_files(project: Project) -> int:
         model_files, file_issues = check_model_files(project, settings.catalog_dir)
         if file_issues:
             raise RequestValidationError(file_issues)
-        params = [p for o in project.scene.objects for p in o.parameters]
-        known = sum(isinstance(p, KnownParameter) for p in params)
-        return ValidationReport(
-            valid=True,
-            schema_version=SCHEMA_VERSION,
-            project_id=project.id,
-            object_count=len(project.scene.objects),
-            asset_count=len(project.catalog),
-            model_file_count=model_files,
-            known_parameter_count=known,
-            unknown_parameter_count=len(params) - known,
-        )
+        return model_files
 
     return app
+
+
+def _validated(document: Any, upgraded_from: str | None = None) -> Project:
+    """Validate a current-version document, reporting errors as paths into ``document``."""
+    try:
+        return Project.model_validate(document)
+    except ValidationError as exc:
+        prefix = "" if upgraded_from is None else f"After upgrading from {upgraded_from}: "
+        raise RequestValidationError(
+            [
+                {
+                    **e,
+                    "loc": ("body", *document_path(document, e["loc"])),
+                    "msg": prefix + e["msg"],
+                }
+                for e in exc.errors()
+            ]
+        ) from None
+
+
+def _report(project: Project, model_files: int) -> ValidationReport:
+    params = [p for o in project.scene.objects for p in o.parameters]
+    known = sum(isinstance(p, KnownParameter) for p in params)
+    return ValidationReport(
+        valid=True,
+        schema_version=SCHEMA_VERSION,
+        project_id=project.id,
+        object_count=len(project.scene.objects),
+        asset_count=len(project.catalog),
+        model_file_count=model_files,
+        known_parameter_count=known,
+        unknown_parameter_count=len(params) - known,
+        edit_record_count=len(project.scene.edit_log),
+    )
 
 
 def document_path(document: Any, loc: tuple[str | int, ...]) -> list[str | int]:

@@ -16,6 +16,28 @@ function respond(status: number, body: string): typeof fetch {
 const BASE = "http://api.test";
 
 describe("api client", () => {
+  it("posts an older document for upgrade and checks the report against the contract", async () => {
+    let posted: { url: string; body: unknown } | null = null;
+    const report = {
+      from_version: "0.2.0",
+      to_version: "0.4.0",
+      notes: ["schema_version 0.2.0 -> 0.3.0", "schema_version 0.3.0 -> 0.4.0"],
+      project: JSON.parse(fixture) as Project,
+      validation: { valid: true, schema_version: "0.4.0", project_id: "proj-foundation-fixture", object_count: 6, asset_count: 3, model_file_count: 0, known_parameter_count: 3, unknown_parameter_count: 3, edit_record_count: 0 },
+    };
+    const api: typeof fetch = (input, init) => {
+      posted = { url: String(input), body: init?.body };
+      return respond(200, JSON.stringify(report))(input, init);
+    };
+    const result = await createApiClient(BASE, api).upgradeProjectDocument('{"schema_version":"0.2.0"}');
+    expect(posted).toEqual({ url: "http://api.test/api/v1/projects/upgrade", body: '{"schema_version":"0.2.0"}' });
+    expect(result.ok && result.value.notes).toEqual(report.notes);
+
+    const broken = { ...report, project: { ...report.project, scene: { ...report.project.scene, edit_log: undefined } } };
+    const bad = await createApiClient(BASE, respond(200, JSON.stringify(broken))).upgradeProjectDocument("{}");
+    expect(!bad.ok && bad.error).toMatchObject({ kind: "contract", issues: [{ path: "/project/scene", message: "must have required property 'edit_log'" }] });
+  });
+
   it("returns a contract-checked project", async () => {
     const result = await createApiClient(BASE, respond(200, fixture)).getFixture("foundation");
     expect(result.ok && result.value.scene.objects.length).toBe(6);

@@ -17,6 +17,7 @@ from .models import (
     SCHEMA_VERSION,
     HealthResponse,
     Project,
+    UpgradeReport,
     ValidationErrorResponse,
     ValidationReport,
 )
@@ -25,6 +26,7 @@ ROOT_MODELS: Final[tuple[type[BaseModel], ...]] = (
     Project,
     HealthResponse,
     ValidationReport,
+    UpgradeReport,
     ValidationErrorResponse,
 )
 BUNDLE_ID: Final = f"urn:replay-world:contracts:{SCHEMA_VERSION}"

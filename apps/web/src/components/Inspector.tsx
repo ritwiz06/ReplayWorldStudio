@@ -1,4 +1,4 @@
-import type { CatalogAsset, Dimensions, Project, SceneObject } from "@replay-world/contracts";
+import type { CatalogAsset, Dimensions, Length, Project, SceneObject } from "@replay-world/contracts";
 import {
   AXES,
   axesDifferingFromNominal,
@@ -17,22 +17,41 @@ import {
   formatValue,
 } from "../format";
 import type { ModelState, ModelStates } from "../hooks/useCatalogModels";
-import type { SceneSource } from "../hooks/useScene";
+import type { SceneSource } from "../hooks/useProject";
 import { fitDistortion, fitScale, isStretched } from "../scene/fit";
+import { EditPanel } from "./EditPanel";
+import { ObjectEditLog, SceneEditLog } from "./EditLog";
 import { EvidenceBadge } from "./EvidenceBadge";
+
+/** Everything the edit panel needs except the object itself. */
+export type EditControls = Omit<Parameters<typeof EditPanel>[0], "object" | "asset">;
 
 interface Props {
   project: Project | null;
   source: SceneSource | null;
   selected: SceneObject | null;
   models: ModelStates;
+  edit: EditControls;
 }
 
-export function Inspector({ project, source, selected, models }: Props) {
+export function Inspector({ project, source, selected, models, edit }: Props) {
   if (!project) return <p className="muted panel-pad">Inspector is empty until a scene loads.</p>;
   if (!selected) return <SceneSummary project={project} source={source} />;
   const asset = project.catalog.find((a) => a.id === selected.asset_id) ?? null;
-  return <ObjectDetails object={selected} asset={asset} model={asset ? models.get(asset.id) : undefined} />;
+  return <ObjectDetails project={project} object={selected} asset={asset} model={asset ? models.get(asset.id) : undefined} edit={edit} />;
+}
+
+function sourceLabel(source: SceneSource | null): string {
+  switch (source?.kind) {
+    case "file":
+      return `${source.filename} (accepted by API)`;
+    case "upgrade":
+      return `${source.filename} (upgraded from ${source.fromVersion}; not saved yet)`;
+    case "fixture":
+      return source.name === "industrial-demo" ? "API industrial demo" : "API foundation fixture";
+    default:
+      return "-";
+  }
 }
 
 function tally(labels: string[]): [string, number][] {
@@ -55,13 +74,7 @@ function SceneSummary({ project, source }: { project: Project; source: SceneSour
         <dt>Revision</dt>
         <dd>{project.scene.revision}</dd>
         <dt>Loaded from</dt>
-        <dd data-testid="scene-source">
-          {source?.kind === "file"
-            ? `${source.filename} (accepted by API)`
-            : source?.name === "industrial-demo"
-              ? "API industrial demo"
-              : "API foundation fixture"}
-        </dd>
+        <dd data-testid="scene-source">{sourceLabel(source)}</dd>
         <dt>Objects</dt>
         <dd>{objects.length}</dd>
         <dt>Catalog</dt>
@@ -96,6 +109,10 @@ function SceneSummary({ project, source }: { project: Project; source: SceneSour
           ))}
         </ul>
       )}
+      <h3 className="section-title">
+        Edit log <span className="count">{project.scene.edit_log.length}</span>
+      </h3>
+      <SceneEditLog project={project} />
       <h3 className="section-title">Sources</h3>
       {project.sources.map((s) => (
         <p key={s.id} className="source-line">
@@ -108,12 +125,23 @@ function SceneSummary({ project, source }: { project: Project; source: SceneSour
   );
 }
 
-function DimensionRows({ dimensions }: { dimensions: Dimensions }) {
+/** The latest edit of each axis of `objectId`: its revision and the value it replaced. */
+function lastAxisEdits(project: Project, objectId: string) {
+  const edits = new Map<string, { revision: number; before: Length }>();
+  for (const r of project.scene.edit_log) {
+    if (r.type === "object_edited" && r.object_id === objectId) for (const c of r.dimensions) edits.set(c.axis, { revision: r.revision, before: c.before });
+  }
+  return edits;
+}
+
+function DimensionRows({ project, objectId, dimensions }: { project: Project; objectId: string; dimensions: Dimensions }) {
+  const edits = lastAxisEdits(project, objectId);
   return (
     <ul className="axes">
       {AXES.map(({ axis, label }) => {
         const length = dimensions[axis];
         const range = length.uncertainty_m;
+        const edit = edits.get(axis);
         return (
           <li key={axis} className="axis" data-testid={`axis-${axis}`}>
             <div className="axis-head">
@@ -126,6 +154,11 @@ function DimensionRows({ dimensions }: { dimensions: Dimensions }) {
               {range && ` · range ${formatMetres(range.lower)} – ${formatMetres(range.upper)}`}
               {length.source_ref && ` · ${length.source_ref}`}
             </div>
+            {edit && (
+              <div className="axis-edited" data-testid={`axis-${axis}-edit`}>
+                Edited at r{edit.revision}; was {formatMetres(edit.before.value_m)} {ORIGIN_LABEL[edit.before.origin]}
+              </div>
+            )}
           </li>
         );
       })}
@@ -222,7 +255,15 @@ function AssetDetails({ object, asset, model }: { object: SceneObject; asset: Ca
   );
 }
 
-function ObjectDetails({ object, asset, model }: { object: SceneObject; asset: CatalogAsset | null; model: ModelState | undefined }) {
+interface DetailsProps {
+  project: Project;
+  object: SceneObject;
+  asset: CatalogAsset | null;
+  model: ModelState | undefined;
+  edit: EditControls;
+}
+
+function ObjectDetails({ project, object, asset, model, edit }: DetailsProps) {
   const { position_m: p, rotation_rad: r } = object.transform;
   return (
     <section aria-label="Object inspector" className="panel-pad" data-testid="object-inspector">
@@ -231,10 +272,12 @@ function ObjectDetails({ object, asset, model }: { object: SceneObject; asset: C
       <p className="muted">{KIND_LABEL[object.kind]}</p>
       <p className="placeholder-note">{representationNote(object, asset, model)}</p>
 
+      <EditPanel key={object.id} object={object} asset={asset} {...edit} />
+
       <h3 className="section-title">
         Dimensions <EvidenceBadge evidence={dimensionEvidence(object.dimensions)} />
       </h3>
-      <DimensionRows dimensions={object.dimensions} />
+      <DimensionRows project={project} objectId={object.id} dimensions={object.dimensions} />
 
       <h3 className="section-title">Catalog asset</h3>
       {asset ? (
@@ -252,6 +295,9 @@ function ObjectDetails({ object, asset, model }: { object: SceneObject; asset: C
         <dt>Rotation Y</dt>
         <dd>{formatRadians(r.y)}</dd>
       </dl>
+
+      <h3 className="section-title">Edit record</h3>
+      <ObjectEditLog project={project} objectId={object.id} />
 
       <h3 className="section-title">Parameters</h3>
       {object.parameters.length === 0 ? (

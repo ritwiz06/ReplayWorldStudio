@@ -1,35 +1,76 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { CatalogAsset, SceneObject, Transform } from "@replay-world/contracts";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createApiClient } from "./api/client";
+import { CatalogPanel } from "./components/CatalogPanel";
+import { UnsavedChangesDialog, UpgradeReviewDialog } from "./components/Dialogs";
 import { Inspector } from "./components/Inspector";
-import { FileRejectedPanel, LoadErrorPanel } from "./components/Notices";
+import { EditRejectedNotice, FileRejectedPanel, LoadErrorPanel, PlacementBanner } from "./components/Notices";
 import { ObjectList } from "./components/ObjectList";
 import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
 import { FixtureBanner, ModelNotice, PlanOverlay, ViewToolbar, WalkHud } from "./components/ViewControls";
+import type { Axis, CommandRequest, EditCommand } from "./editing/commands";
+import type { Outcome } from "./editing/history";
+import { copyId, copyName, instanceId, instanceName } from "./editing/newObjects";
+import { quantizeMetres } from "./editing/units";
 import { summarise, useCatalogModels } from "./hooks/useCatalogModels";
 import { useHealth } from "./hooks/useHealth";
-import { useScene } from "./hooks/useScene";
+import { useProject } from "./hooks/useProject";
 import type { CameraMode, CameraProbe, ViewCommand } from "./scene/CameraRig";
+import { type EditTool, SNAP_OFF, SNAP_ON } from "./scene/drag";
+import type { HandleProbe } from "./scene/EditHandles";
+import type { Vec3Tuple } from "./scene/fit";
 import { isTyping, MODES } from "./scene/modes";
+import type { GhostSpec } from "./scene/PlacementGhost";
+import { worldBounds } from "./scene/placement";
 import { SceneViewport } from "./scene/SceneViewport";
 
 const client = createApiClient();
 
+type Placement = { nonce: number; loadId: number } & ({ kind: "add"; assetId: string } | { kind: "duplicate"; sourceId: string });
+
+const TOOL_KEYS: Record<string, EditTool> = { v: "select", m: "move", r: "rotate", s: "resize" };
+
+const TOOL_HELP: Record<Exclude<EditTool, "select">, (snap: boolean) => string> = {
+  move: (snap) => `Move: drag an arrow along X, Y or Z, or the yellow disc across the floor · snap ${snap ? "10 mm" : "1 mm"}`,
+  rotate: (snap) => `Rotate: drag the ring to turn about the vertical axis · snap ${snap ? "15°" : "1°"}`,
+  resize: (snap) => `Resize: drag a face handle; width and depth change symmetrically, height grows upwards · snap ${snap ? "10 mm" : "1 mm"}`,
+};
+
+/** Where a copy is first shown: beside the source along +X, clear of its footprint. */
+function besideSource(source: SceneObject): [number, number] {
+  const width = worldBounds(source).max.x - worldBounds(source).min.x;
+  return [quantizeMetres(source.transform.position_m.x + width + 0.25, 10), source.transform.position_m.z];
+}
+
 export function App() {
   const health = useHealth(client);
-  const { scene, fixtureName, fileCheck, loadFixture, reloadFixture, openFile, dismissFileCheck } = useScene(client);
+  const session = useProject(client);
+  const { scene, fileCheck, prompt, loadId, execute, undo, redo, save } = session;
   const project = scene.status === "loaded" ? scene.project : null;
   const source = scene.status === "loaded" ? scene.source : null;
   const { models, retry } = useCatalogModels(client, project);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Selection and placement belong to the project they were made in.
+  const [selection, setSelection] = useState<{ loadId: number; id: string | null }>({ loadId: 0, id: null });
+  const [placement, setPlacement] = useState<Placement | null>(null);
   const [rendererReady, setRendererReady] = useState(false);
   const [mode, setMode] = useState<CameraMode>("orbit");
+  const [tool, setTool] = useState<EditTool>("select");
+  const [snapOn, setSnapOn] = useState(true);
+  const [dragging, setDragging] = useState(false);
+  const [rejection, setRejection] = useState<string | null>(null);
   const [command, setCommand] = useState<ViewCommand | null>(null);
   const [pixelsPerMetre, setPixelsPerMetre] = useState<number | null>(null);
   const viewport = useRef<HTMLElement>(null);
 
+  const selectedId = selection.loadId === loadId ? selection.id : null;
   const selected = project?.scene.objects.find((o) => o.id === selectedId) ?? null;
+  const activePlacement = placement?.loadId === loadId ? placement : null;
   const summary = summarise(models);
+  const editable = project !== null && mode !== "walk" && prompt === null;
+  const snap = snapOn ? SNAP_ON : SNAP_OFF;
+
+  const select = useCallback((id: string | null) => setSelection({ loadId, id }), [loadId]);
 
   const issue = useCallback((type: ViewCommand["type"]) => {
     setCommand((current) => ({ type, nonce: (current?.nonce ?? 0) + 1 }));
@@ -44,38 +85,196 @@ export function App() {
     if (next !== null) setPixelsPerMetre((prev) => (prev !== null && Math.abs(next - prev) / prev < 0.01 ? prev : next));
   }, []);
 
+  const onHandleProbe = useCallback((probe: HandleProbe | null) => {
+    if (!viewport.current) return;
+    if (probe) viewport.current.dataset.handles = JSON.stringify(probe);
+    else delete viewport.current.dataset.handles;
+  }, []);
+
+  /** Run one command; select what it created, clear what it removed. */
+  const run = useCallback(
+    (request: CommandRequest): Outcome | null => {
+      const outcome = execute(request);
+      if (outcome?.ok) {
+        setRejection(null);
+        const c = request.command;
+        if (c.type === "add_instance" || c.type === "duplicate_object") select(c.objectId);
+        else if (c.type === "remove_object") select(null);
+      }
+      return outcome;
+    },
+    [execute, select],
+  );
+
+  /** Handles and placement: a rejection is shown as a notice. */
+  const runAndReport = useCallback(
+    (request: CommandRequest) => {
+      const outcome = run(request);
+      if (outcome && !outcome.ok && outcome.rejection.kind !== "no_change") setRejection(outcome.rejection.message);
+      return outcome;
+    },
+    [run],
+  );
+
+  /** Inspector fields: the rejection is shown beside the field. */
+  const runFromField = useCallback(
+    (cmd: EditCommand): string | null => {
+      if (!project) return "No project is loaded.";
+      const outcome = run({ baseRevision: project.scene.revision, command: cmd });
+      return outcome && !outcome.ok && outcome.rejection.kind !== "no_change" ? outcome.rejection.message : null;
+    },
+    [project, run],
+  );
+
+  const step = useCallback(
+    (direction: "undo" | "redo") => {
+      if (dragging || prompt) return;
+      const outcome = direction === "undo" ? undo() : redo();
+      if (!outcome) return;
+      if (!outcome.ok) {
+        if (outcome.rejection.kind !== "no_change") setRejection(outcome.rejection.message);
+        return;
+      }
+      setRejection(null);
+      setPlacement(null);
+      const id = outcome.change.objectId;
+      select(outcome.state.project.scene.objects.some((o) => o.id === id) ? id : null);
+    },
+    [dragging, prompt, undo, redo, select],
+  );
+
+  const startDuplicate = useCallback(() => {
+    if (!selected || !editable) return;
+    setPlacement((p) => ({ nonce: (p?.nonce ?? 0) + 1, loadId, kind: "duplicate", sourceId: selected.id }));
+  }, [editable, loadId, selected]);
+
+  const startPlace = useCallback(
+    (asset: CatalogAsset) => setPlacement((p) => ({ nonce: (p?.nonce ?? 0) + 1, loadId, kind: "add", assetId: asset.id })),
+    [loadId],
+  );
+
+  const remove = useCallback(() => {
+    if (!selected || !project || !editable) return;
+    runAndReport({ baseRevision: project.scene.revision, command: { type: "remove_object", objectId: selected.id } });
+  }, [editable, project, runAndReport, selected]);
+
+  const ghost: GhostSpec | null = useMemo(() => {
+    if (!activePlacement || !project) return null;
+    if (activePlacement.kind === "add") {
+      const asset = project.catalog.find((a) => a.id === activePlacement.assetId);
+      if (!asset) return null;
+      const d = asset.nominal_dimensions;
+      return { nonce: activePlacement.nonce, label: asset.name, size: [d.width.value_m, d.height.value_m, d.depth.value_m], rotation: [0, 0, 0, "XYZ"], y: 0, start: null };
+    }
+    const src = project.scene.objects.find((o) => o.id === activePlacement.sourceId);
+    if (!src) return null;
+    const { width, height, depth } = src.dimensions;
+    const r = src.transform.rotation_rad;
+    return {
+      nonce: activePlacement.nonce,
+      label: `copy of ${src.name}`,
+      size: [width.value_m, height.value_m, depth.value_m],
+      rotation: [r.x, r.y, r.z, r.order],
+      y: src.transform.position_m.y,
+      start: besideSource(src),
+    };
+  }, [activePlacement, project]);
+
+  const place = useCallback(
+    ([x, y, z]: Vec3Tuple) => {
+      if (!project || !activePlacement) return;
+      let cmd: EditCommand;
+      if (activePlacement.kind === "add") {
+        const asset = project.catalog.find((a) => a.id === activePlacement.assetId);
+        if (!asset) return;
+        const transform: Transform = { position_m: { x, y, z }, rotation_rad: { order: "XYZ", x: 0, y: 0, z: 0 } };
+        cmd = { type: "add_instance", assetId: asset.id, objectId: instanceId(project, asset), name: instanceName(project, asset), transform };
+      } else {
+        const src = project.scene.objects.find((o) => o.id === activePlacement.sourceId);
+        if (!src) return;
+        const transform: Transform = { position_m: { x, y, z }, rotation_rad: { ...src.transform.rotation_rad } };
+        cmd = { type: "duplicate_object", sourceId: src.id, objectId: copyId(project, src), name: copyName(project, src), transform };
+      }
+      if (runAndReport({ baseRevision: project.scene.revision, command: cmd })?.ok) setPlacement(null);
+    },
+    [activePlacement, project, runAndReport],
+  );
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
-      const choice = MODES.find((m) => m.key === e.key);
-      if (choice) setMode(choice.id);
-      else if (e.key === "f" || e.key === "F") {
-        if (selected) issue("frame-selection");
-      } else if (e.key === "h" || e.key === "H" || e.key === "Home") issue("frame-all");
-      else if ((e.key === "r" || e.key === "R") && mode === "walk") issue("reset-walk");
-      else if (e.key === "Escape") {
-        if (mode === "walk") setMode("orbit");
-        else setSelectedId(null);
+      if (prompt || isTyping(e.target)) return;
+      if ((e.metaKey || e.ctrlKey) && !e.altKey) {
+        const key = e.key.toLowerCase();
+        if (key === "z") {
+          e.preventDefault();
+          step(e.shiftKey ? "redo" : "undo");
+        } else if (key === "y") {
+          e.preventDefault();
+          step("redo");
+        } else if (key === "s") {
+          e.preventDefault();
+          if (!dragging) save();
+        } else if (key === "d") {
+          e.preventDefault();
+          startDuplicate();
+        }
+        return;
       }
+      if (e.metaKey || e.ctrlKey || e.altKey || dragging) return;
+      if (activePlacement) {
+        if (e.key === "Escape") setPlacement(null);
+        return; // Enter is handled by the placement marker
+      }
+      const choice = MODES.find((m) => m.key === e.key);
+      const lower = e.key.toLowerCase();
+      if (choice) setMode(choice.id);
+      else if (lower === "f") {
+        if (selected) issue("frame-selection");
+      } else if (lower === "h" || e.key === "Home") issue("frame-all");
+      else if (mode === "walk") {
+        if (lower === "r") issue("reset-walk");
+        else if (e.key === "Escape") setMode("orbit");
+      } else if (lower in TOOL_KEYS && editable) setTool(TOOL_KEYS[lower]!);
+      else if ((e.key === "Delete" || e.key === "Backspace") && selected) {
+        e.preventDefault();
+        remove();
+      } else if (e.key === "Escape") select(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [issue, mode, selected]);
+  }, [activePlacement, dragging, editable, issue, mode, prompt, remove, save, select, selected, startDuplicate, step]);
 
   const help = MODES.find((m) => m.id === mode)!.help;
+  const hint = mode !== "walk" && tool !== "select" && selected ? TOOL_HELP[tool](snapOn) : help;
 
   return (
     <div className="app">
       <TopBar
         scene={scene}
-        fixtureName={source?.kind === "fixture" || scene.status !== "loaded" ? fixtureName : null}
+        fixtureName={source?.kind === "fixture" || scene.status !== "loaded" ? session.fixtureName : null}
         health={health}
         fileCheck={fileCheck}
-        onOpenFile={(file) => void openFile(file)}
-        onLoadFixture={loadFixture}
+        dirty={session.dirty}
+        undoLabel={session.undoLabel}
+        redoLabel={session.redoLabel}
+        busy={dragging || prompt !== null}
+        onUndo={() => step("undo")}
+        onRedo={() => step("redo")}
+        onSave={() => save()}
+        onOpenFile={(file) => void session.openFile(file)}
+        onLoadFixture={session.loadFixture}
       />
       <aside className="panel panel-left">
-        <ObjectList project={project} selectedId={selected?.id ?? null} onSelect={setSelectedId} />
+        <ObjectList project={project} selectedId={selected?.id ?? null} onSelect={select} />
+        {project && (
+          <CatalogPanel
+            project={project}
+            placingAssetId={activePlacement?.kind === "add" ? activePlacement.assetId : null}
+            editable={editable}
+            onPlace={startPlace}
+            onCancel={() => setPlacement(null)}
+          />
+        )}
       </aside>
       <main
         ref={viewport}
@@ -85,6 +284,7 @@ export function App() {
         data-renderer={project && rendererReady ? "ready" : "pending"}
         data-camera-mode={mode}
         data-models={`${summary.ready}/${summary.total} ready, ${summary.failed} failed`}
+        data-dragging={dragging ? "true" : "false"}
       >
         {project && (
           <SceneViewport
@@ -93,24 +293,29 @@ export function App() {
             mode={mode}
             command={command}
             selectedId={selected?.id ?? null}
-            onSelect={setSelectedId}
+            onSelect={select}
             onReady={() => setRendererReady(true)}
             onProbe={onProbe}
             planPixelsPerMetre={pixelsPerMetre}
+            editable={editable}
+            tool={tool}
+            snap={snap}
+            placement={editable ? ghost : null}
+            onPlace={place}
+            onCommand={runAndReport}
+            onDragChange={setDragging}
+            onHandleProbe={onHandleProbe}
           />
         )}
         <div className="viewport-overlays">
-          {project?.fixture && <FixtureBanner fixture={project.fixture} />}
+          {project?.fixture && <FixtureBanner fixture={project.fixture} edited={project.scene.edit_log.length > 0} />}
+          {ghost && editable && <PlacementBanner label={ghost.label} onCancel={() => setPlacement(null)} />}
+          {rejection && <EditRejectedNotice message={rejection} onDismiss={() => setRejection(null)} />}
           {project && <ModelNotice catalog={project.catalog} models={models} onRetry={retry} />}
           {scene.status === "loading" && <div className="notice">Loading scene from the API…</div>}
-          {scene.status === "error" && <LoadErrorPanel error={scene.error} onRetry={reloadFixture} />}
+          {scene.status === "error" && <LoadErrorPanel error={scene.error} onRetry={session.reloadFixture} />}
           {fileCheck.status === "rejected" && (
-            <FileRejectedPanel
-              filename={fileCheck.filename}
-              error={fileCheck.error}
-              sceneKept={project !== null}
-              onDismiss={dismissFileCheck}
-            />
+            <FileRejectedPanel filename={fileCheck.filename} error={fileCheck.error} sceneKept={project !== null} onDismiss={session.dismissFileCheck} />
           )}
         </div>
         {project && (
@@ -125,15 +330,51 @@ export function App() {
         {project && mode === "top" && <PlanOverlay pixelsPerMetre={pixelsPerMetre} />}
         {project && mode === "walk" && <WalkHud onReset={() => issue("reset-walk")} onExit={() => setMode("orbit")} />}
         {project && mode !== "walk" && (
-          <p className="viewport-hint">
-            {help} · <kbd>F</kbd> frame selection · <kbd>H</kbd> frame all
+          <p className="viewport-hint" data-testid="viewport-hint">
+            {hint} · <kbd>F</kbd> frame selection · <kbd>H</kbd> frame all
           </p>
         )}
       </main>
       <aside className="panel panel-right">
-        <Inspector project={project} source={source} selected={selected} models={models} />
+        <Inspector
+          project={project}
+          source={source}
+          selected={selected}
+          models={models}
+          edit={{
+            tool,
+            snap: snapOn,
+            editable,
+            onTool: setTool,
+            onSnap: setSnapOn,
+            onTransform: (transform) => (selected ? runFromField({ type: "set_transform", objectId: selected.id, transform }) : null),
+            onDimensions: (values: Partial<Record<Axis, number>>) =>
+              selected ? runFromField({ type: "set_dimensions", objectId: selected.id, values }) : null,
+            onDuplicate: startDuplicate,
+            onRemove: remove,
+          }}
+        />
       </aside>
-      <StatusBar project={project} mode={mode} models={summary} />
+      <StatusBar project={project} mode={mode} models={summary} savedAs={session.savedAs} dirty={session.dirty} />
+      {prompt?.kind === "unsaved" && project && (
+        <UnsavedChangesDialog
+          action={prompt.action}
+          revision={project.scene.revision}
+          onSave={() => session.resolveUnsaved("save")}
+          onDiscard={() => session.resolveUnsaved("discard")}
+          onCancel={() => session.resolveUnsaved("cancel")}
+        />
+      )}
+      {prompt?.kind === "upgrade" && (
+        <UpgradeReviewDialog
+          filename={prompt.filename}
+          report={prompt.report}
+          savedAs={prompt.savedAs}
+          onOpen={session.openUpgraded}
+          onSave={session.saveUpgraded}
+          onCancel={session.closePrompt}
+        />
+      )}
     </div>
   );
 }

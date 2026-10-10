@@ -69,9 +69,25 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 
 - Priority: P0
 - Dependencies: WRL-02
-- Baseline status: planned; reconcile with actual repository
+- Status: **done** (2026-10-10, local; CI recorded below once pushed)
 - Done when: Numeric and gizmo edits agree; undo and save/reload preserve the model.
-- Evidence: not recorded by this package
+- Evidence:
+  - **One typed command path (ADR-023).** `set_transform`, `set_dimensions`, `add_instance`, `duplicate_object` and `remove_object` are checked against the base revision and then every value, all or nothing. The engine returns reversible snapshots, and the revision advances by one per edit, undo and redo.
+  - **Contract 0.4.0 (ADR-024).** The scene edit log keeps the previous transform and the previous value and evidence of each edited axis. Pydantic checks that the log describes the scene.
+  - **Upgrades.** `POST /api/v1/projects/upgrade` with an in-browser review of the notes (ADR-025).
+  - **Save and reopen.** Save as a JSON download, reopen through the API file check, and an unsaved-change guard (ADR-026).
+  - **UI.**
+    - Inspector fields in metres and degrees; move arrows and floor disc, yaw ring, and face handles that commit one command per drag.
+    - Catalog placement with a marker, duplicate, remove, and Undo/Redo controls with shortcuts and disabled states.
+    - Edit records per object and per scene.
+    - "Edited layout - not checked" labels.
+  - **Tests:**
+    - Vitest (10 + 93): command validation, conflicts, inverses for every command, grouped drags, redo invalidation, the history limit, provenance on edited axes, add/duplicate/remove and ID retirement, shared units, handle equals typed value, JSON round trip, the upgrade client, and the TS-generated sample `fixtures/edited/foundation-edited.json`.
+    - pytest (196): edit-log validity and 11 rejection cases on that sample, the 0.3.0 → 0.4.0 step and the full chain, the upgrade endpoint (0.1.0/0.2.0/0.3.0, unknown version, malformed, invalid after upgrade, model hash), and the API accepting the browser-written sample.
+    - Playwright (11): one test edits → undo/redo → save → reopen with byte-identical re-save; one covers unsaved-change protection; one covers upgrade review and rejected unknown, failed and inconsistent files.
+  - **Local runs:** `pnpm check` exit 0; `pnpm test:e2e` 11 passed.
+  - **Screenshot:** `apps/web/test-results/edited-scene.png` (reopened file with a conveyor resized to a 73 % model stretch and the warning shown), plus session screenshots of handles in orbit and top view, placement, and both dialogs.
+  - Spatial clearance and feasibility are deliberately **not** checked (M3).
 
 ### WRL-04 - Profile visual quality and performance
 

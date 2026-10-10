@@ -14,6 +14,10 @@ each change, and the result is then validated like any other document.
     * version only. 0.3.0 is additive (glTF visuals, ``walkway``/``keep_clear`` kinds,
       ``demonstration`` fixture label), so every 0.2.0 document is valid 0.3.0 content.
 
+0.3.0 -> 0.4.0
+    * an empty ``scene.edit_log`` is added. A file saved before the editor existed has no
+      recorded edits; its values and evidence are carried over unchanged.
+
 Steps run in sequence, so a 0.1.0 document passes through 0.2.0 on its way to the current
 version and its notes describe every step.
 """
@@ -116,5 +120,25 @@ def _from_0_2_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     return upgraded, [note]
 
 
-_STEPS: Final[dict[str, Step]] = {"0.1.0": _from_0_1_0, "0.2.0": _from_0_2_0}
+def _from_0_3_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    scene = copy.deepcopy(dict(old["scene"]))
+    if "edit_log" in scene:
+        raise MigrationError("malformed 0.3.0 document: scene.edit_log only exists from 0.4.0")
+    upgraded = {
+        **copy.deepcopy(dict(old)),
+        "schema_version": "0.4.0",
+        "scene": {**scene, "edit_log": []},
+    }
+    note = (
+        "schema_version 0.3.0 -> 0.4.0 (adds an empty scene edit log; no values or evidence "
+        "changed)"
+    )
+    return upgraded, [note]
+
+
+_STEPS: Final[dict[str, Step]] = {
+    "0.1.0": _from_0_1_0,
+    "0.2.0": _from_0_2_0,
+    "0.3.0": _from_0_3_0,
+}
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)

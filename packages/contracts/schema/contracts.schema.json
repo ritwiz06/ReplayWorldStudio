@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.3.0",
+  "$id": "urn:replay-world:contracts:0.4.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.3.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.4.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -14,6 +14,9 @@
     "ValidationReport": {
       "$ref": "#/$defs/ValidationReport"
     },
+    "UpgradeReport": {
+      "$ref": "#/$defs/UpgradeReport"
+    },
     "ValidationErrorResponse": {
       "$ref": "#/$defs/ValidationErrorResponse"
     }
@@ -22,6 +25,7 @@
     "Project",
     "HealthResponse",
     "ValidationReport",
+    "UpgradeReport",
     "ValidationErrorResponse"
   ],
   "additionalProperties": false,
@@ -64,6 +68,33 @@
         "reference"
       ],
       "title": "AssetSource",
+      "type": "object"
+    },
+    "AxisChange": {
+      "additionalProperties": false,
+      "description": "One dimension axis before and after an edit. ``before`` keeps the replaced evidence.",
+      "properties": {
+        "axis": {
+          "enum": [
+            "width",
+            "height",
+            "depth"
+          ],
+          "type": "string"
+        },
+        "before": {
+          "$ref": "#/$defs/Length"
+        },
+        "after": {
+          "$ref": "#/$defs/Length"
+        }
+      },
+      "required": [
+        "axis",
+        "before",
+        "after"
+      ],
+      "title": "AxisChange",
       "type": "object"
     },
     "CatalogAsset": {
@@ -280,7 +311,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.3.0",
+          "const": "0.4.0",
           "type": "string"
         }
       },
@@ -455,6 +486,130 @@
       "title": "ModelBounds",
       "type": "object"
     },
+    "ObjectAdded": {
+      "additionalProperties": false,
+      "description": "A new object was placed: an instance of a catalog asset or a copy of another object.",
+      "properties": {
+        "type": {
+          "const": "object_added",
+          "type": "string"
+        },
+        "revision": {
+          "description": "Scene revision this edit produced.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "object_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "asset_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duplicate_of": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Object this one was copied from; null for a new catalog instance."
+        }
+      },
+      "required": [
+        "type",
+        "revision",
+        "object_id",
+        "asset_id",
+        "duplicate_of"
+      ],
+      "title": "ObjectAdded",
+      "type": "object"
+    },
+    "ObjectEdited": {
+      "additionalProperties": false,
+      "description": "An existing object was moved, rotated or resized in the editor.\n\nA changed axis always becomes ``user_supplied`` and unreviewed, because a person typed or\ndragged the new value; the previous value and its evidence stay in ``before``.",
+      "properties": {
+        "type": {
+          "const": "object_edited",
+          "type": "string"
+        },
+        "revision": {
+          "description": "Scene revision this edit produced.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "object_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "transform": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TransformChange"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dimensions": {
+          "items": {
+            "$ref": "#/$defs/AxisChange"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "revision",
+        "object_id",
+        "transform",
+        "dimensions"
+      ],
+      "title": "ObjectEdited",
+      "type": "object"
+    },
+    "ObjectRemoved": {
+      "additionalProperties": false,
+      "description": "An object was removed. Its last state, evidence included, is kept here.",
+      "properties": {
+        "type": {
+          "const": "object_removed",
+          "type": "string"
+        },
+        "revision": {
+          "description": "Scene revision this edit produced.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "object": {
+          "$ref": "#/$defs/SceneObject"
+        }
+      },
+      "required": [
+        "type",
+        "revision",
+        "object"
+      ],
+      "title": "ObjectRemoved",
+      "type": "object"
+    },
     "PlaceholderBoxVisual": {
       "additionalProperties": false,
       "description": "A plain labelled box sized from each instance's dimensions. Always provisional.",
@@ -474,7 +629,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.3.0",
+          "const": "0.4.0",
           "type": "string"
         },
         "id": {
@@ -535,6 +690,7 @@
     },
     "Scene": {
       "additionalProperties": false,
+      "description": "Placed objects plus the record of every edit in effect.\n\n``revision`` advances by one for every accepted edit, undo and redo, so a command prepared\nagainst an older revision is always detected. ``edit_log`` lists, oldest first, the edits\nthat produced the current objects. An undone edit leaves the log, so the revisions of its\nrecords may have gaps; the log never describes values the scene does not hold.",
       "properties": {
         "id": {
           "description": "Stable, lowercase identifier. Never reused for a different entity.",
@@ -547,7 +703,7 @@
           "type": "string"
         },
         "revision": {
-          "description": "Incremented by every accepted edit.",
+          "description": "Advanced by one for every accepted edit, undo and redo.",
           "minimum": 0,
           "type": "integer"
         },
@@ -556,13 +712,34 @@
             "$ref": "#/$defs/SceneObject"
           },
           "type": "array"
+        },
+        "edit_log": {
+          "items": {
+            "discriminator": {
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/ObjectEdited"
+              },
+              {
+                "$ref": "#/$defs/ObjectAdded"
+              },
+              {
+                "$ref": "#/$defs/ObjectRemoved"
+              }
+            ],
+            "type": "object"
+          },
+          "type": "array"
         }
       },
       "required": [
         "id",
         "name",
         "revision",
-        "objects"
+        "objects",
+        "edit_log"
       ],
       "title": "Scene",
       "type": "object"
@@ -760,6 +937,24 @@
       "title": "Transform",
       "type": "object"
     },
+    "TransformChange": {
+      "additionalProperties": false,
+      "description": "An object's placement before and after an edit.",
+      "properties": {
+        "before": {
+          "$ref": "#/$defs/Transform"
+        },
+        "after": {
+          "$ref": "#/$defs/Transform"
+        }
+      },
+      "required": [
+        "before",
+        "after"
+      ],
+      "title": "TransformChange",
+      "type": "object"
+    },
     "UncertaintyBounds": {
       "additionalProperties": false,
       "description": "Inclusive bounds in the unit of the value they qualify. Not a calibrated probability.",
@@ -850,6 +1045,45 @@
         "reason"
       ],
       "title": "UnknownParameter",
+      "type": "object"
+    },
+    "UpgradeReport": {
+      "additionalProperties": false,
+      "description": "An older project document upgraded to the current contract and validated, for review.\n\nNothing is saved or replaced by producing this report; the client shows ``notes`` and lets\nthe user decide whether to open or download the upgraded ``project``.",
+      "properties": {
+        "from_version": {
+          "description": "Schema version of the submitted document.",
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "to_version": {
+          "const": "0.4.0",
+          "type": "string"
+        },
+        "notes": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "project": {
+          "$ref": "#/$defs/Project"
+        },
+        "validation": {
+          "$ref": "#/$defs/ValidationReport"
+        }
+      },
+      "required": [
+        "from_version",
+        "to_version",
+        "notes",
+        "project",
+        "validation"
+      ],
+      "title": "UpgradeReport",
       "type": "object"
     },
     "UsageRights": {
@@ -966,7 +1200,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.3.0",
+          "const": "0.4.0",
           "type": "string"
         },
         "project_id": {
@@ -994,6 +1228,11 @@
         "unknown_parameter_count": {
           "minimum": 0,
           "type": "integer"
+        },
+        "edit_record_count": {
+          "description": "Records in the scene edit log.",
+          "minimum": 0,
+          "type": "integer"
         }
       },
       "required": [
@@ -1004,7 +1243,8 @@
         "asset_count",
         "model_file_count",
         "known_parameter_count",
-        "unknown_parameter_count"
+        "unknown_parameter_count",
+        "edit_record_count"
       ],
       "title": "ValidationReport",
       "type": "object"

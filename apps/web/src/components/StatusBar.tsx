@@ -6,11 +6,13 @@ interface Props {
   project: Project | null;
   mode: CameraMode;
   models: ModelSummary;
+  savedAs: string | null;
+  dirty: boolean;
 }
 
 const MODE_LABEL: Record<CameraMode, string> = { orbit: "Orbit view", top: "Top view (plan)", walk: "Walk view" };
 
-export function StatusBar({ project, mode, models }: Props) {
+export function StatusBar({ project, mode, models, savedAs, dirty }: Props) {
   return (
     <footer className="statusbar" data-testid="status-bar">
       {project ? (
@@ -24,7 +26,14 @@ export function StatusBar({ project, mode, models }: Props) {
             {project.world_frame.floor_plane}
           </span>
           <span>Schema {project.schema_version}</span>
-          <span>Scene revision {project.scene.revision}</span>
+          <span data-testid="revision-status">Scene revision {project.scene.revision}</span>
+          <span data-testid="edit-count">{project.scene.edit_log.length} edits recorded</span>
+          {project.scene.edit_log.length > 0 && (
+            <span className="status-warn" data-testid="unchecked-status" title="Spatial clearance and engineering checks arrive in M3">
+              Edited layout · not checked for clearance, collisions or feasibility
+            </span>
+          )}
+          {savedAs && !dirty && <span data-testid="saved-as">Saved as {savedAs}</span>}
           <span data-testid="camera-mode-status">{MODE_LABEL[mode]}</span>
           {models.total > 0 && (
             <span data-testid="model-status" className={models.failed > 0 ? "status-warn" : undefined}>

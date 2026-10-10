@@ -1,5 +1,5 @@
 // Camera framing and plan-view maths, kept free of React so they can be tested directly.
-import { type Box3, PerspectiveCamera, Vector3 } from "three";
+import { type Box3, type Camera, type OrthographicCamera, PerspectiveCamera, Vector3 } from "three";
 import type { Vec3Tuple } from "./fit";
 
 export interface CameraPose {
@@ -93,4 +93,14 @@ export function scaleBar(pixelsPerMetre: number, maxPx = 180): ScaleBar {
   const fitting = NICE_LENGTHS.filter((m) => m * pixelsPerMetre <= maxPx);
   const metres = fitting.at(-1) ?? NICE_LENGTHS[0]!;
   return { metres, pixels: metres * pixelsPerMetre, label: `${metres} m` };
+}
+
+/** World metres covered by one screen pixel at `point` (handles use it to keep a constant size). */
+export function worldPerPixel(camera: Camera, point: Vector3, heightPx: number): number {
+  if ((camera as OrthographicCamera).isOrthographicCamera) {
+    const c = camera as OrthographicCamera;
+    return (c.top - c.bottom) / c.zoom / heightPx;
+  }
+  const c = camera as PerspectiveCamera;
+  return (2 * c.position.distanceTo(point) * Math.tan((c.fov * Math.PI) / 360)) / heightPx;
 }

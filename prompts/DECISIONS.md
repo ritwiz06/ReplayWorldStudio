@@ -182,3 +182,79 @@ For a new decision, append: ID, date, status, context, options considered, decis
 - Date: 2026-10-10. Status: adopted.
 - Decision: 0.3.0 adds the glTF visual, the `walkway`/`keep_clear` kinds, the `demonstration` fixture label and `ValidationReport.model_file_count`. ADR-017 still applies: the model is strict about the current version. Migration steps run in sequence (0.1.0 → 0.2.0 → 0.3.0), and the 0.2.0 → 0.3.0 step changes only the version. The API answers 0.1.0 and 0.2.0 documents with one actionable upgrade message.
 - Evidence: `test_migrations.py` (step order, 0.2.0 version-only step, CLI notes).
+
+### ADR-023 - One typed command path; revisions advance on every edit, undo and redo
+
+- Date: 2026-10-10. Status: adopted (WRL-03).
+- Context: numeric fields, 3D handles, catalog placement, duplicate and remove must all change the project the same way, be reversible, and never apply to a state they were not prepared for. ADR-007 already expects later AI proposals to arrive as bounded typed commands.
+- Options considered:
+  - mutation: let each UI control change the project directly (no single place to validate or record); typed commands applied by one engine.
+  - inverses: per-command inverse functions; before/after snapshots of the affected object.
+  - revisions: restore the old number on undo (a state-identity number); advance on every transition.
+- Decision:
+  - `apps/web/src/editing/commands.ts` defines `set_transform`, `set_dimensions`, `add_instance`, `duplicate_object` and `remove_object`. Each request carries `baseRevision`.
+  - The engine checks the revision first, then every value (finite; |coordinate| ≤ 1000 m; |angle| ≤ 360°; 1 mm ≤ length ≤ 1000 m; ID pattern; IDs unique and never reused, including IDs that appear only in the edit log; asset exists). Only then does it build one new project value, and as a final guard it runs the contract schema.
+  - A rejected command returns a typed reason and the same project object. Projects are never mutated; tests deep-freeze the fixtures.
+  - An accepted command yields an object patch (index, before snapshot, after snapshot) plus an edit record. Undo applies the inverse patch and drops the record; redo re-applies it.
+  - `scene.revision` advances by exactly one for every accepted command, undo and redo. A command, undo or redo whose base revision is stale is refused as a conflict.
+  - A handle drag captures its base revision on pointer-down, previews without touching the project, and commits one command on release. Esc cancels. Undo and redo are blocked while a handle is held.
+  - Undo history lives in the session only and is capped at 200 steps.
+- Rationale: a single engine is the only place that validates and records changes. Snapshots make inverses exact by construction (undo of a remove restores the same object at the same index). Restoring old revision numbers would let two different states share a revision after undo and a new edit, so a stale command could pass the check.
+- Consequences: the revision counts state transitions, not distinct states. Undoing back to the loaded state still leaves the project at a higher revision, which counts as unsaved. The engine is TypeScript-only for now: the API validates whole documents, not commands.
+- Evidence: `commands.test.ts`, `history.test.ts`, `units.test.ts` and the e2e test in `editing.spec.ts`.
+- Revisit when: AI-01 needs the API to accept commands (move the command schema into the contract), or TEAM-01 needs concurrent editors.
+
+### ADR-024 - Schema 0.4.0: a scene edit log that keeps the evidence each edit replaced
+
+- Date: 2026-10-10. Status: adopted (contract 0.4.0).
+- Context: editing a dimension must mark that axis as user-supplied while keeping the previous value and its evidence, and transform changes need an inspectable record. Both must survive save and reload.
+- Options considered: keep records only in the browser (lost on reload); an append-only journal including undo and redo entries (the saved log would carry abandoned experiments and need replaying to be read); a log of the edits in effect, persisted in the project.
+- Decision: `Scene.edit_log` is a list of typed records:
+  - `object_edited`: `revision`, `object_id`, optional `transform` {before, after}, and per-axis `dimensions` changes {axis, before `Length`, after `Length`};
+  - `object_added`: `asset_id`, `duplicate_of`;
+  - `object_removed`: the full removed `SceneObject`.
+
+  An edited axis becomes `user_supplied`, `unreviewed`, with no uncertainty and a fixed `source_ref` pointing at the log. An undone edit leaves the log, so record revisions can have gaps.
+
+  Pydantic enforces that the log describes the scene:
+  - revisions strictly increase and do not exceed the scene revision;
+  - every edit changes something;
+  - edited axes are `user_supplied`;
+  - removed IDs are never reused;
+  - added instances keep their asset and reference catalog assets;
+  - edited or added objects either exist or were removed later;
+  - the latest recorded transform and axis values equal the scene's.
+
+  The version bump is minor (pre-1.0); migration 0.3.0 → 0.4.0 adds an empty log. JSON Schema and TypeScript were regenerated.
+- Rationale: the saved file must say where every value came from, including values a person typed over measured ones, and a log that contradicts its scene would make that untrustworthy.
+- Consequences: a value changed outside the editor without a record makes the file invalid (the API says the log no longer describes the scene). Records carry no author or time yet. Added instances copy the catalog's nominal dimensions and evidence; duplicates copy the source's dimensions, evidence, asset and parameters. The synthetic `fixture` label is never removed by edits.
+- Evidence: `packages/contracts/tests/test_edit_log.py` (16 tests) on `fixtures/edited/foundation-edited.json`, which the TypeScript engine reproduces byte-for-byte in `sample.test.ts`; the API accepts it, and rejects it when tampered (`services/api/tests/test_upgrade.py`).
+- Revisit when: TEAM-01 needs authorship and time, or M2 imports need a record type of their own.
+
+### ADR-025 - Older files are upgraded by the API and reviewed in the browser
+
+- Date: 2026-10-10. Status: adopted. Resolves the WRL-03 follow-up of ADR-017.
+- Context: users must be able to open 0.1.0–0.3.0 files, see what the migration changes, and choose to open or save the upgraded copy. Unknown versions and failed migrations must leave the current scene intact.
+- Options considered: port the migrations to TypeScript (two implementations to keep equal); accept old versions in `/validate` (hides the transformation); a separate upgrade endpoint that runs the existing Python chain and returns a report.
+- Decision: `POST /api/v1/projects/upgrade` runs `upgrade_document` on any JSON object, validates the result (contract and model files), and returns `UpgradeReport {from_version, to_version, notes, project, validation}`. Nothing is stored. Unknown versions give one 422 issue at `/schema_version`; malformed legacy documents give one at the document level; validation errors after the upgrade are located in the upgraded document and prefixed "After upgrading from X". The browser sends any file whose `schema_version` is a different string to this endpoint and shows a review dialog: the notes, Open upgraded project, Download upgraded file (`<name>-0.4.0.json`), Cancel. An opened upgrade counts as unsaved until saved. `/validate` keeps its single actionable message for older versions.
+- Rationale: one migration implementation, already tested, and the user sees every change before anything is replaced or written.
+- Evidence: `services/api/tests/test_upgrade.py`, `client.test.ts`, the e2e upgrade test.
+
+### ADR-026 - Save as a JSON download; unsaved edits are never replaced silently
+
+- Date: 2026-10-10. Status: adopted (WRL-03).
+- Decision:
+  - **Save** (button or ⌘/Ctrl+S) downloads the complete project as pretty-printed JSON named `<project-id>-r<revision>.json`.
+  - **Dirty state:** the project is dirty whenever its revision differs from the revision last loaded or saved. An opened upgrade counts as dirty until saved.
+  - **Guard:** loading a fixture or opening a valid file while dirty first asks Save then continue / Discard changes / Cancel. The question is asked when the replacement is ready, so invalid files never prompt. Closing the tab while dirty triggers the browser's leave warning.
+  - **Reopen:** reuses the existing file flow (API validation including model files, then Ajv).
+  - **Undo history is not persisted:** the saved edit log is the durable record.
+  - **Precision:** numbers are written with JavaScript's shortest round-trip form. The editor never stores `-0`, because JSON would turn it into `0`.
+- Options considered: browser storage or an API project store (not needed for a local single-user prototype; REL-01 and TEAM-01 will need real storage); a File System Access API "save in place" (Chromium-only).
+- Evidence: the e2e test re-saves a reopened file and gets byte-identical text; the unsaved-changes e2e test covers Cancel, Save then continue, and Discard.
+- Revisit when: projects need server-side storage, autosave, or model files bundled with the JSON (REL-01).
+
+### Updates to earlier decisions (2026-10-10, WRL-03)
+
+- ADR-017 / ADR-022: the loader now upgrades older files through the API and shows the notes before anything is replaced or saved (ADR-025). 0.3.0 is now also a legacy version.
+- ADR-021: editing handles are custom R3F meshes. Each is drawn at a constant screen size above the scene, and a root event filter puts handle hits first. Grabbing a handle disables the active orbit or map controls until release. The vertical arrow is hidden in the top view, and walk view has no editing. Camera framing, walk obstacles and shadows follow the edited scene. Model loading is keyed on the catalog, so scene edits do not reload models.
