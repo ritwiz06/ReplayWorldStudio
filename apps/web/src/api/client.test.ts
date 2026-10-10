@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import type { Project } from "@replay-world/contracts";
 import { describe, expect, it } from "vitest";
 import { createApiClient, locationToPath } from "./client";
 
@@ -30,8 +31,8 @@ describe("api client", () => {
   });
 
   it("reports a 2xx body that breaks the contract with located issues", async () => {
-    const broken = JSON.parse(fixture) as { scene: { objects: { dimensions: object }[] } };
-    broken.scene.objects[1]!.dimensions = { ...broken.scene.objects[1]!.dimensions, depth_m: 0 };
+    const broken = JSON.parse(fixture) as Project;
+    broken.scene.objects[1]!.dimensions.depth.value_m = 0;
     const result = await createApiClient(
       BASE,
       respond(200, JSON.stringify(broken)),
@@ -40,7 +41,7 @@ describe("api client", () => {
     if (result.ok) return;
     expect(result.error).toMatchObject({
       kind: "contract",
-      issues: [{ path: "/scene/objects/1/dimensions/depth_m", message: "must be > 0" }],
+      issues: [{ path: "/scene/objects/1/dimensions/depth/value_m", message: "must be > 0" }],
     });
   });
 
@@ -53,7 +54,7 @@ describe("api client", () => {
     const rejection = JSON.stringify({
       detail: [
         {
-          loc: ["body", "scene", "objects", 4, "dimensions", "width_m"],
+          loc: ["body", "scene", "objects", 4, "dimensions", "width", "value_m"],
           msg: "Input should be greater than 0",
           type: "greater_than",
         },
@@ -70,7 +71,7 @@ describe("api client", () => {
         message: "The API rejected the input.",
         issues: [
           {
-            path: "/scene/objects/4/dimensions/width_m",
+            path: "/scene/objects/4/dimensions/width/value_m",
             message: "Input should be greater than 0",
           },
         ],

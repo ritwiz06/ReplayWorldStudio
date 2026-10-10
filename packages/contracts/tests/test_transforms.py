@@ -42,8 +42,9 @@ def test_fixture_column_plan_point_lands_at_its_world_position(fixture_text: str
     t = source.source_to_world
     assert t.metres_per_source_unit == METRES_PER_UNIT[t.source_unit]
     column = next(o for o in project.scene.objects if o.id == "obj-column-c1")
-    assert column.dimensions.source_ref is not None
-    assert "(14000,9000) mm" in column.dimensions.source_ref
+    for axis in (column.dimensions.width, column.dimensions.depth):
+        assert axis.origin == "measured"
+        assert axis.source_ref is not None and "(14000,9000) mm" in axis.source_ref
     assert source_point_to_world(t, 14000.0, 9000.0) == column.transform.position_m
 
 

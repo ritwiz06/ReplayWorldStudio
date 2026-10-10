@@ -83,3 +83,45 @@ For a new decision, append: ID, date, status, context, options considered, decis
 - Decision: the browser calls `VITE_API_BASE_URL` (default `http://127.0.0.1:8000`). The API allows only the origins in `RWS_CORS_ORIGINS` (default: the Vite dev and preview origins) and refuses `*`. Both servers bind to 127.0.0.1.
 - Rationale: the same request path works in dev, preview and tests, and the CORS boundary is exercised and tested rather than hidden by a proxy.
 - Revisit when: the app is served from the API origin or deployed.
+
+### ADR-015 - Per-axis dimension evidence; dimensions stay required
+
+- Date: 2026-10-10. Status: adopted (contract 0.2.0, WRL-01). Supersedes the "one origin per box" part of ADR-013.
+- Context: 0.1.0 gave a box a single origin, so a footprint measured from a plan and an assumed height had to be collapsed into the weaker label, losing honest information.
+- Options considered:
+  1. Keep one origin per box and explain it in text (status quo; loses information).
+  2. Per-axis `Length` records, each with value, origin, source, review status and uncertainty.
+  3. Per-axis records that may also be `unknown`.
+- Decision: option 2. `Dimensions = {width, height, depth}`, each a `Length` (`value_m` > 0, `origin`, `source_ref`, `review_status`, `uncertainty_m` with lower bound > 0 that contains the value).
+- Rationale: it represents a measured footprint plus an inferred height exactly. Option 3 would make every renderer, bounds and clearance consumer handle missing extents before any import produces them.
+- Consequences: placed objects always have three extents. An unestablished axis must be `default` with an explanation, and the UI shows it as a placeholder. Units (metres), frame, bottom-centre placement and parameter known/unknown rules are unchanged.
+- Evidence: `test_measured_footprint_and_inferred_height_stay_distinct`, per-axis rejection tests, the e2e inspector assertions, and the inspector screenshot.
+- Revisit when: M2 imports footprint-only geometry, where unknown heights may need option 3 and an "input missing" state in M3 checks.
+
+### ADR-016 - Catalog asset records embedded in the project, with explicit source and rights
+
+- Date: 2026-10-10. Status: adopted (contract 0.2.0, WRL-01).
+- Context: equipment must be matched to reusable models or clearly provisional assets, with provenance and license known before anything is redistributed.
+- Options considered:
+  - catalog location: a shared library file referenced by path, or embedded in the project;
+  - license representation: free text, or an SPDX identifier with `LicenseRef-*` and `NOASSERTION`;
+  - visual types: add glTF now, or only when it can be rendered.
+- Decision: `Project.catalog: list[CatalogAsset]`, embedded so projects are self-contained. Each asset has a stable `id`, `kind`, `visual`, per-axis `nominal_dimensions`, `source {kind, author, reference}` and `rights {license, redistribution, attribution, terms_ref}`. `SceneObject.asset_id` is a catalog ID or `null` (scene geometry). The API validates unique asset IDs, resolution of every reference and kind match. `NOASSERTION` forces `redistribution: unknown`. Vendor and third-party sources must cite a reference. `visual` is `placeholder_box` only. The 0.1.0 `representation` field is removed.
+- Rationale: SPDX identifiers are machine-checkable and standard, and `NOASSERTION` states "unknown" explicitly instead of omitting it. Adding a glTF type now would describe a renderer that does not exist.
+- Consequences: the license check covers identifier syntax only, not membership of the SPDX list. Instances keep their own dimensions, and nominal-versus-instance differences are shown, not reconciled. The fixture's synthetic assets declare `NOASSERTION` because no project license is chosen.
+- Evidence: reference, rights and source tests in `packages/contracts/tests/test_models.py`; API test for dangling references; e2e asset section and dangling-file rejection.
+- Revisit when: WRL-02 adds glTF visuals, a shared multi-project library is needed, or the project license is chosen.
+
+### ADR-017 - Schema 0.2.0: strict current model, explicit migration for 0.1.0
+
+- Date: 2026-10-10. Status: adopted.
+- Context: 0.2.0 changes the dimension shape and adds `catalog` and `asset_id`, a breaking change. Only repository fixtures exist in 0.1.0, because no persistence exists yet.
+- Options considered:
+  1. Accept both versions in `Project` (a union or defaults).
+  2. Reject 0.1.0 with no upgrade path.
+  3. Strict 0.2.0 model plus an explicit, lossless, tested migration.
+  4. Auto-upgrade inside the API's open/validate path.
+- Decision: option 3. The version bump is minor because the contract is pre-1.0. `upgrade_document` maps 0.1.0 → 0.2.0: the box evidence is copied to each axis (never strengthened), `representation` becomes `asset_id: null`, and an empty catalog is added. Unknown versions are refused. The command `python -m replay_world_contracts.migrate` validates its output, prints notes and never modifies the input. The API answers 0.1.0 with a single actionable 422 issue at `/schema_version`. Package versions were bumped to 0.2.0.
+- Rationale: one current shape keeps every consumer simple, and upgrades stay visible and auditable. Option 4 would hide a transformation behind an endpoint before persistence exists to justify it.
+- Evidence: `packages/contracts/tests/test_migrations.py` (validity, value preservation, no input mutation, refusal cases, CLI) and the API legacy test; `fixtures/legacy/foundation-scene-0.1.0.json`.
+- Revisit when: WRL-03 adds save/reload. The loader should then call `upgrade_document` and show its notes before the first save.

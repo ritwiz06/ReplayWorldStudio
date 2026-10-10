@@ -90,7 +90,7 @@ function PlaceholderBox({ object, selected, onSelect }: BoxProps) {
     <group position={placement.position} rotation={placement.rotation}>
       <mesh
         position={placement.meshOffset}
-        castShadow={object.kind !== "structure" || object.dimensions.height_m > 1}
+        castShadow={object.kind !== "structure" || object.dimensions.height.value_m > 1}
         receiveShadow
         onClick={select}
         onPointerOver={(e) => {

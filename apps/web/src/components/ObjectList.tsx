@@ -1,4 +1,5 @@
 import type { Project } from "@replay-world/contracts";
+import { dimensionEvidence } from "../evidence";
 import { formatFootprint } from "../format";
 import { EvidenceBadge } from "./EvidenceBadge";
 
@@ -28,9 +29,10 @@ export function ObjectList({ project, selectedId, onSelect }: Props) {
             >
               <span className="object-name">{o.name}</span>
               <span className="object-meta">
-                {KIND_LABEL[o.kind]} · {formatFootprint(o.dimensions)}
+                {KIND_LABEL[o.kind]} · {o.asset_id ? "catalog asset" : "scene geometry"}
               </span>
-              <EvidenceBadge evidence={o.dimensions.origin} />
+              <span className="object-meta">{formatFootprint(o.dimensions)}</span>
+              <EvidenceBadge evidence={dimensionEvidence(o.dimensions)} />
             </button>
           </li>
         ))}

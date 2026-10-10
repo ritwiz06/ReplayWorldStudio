@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "id": "proj-invalid-negative-dimension",
   "name": "Foundation fixture - packaging area",
   "units": {
@@ -15,7 +15,7 @@
   },
   "fixture": {
     "kind": "foundation",
-    "note": "Synthetic basic geometry that proves units, coordinates and schema handling. It is not the realistic factory scene and its values are not engineering data."
+    "note": "Synthetic basic geometry that proves units, coordinates, evidence and schema handling. It is not the realistic factory scene, its values are not engineering data, and its catalog assets are synthetic placeholders with no asserted license."
   },
   "sources": [
     {
@@ -37,6 +37,134 @@
       "import_warnings": []
     }
   ],
+  "catalog": [
+    {
+      "id": "asset-generic-belt-conveyor",
+      "name": "Generic belt conveyor, 3 m (provisional)",
+      "kind": "equipment",
+      "visual": {
+        "type": "placeholder_box"
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 3.0,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 0.9,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 0.8,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "synthetic",
+        "author": "Replay World Studio foundation fixture",
+        "reference": null
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "No project license has been chosen yet (see README)"
+      }
+    },
+    {
+      "id": "asset-generic-processing-station",
+      "name": "Generic processing station (provisional)",
+      "kind": "equipment",
+      "visual": {
+        "type": "placeholder_box"
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 1.6,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 1.8,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 1.2,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "synthetic",
+        "author": "Replay World Studio foundation fixture",
+        "reference": null
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "No project license has been chosen yet (see README)"
+      }
+    },
+    {
+      "id": "asset-generic-packing-station",
+      "name": "Generic packing station (provisional)",
+      "kind": "equipment",
+      "visual": {
+        "type": "placeholder_box"
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 1.2,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 1.4,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 1.0,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "synthetic",
+        "author": "Replay World Studio foundation fixture",
+        "reference": null
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "No project license has been chosen yet (see README)"
+      }
+    }
+  ],
   "scene": {
     "id": "scene-foundation",
     "name": "Packaging area (foundation fixture)",
@@ -46,7 +174,7 @@
         "id": "obj-floor",
         "name": "Floor slab",
         "kind": "structure",
-        "representation": "placeholder_box",
+        "asset_id": null,
         "transform": {
           "position_m": {
             "x": 0.0,
@@ -61,12 +189,27 @@
           }
         },
         "dimensions": {
-          "width_m": 20.0,
-          "height_m": 0.2,
-          "depth_m": 12.0,
-          "origin": "inferred",
-          "source_ref": "Footprint from src-synthetic-plan#floor-outline (0,0)-(20000,12000) mm; slab thickness assumed",
-          "review_status": "unreviewed"
+          "width": {
+            "value_m": 20.0,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#floor-outline: 20000 mm along plan X",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.2,
+            "origin": "default",
+            "source_ref": "Slab thickness is not on the plan; placeholder value",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 12.0,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#floor-outline: 12000 mm along plan Y",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
         },
         "parameters": []
       },
@@ -74,7 +217,7 @@
         "id": "obj-column-c1",
         "name": "Column C1",
         "kind": "structure",
-        "representation": "placeholder_box",
+        "asset_id": null,
         "transform": {
           "position_m": {
             "x": 4.0,
@@ -89,12 +232,27 @@
           }
         },
         "dimensions": {
-          "width_m": 0.4,
-          "height_m": 6.0,
-          "depth_m": 0.4,
-          "origin": "measured",
-          "source_ref": "src-synthetic-plan#C1 centre (14000,9000) mm",
-          "review_status": "unreviewed"
+          "width": {
+            "value_m": 0.4,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#C1 centre (14000,9000) mm, 400 mm square",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 6.0,
+            "origin": "default",
+            "source_ref": "Column height is not on the plan; placeholder value",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.4,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#C1 centre (14000,9000) mm, 400 mm square",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
         },
         "parameters": []
       },
@@ -102,7 +260,7 @@
         "id": "obj-infeed-conveyor",
         "name": "Infeed conveyor (placeholder)",
         "kind": "equipment",
-        "representation": "placeholder_box",
+        "asset_id": "asset-generic-belt-conveyor",
         "transform": {
           "position_m": {
             "x": -6.0,
@@ -117,12 +275,27 @@
           }
         },
         "dimensions": {
-          "width_m": 3.0,
-          "height_m": 0.9,
-          "depth_m": 0.8,
-          "origin": "default",
-          "source_ref": "Placeholder box size for the foundation fixture; not from a datasheet",
-          "review_status": "unreviewed"
+          "width": {
+            "value_m": 3.0,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-belt-conveyor (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.9,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-belt-conveyor (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.8,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-belt-conveyor (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
         },
         "parameters": [
           {
@@ -149,7 +322,7 @@
         "id": "obj-process-station",
         "name": "Processing station (placeholder)",
         "kind": "equipment",
-        "representation": "placeholder_box",
+        "asset_id": "asset-generic-processing-station",
         "transform": {
           "position_m": {
             "x": -2.0,
@@ -164,12 +337,27 @@
           }
         },
         "dimensions": {
-          "width_m": 1.6,
-          "height_m": 1.8,
-          "depth_m": 1.2,
-          "origin": "default",
-          "source_ref": "Placeholder box size for the foundation fixture; not from a datasheet",
-          "review_status": "unreviewed"
+          "width": {
+            "value_m": 1.6,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-processing-station (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.8,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-processing-station (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1.2,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-processing-station (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
         },
         "parameters": [
           {
@@ -199,7 +387,7 @@
         "id": "obj-packing-station",
         "name": "Packing station (placeholder)",
         "kind": "equipment",
-        "representation": "placeholder_box",
+        "asset_id": "asset-generic-packing-station",
         "transform": {
           "position_m": {
             "x": 2.5,
@@ -214,12 +402,33 @@
           }
         },
         "dimensions": {
-          "width_m": -1.2,
-          "height_m": 1.4,
-          "depth_m": 1.0,
-          "origin": "inferred",
-          "source_ref": "Footprint inferred from synthetic plan outline; height assumed",
-          "review_status": "unreviewed"
+          "width": {
+            "value_m": -1.2,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#PK1 outline, 1200 mm side",
+            "review_status": "unreviewed",
+            "uncertainty_m": {
+              "lower": 1.19,
+              "upper": 1.21
+            }
+          },
+          "height": {
+            "value_m": 1.4,
+            "origin": "inferred",
+            "source_ref": "Inferred from the catalog nominal height of asset-generic-packing-station",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1.0,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#PK1 outline, 1000 mm side",
+            "review_status": "unreviewed",
+            "uncertainty_m": {
+              "lower": 0.99,
+              "upper": 1.01
+            }
+          }
         },
         "parameters": [
           {
@@ -246,7 +455,7 @@
         "id": "obj-reference-cube",
         "name": "1 m reference cube",
         "kind": "reference",
-        "representation": "placeholder_box",
+        "asset_id": null,
         "transform": {
           "position_m": {
             "x": 7.0,
@@ -261,12 +470,27 @@
           }
         },
         "dimensions": {
-          "width_m": 1.0,
-          "height_m": 1.0,
-          "depth_m": 1.0,
-          "origin": "user_supplied",
-          "source_ref": "Scale reference defined by the foundation fixture",
-          "review_status": "confirmed"
+          "width": {
+            "value_m": 1.0,
+            "origin": "user_supplied",
+            "source_ref": "Scale reference defined by the foundation fixture",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.0,
+            "origin": "user_supplied",
+            "source_ref": "Scale reference defined by the foundation fixture",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1.0,
+            "origin": "user_supplied",
+            "source_ref": "Scale reference defined by the foundation fixture",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          }
         },
         "parameters": []
       }

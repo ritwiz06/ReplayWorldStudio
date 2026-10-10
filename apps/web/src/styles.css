@@ -436,3 +436,49 @@ nav .panel-title {
   white-space: nowrap;
   overflow: hidden;
 }
+
+/* ---------- per-axis evidence and catalog asset (WRL-01) ---------- */
+.badge-mixed {
+  color: #d7dde4;
+  border-color: #5b6470;
+  border-style: double;
+  border-width: 3px;
+  padding: 0 6px;
+}
+.axes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.axis {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.axis-head {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+.axis-label {
+  color: var(--muted);
+}
+.axis-detail {
+  margin-top: 2px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.asset-name {
+  margin: 0;
+  font-weight: 500;
+}
+.asset-name + .mono {
+  margin: 0 0 6px;
+}
+.conflict-note {
+  margin: 8px 0 0;
+  padding: 6px 8px;
+  border-left: 3px solid var(--error);
+  background: #2c1a1a;
+  font-size: 12px;
+}

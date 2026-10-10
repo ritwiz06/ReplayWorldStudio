@@ -1,6 +1,6 @@
 import type { Dimensions, KnownParameter } from "@replay-world/contracts";
 
-type Origin = Dimensions["origin"];
+type Origin = Dimensions["width"]["origin"];
 
 export const ORIGIN_LABEL: Record<Origin, string> = {
   measured: "Measured",
@@ -10,7 +10,7 @@ export const ORIGIN_LABEL: Record<Origin, string> = {
   default: "Default",
 };
 
-export const REVIEW_LABEL: Record<Dimensions["review_status"], string> = {
+export const REVIEW_LABEL: Record<Dimensions["width"]["review_status"], string> = {
   unreviewed: "Unreviewed",
   confirmed: "Confirmed",
 };
@@ -44,6 +44,6 @@ export function formatRadians(value: number): string {
 }
 
 /** Plan footprint (width along X × depth along Z) followed by height, e.g. "1.20 × 1.00 m · 1.40 m high". */
-export function formatFootprint(d: Pick<Dimensions, "width_m" | "height_m" | "depth_m">): string {
-  return `${formatNumber(d.width_m)} × ${formatNumber(d.depth_m)} m · ${formatNumber(d.height_m)} m high`;
+export function formatFootprint(d: Dimensions): string {
+  return `${formatNumber(d.width.value_m)} × ${formatNumber(d.depth.value_m)} m · ${formatNumber(d.height.value_m)} m high`;
 }

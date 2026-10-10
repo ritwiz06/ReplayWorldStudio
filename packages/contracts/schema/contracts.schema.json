@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.1.0",
+  "$id": "urn:replay-world:contracts:0.2.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.1.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.2.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -26,36 +26,25 @@
   ],
   "additionalProperties": false,
   "$defs": {
-    "Dimensions": {
+    "AssetSource": {
       "additionalProperties": false,
-      "description": "Physical bounding-box size along the object's local axes, with provenance.",
+      "description": "Where an asset definition came from. Vendor and third-party assets must cite it.",
       "properties": {
-        "width_m": {
-          "description": "Extent along local X.",
-          "exclusiveMinimum": 0,
-          "type": "number"
-        },
-        "height_m": {
-          "description": "Extent along local Y (up).",
-          "exclusiveMinimum": 0,
-          "type": "number"
-        },
-        "depth_m": {
-          "description": "Extent along local Z.",
-          "exclusiveMinimum": 0,
-          "type": "number"
-        },
-        "origin": {
+        "kind": {
           "enum": [
-            "measured",
-            "user_supplied",
-            "supplier",
-            "inferred",
-            "default"
+            "synthetic",
+            "in_house",
+            "vendor",
+            "third_party"
           ],
           "type": "string"
         },
-        "source_ref": {
+        "author": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "reference": {
           "anyOf": [
             {
               "maxLength": 500,
@@ -65,23 +54,83 @@
             {
               "type": "null"
             }
-          ]
-        },
-        "review_status": {
-          "enum": [
-            "unreviewed",
-            "confirmed"
           ],
-          "type": "string"
+          "description": "URL, catalogue number or document that identifies the original."
         }
       },
       "required": [
-        "width_m",
-        "height_m",
-        "depth_m",
-        "origin",
-        "source_ref",
-        "review_status"
+        "kind",
+        "author",
+        "reference"
+      ],
+      "title": "AssetSource",
+      "type": "object"
+    },
+    "CatalogAsset": {
+      "additionalProperties": false,
+      "description": "A reusable definition that scene objects instantiate by referencing its ``id``.\n\n``nominal_dimensions`` describe the catalogued item. Each scene object keeps its own\n``dimensions`` because an installed instance may be measured differently; differences\nare surfaced, never averaged away.",
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "structure",
+            "equipment",
+            "reference"
+          ],
+          "type": "string"
+        },
+        "visual": {
+          "$ref": "#/$defs/PlaceholderBoxVisual"
+        },
+        "nominal_dimensions": {
+          "$ref": "#/$defs/Dimensions"
+        },
+        "source": {
+          "$ref": "#/$defs/AssetSource"
+        },
+        "rights": {
+          "$ref": "#/$defs/UsageRights"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "visual",
+        "nominal_dimensions",
+        "source",
+        "rights"
+      ],
+      "title": "CatalogAsset",
+      "type": "object"
+    },
+    "Dimensions": {
+      "additionalProperties": false,
+      "description": "Physical bounding-box extents along the object's local axes, each with its own evidence.\n\n``width`` is local X, ``height`` is local Y (up) and ``depth`` is local Z, all before\nrotation. Every placed object needs all three; an axis nobody has established is recorded\nwith origin ``default`` and an explanation, never left blank or silently guessed.",
+      "properties": {
+        "width": {
+          "$ref": "#/$defs/Length"
+        },
+        "height": {
+          "$ref": "#/$defs/Length"
+        },
+        "depth": {
+          "$ref": "#/$defs/Length"
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "depth"
       ],
       "title": "Dimensions",
       "type": "object"
@@ -151,7 +200,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.1.0",
+          "const": "0.2.0",
           "type": "string"
         }
       },
@@ -249,11 +298,85 @@
       "title": "KnownParameter",
       "type": "object"
     },
+    "Length": {
+      "additionalProperties": false,
+      "description": "A strictly positive length in metres that carries its own evidence.",
+      "properties": {
+        "value_m": {
+          "description": "Strictly positive length in metres.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "origin": {
+          "enum": [
+            "measured",
+            "user_supplied",
+            "supplier",
+            "inferred",
+            "default"
+          ],
+          "type": "string"
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "review_status": {
+          "enum": [
+            "unreviewed",
+            "confirmed"
+          ],
+          "type": "string"
+        },
+        "uncertainty_m": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UncertaintyBounds"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "value_m",
+        "origin",
+        "source_ref",
+        "review_status",
+        "uncertainty_m"
+      ],
+      "title": "Length",
+      "type": "object"
+    },
+    "PlaceholderBoxVisual": {
+      "additionalProperties": false,
+      "description": "A plain labelled box sized from each instance's dimensions. Always provisional.",
+      "properties": {
+        "type": {
+          "const": "placeholder_box",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "PlaceholderBoxVisual",
+      "type": "object"
+    },
     "Project": {
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.1.0",
+          "const": "0.2.0",
           "type": "string"
         },
         "id": {
@@ -288,6 +411,12 @@
           },
           "type": "array"
         },
+        "catalog": {
+          "items": {
+            "$ref": "#/$defs/CatalogAsset"
+          },
+          "type": "array"
+        },
         "scene": {
           "$ref": "#/$defs/Scene"
         }
@@ -300,6 +429,7 @@
         "world_frame",
         "fixture",
         "sources",
+        "catalog",
         "scene"
       ],
       "title": "Project",
@@ -360,10 +490,18 @@
           ],
           "type": "string"
         },
-        "representation": {
-          "const": "placeholder_box",
-          "description": "How the object is drawn. M0 only supports labelled placeholder boxes.",
-          "type": "string"
+        "asset_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Catalog asset this object instantiates; null for scene geometry."
         },
         "transform": {
           "$ref": "#/$defs/Transform"
@@ -393,7 +531,7 @@
         "id",
         "name",
         "kind",
-        "representation",
+        "asset_id",
         "transform",
         "dimensions",
         "parameters"
@@ -524,7 +662,7 @@
     },
     "UncertaintyBounds": {
       "additionalProperties": false,
-      "description": "Inclusive bounds in the parameter's own unit. Not a calibrated probability.",
+      "description": "Inclusive bounds in the unit of the value they qualify. Not a calibrated probability.",
       "properties": {
         "lower": {
           "type": "number"
@@ -614,6 +752,58 @@
       "title": "UnknownParameter",
       "type": "object"
     },
+    "UsageRights": {
+      "additionalProperties": false,
+      "description": "Explicit usage rights. An unknown license is recorded as NOASSERTION, never omitted.",
+      "properties": {
+        "license": {
+          "description": "A single SPDX license identifier (e.g. CC0-1.0), a LicenseRef-* identifier for custom terms, or NOASSERTION when the license is not known.",
+          "pattern": "^(NOASSERTION|LicenseRef-[A-Za-z0-9.-]+|[A-Za-z0-9][A-Za-z0-9.+-]*)$",
+          "type": "string"
+        },
+        "redistribution": {
+          "enum": [
+            "allowed",
+            "restricted",
+            "unknown"
+          ],
+          "type": "string"
+        },
+        "attribution": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "terms_ref": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where the governing terms are recorded (URL, agreement or note)."
+        }
+      },
+      "required": [
+        "license",
+        "redistribution",
+        "attribution",
+        "terms_ref"
+      ],
+      "title": "UsageRights",
+      "type": "object"
+    },
     "ValidationErrorResponse": {
       "additionalProperties": false,
       "description": "Body of every HTTP 422 response. Rejected input is not echoed back.",
@@ -676,7 +866,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.1.0",
+          "const": "0.2.0",
           "type": "string"
         },
         "project_id": {
@@ -685,6 +875,10 @@
           "type": "string"
         },
         "object_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "asset_count": {
           "minimum": 0,
           "type": "integer"
         },
@@ -702,6 +896,7 @@
         "schema_version",
         "project_id",
         "object_count",
+        "asset_count",
         "known_parameter_count",
         "unknown_parameter_count"
       ],

@@ -8,9 +8,9 @@ An AI-assisted platform for turning drawings, photos, videos and specifications 
 
 | Area | Implemented (M0) | Planned (not built) |
 | --- | --- | --- |
-| Contracts | Versioned Project / Scene / Object / Parameter models in SI units, right-handed Y-up world, explicit source-to-world transform, provenance on every value, explicit *unknown* parameters | Catalog assets, process graph, scenarios, runs, findings (M1–M4) |
-| API | `GET /health`, `GET /api/v1/fixtures/foundation`, `POST /api/v1/projects/validate`; loopback-only; CORS limited to dev origins | Project storage, commands/undo, import and simulation jobs |
-| Web | Editor shell, 3D viewport (orbit), object list, evidence inspector, API health, scene-file check | Realistic assets, walk/top views, editing, drawing overlay, playback |
+| Contracts (v0.2.0) | Versioned Project / Scene / Object / Parameter models in SI units, right-handed Y-up world, explicit source-to-world transform; **per-axis** evidence on every dimension; catalog asset records with explicit source and license, validated references; explicit *unknown* parameters; tested 0.1.0 → 0.2.0 migration | glTF visuals (WRL-02), editing commands (WRL-03), process graph, scenarios, runs, findings (M3–M4) |
+| API | `GET /health`, `GET /api/v1/fixtures/foundation`, `POST /api/v1/projects/validate` (older schema versions get one actionable upgrade message); loopback-only; CORS limited to dev origins | Project storage, commands/undo, import and simulation jobs |
+| Web | Editor shell, 3D viewport (orbit), object list, inspector with per-axis evidence and catalog asset identity, source and rights, API health, scene-file check | Realistic assets, walk/top views, editing, drawing overlay, playback |
 | Import | — | DXF (M2), calibrated PDF/PNG reference (M2) |
 | Checks | Spatial: none. Operational: none. | Footprint/clearance/route checks (M3), discrete-event production (M4) |
 | AI | — (no model, no mock) | Typed command proposals with grounding (M5) |
@@ -51,7 +51,13 @@ pnpm dev:web    # Vite on   http://127.0.0.1:5173
 
 Open <http://127.0.0.1:5173>. You should see **API online**, **Scene loaded · 6 objects**, the foundation-fixture banner, and the units bar (`m · s · kg · rad`, right-handed, +Y up). Select an object to see its dimensions and the evidence behind each value.
 
-To see input rejection, click **Open scene file…** and choose `fixtures/invalid/negative-dimension.json`. The API rejects it, names `/scene/objects/4/dimensions/width_m`, and the current scene stays loaded.
+To see input rejection, click **Open scene file…** and choose `fixtures/invalid/negative-dimension.json`. The API rejects it, names `/scene/objects/4/dimensions/width/value_m`, and the current scene stays loaded.
+
+To upgrade a contract 0.1.0 project file (for example `fixtures/legacy/foundation-scene-0.1.0.json`):
+
+```bash
+uv run python -m replay_world_contracts.migrate OLD.json -o NEW.json
+```
 
 API docs (OpenAPI) are served at <http://127.0.0.1:8000/docs> while the API runs.
 
@@ -88,7 +94,8 @@ prompts/               Project context, milestones, backlog, decisions and sessi
 - **Units:** metres, seconds, kilograms, radians internally. Display formatting is a UI concern.
 - **World frame:** right-handed, +Y up, floor in the X-Z plane (identical to Three.js, so no conversion is applied when rendering).
 - **Object placement:** `position_m` is the bottom-centre of the object's bounding box; `dimensions` are measured along the object's local axes before rotation.
-- **Evidence:** every known value carries an origin (`measured`, `user_supplied`, `supplier`, `inferred`, `default`) and a review status. Unknown values are `{"state": "unknown", "reason": ...}` and never carry a substitute number.
+- **Evidence:** every known value, including each dimension axis separately, carries an origin (`measured`, `user_supplied`, `supplier`, `inferred`, `default`) and a review status. Unknown parameters are `{"state": "unknown", "reason": ...}` and never carry a substitute number.
+- **Assets:** catalog assets record their source and usage rights explicitly (`NOASSERTION` when unknown). Objects reference them by stable ID, and every reference must resolve.
 - **One schema source:** Pydantic models → JSON Schema → TypeScript types and browser validation. Details in [docs/contracts.md](docs/contracts.md).
 
 ## Data care

@@ -20,12 +20,12 @@ export interface Placement {
 
 export function placementOf(object: Pick<SceneObject, "transform" | "dimensions">): Placement {
   const { position_m: p, rotation_rad: r } = object.transform;
-  const { width_m, height_m, depth_m } = object.dimensions;
+  const { width, height, depth } = object.dimensions;
   return {
     position: [p.x, p.y, p.z],
     rotation: [r.x, r.y, r.z, r.order],
-    size: [width_m, height_m, depth_m],
-    meshOffset: [0, height_m / 2, 0],
+    size: [width.value_m, height.value_m, depth.value_m],
+    meshOffset: [0, height.value_m / 2, 0],
   };
 }
 

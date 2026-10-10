@@ -1,5 +1,5 @@
 # Equipment asset catalog
 
-Empty in M0. From M1, each entry will pair a glTF/GLB visual asset with engineering metadata: footprint, bounds, optional collision geometry, service envelope, ports, behaviour type, editable parameters, provenance and **license**. Visual scale stays separate from physical dimensions.
+No asset files yet. Since contract 0.2.0 (WRL-01), catalog asset *records* live inside each project (`Project.catalog`): stable ID, kind, nominal per-axis dimensions with evidence, source and explicit usage rights (see docs/contracts.md). Visual files arrive with WRL-02, which adds the glTF visual type. Service envelopes, ports and behaviour come with M3/M4. Visual scale stays separate from physical dimensions.
 
 Add only assets you are licensed to redistribute, and record each asset's source and license next to it. Large or restricted vendor files belong outside version control.

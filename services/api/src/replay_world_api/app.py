@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final
+from typing import Annotated, Any, Final
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -19,6 +19,7 @@ from replay_world_contracts import (
     ValidationIssue,
     ValidationReport,
 )
+from replay_world_contracts.migrations import LEGACY_SCHEMA_VERSIONS
 
 from . import __version__
 from .settings import Settings
@@ -27,6 +28,17 @@ logger = logging.getLogger(__name__)
 
 # Fixture names map to fixed files; request paths are never joined onto the filesystem.
 FIXTURES: Final = {"foundation": "scenes/foundation-scene.json"}
+
+MIGRATE_COMMAND: Final = "uv run python -m replay_world_contracts.migrate FILE -o UPGRADED.json"
+
+# The body is read as plain JSON so an older schema version gets one precise answer instead
+# of a cascade of field errors; OpenAPI still documents the expected Project shape.
+_PROJECT_BODY_DOC: Final[dict[str, Any]] = {
+    "requestBody": {
+        "required": True,
+        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Project"}}},
+    }
+}
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -76,8 +88,29 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 status_code=500, detail=f"Fixture '{name}' failed contract validation"
             ) from None
 
-    @app.post("/api/v1/projects/validate")
-    def validate_project(project: Project) -> ValidationReport:
+    @app.post("/api/v1/projects/validate", openapi_extra=_PROJECT_BODY_DOC)
+    def validate_project(document: Annotated[Any, Body()]) -> ValidationReport:
+        version = document.get("schema_version") if isinstance(document, dict) else None
+        if version in LEGACY_SCHEMA_VERSIONS:
+            raise RequestValidationError(
+                [
+                    {
+                        "type": "schema_version_outdated",
+                        "loc": ("body", "schema_version"),
+                        "msg": (
+                            f"Schema {version} is an older contract; this API accepts "
+                            f"{SCHEMA_VERSION}. Upgrade the file with `{MIGRATE_COMMAND}`, "
+                            "then open the upgraded file."
+                        ),
+                    }
+                ]
+            )
+        try:
+            project = Project.model_validate(document)
+        except ValidationError as exc:
+            raise RequestValidationError(
+                [{**e, "loc": ("body", *e["loc"])} for e in exc.errors()]
+            ) from None
         params = [p for o in project.scene.objects for p in o.parameters]
         known = sum(isinstance(p, KnownParameter) for p in params)
         return ValidationReport(
@@ -85,6 +118,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             schema_version=SCHEMA_VERSION,
             project_id=project.id,
             object_count=len(project.scene.objects),
+            asset_count=len(project.catalog),
             known_parameter_count=known,
             unknown_parameter_count=len(params) - known,
         )
