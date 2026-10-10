@@ -68,7 +68,7 @@ async function save(page: Page): Promise<{ download: Download; text: string }> {
   return { download, text: readFileSync((await download.path())!, "utf8") };
 }
 
-test("edits, undoes and redoes, saves and reopens the demo with every value intact", async ({ page }) => {
+test("edits, undoes and redoes, saves and reopens the demo with every value intact", { tag: "@smoke" }, async ({ page }) => {
   test.setTimeout(150_000);
   await openDemo(page);
   const inspector = page.getByTestId("object-inspector");
@@ -112,6 +112,8 @@ test("edits, undoes and redoes, saves and reopens the demo with every value inta
   await setField(page, "field-width", "3.6");
   await revision(page, 6);
   await expect(page.getByTestId("stretch-warning")).toContainText("stretched 20 % (tolerance 5 %)");
+  // The distortion is also flagged in the object list, without selecting the object.
+  await expect(page.getByRole("button", { name: /^Infeed conveyor/ }).getByTestId("stretch-badge")).toHaveText("Model stretched 20 %");
   await expect(inspector.getByTestId("axis-width")).toContainText("3.60 mUser-supplied");
   await expect(inspector.getByTestId("axis-width-edit")).toHaveText("Edited at r6; was 3.00 m User-supplied");
   await expect(inspector.getByTestId("object-edit-log")).toContainText("Width 3.000 m → 3.600 m");
@@ -228,7 +230,7 @@ test("edits, undoes and redoes, saves and reopens the demo with every value inta
   expect(second.text).toBe(first.text); // byte-for-byte the same document
 });
 
-test("protects unsaved changes when switching scenes or opening files", async ({ page }) => {
+test("protects unsaved changes when switching scenes or opening files", { tag: "@smoke" }, async ({ page }) => {
   test.setTimeout(90_000);
   await openDemo(page);
   await page.getByRole("button", { name: /Filling cell/ }).click();

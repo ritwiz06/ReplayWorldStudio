@@ -23,7 +23,7 @@ async function openDemo(page: Page) {
   await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 15 objects");
 }
 
-test("opens on the industrial demo with verified, labelled synthetic equipment", async ({ page }) => {
+test("opens on the industrial demo with verified, labelled synthetic equipment", { tag: "@smoke" }, async ({ page }) => {
   await openDemo(page);
   const viewport = page.getByTestId("viewport");
   await expect(viewport).toHaveAttribute("data-renderer", "ready");

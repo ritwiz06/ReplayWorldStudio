@@ -94,9 +94,44 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 
 - Priority: P1
 - Dependencies: WRL-03
-- Baseline status: planned; reconcile with actual repository
+- Status: **done** (2026-10-10, local; commit and CI recorded below once pushed)
 - Done when: Record reference hardware, scene complexity and FPS; resolve major visual defects.
-- Evidence: not recorded by this package
+- Evidence (full report: docs/performance.md; every run: docs/performance-runs.csv):
+  - **Reference and method (ADR-028).** MacBook Pro M3 Pro, Chrome 154 with hardware WebGL (ANGLE Metal) verified through CDP, 120 Hz, AC power. Runs at 1440 × 900 @2 and 1920 × 1080 @1 with production builds, through the reproducible `pnpm bench` harness.
+  - **Coverage.** 47 runs per build:
+    - demo (15 objects), and generated edited layouts of 30, 60, 120, 260, 510 and 1,010 objects (`scripts/build_benchmark_scenes.py`, labelled synthetic);
+    - load, idle, orbit, plan pan, walk, handle drag and view switches;
+    - frame intervals (median, p95, p99, long frames), long-animation-frame entries, renders/s, draw calls and triangles, main-thread and GPU-process CPU, memory.
+  - **Before.** Interaction held 120 Hz up to 260 objects (p95 ≤ 9.3 ms), but:
+    - an idle scene redrew at 120 Hz (main thread 10 % at 15 objects, up to 74 % at 260);
+    - first switches to the plan view stalled 25–50 ms;
+    - unexplained 108–325 ms stalls appeared on view switches.
+
+    Three of the four M1 target criteria were missed.
+  - **Fixes:**
+    - on-demand rendering;
+    - stable shader configuration across views (ADR-027);
+    - per-document camera memory;
+    - separated resize knobs;
+    - responsive top bar and overlays;
+    - stretched-model badge;
+    - compact object list;
+    - two-line plan labels.
+  - **After** (same runs):
+    - idle main thread 1–3 %, GPU process 1–3 %, 0 renders/s at every size;
+    - no frame over 50 ms in any interaction or view switch at ≤ 60 objects (worst switch 33 ms);
+    - interaction unchanged at median 8.3 ms, p95 ≤ 9.3 ms;
+    - all models ready ≤ 472 ms.
+
+    **M1 target met.**
+  - **Scale limit.** 120 Hz up to about 260–300 objects; about 500 objects at 60–90 Hz; about 1,000 objects at 40–60 Hz. The page main thread is the bottleneck, at about 17 draw calls per equipment instance.
+  - **Visual review.** Before/after pairs in docs/visual-review/.
+  - **Tests:**
+    - `e2e/regressions.spec.ts`: 4 tests, each failing on the old code and passing on the new;
+    - a stretch-badge assertion;
+    - `tests/test_benchmark_scenes.py`;
+    - local `pnpm check` exit 0 (Vitest 10 + 93, pytest 198) and `pnpm test:e2e` 15 passed.
+  - **CI.** New `browser-smoke` job: 4 `@smoke` Playwright tests in software WebGL (ADR-029).
 
 ## M2
 

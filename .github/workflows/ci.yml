@@ -56,3 +56,45 @@ jobs:
 
       - name: Build web app
         run: pnpm build
+
+  browser-smoke:
+    # Four Playwright tests against the real API and Vite servers: the demo loads with verified
+    # models, the edit -> undo/redo -> save -> reopen path, unsaved-change protection, and that
+    # an idle scene is not re-rendered. CI has no GPU, so WebGL runs in software (SwiftShader):
+    # this checks behaviour, never frame rate. The full suite runs locally with `pnpm test:e2e`.
+    name: Browser smoke test (Playwright, software WebGL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          version: "0.12.18"
+          enable-cache: true
+
+      - name: Install locked dependencies
+        run: |
+          uv sync --locked
+          pnpm install --frozen-lockfile
+
+      - name: Install Playwright's headless Chromium and its system libraries
+        run: pnpm --filter @replay-world/web exec playwright install --with-deps chromium --only-shell
+
+      - name: Browser smoke tests
+        run: pnpm test:e2e:smoke
+
+      - name: Keep traces of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: apps/web/test-results/
+          retention-days: 7

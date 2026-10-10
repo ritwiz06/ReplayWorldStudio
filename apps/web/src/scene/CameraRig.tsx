@@ -1,6 +1,7 @@
 // The three camera modes. Orbit and walk share the canvas's perspective camera; the top view
 // mounts an orthographic camera with world -Z pointing up the screen. Each rig remembers its
-// last pose, so switching modes and back returns to the same view.
+// last pose, so switching modes and back returns to the same view. The canvas renders on demand,
+// so every camera change made here (animations, walking, commands) requests a frame.
 import { MapControls, OrbitControls, OrthographicCamera } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { type ComponentRef, type RefObject, useEffect, useLayoutEffect, useRef } from "react";
@@ -8,6 +9,7 @@ import { type Box3, type OrthographicCamera as OrthographicCameraImpl, type Pers
 import { type CameraPose, frameBox, PLAN_UP, planView } from "./cameras";
 import type { Vec3Tuple } from "./fit";
 import { isTyping } from "./modes";
+import { useFrameProbe } from "./probe";
 import { EYE_HEIGHT_M, look, rectOf, stepWalker, walkPoseFacing, walkStart, type WalkPose, type WalkWorld } from "./walk";
 
 export type CameraMode = "orbit" | "top" | "walk";
@@ -46,7 +48,6 @@ interface RigProps {
 const ORBIT_FOV = 45;
 const WALK_FOV = 70;
 const ANIMATION_MS = 450;
-const PROBE_INTERVAL_S = 0.15;
 
 const round = (v: Vector3): Vec3Tuple => [Math.round(v.x * 1000) / 1000, Math.round(v.y * 1000) / 1000, Math.round(v.z * 1000) / 1000];
 
@@ -64,18 +65,6 @@ function useCommand(command: ViewCommand | null, handle: (command: ViewCommand) 
   }, [command]);
 }
 
-/** Calls `report` at most every PROBE_INTERVAL_S seconds from the render loop. */
-function useProbe(report: () => void) {
-  const elapsed = useRef(PROBE_INTERVAL_S);
-  useFrame((_, dt) => {
-    elapsed.current += dt;
-    if (elapsed.current >= PROBE_INTERVAL_S) {
-      elapsed.current = 0;
-      report();
-    }
-  });
-}
-
 export function CameraRig({ mode, walkWorld, ...props }: RigProps & { mode: CameraMode; walkWorld: WalkWorld }) {
   if (mode === "top") return <TopRig {...props} />;
   if (mode === "walk") return <WalkRig {...props} world={walkWorld} />;
@@ -85,6 +74,7 @@ export function CameraRig({ mode, walkWorld, ...props }: RigProps & { mode: Came
 function OrbitRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps) {
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
   const size = useThree((s) => s.size);
+  const invalidate = useThree((s) => s.invalidate);
   const controls = useRef<OrbitControlsImpl>(null);
   const animation = useRef<{ from: CameraPose; to: CameraPose; start: number } | null>(null);
 
@@ -97,6 +87,7 @@ function OrbitRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps)
     camera.position.set(...pose.position);
     controls.current?.target.set(...pose.target);
     controls.current?.update();
+    invalidate();
     const saved = memory.current;
     const ctrl = controls.current;
     return () => {
@@ -117,7 +108,10 @@ function OrbitRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps)
         : cmd.type === "frame-all"
           ? frameBox(sceneBox, ORBIT_FOV, aspect)
           : null;
-    if (to) animation.current = { from: { position: camera.position.toArray(), target: target.toArray() }, to, start: performance.now() };
+    if (to) {
+      animation.current = { from: { position: camera.position.toArray(), target: target.toArray() }, to, start: performance.now() };
+      invalidate();
+    }
   });
 
   useFrame(() => {
@@ -129,9 +123,10 @@ function OrbitRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps)
     controls.current.target.lerpVectors(new Vector3(...a.from.target), new Vector3(...a.to.target), ease);
     controls.current.update();
     if (t >= 1) animation.current = null;
+    else invalidate();
   });
 
-  useProbe(() =>
+  useFrameProbe(() =>
     onProbe({ mode: "orbit", position: round(camera.position), target: round(controls.current?.target ?? new Vector3()), pixelsPerMetre: null }),
   );
 
@@ -150,6 +145,7 @@ function OrbitRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps)
 
 function TopRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps) {
   const size = useThree((s) => s.size);
+  const invalidate = useThree((s) => s.invalidate);
   const cameraRef = useRef<OrthographicCameraImpl>(null);
   const controls = useRef<MapControlsImpl>(null);
   const height = sceneBox.max.y + 50;
@@ -162,6 +158,7 @@ function TopRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps) {
     cam.updateProjectionMatrix();
     controls.current.target.set(centre[0], 0, centre[2]);
     controls.current.update();
+    invalidate();
   };
 
   useLayoutEffect(() => {
@@ -186,7 +183,7 @@ function TopRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps) {
     }
   });
 
-  useProbe(() => {
+  useFrameProbe(() => {
     const cam = cameraRef.current;
     if (!cam) return;
     onProbe({ mode: "top", position: round(cam.position), target: round(controls.current?.target ?? new Vector3()), pixelsPerMetre: Math.round(cam.zoom * 100) / 100 });
@@ -205,6 +202,9 @@ const WALK_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "KeyQ", "KeyE", "Arro
 function WalkRig({ selectedBox, command, memory, onProbe, world }: RigProps & { world: WalkWorld }) {
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
   const element = useThree((s) => s.gl.domElement);
+  const invalidate = useThree((s) => s.invalidate);
+  /** Whether the previous frame was moving, so the first step after a pause uses no stale time. */
+  const moving = useRef(false);
   const pose = useRef<WalkPose>(
     memory.current.walk ?? (selectedBox ? walkPoseFacing(rectOf(selectedBox), world) : walkStart(world)),
   );
@@ -214,11 +214,12 @@ function WalkRig({ selectedBox, command, memory, onProbe, world }: RigProps & { 
     camera.fov = WALK_FOV;
     camera.near = 0.05;
     camera.updateProjectionMatrix();
+    invalidate();
     const saved = memory.current;
     return () => {
       saved.walk = pose.current;
     };
-  }, [camera, memory]);
+  }, [camera, memory, invalidate]);
 
   useEffect(() => {
     const pressed = keys.current;
@@ -226,6 +227,7 @@ function WalkRig({ selectedBox, command, memory, onProbe, world }: RigProps & { 
       if (!WALK_KEYS.has(e.code) || isTyping(e.target)) return;
       pressed.add(e.code);
       if (e.code.startsWith("Arrow")) e.preventDefault();
+      invalidate();
     };
     const up = (e: KeyboardEvent) => pressed.delete(e.code);
     const clear = () => pressed.clear();
@@ -241,6 +243,7 @@ function WalkRig({ selectedBox, command, memory, onProbe, world }: RigProps & { 
       if (!last || e.buttons === 0) return;
       pose.current = look(pose.current, -(e.clientX - last.x) * 0.004, -(e.clientY - last.y) * 0.004);
       last = { x: e.clientX, y: e.clientY };
+      invalidate();
     };
     const release = () => {
       last = null;
@@ -257,15 +260,22 @@ function WalkRig({ selectedBox, command, memory, onProbe, world }: RigProps & { 
       window.removeEventListener("pointerup", release);
       pressed.clear();
     };
-  }, [element]);
+  }, [element, invalidate]);
 
   useCommand(command, (cmd) => {
     if (cmd.type === "reset-walk" || cmd.type === "frame-all") pose.current = walkStart(world);
     else if (cmd.type === "frame-selection" && selectedBox) pose.current = walkPoseFacing(rectOf(selectedBox), world);
+    invalidate();
   });
 
   useFrame((_, dt) => {
     const k = keys.current;
+    const active = k.size > 0;
+    // Frames only render while something changes: keep them coming while a key is held, and
+    // give the first step after a pause no time (the gap since the last frame is not walking).
+    const step = active && moving.current ? Math.min(dt, 0.1) : 0;
+    moving.current = active;
+    if (active) invalidate();
     const axis = (plus: string[], minus: string[]) => (plus.some((c) => k.has(c)) ? 1 : 0) - (minus.some((c) => k.has(c)) ? 1 : 0);
     pose.current = stepWalker(
       pose.current,
@@ -275,7 +285,7 @@ function WalkRig({ selectedBox, command, memory, onProbe, world }: RigProps & { 
         turn: axis(["ArrowRight", "KeyE"], ["ArrowLeft", "KeyQ"]),
         run: k.has("ShiftLeft") || k.has("ShiftRight"),
       },
-      Math.min(dt, 0.1),
+      step,
       world,
     );
     const { x, z, yaw, pitch } = pose.current;
@@ -283,7 +293,7 @@ function WalkRig({ selectedBox, command, memory, onProbe, world }: RigProps & { 
     camera.rotation.set(pitch, yaw, 0, "YXZ");
   });
 
-  useProbe(() => {
+  useFrameProbe(() => {
     const ahead = new Vector3(0, 0, -1).applyQuaternion(camera.quaternion).add(camera.position);
     onProbe({ mode: "walk", position: round(camera.position), target: round(ahead), pixelsPerMetre: null });
   });

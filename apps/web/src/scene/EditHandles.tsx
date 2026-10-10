@@ -7,7 +7,8 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Euler, type Group, Raycaster, Vector2, Vector3 } from "three";
 import type { CommandRequest } from "../editing/commands";
 import { worldPerPixel } from "./cameras";
-import { beginDrag, dragCommand, dragTo, type EditTool, handleAnchor, type HandleId, originOf, type Snap, TOOL_HANDLES, yawOnly } from "./drag";
+import { beginDrag, dragCommand, dragTo, type EditTool, handleAnchor, handleAxis, type HandleId, originOf, type Snap, TOOL_HANDLES, yawOnly } from "./drag";
+import { useFrameProbe } from "./probe";
 
 const COLOR: Record<string, string> = { x: "#ef5b52", y: "#5cc160", z: "#4f9df7", xz: "#f2c94c", ring: "#f2c94c" };
 const HOVER = "#ffffff";
@@ -16,6 +17,16 @@ const HOVER = "#ffffff";
 const ARROW = { start: 16, length: 70, shaft: 1.6, head: 6, headLength: 16, hit: 9 };
 const RING = { radius: 74, tube: 2.4, hit: 9 };
 const KNOB = 11;
+/** Resize knobs sit this far outside their face (screen pixels), so the knobs of a small or
+ * distant object stay apart instead of collapsing into one cluster. */
+const KNOB_GAP = 20;
+const KNOB_OFFSET: Partial<Record<HandleId, [number, number, number]>> = {
+  "size-x+": [KNOB_GAP, 0, 0],
+  "size-x-": [-KNOB_GAP, 0, 0],
+  "size-y+": [0, KNOB_GAP, 0],
+  "size-z+": [0, 0, KNOB_GAP],
+  "size-z-": [0, 0, -KNOB_GAP],
+};
 const NO_ROTATION = new Euler();
 
 /** Screen points for tests and debugging: where each handle can be grabbed, in client pixels. */
@@ -54,7 +65,6 @@ export function EditHandles({ object, tool, snap, revision, vertical, onPreview,
   const [active, setActive] = useState<HandleId | null>(null);
   const groups = useRef(new Map<HandleId, Group>());
   const cleanup = useRef<(() => void) | null>(null);
-  const sinceProbe = useRef(1);
 
   const handles = TOOL_HANDLES[tool].filter((h) => (h !== "move-y" || vertical) && (h !== "rotate-y" || yawOnly(object)));
 
@@ -64,12 +74,13 @@ export function EditHandles({ object, tool, snap, revision, vertical, onPreview,
     onHover(hovered !== null || active !== null);
   }, [hovered, active, onHover]);
 
-  // Keep every handle the same size on screen, and report where to grab it.
-  useFrame((_, dt) => {
+  // Keep every handle the same size on screen.
+  useFrame(() => {
     for (const group of groups.current.values()) group.scale.setScalar(worldPerPixel(camera, group.position, size.height));
-    sinceProbe.current += dt;
-    if (sinceProbe.current < 0.15) return;
-    sinceProbe.current = 0;
+  });
+
+  // Report where each handle can be grabbed (for tests and debugging).
+  useFrameProbe(() => {
     const rect = gl.domElement.getBoundingClientRect();
     const screen = (p: Vector3): [number, number] => {
       const ndc = p.clone().project(camera);
@@ -87,7 +98,11 @@ export function EditHandles({ object, tool, snap, revision, vertical, onPreview,
       else if (h === "rotate-y") {
         points[h] = screen(along(new Vector3(1, 0, 0), RING.radius));
         points["rotate-y@90"] = screen(along(new Vector3(0, 0, -1), RING.radius));
-      } else points[h] = screen(handleAnchor(object, h));
+      } else {
+        const anchor = handleAnchor(object, h);
+        const gap = KNOB_GAP * worldPerPixel(camera, anchor, size.height);
+        points[h] = screen(anchor.addScaledVector(handleAxis(object, h)!, gap));
+      }
     }
     onProbe({ objectId: object.id, tool, points });
   });
@@ -214,16 +229,24 @@ export function EditHandles({ object, tool, snap, revision, vertical, onPreview,
           );
         }
         const axis = id.charAt(5);
+        const offset = KNOB_OFFSET[id]!;
+        const stem: [number, number, number] = [offset[0] / 2, offset[1] / 2, offset[2] / 2];
+        const stemTurn: [number, number, number] = axis === "x" ? [0, 0, Math.PI / 2] : axis === "z" ? [Math.PI / 2, 0, 0] : [0, 0, 0];
         return place(
           id,
           handleAnchor(object, id),
           objectRotation,
           <>
-            <mesh renderOrder={22}>
+            {/* A thin stem from the face to its knob shows which face the knob moves. */}
+            <mesh position={stem} rotation={stemTurn} renderOrder={21}>
+              <cylinderGeometry args={[1, 1, KNOB_GAP, 6]} />
+              {material(colorOf(id, COLOR[axis]!))}
+            </mesh>
+            <mesh position={offset} renderOrder={22}>
               <boxGeometry args={[KNOB, KNOB, KNOB]} />
               {material(colorOf(id, COLOR[axis]!))}
             </mesh>
-            <mesh>
+            <mesh position={offset}>
               <boxGeometry args={[KNOB * 2, KNOB * 2, KNOB * 2]} />
               {hitMaterial}
             </mesh>

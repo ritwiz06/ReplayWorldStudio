@@ -289,6 +289,7 @@ export function App() {
         {project && (
           <SceneViewport
             project={project}
+            documentKey={loadId}
             models={models}
             mode={mode}
             command={command}

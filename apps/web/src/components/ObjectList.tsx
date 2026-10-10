@@ -1,6 +1,7 @@
-import type { Project } from "@replay-world/contracts";
+import type { Project, SceneObject } from "@replay-world/contracts";
 import { dimensionEvidence } from "../evidence";
 import { formatFootprint, KIND_LABEL } from "../format";
+import { fitDistortion, isStretched } from "../scene/fit";
 import { EvidenceBadge } from "./EvidenceBadge";
 
 interface Props {
@@ -9,6 +10,13 @@ interface Props {
   onSelect: (id: string | null) => void;
 }
 
+
+/** Distortion of the object's glTF model beyond its tolerance, or null when it is faithful. */
+function stretchOf(project: Project, object: SceneObject): number | null {
+  const asset = object.asset_id ? project.catalog.find((a) => a.id === object.asset_id) : undefined;
+  if (asset?.visual.type !== "gltf" || !isStretched(asset.visual, object.dimensions)) return null;
+  return fitDistortion(asset.visual, object.dimensions);
+}
 
 export function ObjectList({ project, selectedId, onSelect }: Props) {
   if (!project) return <p className="muted panel-pad">No scene loaded.</p>;
@@ -32,10 +40,21 @@ export function ObjectList({ project, selectedId, onSelect }: Props) {
               </span>
               <span className="object-meta">{formatFootprint(o.dimensions)}</span>
               <EvidenceBadge evidence={dimensionEvidence(o.dimensions)} />
+              <StretchBadge stretch={stretchOf(project, o)} />
             </button>
           </li>
         ))}
       </ul>
     </nav>
+  );
+}
+
+function StretchBadge({ stretch }: { stretch: number | null }) {
+  if (stretch === null) return null;
+  const percent = Math.round(stretch * 100);
+  return (
+    <span className="badge badge-stretched" data-testid="stretch-badge" title={`The model is stretched ${percent} % to fit the recorded dimensions; its proportions may mislead`}>
+      Model stretched {percent} %
+    </span>
   );
 }

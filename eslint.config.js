@@ -11,6 +11,7 @@ export default defineConfig(
       "**/dist/**",
       "**/node_modules/**",
       "**/test-results/**",
+      "bench-results/**",
       "**/playwright-report/**",
       "packages/contracts/ts/generated/**",
       ".venv/**",

@@ -21,6 +21,7 @@ Recorded 2026-10-09 (America/Phoenix) by the M0 session. Re-record when the refe
 | GPU | Apple M3 Pro integrated, 18 cores, Metal 4 (unified memory; no separate VRAM) |
 | Display | 3024 × 1964 Retina |
 | Browsers installed | Google Chrome, Firefox, Safari, Brave; Playwright headless Chromium build 1248 (installed this session) |
+| Display refresh | ProMotion, measured 120 Hz in Chrome (8.33 ms animation-frame interval, WRL-04) |
 
 ## Toolchain
 
@@ -54,4 +55,21 @@ Full trees are locked in `pnpm-lock.yaml` and `uv.lock`. Direct versions are exa
 - **Starlette 1.7** deprecates `httpx` for its test client in favour of `httpx2`; the dev group uses `httpx2`.
 - **Ajv** rejects Pydantic's OpenAPI-style `discriminator.mapping` and wants `type: "object"` beside `discriminator`; the schema exporter normalises this (see docs/contracts.md).
 - **Three.js 0.186** logs a deprecation for `THREE.Clock`, which React Three Fiber 9.8.1 still uses internally. Harmless; revisit when R3F updates.
-- **Bundle size:** the production web bundle is 1.34 MB (372 kB gzip), dominated by three/drei/R3F. Vite warns above 500 kB. Not addressed in M0; profile under WRL-04.
+- **Bundle size:** the production web bundle is 1.34 MB (372 kB gzip) at M0 and 1.49 MB JS + CSS (411 kB gzip) at WRL-04, dominated by three/drei/R3F. Vite warns above 500 kB. WRL-04 measured that parsing and running it costs one 58–80 ms task during load, which is within the load target, so it is not split (docs/performance.md).
+
+## Reference measurement setup (WRL-04)
+
+Rendering is measured on the reference workstation above, never in CI or headless browsers (they render WebGL in software).
+
+| Item | Setting |
+| --- | --- |
+| Browser | Google Chrome 154.0.8037.98 (stable, installed app), driven headed by Playwright 1.64 (`channel: "chrome"`) |
+| Graphics | ANGLE Metal on the Apple M3 Pro GPU: WebGL 2 `ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Pro, …)`. Chrome reports `webgl: enabled`, `gpu_compositing: enabled`, `skia_graphite: enabled_on`; the harness refuses to run unless WebGL and GPU compositing are hardware-enabled |
+| Power | AC power, Low Power Mode off (recorded per run from `pmset`) |
+| Viewports | 1440 × 900 CSS px at device pixel ratio 2 (canvas drawing buffer 1696 × 1640), and 1920 × 1080 at DPR 1 for the "1080p" target |
+| Frame pacing | vsync on (120 Hz) for all reported results; a separate vsync-off run (`--disable-gpu-vsync --disable-frame-rate-limit`) shows headroom only |
+| Window | Headed Chrome window brought to the front; `--disable-backgrounding-occluded-windows`, `--disable-renderer-backgrounding` and `--disable-background-timer-throttling` keep a partly covered window rendering at full rate |
+| App build | Production `vite build` served by `vite preview` (port 4183) with the API on port 8020, both on 127.0.0.1 |
+| Caches | A fresh browser and profile per scene: run 1 is a first visit (empty HTTP and GPU shader caches); runs 2+ are new contexts in the same browser (cold HTTP cache, warm shader cache) |
+
+Reproduce with `pnpm bench` (method, scenarios and results: [docs/performance.md](performance.md)). The visual review screenshots come from `pnpm review` in the same browser.

@@ -18,6 +18,9 @@ import { isFloorMarking, sceneBounds, walkWorldOf } from "./sceneBounds";
 
 interface Props {
   project: Project;
+  /** Changes whenever a document is loaded, even one with the same project ID, so camera views
+   * remembered for the previous document are not reused for a different layout. */
+  documentKey: number;
   models: ModelStates;
   mode: CameraMode;
   command: ViewCommand | null;
@@ -61,6 +64,7 @@ function HandlesFirst() {
 
 export function SceneViewport({
   project,
+  documentKey,
   models,
   mode,
   command,
@@ -89,8 +93,9 @@ export function SceneViewport({
   const committed = objects.find((o) => o.id === selectedId) ?? null;
   const selected = draft && committed && draft.id === committed.id ? draft : committed;
   const selectedBox = useMemo(() => (selected ? worldBounds(selected) : null), [selected]);
-  // One camera memory per project, so opening another scene frames it afresh.
-  const memory: RefObject<CameraMemory> = useMemo(() => ({ current: { orbit: null, top: null, walk: null } }), [project.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  // One camera memory per loaded document, so opening another file (even a saved copy of the
+  // same project) frames it afresh.
+  const memory: RefObject<CameraMemory> = useMemo(() => ({ current: { orbit: null, top: null, walk: null } }), [documentKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const radius = sceneBox.getSize(new Vector3()).length() / 2;
   const showHandles = editable && tool !== "select" && !placement && mode !== "walk";
@@ -110,6 +115,9 @@ export function SceneViewport({
 
   return (
     <Canvas
+      // Render only when something changes (camera, scene, selection, handles); an idle scene
+      // costs no CPU or GPU time whatever its size.
+      frameloop="demand"
       shadows="percentage"
       dpr={[1, 2]}
       camera={{ fov: 45, near: 0.1, far: 600, position: [20, 14, 20] }}
@@ -117,7 +125,10 @@ export function SceneViewport({
       onPointerMissed={() => onSelect(null)}
     >
       <color attach="background" args={[BACKGROUND]} />
-      {mode !== "top" && <fog attach="fog" args={[BACKGROUND, radius * 2.2, radius * 6]} />}
+      {/* Fog stays attached in every view (the plan view pushes it out of range): adding or removing
+          fog changes every material's shader, and recompiling them made the first switch to the
+          plan view stall. */}
+      <fog attach="fog" args={mode === "top" ? [BACKGROUND, 1e5, 2e5] : [BACKGROUND, radius * 2.2, radius * 6]} />
       <Lighting box={sceneBox} shadows={mode !== "top"} />
       <Grid
         position={[0, 0.006, 0]}
@@ -166,7 +177,7 @@ export function SceneViewport({
       {placement && editable && <PlacementGhost key={placement.nonce} spec={placement} stepMm={snap.lengthMm} onPlace={onPlace} />}
       <HoverCursor active={((hoveredId !== null && !placement) || handleHover) && mode !== "walk"} />
       <CameraRig
-        key={`${project.id}:${mode}`}
+        key={`${documentKey}:${mode}`}
         mode={mode}
         sceneBox={sceneBox}
         selectedBox={selectedBox}
@@ -218,6 +229,7 @@ function HoverCursor({ active }: { active: boolean }) {
 function Lighting({ box, shadows }: { box: Box3; shadows: boolean }) {
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
+  const invalidate = useThree((s) => s.invalidate);
   const key = useRef<DirectionalLight>(null);
   const centre = useMemo(() => box.getCenter(new Vector3()), [box]);
   const radius = useMemo(() => Math.max(box.getSize(new Vector3()).length() / 2, 2), [box]);
@@ -227,12 +239,13 @@ function Lighting({ box, shadows }: { box: Box3; shadows: boolean }) {
     const environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environment = environment;
     scene.environmentIntensity = 0.45;
+    invalidate();
     return () => {
       scene.environment = null;
       environment.dispose();
       pmrem.dispose();
     };
-  }, [gl, scene]);
+  }, [gl, scene, invalidate]);
 
   useEffect(() => {
     const light = key.current;
@@ -245,7 +258,20 @@ function Lighting({ box, shadows }: { box: Box3; shadows: boolean }) {
     cam.near = 0.5;
     cam.far = radius * 5;
     cam.updateProjectionMatrix();
-  }, [centre, radius]);
+    invalidate();
+  }, [centre, radius, invalidate]);
+
+  // The plan view hides shadows without changing how the light is set up: toggling castShadow
+  // would recompile every material's shader on the first switch (a visible hitch). The shadow
+  // map is not updated while hidden, so the plan view also skips the shadow pass.
+  useEffect(() => {
+    const light = key.current;
+    if (!light) return;
+    light.shadow.intensity = shadows ? 1 : 0;
+    gl.shadowMap.autoUpdate = shadows;
+    gl.shadowMap.needsUpdate = shadows;
+    invalidate();
+  }, [gl, shadows, invalidate]);
 
   return (
     <>
@@ -254,7 +280,7 @@ function Lighting({ box, shadows }: { box: Box3; shadows: boolean }) {
         ref={key}
         position={[centre.x - radius * 0.45, centre.y + radius * 1.5, centre.z + radius * 0.7]}
         intensity={1.8}
-        castShadow={shadows}
+        castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0003}
         shadow-normalBias={0.025}

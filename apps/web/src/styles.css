@@ -920,3 +920,107 @@ kbd {
 .drag-readout {
   transform: translateY(-42px);
 }
+
+/* ---------- WRL-04: layout fixes from the visual review ---------- */
+/* Top bar: nothing wraps; the project name gives way first, then labels shorten. */
+.topbar > * {
+  flex-shrink: 0;
+}
+.topbar .project-name {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.topbar button,
+.topbar .chip {
+  white-space: nowrap;
+}
+.label-short {
+  display: none;
+}
+@media (max-width: 1600px) {
+  .brand-text,
+  .label-long {
+    display: none;
+  }
+  .label-short {
+    display: inline;
+  }
+}
+@media (max-width: 1300px) {
+  .topbar {
+    gap: 8px;
+    padding: 0 10px;
+  }
+  .topbar .chip {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+  .label-medium {
+    display: none;
+  }
+}
+
+/* Viewport notices sit below the camera toolbar, so the toolbar never covers the
+   synthetic-data banner, whatever the window width. UI stays above 3D labels. */
+.viewport-overlays {
+  top: 66px;
+  max-width: min(560px, calc(100% - 24px));
+  min-width: 0;
+}
+.viewport-overlays,
+.view-toolbar,
+.plan-overlay,
+.viewport-hint,
+.walk-hud {
+  z-index: 40;
+}
+.view-toolbar {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: calc(100% - 24px);
+}
+
+/* Object list: badge on the name row, details on full-width lines. */
+.object-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+.object-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.object-item .badge {
+  grid-column: 2;
+  grid-row: 1;
+}
+.object-meta {
+  grid-column: 1 / -1;
+}
+.object-item .badge-stretched {
+  grid-column: 1 / -1;
+  grid-row: auto;
+  justify-self: start;
+  margin-top: 2px;
+}
+.badge-stretched {
+  color: #ffd2b8;
+  border-color: #c0562b;
+  background: #3a1d12;
+}
+
+/* Plan labels may use two lines inside their footprint instead of one truncated line. Without
+   an explicit max-content width, a positioned label shrinks to its narrowest wrap (one letter). */
+.scene-label-plan {
+  width: max-content;
+  white-space: normal;
+}
+.scene-label-plan strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  text-align: center;
+}

@@ -21,7 +21,10 @@
     "typecheck": "pnpm -r typecheck && uv run mypy",
     "test": "pnpm -r test && uv run pytest",
     "test:e2e": "pnpm --filter @replay-world/web test:e2e",
+    "test:e2e:smoke": "pnpm --filter @replay-world/web exec playwright test --grep @smoke",
     "test:e2e:install": "pnpm --filter @replay-world/web exec playwright install chromium --only-shell",
+    "bench": "pnpm --filter @replay-world/web exec node scripts/bench/run.ts",
+    "review": "pnpm --filter @replay-world/web exec node scripts/bench/review.ts",
     "build": "pnpm --filter @replay-world/web build",
     "check": "pnpm contracts:check && pnpm assets:check && pnpm fixtures:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },

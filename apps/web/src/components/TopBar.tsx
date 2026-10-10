@@ -24,6 +24,7 @@ interface Props {
 }
 
 const FIXTURES: FixtureName[] = ["industrial-demo", "foundation"];
+const SHORT_FIXTURE_LABEL: Record<FixtureName, string> = { "industrial-demo": "Demo", foundation: "Foundation" };
 
 function sceneStatus(scene: SceneState): [tone: string, text: string] {
   switch (scene.status) {
@@ -32,7 +33,7 @@ function sceneStatus(scene: SceneState): [tone: string, text: string] {
     case "error":
       return ["error", "Scene failed to load"];
     case "loaded":
-      return ["ok", `Scene loaded · ${scene.project.scene.objects.length} objects`];
+      return ["ok", `${scene.project.scene.objects.length} objects`];
   }
 }
 
@@ -50,9 +51,9 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
 
   return (
     <header className="topbar">
-      <div className="brand">
+      <div className="brand" title="Replay World Studio">
         <span className="brand-mark" aria-hidden="true" />
-        Replay World Studio
+        <span className="brand-text">Replay World Studio</span>
       </div>
       <div className="project-name" data-testid="project-name" title={loaded ? scene.project.name : undefined}>
         {loaded ? scene.project.name : "No project loaded"}
@@ -60,7 +61,17 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
       <div className="topbar-status">
         <div className={`chip chip-${tone}`} role="status" aria-live="polite" data-testid="scene-status">
           <span className="dot" aria-hidden="true" />
-          {checking ? `Checking ${fileCheck.filename}…` : text}
+          {checking ? (
+            `Checking ${fileCheck.filename}…`
+          ) : scene.status === "loaded" ? (
+            <>
+              {/* Narrow windows keep only the count; the text content stays complete. */}
+              <span className="label-long">Scene loaded · </span>
+              {text}
+            </>
+          ) : (
+            text
+          )}
         </div>
         {loaded && (
           <div
@@ -82,8 +93,9 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
             disabled={!loaded || busy || undoLabel === null}
             title={undoLabel ? `Undo: ${undoLabel} (${shortcut("Z")})` : "Nothing to undo"}
             data-testid="undo"
+            aria-label="Undo"
           >
-            ↶ Undo
+            ↶<span className="label-medium"> Undo</span>
           </button>
           <button
             type="button"
@@ -91,8 +103,9 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
             disabled={!loaded || busy || redoLabel === null}
             title={redoLabel ? `Redo: ${redoLabel} (${shortcut("Z", true)})` : "Nothing to redo"}
             data-testid="redo"
+            aria-label="Redo"
           >
-            ↷ Redo
+            ↷<span className="label-medium"> Redo</span>
           </button>
         </div>
         <button
@@ -102,8 +115,9 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
           disabled={!loaded || busy}
           title={`Download the project as JSON (${shortcut("S")})`}
           data-testid="save"
+          aria-label="Save project"
         >
-          Save project
+          Save<span className="label-long"> project</span>
         </button>
         <div className="segmented scene-picker" role="group" aria-label="Scene">
           {FIXTURES.map((name) => (
@@ -111,10 +125,12 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
               key={name}
               type="button"
               aria-pressed={fixtureName === name}
+              aria-label={FIXTURE_LABEL[name]}
               title={fixtureName === name ? "Reload this scene from the API" : `Load the ${FIXTURE_LABEL[name].toLowerCase()} from the API`}
               onClick={() => onLoadFixture(name)}
             >
-              {FIXTURE_LABEL[name]}
+              <span className="label-long">{FIXTURE_LABEL[name]}</span>
+              <span className="label-short">{SHORT_FIXTURE_LABEL[name]}</span>
             </button>
           ))}
         </div>
@@ -124,8 +140,9 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
           onClick={() => fileInput.current?.click()}
           disabled={checking}
           title="Open a project JSON file; it is checked by the API before anything is replaced"
+          aria-label="Open project…"
         >
-          Open project…
+          Open<span className="label-long"> project</span>…
         </button>
         <input
           ref={fileInput}

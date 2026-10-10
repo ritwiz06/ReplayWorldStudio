@@ -16,6 +16,7 @@ __pycache__/
 .eslintcache
 coverage/
 apps/web/test-results/
+bench-results/
 apps/web/playwright-report/
 apps/web/blob-report/
 

@@ -146,6 +146,78 @@ Append entries in chronological order. If a live repository session log already 
 - Milestone status after this session: M1 in progress (WRL-01, WRL-02 and WRL-03 done; WRL-04 remains).
 - Next concrete task: WRL-04 - profile visual quality and performance on the reference workstation, including edited scenes.
 
+## 2026-10-10 - WRL-04 visual quality and performance; M1 closed
+
+- Active milestone / issue IDs: M1 / WRL-04.
+- Starting branch and relevant commit: `main` at `26943d0`, clean, CI green. Baseline `pnpm check` exit 0.
+- Goal and completion criteria:
+  - a reproducible hardware benchmark on the reference Mac: load, frame times while orbiting, panning, walking and dragging handles, complexity and resources, several runs each;
+  - a real-browser visual review at 1440 × 900 and a narrower window;
+  - fixes for the largest measured or visible problems, re-measured;
+  - an explicit M1 target and a scale limit;
+  - a CI smoke test if practical;
+  - close M1 only on complete evidence.
+- Work completed:
+  - **Benchmark harness.** `apps/web/scripts/bench/`:
+    - `run.ts`: headed Google Chrome via Playwright, with hardware WebGL verified through CDP SystemInfo;
+    - `instrument.ts`: rAF intervals, LoAF, and `renderer.info` via `__THREE_DEVTOOLS__`;
+    - `stats.ts` and `servers.ts`;
+    - `review.ts`: screenshots.
+
+    `scripts/build_benchmark_scenes.py` generates edited layouts with edit records. Commands: `pnpm bench`, `pnpm review`.
+  - **Baseline** (`26943d0`): 47 runs. Interaction held 120 Hz up to 260 objects, but the canvas redrew continuously, there were plan-view switch stalls, and rare 108–325 ms stalls on switches.
+  - **Visual review findings:**
+    - the top bar overflowed at 1280 px;
+    - the toolbar covered the synthetic banner;
+    - resize knobs merged on small or distant objects;
+    - stale camera memory across documents with the same project ID (the plan view showed a quarter of a large layout);
+    - plan labels cut to a few letters and drawn over the plan overlay;
+    - the stretch warning was visible only on selection;
+    - object list items were 4–5 lines tall.
+  - **Fixes:**
+    - on-demand rendering with explicit invalidation and trailing probes;
+    - stable shaders across views (shadow intensity and paused shadow map; fog kept in every view);
+    - per-document camera memory;
+    - offset resize knobs with stems;
+    - responsive top bar and overlay layering;
+    - stretched-model badge;
+    - compact list;
+    - two-line plan labels;
+    - ESLint now ignores `bench-results/`.
+  - **After:** the same 47 runs, M1 target met (docs/performance.md).
+  - **Tests and CI:** regression tests (`e2e/regressions.spec.ts`), a generator test, a CI `browser-smoke` job (`@smoke` tests), and the M1 learning note.
+- Issues found and fixed during the session:
+  - Port 4190 is a browser-blocked port (Fetch "bad ports"), so the bench uses 4183.
+  - zsh does not word-split options, so the suite runs from a bash script.
+  - The first plan-view fix still recompiled shaders: fog also changed the shader key, and the stall got worse (40–50 ms, 792 ms cold). Fog is now kept in every view, and the whole after-suite was rerun on the final build.
+  - Two-line plan labels first collapsed to one letter per line (positioned elements shrink to min-content), fixed with `width: max-content`.
+  - The screenshots (17 MB) were reduced to 14 downscaled pairs (1.8 MB).
+- Relevant files changed: apps/web/src/{App.tsx,styles.css,components/{TopBar,ObjectList}.tsx,scene/{SceneViewport,CameraRig,EditHandles}.tsx,scene/probe.ts}, apps/web/scripts/bench/*, apps/web/e2e/{regressions,editing,industrial-demo}.spec.ts, scripts/build_benchmark_scenes.py, tests/test_benchmark_scenes.py, .github/workflows/ci.yml, package.json, eslint.config.js, .gitignore, docs/{performance.md,performance-runs.csv,environment.md,visual-review/*,learning/M1-world-and-assets.md}, README.md, prompts/{BACKLOG,DECISIONS,PROJECT_STATE,SESSION_LOG}.md.
+- Commands run and actual outcomes:
+  - Baseline and after benchmark suites:
+    - main: 0,15 × 5;
+    - scale: 45,105,245 × 3;
+    - uncapped: 0–245 × 3;
+    - 1080p: 0,15 × 3;
+    - stress: 495,995 × 2.
+
+    Raw data is in `bench-results/` (git-ignored) and condensed in docs/performance-runs.csv (880 rows).
+  - The four regression tests fail on the old code (stash check) and pass on the new.
+  - `pnpm check`: exit 0 (Vitest 10 + 93, pytest 198, lint, types, build).
+  - `pnpm test:e2e`: 15 passed.
+  - `pnpm test:e2e:smoke`: 4 passed.
+- Visual evidence: docs/visual-review/*-{before,after}.jpg (7 pairs) and the full sets in `bench-results/review-{before,after}/shots/` (22 each, git-ignored).
+- Decisions changed and rationale: ADR-027 (on-demand rendering, stable shaders), ADR-028 (benchmark method and M1 target), ADR-029 (CI browser smoke), ADR-021 updated (per-document camera memory, knob offsets).
+- Known limitations / blockers: no blocker.
+  - Measurements cover one machine and browser; GPU time and energy are unmeasured.
+  - Scale limit: about 260–300 objects at 120 Hz, about 1,000 objects at 40–60 Hz (draw-call bound).
+  - The plan view pays about 0.6 ms per frame for its hidden shadow map at 260 objects (vsync off).
+  - The 510-object orbit rendered about 72 vs about 90 frames/s (unprofiled).
+  - "100 product items" waits for M4.
+- Exact reproduction commands: repo root - `pnpm check && pnpm test:e2e`; `pnpm bench -- --scenes 0,15 --runs 5 --label main` (see docs/performance.md for the full list); `pnpm review -- --stage after`.
+- Milestone status after this session: **M1 complete** (WRL-01 to WRL-04).
+- Next concrete task: IMP-01 - DXF geometry adapter (M2).
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

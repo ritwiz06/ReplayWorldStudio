@@ -258,3 +258,61 @@ For a new decision, append: ID, date, status, context, options considered, decis
 
 - ADR-017 / ADR-022: the loader now upgrades older files through the API and shows the notes before anything is replaced or saved (ADR-025). 0.3.0 is now also a legacy version.
 - ADR-021: editing handles are custom R3F meshes. Each is drawn at a constant screen size above the scene, and a root event filter puts handle hits first. Grabbing a handle disables the active orbit or map controls until release. The vertical arrow is hidden in the top view, and walk view has no editing. Camera framing, walk obstacles and shadows follow the edited scene. Model loading is keyed on the catalog, so scene edits do not reload models.
+
+### ADR-027 - Render on demand; keep shader configuration identical across views
+
+- Date: 2026-10-10. Status: adopted (WRL-04).
+- Context: the WRL-04 benchmark showed the canvas redrawing at the display rate (120 Hz) while nothing changed. On the reference M3 Pro, an idle scene cost 10 % of a CPU core on the page's main thread plus 12–13 % in Chrome's GPU process for the 15-object demo, rising to 74 % plus 51 % at 260 objects. Frame times were never the problem: every scenario up to 260 objects held 120 Hz. Switching to the plan view also stalled for 25–50 ms the first time each session, because toggling shadows and fog changed every material's shader.
+- Options considered:
+  - idle cost: lower the device pixel ratio or shadow resolution (visual cost; idle CPU still grows with object count); instancing or merging meshes (large change, and draw calls were not limiting at M1 sizes); R3F `frameloop="demand"`, with explicit invalidation where the app animates on its own.
+  - plan-view hitch: precompile both shader variants; or never change the variant (keep the light casting shadows at `shadow.intensity = 0`, pause shadow-map updates in the plan view, and keep fog attached with its range pushed out).
+- Decision:
+  - The canvas renders on demand. Controls, damping and the axis gizmo already request frames (drei).
+  - The app requests frames for camera animations, walking (every frame while a key is held, with the first step after a pause using no stale time) and look-drags, view commands, and lighting changes. React prop changes request frames through R3F.
+  - Camera and handle probes report on a throttle plus a trailing call after the last frame, so the page (and tests) always see the final state.
+  - The plan view keeps the same lights, shadows and fog configuration as the other views and only changes uniforms.
+- Rationale: the idle cost is pure waste on a laptop and grows with the layout, while interaction smoothness is unchanged (orbit, pan and walk still render about 119–120 frames per second while moving).
+- Consequences:
+  - Anything that animates by itself must call `invalidate()`, or it freezes until the next input. New animated features must follow this rule.
+  - Handle drags render at the pointer-event rate, which is visually the same as before.
+  - The headless e2e suite also became about 3× faster (1.7 min to 36 s).
+- Evidence: docs/performance.md (idle main thread 1–2 % and GPU process 1–3 % at 15–260 objects; no frame over 50 ms in any view switch); `e2e/regressions.spec.ts` "renders nothing while the scene is idle".
+- Revisit when: continuous animation is needed (M4 playback should request frames only while playing), or draw calls become the limit (instancing; see the scale limit in docs/performance.md).
+
+### ADR-028 - Benchmark method and the M1 performance target
+
+- Date: 2026-10-10. Status: adopted (WRL-04).
+- Context: the UI requirements give a provisional target (30 FPS at 1080p for 20 equipment instances and 100 product items) to be measured, not assumed. Headless test browsers render WebGL in software, so their frame times say nothing about real use.
+- Decision:
+  - **Method.** `pnpm bench` drives the installed Google Chrome, headed, with hardware WebGL verified through CDP, on the reference MacBook Pro. It uses a production build and fresh contexts, with a fresh browser per scene so run 1 is a first visit. Each run measures fixed 4 s windows of paced input (orbit, plan pan, walk, handle drag), idle, frame-all and view switches. For each window it records animation-frame intervals (median, p95, p99, max, frames over 33 and 50 ms), long-animation-frame entries with script attribution, renders per second, draw calls and triangles from `renderer.info`, page main-thread busy time (CDP), and GPU- and renderer-process CPU time (`SystemInfo.getProcessInfo`).
+  - **Scenes.** Edited layouts are generated as the demo plus N catalog instances, with the editor's own edit records (`scripts/build_benchmark_scenes.py`, labelled synthetic).
+  - **M1 target** on the reference machine, at 1440 × 900 (DPR 2) and 1920 × 1080 (DPR 1), for the demo and edited layouts up to 60 objects:
+    1. interaction (orbit, plan pan, walk, handle drag): frame-interval median ≤ 16.7 ms, p95 ≤ 33.3 ms, and no frame over 50 ms;
+    2. first useful scene ≤ 1.5 s and all models ready ≤ 3 s after navigation (local servers, first visit included);
+    3. no frame over 50 ms when switching views in a warm session;
+    4. an idle scene uses < 5 % of a CPU core on the page's main thread.
+
+    Larger layouts (120–1010 objects) are measured to find the scale limit, not held to the target.
+- Rationale: the target is stricter than the provisional 30 FPS because the reference hardware comfortably exceeds it, and it adds what users feel (hitches, load, idle cost). "100 product items" cannot be measured before M4 creates product items, so that part stays open.
+- Consequences: the target is tied to one machine and Chrome; other GPUs and browsers are unmeasured. CI never reports frame rates.
+- Evidence and revisit: docs/performance.md; re-measure when rendering, assets or the reference machine change, and at M4 with product items.
+
+### ADR-029 - A small browser smoke job in CI
+
+- Date: 2026-10-10. Status: adopted (WRL-04). Supersedes "CI does not run Playwright" (M0).
+- Context: on-demand rendering made the Playwright suite fast and less dependent on software WebGL speed (36 s locally). Playwright always passes `--enable-unsafe-swiftshader`, so WebGL works on GitHub's GPU-less runners.
+- Decision: a separate `browser-smoke` job installs the Chromium headless shell with its system libraries and runs the four `@smoke` tests:
+  - the demo loads with verified models;
+  - the full edit → undo/redo → save → reopen path;
+  - unsaved-change protection;
+  - the idle-rendering regression.
+
+  There are no retries, and traces are uploaded on failure. The full suite stays local (`pnpm test:e2e`).
+- Rationale: a separate job distinguishes a browser failure from contract or unit failures. The subset covers the workflows that matter most while keeping CI time and flakiness low.
+- Consequences: CI checks behaviour in software WebGL only; frame rates come from `pnpm bench` on the reference machine.
+- Revisit when: the smoke job flakes, or the full suite proves stable enough on CI to run entirely.
+
+### Update to ADR-021 (2026-10-10, WRL-04)
+
+- Camera memory (the last orbit, plan and walk pose) is now kept per loaded document, not per project ID. Opening a saved or edited copy of the same project, or a different layout with the same ID, frames it afresh instead of reusing the previous document's views (regression test: "frames a newly opened document afresh").
+- Resize knobs sit 20 px outside their faces on a short stem, so the knobs of small or distant objects no longer merge into one cluster.
