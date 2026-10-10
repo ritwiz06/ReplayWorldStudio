@@ -69,7 +69,7 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 
 - Priority: P0
 - Dependencies: WRL-02
-- Status: **done** (2026-10-10, local; CI recorded below once pushed)
+- Status: **done** (2026-10-10, commit `5cc18c3`)
 - Done when: Numeric and gizmo edits agree; undo and save/reload preserve the model.
 - Evidence:
   - **One typed command path (ADR-023).** `set_transform`, `set_dimensions`, `add_instance`, `duplicate_object` and `remove_object` are checked against the base revision and then every value, all or nothing. The engine returns reversible snapshots, and the revision advances by one per edit, undo and redo.
@@ -87,6 +87,7 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
     - Playwright (11): one test edits → undo/redo → save → reopen with byte-identical re-save; one covers unsaved-change protection; one covers upgrade review and rejected unknown, failed and inconsistent files.
   - **Local runs:** `pnpm check` exit 0; `pnpm test:e2e` 11 passed.
   - **Screenshot:** `apps/web/test-results/edited-scene.png` (reopened file with a conveyor resized to a 73 % model stretch and the warning shown), plus session screenshots of handles in orbit and top view, placement, and both dialogs.
+  - CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38034359681 succeeded on `5cc18c3`. It covered contracts, byte-identical model and fixture rebuilds, lint, types, Vitest 10 + 93 (including the edited sample reproduced byte-for-byte on Linux), pytest 196 and the build. Playwright is not part of CI; it was run locally.
   - Spatial clearance and feasibility are deliberately **not** checked (M3).
 
 ### WRL-04 - Profile visual quality and performance
