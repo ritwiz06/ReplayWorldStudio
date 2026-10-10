@@ -206,6 +206,7 @@ Append entries in chronological order. If a live repository session log already 
   - `pnpm check`: exit 0 (Vitest 10 + 93, pytest 198, lint, types, build).
   - `pnpm test:e2e`: 15 passed.
   - `pnpm test:e2e:smoke`: 4 passed.
+  - Committed `0a929ea` and pushed. CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38040882335: success for both jobs; browser smoke passed 4 tests in 1.1 min on the Linux runner (software WebGL).
 - Visual evidence: docs/visual-review/*-{before,after}.jpg (7 pairs) and the full sets in `bench-results/review-{before,after}/shots/` (22 each, git-ignored).
 - Decisions changed and rationale: ADR-027 (on-demand rendering, stable shaders), ADR-028 (benchmark method and M1 target), ADR-029 (CI browser smoke), ADR-021 updated (per-document camera memory, knob offsets).
 - Known limitations / blockers: no blocker.

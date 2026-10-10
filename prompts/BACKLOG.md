@@ -94,7 +94,7 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 
 - Priority: P1
 - Dependencies: WRL-03
-- Status: **done** (2026-10-10, local; commit and CI recorded below once pushed)
+- Status: **done** (2026-10-10, commit `0a929ea`); closes M1
 - Done when: Record reference hardware, scene complexity and FPS; resolve major visual defects.
 - Evidence (full report: docs/performance.md; every run: docs/performance-runs.csv):
   - **Reference and method (ADR-028).** MacBook Pro M3 Pro, Chrome 154 with hardware WebGL (ANGLE Metal) verified through CDP, 120 Hz, AC power. Runs at 1440 × 900 @2 and 1920 × 1080 @1 with production builds, through the reproducible `pnpm bench` harness.
@@ -131,7 +131,7 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
     - a stretch-badge assertion;
     - `tests/test_benchmark_scenes.py`;
     - local `pnpm check` exit 0 (Vitest 10 + 93, pytest 198) and `pnpm test:e2e` 15 passed.
-  - **CI.** New `browser-smoke` job: 4 `@smoke` Playwright tests in software WebGL (ADR-029).
+  - **CI.** New `browser-smoke` job: 4 `@smoke` Playwright tests in software WebGL (ADR-029). CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38040882335 succeeded on `0a929ea`: the main job (Vitest 10 + 93, pytest 198, build) and browser smoke (4 passed in 1.1 min).
 
 ## M2
 
