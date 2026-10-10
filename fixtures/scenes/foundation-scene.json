@@ -1,0 +1,275 @@
+{
+  "schema_version": "0.1.0",
+  "id": "proj-foundation-fixture",
+  "name": "Foundation fixture - packaging area",
+  "units": {
+    "length": "m",
+    "time": "s",
+    "mass": "kg",
+    "angle": "rad"
+  },
+  "world_frame": {
+    "handedness": "right",
+    "up_axis": "+Y",
+    "floor_plane": "XZ"
+  },
+  "fixture": {
+    "kind": "foundation",
+    "note": "Synthetic basic geometry that proves units, coordinates and schema handling. It is not the realistic factory scene and its values are not engineering data."
+  },
+  "sources": [
+    {
+      "id": "src-synthetic-plan",
+      "kind": "synthetic",
+      "filename": null,
+      "sha256": null,
+      "source_to_world": {
+        "convention": "plan_xy_to_world_x_neg_z",
+        "source_unit": "mm",
+        "metres_per_source_unit": 0.001,
+        "rotation_about_world_y_rad": 0.0,
+        "translation_m": {
+          "x": -10.0,
+          "y": 0.0,
+          "z": 6.0
+        }
+      },
+      "import_warnings": []
+    }
+  ],
+  "scene": {
+    "id": "scene-foundation",
+    "name": "Packaging area (foundation fixture)",
+    "revision": 0,
+    "objects": [
+      {
+        "id": "obj-floor",
+        "name": "Floor slab",
+        "kind": "structure",
+        "representation": "placeholder_box",
+        "transform": {
+          "position_m": {
+            "x": 0.0,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width_m": 20.0,
+          "height_m": 0.2,
+          "depth_m": 12.0,
+          "origin": "inferred",
+          "source_ref": "Footprint from src-synthetic-plan#floor-outline (0,0)-(20000,12000) mm; slab thickness assumed",
+          "review_status": "unreviewed"
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-column-c1",
+        "name": "Column C1",
+        "kind": "structure",
+        "representation": "placeholder_box",
+        "transform": {
+          "position_m": {
+            "x": 4.0,
+            "y": 0.0,
+            "z": -3.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width_m": 0.4,
+          "height_m": 6.0,
+          "depth_m": 0.4,
+          "origin": "measured",
+          "source_ref": "src-synthetic-plan#C1 centre (14000,9000) mm",
+          "review_status": "unreviewed"
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-infeed-conveyor",
+        "name": "Infeed conveyor (placeholder)",
+        "kind": "equipment",
+        "representation": "placeholder_box",
+        "transform": {
+          "position_m": {
+            "x": -6.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width_m": 3.0,
+          "height_m": 0.9,
+          "depth_m": 0.8,
+          "origin": "default",
+          "source_ref": "Placeholder box size for the foundation fixture; not from a datasheet",
+          "review_status": "unreviewed"
+        },
+        "parameters": [
+          {
+            "state": "known",
+            "id": "belt-speed",
+            "label": "Belt speed",
+            "unit": "m/s",
+            "value": 0.25,
+            "origin": "user_supplied",
+            "source_ref": "Foundation fixture value entered by developer",
+            "review_status": "unreviewed",
+            "uncertainty": null
+          },
+          {
+            "state": "unknown",
+            "id": "mass",
+            "label": "Mass",
+            "unit": "kg",
+            "reason": "Not established by layout geometry; needs supplier or measured data"
+          }
+        ]
+      },
+      {
+        "id": "obj-process-station",
+        "name": "Processing station (placeholder)",
+        "kind": "equipment",
+        "representation": "placeholder_box",
+        "transform": {
+          "position_m": {
+            "x": -2.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width_m": 1.6,
+          "height_m": 1.8,
+          "depth_m": 1.2,
+          "origin": "default",
+          "source_ref": "Placeholder box size for the foundation fixture; not from a datasheet",
+          "review_status": "unreviewed"
+        },
+        "parameters": [
+          {
+            "state": "known",
+            "id": "cycle-time",
+            "label": "Cycle time",
+            "unit": "s",
+            "value": 45.0,
+            "origin": "user_supplied",
+            "source_ref": "Foundation fixture value entered by developer",
+            "review_status": "unreviewed",
+            "uncertainty": {
+              "lower": 40.0,
+              "upper": 50.0
+            }
+          },
+          {
+            "state": "unknown",
+            "id": "mass",
+            "label": "Mass",
+            "unit": "kg",
+            "reason": "Not established by layout geometry; needs supplier or measured data"
+          }
+        ]
+      },
+      {
+        "id": "obj-packing-station",
+        "name": "Packing station (placeholder)",
+        "kind": "equipment",
+        "representation": "placeholder_box",
+        "transform": {
+          "position_m": {
+            "x": 2.5,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 1.5707963267948966,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width_m": 1.2,
+          "height_m": 1.4,
+          "depth_m": 1.0,
+          "origin": "inferred",
+          "source_ref": "Footprint inferred from synthetic plan outline; height assumed",
+          "review_status": "unreviewed"
+        },
+        "parameters": [
+          {
+            "state": "unknown",
+            "id": "cycle-time",
+            "label": "Cycle time",
+            "unit": "s",
+            "reason": "Not established; a drawing cannot provide cycle times"
+          },
+          {
+            "state": "known",
+            "id": "service-clearance-front",
+            "label": "Front service clearance",
+            "unit": "m",
+            "value": 0.8,
+            "origin": "user_supplied",
+            "source_ref": "Foundation fixture requirement entered by developer",
+            "review_status": "unreviewed",
+            "uncertainty": null
+          }
+        ]
+      },
+      {
+        "id": "obj-reference-cube",
+        "name": "1 m reference cube",
+        "kind": "reference",
+        "representation": "placeholder_box",
+        "transform": {
+          "position_m": {
+            "x": 7.0,
+            "y": 0.0,
+            "z": 4.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width_m": 1.0,
+          "height_m": 1.0,
+          "depth_m": 1.0,
+          "origin": "user_supplied",
+          "source_ref": "Scale reference defined by the foundation fixture",
+          "review_status": "confirmed"
+        },
+        "parameters": []
+      }
+    ]
+  }
+}

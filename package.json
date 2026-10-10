@@ -1,0 +1,34 @@
+{
+  "name": "replay-world-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Editable, evidence-aware simulated worlds. First application: factory production-area planning.",
+  "type": "module",
+  "packageManager": "pnpm@11.12.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev:api": "uv run python -m replay_world_api --reload",
+    "dev:web": "pnpm --filter @replay-world/web dev",
+    "contracts:generate": "node scripts/contracts.mjs",
+    "contracts:check": "node scripts/contracts.mjs --check",
+    "lint": "eslint . && uv run ruff check && uv run ruff format --check",
+    "typecheck": "pnpm -r typecheck && uv run mypy",
+    "test": "pnpm -r test && uv run pytest",
+    "test:e2e": "pnpm --filter @replay-world/web test:e2e",
+    "test:e2e:install": "pnpm --filter @replay-world/web exec playwright install chromium --only-shell",
+    "build": "pnpm --filter @replay-world/web build",
+    "check": "pnpm contracts:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.12.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.7",
+    "globals": "17.13.0",
+    "json-schema-to-typescript": "16.0.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1"
+  }
+}

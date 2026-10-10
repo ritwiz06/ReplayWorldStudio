@@ -1,0 +1,758 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:replay-world:contracts:0.1.0",
+  "title": "ReplayWorldContracts",
+  "description": "Replay World Studio contracts, schema version 0.1.0. Generated from packages/contracts/python - do not edit by hand.",
+  "type": "object",
+  "properties": {
+    "Project": {
+      "$ref": "#/$defs/Project"
+    },
+    "HealthResponse": {
+      "$ref": "#/$defs/HealthResponse"
+    },
+    "ValidationReport": {
+      "$ref": "#/$defs/ValidationReport"
+    },
+    "ValidationErrorResponse": {
+      "$ref": "#/$defs/ValidationErrorResponse"
+    }
+  },
+  "required": [
+    "Project",
+    "HealthResponse",
+    "ValidationReport",
+    "ValidationErrorResponse"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "Dimensions": {
+      "additionalProperties": false,
+      "description": "Physical bounding-box size along the object's local axes, with provenance.",
+      "properties": {
+        "width_m": {
+          "description": "Extent along local X.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "height_m": {
+          "description": "Extent along local Y (up).",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "depth_m": {
+          "description": "Extent along local Z.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "origin": {
+          "enum": [
+            "measured",
+            "user_supplied",
+            "supplier",
+            "inferred",
+            "default"
+          ],
+          "type": "string"
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "review_status": {
+          "enum": [
+            "unreviewed",
+            "confirmed"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "width_m",
+        "height_m",
+        "depth_m",
+        "origin",
+        "source_ref",
+        "review_status"
+      ],
+      "title": "Dimensions",
+      "type": "object"
+    },
+    "EulerRotation": {
+      "additionalProperties": false,
+      "description": "Rotation in radians, applied as R = Rx(x) * Ry(y) * Rz(z) (Three.js 'XYZ' order).",
+      "properties": {
+        "order": {
+          "const": "XYZ",
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "order",
+        "x",
+        "y",
+        "z"
+      ],
+      "title": "EulerRotation",
+      "type": "object"
+    },
+    "FixtureLabel": {
+      "additionalProperties": false,
+      "description": "Marks development data so it is never mistaken for a real project.",
+      "properties": {
+        "kind": {
+          "const": "foundation",
+          "type": "string"
+        },
+        "note": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "note"
+      ],
+      "title": "FixtureLabel",
+      "type": "object"
+    },
+    "HealthResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "const": "ok",
+          "type": "string"
+        },
+        "service": {
+          "const": "replay-world-api",
+          "type": "string"
+        },
+        "api_version": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "0.1.0",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "service",
+        "api_version",
+        "schema_version"
+      ],
+      "title": "HealthResponse",
+      "type": "object"
+    },
+    "KnownParameter": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "const": "known",
+          "type": "string"
+        },
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "unit": {
+          "enum": [
+            "m",
+            "s",
+            "kg",
+            "rad",
+            "m/s",
+            "1"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        },
+        "origin": {
+          "enum": [
+            "measured",
+            "user_supplied",
+            "supplier",
+            "inferred",
+            "default"
+          ],
+          "type": "string"
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "review_status": {
+          "enum": [
+            "unreviewed",
+            "confirmed"
+          ],
+          "type": "string"
+        },
+        "uncertainty": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UncertaintyBounds"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "state",
+        "id",
+        "label",
+        "unit",
+        "value",
+        "origin",
+        "source_ref",
+        "review_status",
+        "uncertainty"
+      ],
+      "title": "KnownParameter",
+      "type": "object"
+    },
+    "Project": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "0.1.0",
+          "type": "string"
+        },
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "units": {
+          "$ref": "#/$defs/UnitSystem"
+        },
+        "world_frame": {
+          "$ref": "#/$defs/WorldFrame"
+        },
+        "fixture": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FixtureLabel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/SourceDocument"
+          },
+          "type": "array"
+        },
+        "scene": {
+          "$ref": "#/$defs/Scene"
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "name",
+        "units",
+        "world_frame",
+        "fixture",
+        "sources",
+        "scene"
+      ],
+      "title": "Project",
+      "type": "object"
+    },
+    "Scene": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "revision": {
+          "description": "Incremented by every accepted edit.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/SceneObject"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "revision",
+        "objects"
+      ],
+      "title": "Scene",
+      "type": "object"
+    },
+    "SceneObject": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "structure",
+            "equipment",
+            "reference"
+          ],
+          "type": "string"
+        },
+        "representation": {
+          "const": "placeholder_box",
+          "description": "How the object is drawn. M0 only supports labelled placeholder boxes.",
+          "type": "string"
+        },
+        "transform": {
+          "$ref": "#/$defs/Transform"
+        },
+        "dimensions": {
+          "$ref": "#/$defs/Dimensions"
+        },
+        "parameters": {
+          "items": {
+            "discriminator": {
+              "propertyName": "state"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/KnownParameter"
+              },
+              {
+                "$ref": "#/$defs/UnknownParameter"
+              }
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "representation",
+        "transform",
+        "dimensions",
+        "parameters"
+      ],
+      "title": "SceneObject",
+      "type": "object"
+    },
+    "SourceDocument": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "synthetic",
+            "dxf",
+            "pdf",
+            "png"
+          ],
+          "type": "string"
+        },
+        "filename": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_to_world": {
+          "$ref": "#/$defs/SourceToWorldTransform"
+        },
+        "import_warnings": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "filename",
+        "sha256",
+        "source_to_world",
+        "import_warnings"
+      ],
+      "title": "SourceDocument",
+      "type": "object"
+    },
+    "SourceToWorldTransform": {
+      "additionalProperties": false,
+      "description": "Maps a 2D source plan (drawing) point to world metres.\n\nSteps, applied in order to source point (u, v):\n1. scale by ``metres_per_source_unit``;\n2. axis convention ``plan_xy_to_world_x_neg_z``: source +X -> world +X, source +Y -> world -Z;\n3. rotate about world +Y by ``rotation_about_world_y_rad`` (right-hand rule);\n4. translate by ``translation_m`` (its y component is the plan's floor elevation).",
+      "properties": {
+        "convention": {
+          "const": "plan_xy_to_world_x_neg_z",
+          "type": "string"
+        },
+        "source_unit": {
+          "enum": [
+            "m",
+            "cm",
+            "mm",
+            "in",
+            "ft"
+          ],
+          "type": "string"
+        },
+        "metres_per_source_unit": {
+          "description": "Metres per one source unit.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "rotation_about_world_y_rad": {
+          "type": "number"
+        },
+        "translation_m": {
+          "$ref": "#/$defs/Vec3"
+        }
+      },
+      "required": [
+        "convention",
+        "source_unit",
+        "metres_per_source_unit",
+        "rotation_about_world_y_rad",
+        "translation_m"
+      ],
+      "title": "SourceToWorldTransform",
+      "type": "object"
+    },
+    "Transform": {
+      "additionalProperties": false,
+      "description": "World placement; ``position_m`` locates the bounding-box bottom-centre.",
+      "properties": {
+        "position_m": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "rotation_rad": {
+          "$ref": "#/$defs/EulerRotation"
+        }
+      },
+      "required": [
+        "position_m",
+        "rotation_rad"
+      ],
+      "title": "Transform",
+      "type": "object"
+    },
+    "UncertaintyBounds": {
+      "additionalProperties": false,
+      "description": "Inclusive bounds in the parameter's own unit. Not a calibrated probability.",
+      "properties": {
+        "lower": {
+          "type": "number"
+        },
+        "upper": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "lower",
+        "upper"
+      ],
+      "title": "UncertaintyBounds",
+      "type": "object"
+    },
+    "UnitSystem": {
+      "additionalProperties": false,
+      "properties": {
+        "length": {
+          "const": "m",
+          "type": "string"
+        },
+        "time": {
+          "const": "s",
+          "type": "string"
+        },
+        "mass": {
+          "const": "kg",
+          "type": "string"
+        },
+        "angle": {
+          "const": "rad",
+          "type": "string"
+        }
+      },
+      "required": [
+        "length",
+        "time",
+        "mass",
+        "angle"
+      ],
+      "title": "UnitSystem",
+      "type": "object"
+    },
+    "UnknownParameter": {
+      "additionalProperties": false,
+      "description": "A required quantity that has not been established. It carries no value.",
+      "properties": {
+        "state": {
+          "const": "unknown",
+          "type": "string"
+        },
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "unit": {
+          "enum": [
+            "m",
+            "s",
+            "kg",
+            "rad",
+            "m/s",
+            "1"
+          ],
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "state",
+        "id",
+        "label",
+        "unit",
+        "reason"
+      ],
+      "title": "UnknownParameter",
+      "type": "object"
+    },
+    "ValidationErrorResponse": {
+      "additionalProperties": false,
+      "description": "Body of every HTTP 422 response. Rejected input is not echoed back.",
+      "properties": {
+        "detail": {
+          "items": {
+            "$ref": "#/$defs/ValidationIssue"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "detail"
+      ],
+      "title": "ValidationErrorResponse",
+      "type": "object"
+    },
+    "ValidationIssue": {
+      "additionalProperties": false,
+      "description": "One reason a request was rejected. ``loc`` is the path to the offending value.",
+      "properties": {
+        "loc": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "msg": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "loc",
+        "msg",
+        "type"
+      ],
+      "title": "ValidationIssue",
+      "type": "object"
+    },
+    "ValidationReport": {
+      "additionalProperties": false,
+      "description": "Summary returned when the API accepts a project document.",
+      "properties": {
+        "valid": {
+          "const": true,
+          "type": "boolean"
+        },
+        "schema_version": {
+          "const": "0.1.0",
+          "type": "string"
+        },
+        "project_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "object_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "known_parameter_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unknown_parameter_count": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "valid",
+        "schema_version",
+        "project_id",
+        "object_count",
+        "known_parameter_count",
+        "unknown_parameter_count"
+      ],
+      "title": "ValidationReport",
+      "type": "object"
+    },
+    "Vec3": {
+      "additionalProperties": false,
+      "description": "A point or offset in world metres.",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "title": "Vec3",
+      "type": "object"
+    },
+    "WorldFrame": {
+      "additionalProperties": false,
+      "properties": {
+        "handedness": {
+          "const": "right",
+          "type": "string"
+        },
+        "up_axis": {
+          "const": "+Y",
+          "type": "string"
+        },
+        "floor_plane": {
+          "const": "XZ",
+          "type": "string"
+        }
+      },
+      "required": [
+        "handedness",
+        "up_axis",
+        "floor_plane"
+      ],
+      "title": "WorldFrame",
+      "type": "object"
+    }
+  }
+}

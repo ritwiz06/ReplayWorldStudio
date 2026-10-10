@@ -1,0 +1,56 @@
+# --- Dependencies and build output ---
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# --- Tool caches ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.vite/
+.eslintcache
+coverage/
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/blob-report/
+
+# --- Credentials and local configuration (never commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# --- Local project data, run outputs and generated caches ---
+# Projects created while using the app, simulation runs and job logs stay local.
+data/
+runs/
+var/
+*.sqlite
+*.sqlite3
+*.db
+
+# --- Customer or third-party drawings (use fixtures/ for synthetic or permissioned samples) ---
+uploads/
+drawings/
+customer-data/
+
+# --- Model weights and large binary artefacts ---
+models/
+*.safetensors
+*.gguf
+*.ckpt
+*.pt
+*.pth
+*.onnx
+
+# --- OS / editor noise ---
+.DS_Store
+.idea/
+*.swp

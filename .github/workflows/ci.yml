@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Contracts, lint, types, tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      # pnpm version comes from "packageManager" in package.json.
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.12.18"
+          enable-cache: true
+
+      - name: Install locked dependencies
+        run: |
+          uv sync --locked
+          pnpm install --frozen-lockfile
+
+      - name: Generated contracts match the Pydantic source
+        run: pnpm contracts:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check (TypeScript + mypy)
+        run: pnpm typecheck
+
+      - name: Unit, schema and API tests (Vitest + pytest)
+        run: pnpm test
+
+      - name: Build web app
+        run: pnpm build

@@ -1,0 +1,6 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Record exact versions in package.json; pnpm-lock.yaml pins the full tree.
+saveExact: true
