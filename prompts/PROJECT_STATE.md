@@ -26,22 +26,22 @@ If a maintained project-status file is later created elsewhere, put its exact re
 
 | Field | Value |
 | --- | --- |
-| Active milestone | M0 complete (local evidence). Next: M1, starting with WRL-01. |
-| Git / branch / commit | **No Git repository exists.** The directory had no `.git`; `git init` was not run (ADR-012). No branch, commits or remotes. |
+| Active milestone | M0 complete, including CI. M1 active; next issue WRL-01. |
+| Git / branch / commit | Branch `main`, tracking `origin` = https://github.com/ritwiz06/ReplayWorldStudio (created by the user after the M0 session). M0 CI gate closed at commit `28ebce7`. |
 | Implemented capabilities | Contracts v0.1.0 (Pydantic source → JSON Schema → TS types + Ajv); FastAPI `/health`, `/api/v1/fixtures/foundation`, `/api/v1/projects/validate` (loopback, CORS allow-list); React/Vite editor shell with R3F orbit viewport, object list, evidence inspector, API health, scene-file check; synthetic foundation fixture plus three invalid samples. |
 | Not implemented | Catalog assets, realistic scene, walk/top cameras, editing, undo, persistence, DXF/PDF import, spatial checks, simulation, AI. |
-| Latest passing checks | 2026-10-09: `pnpm check` exit 0 (contracts up to date; ESLint and Ruff clean; tsc and mypy strict clean; Vitest 19 passed; pytest 48 passed; build OK); `pnpm test:e2e` 4 passed. Repeated in a clean copy installed with `uv sync --locked` and `pnpm install --frozen-lockfile` (local caches reused). |
-| Not yet run | The GitHub Actions workflow has never executed: there is no repository or remote. |
+| Latest passing checks | GitHub Actions run 38022453114 on `28ebce7` (2026-10-10 UTC): success. Ubuntu 24.04, pnpm 11.11.0, Python 3.14.7; contracts up to date, lint, types, Vitest 7 + 12, pytest 48, build. Local: `pnpm check` exit 0 and `pnpm test:e2e` 4 passed (2026-10-09). |
+| CI history | Run 38021553918 (`511b04e`) failed: `astral-sh/setup-uv@v10` has no floating major tag (fixed by the user in `f173510`). Run 38022020880 (`f173510`) failed: pnpm 11.12.0 is a broken upstream release. Run 38022453114 (`28ebce7`, pnpm pinned to 11.11.0) passed. |
 | Run commands | Repo root: `uv sync --locked`, `pnpm install --frozen-lockfile`, `pnpm dev:api`, `pnpm dev:web`, `pnpm check`, `pnpm test:e2e:install` (once), `pnpm test:e2e`. See README.md. |
-| Known blockers | None for M1 local work. Committing, CI and history need the user to create or choose a Git repository. |
+| Known blockers | None. |
 | Known limitations | Web bundle 1.34 MB (372 kB gzip), unprofiled. R3F 9.8.1 triggers a `THREE.Clock` deprecation warning. One provenance origin per dimension box, not per axis. Ajv cannot check unique IDs or uncertainty ordering; the API does. |
-| Next issue | WRL-01 - define world and asset records (catalog asset reference, asset provenance/license, per-axis dimension provenance decision, stable-ID round-trip). Decide the Git repository question first if possible. |
+| Next issue | WRL-01 - define world and asset records (catalog asset reference, asset provenance/license, per-axis dimension provenance, stable-ID round-trip). |
 
 ## Milestone status
 
 | Gate | Status | Evidence |
 | --- | --- | --- |
-| M0 | Complete (local) | SET-01/02/03 evidence in BACKLOG.md; session 2026-10-09 in SESSION_LOG.md. CI defined but not yet executed remotely. |
+| M0 | Complete | SET-01/02/03 evidence in BACKLOG.md. CI run https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38022453114 passed on `28ebce7`. |
 | M1 | Not started | - |
 | M2 | Not started | - |
 | M3 | Not started | - |
@@ -51,7 +51,6 @@ If a maintained project-status file is later created elsewhere, put its exact re
 
 ## Information still to confirm when relevant
 
-- **Git repository:** initialise locally or clone an existing remote? (Needed before commits and CI.)
 - Available weekly time; permissioned sample drawing; machine dimensions and operating data; model provider and data-routing preference; repository license and visibility; engineering reviewer.
 - Reference workstation recorded in docs/environment.md (Apple M3 Pro, 18 GiB, macOS 26.6.2). Graphics performance has not been measured yet (WRL-04).
 

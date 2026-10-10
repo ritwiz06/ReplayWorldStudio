@@ -36,6 +36,7 @@ For a new decision, append: ID, date, status, context, options considered, decis
 - Evidence: clean-copy install plus `pnpm check` passed (SESSION_LOG 2026-10-09). Versions are listed in docs/environment.md.
 - Revisit when: a dependency lacks Python 3.14 wheels, or CI on Linux disagrees with macOS.
 - Status updates: ADR-002 (browser + local Python API) and ADR-003 (versioned records) are now implemented in their minimal M0 form.
+- Update (2026-10-10): pnpm pinned to **11.11.0**, because 11.12.0 is a broken upstream release that `pnpm/action-setup` refuses to install. The lockfile is unchanged. `astral-sh/setup-uv` is pinned to the exact tag `v10.3.0` because no `v10` major tag exists.
 
 ### ADR-010 - One contract pipeline: Pydantic → JSON Schema → TypeScript + Ajv
 
@@ -65,6 +66,7 @@ For a new decision, append: ID, date, status, context, options considered, decis
 - Decision: build and verify M0 without Git, record the discrepancy (docs/environment.md), and leave repository creation to the user. The user may want to clone an existing remote instead.
 - Consequences: no commits or branch history. The CI workflow has not run. Lockfiles and ignore rules are ready for the first commit.
 - Revisit when: the user initialises or clones the repository. Then run `git status` to confirm `.gitignore` excludes `.venv`, `node_modules`, `dist`, `test-results` and `.env`.
+- Outcome (2026-10-10): resolved. The user created the repository (`main` → `origin` https://github.com/ritwiz06/ReplayWorldStudio). The initial commit `511b04e` contains no ignored artefacts (`.venv`, `node_modules`, `dist`, `test-results`, `.env` absent).
 
 ### ADR-013 - Contract conventions for placement, plans and unknowns
 

@@ -47,6 +47,18 @@ Append entries in chronological order. If a live repository session log already 
   1. The user decides how the Git repository is created (`git init` here, or clone the intended remote and move these files in), then makes the first commit and confirms CI passes.
   2. Start M1 with WRL-01: add catalog asset records (visual asset reference, footprint/bounds, provenance, license), decide per-axis dimension provenance, and add stable-ID and unit round-trip tests. Bump the contract version.
 
+## 2026-10-10 - M0 CI gate closed
+
+- Active milestone / issue IDs: M0 / SET-03 (CI evidence).
+- Starting branch and relevant commit: `main` at `f173510` (the user created the repository and pushed `511b04e` "init", then `f173510`, which pinned `astral-sh/setup-uv@v10.3.0`). Working tree clean.
+- Repository state found: CI run 38021553918 (`511b04e`) failed because `astral-sh/setup-uv@v10` does not resolve. CI run 38022020880 (`f173510`) failed with `ERR_PNPM_BROKEN_PNPM_RELEASE`: pnpm 11.12.0 shipped an `@pnpm/exe` without a binary and npm marks it deprecated.
+- Work completed: pinned `packageManager` to `pnpm@11.11.0`. The lockfile is unchanged; pnpm 11.11.0 reports it up to date. Updated the pnpm references in README.md and docs/environment.md. Corrected the stale records that said no repository existed and CI had never run.
+- Commands run and actual outcomes: clean local reinstall (`rm -rf node_modules …`, `uv sync --locked`, `pnpm install --frozen-lockfile` under pnpm 11.11.0), then `pnpm check` exit 0. Pushed `28ebce7`. CI run https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38022453114 succeeded: Ubuntu 24.04.5, CPython 3.14.7, pnpm 11.11.0; contracts up to date; ESLint/Ruff clean; tsc/mypy clean; Vitest 7 + 12 passed; pytest 48 passed; build OK.
+- Decisions changed: ADR-009 updated (pnpm 11.11.0; exact setup-uv tag). ADR-012 resolved (the repository now exists).
+- Known limitations: CI does not run the Playwright suite (by design for M0). GitHub notes that `ubuntu-latest` moves to Ubuntu 26 from 2026-10-19. Upstream recommends pnpm ≥ 11.13.1; moving the pin forward is a deliberate future bump.
+- Milestone status after this session: M0 complete, including CI.
+- Next concrete task: WRL-01.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

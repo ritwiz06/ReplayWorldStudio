@@ -26,9 +26,9 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 
 - Priority: P0
 - Dependencies: SET-02
-- Status: **done locally** (2026-10-09); CI workflow defined but never executed remotely (no Git repository)
+- Status: **done** (local 2026-10-09; CI 2026-10-10)
 - Done when: Schema check, build and smoke workflow pass; exact dependency versions are locked.
-- Evidence: `pnpm check` exit 0 (contracts:check, lint, typecheck, Vitest 19, pytest 48, build) in the working tree and in a clean copy installed from `uv.lock` / `pnpm-lock.yaml` with `--locked` / `--frozen-lockfile`. Direct versions are exact in every manifest. `.github/workflows/ci.yml` runs the same commands; YAML parsed, unexecuted. Docs: README.md, docs/environment.md, docs/contracts.md, docs/learning/M0-foundation.md.
+- Evidence: `pnpm check` exit 0 (contracts:check, lint, typecheck, Vitest 19, pytest 48, build) in the working tree and in a clean copy installed from `uv.lock` / `pnpm-lock.yaml` with `--locked` / `--frozen-lockfile`. Direct versions are exact in every manifest. `.github/workflows/ci.yml` runs the same commands. After two setup failures (no `setup-uv@v10` major tag; broken pnpm 11.12.0), CI run 38022453114 passed on `28ebce7`: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38022453114. Docs: README.md, docs/environment.md, docs/contracts.md, docs/learning/M0-foundation.md.
 
 ## M1
 

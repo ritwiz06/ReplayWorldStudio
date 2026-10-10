@@ -7,7 +7,7 @@ Recorded 2026-10-09 (America/Phoenix) by the M0 session. Re-record when the refe
 | Item | Observed |
 | --- | --- |
 | Directory | `ReplayWorldStudio/` containing only `prompts/` (18 Markdown context files) and a `.DS_Store` |
-| Git | **Not a Git repository** - no `.git` here or in any parent directory. No branch, commits or remotes exist. The project context assumed an initialized repository; this was not true. `git init` was deliberately **not** run (see ADR-012). |
+| Git | At the M0 session (2026-10-09) this was **not a Git repository**, and `git init` was deliberately not run (ADR-012). The user then created the repository: branch `main`, remote `origin` = https://github.com/ritwiz06/ReplayWorldStudio. |
 | Existing application code, dependency files, docs, CI | None |
 | Earlier HTML concept / planning PDF | Not present (optional references; not needed) |
 
