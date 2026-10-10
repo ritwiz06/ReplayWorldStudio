@@ -49,9 +49,21 @@ P0 is required for its milestone; P1 is negotiable while preserving the workflow
 
 - Priority: P0
 - Dependencies: WRL-01
-- Baseline status: planned; reconcile with actual repository
+- Status: **done** (2026-10-10, commit `9571b49`)
 - Done when: Walk/top/orbit views and coherent lighting work with dimensioned catalog assets.
-- Evidence: not recorded by this package
+- Evidence:
+  - Contract 0.3.0 `GltfVisual` (ADR-018, ADR-022).
+  - Four original deterministic GLB models (ADR-020): conveyor, machine cell, cabinet, pallet; 3–14k triangles and 5–13 PBR materials each.
+  - A 15-object industrial demo, labelled synthetic and loaded by default; three conveyors share one model, as do the two cells, two cabinets and two pallets.
+  - Catalog-library resolution and verification (ADR-019).
+  - Orbit, top and walk cameras (ADR-021).
+  - Tests:
+    - Vitest: every demo instance's drawn model fills its recorded box to 0.1 mm and rests on the floor; rotated and stretched instances; hash, invalid-glTF, bounds, 404, unsafe and offline failures; framing, plan orientation and scale bar; walking, collision and floor limits.
+    - pytest: glTF field validation, symlink and unsafe paths, missing and altered files on open, an independent GLB parse matching the manifest and fixture.
+    - Playwright: demo load, all three modes with the selection kept, labelled fallbacks with actionable errors and retry, unsafe or unavailable paths in opened files.
+  - Local `pnpm check` exit 0 (pytest 161, Vitest 10 + 52) and `pnpm test:e2e` 8 passed, also from a fresh clone of `9571b49`. Screenshots inspected at 1440×900 and 1600×960.
+  - CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38025828571 succeeded on `9571b49`, including byte-identical model rebuilds on Linux.
+  - Frame-rate performance is **not** measured; that is WRL-04.
 
 ### WRL-03 - Implement object editing and undo
 
