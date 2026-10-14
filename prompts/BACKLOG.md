@@ -190,7 +190,7 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P0
 - Dependencies: GEN-01
-- Status: **done** (2026-10-14; commit `<pending>`; CI `<pending>`). Supported case bounded by the feasibility check (below). GEN-02 and GEN-03 remain open, so M2 is not complete.
+- Status: **done** (2026-10-14; `e756edf`; CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38638851329 green). Supported case bounded by the feasibility check (below). GEN-02 and GEN-03 remain open, so M2 is not complete.
 - Done when: A user supplies one permitted image; a vision-capable model (candidate `qwen3-vl-32b-instruct`, tested on actual image inputs at the start of the issue) proposes the objects it can see with approximate floor positions and sizes; the user sets scale from one known dimension; each object is accepted, corrected or rejected and becomes a generated or catalog instance placed through the command path, with "inferred from image" evidence and occluded or unseen parts labelled; the image is stored as a source with its hash. Text-to-image or video-generation models are not used as image-to-3D services.
 - Evidence (details: docs/image-import.md, ADR-036..038):
   - **Feasibility and supported case.** `qwen3-vl-32b-instruct` on ASU Voyager accepts images and returns schema-valid JSON with `json_schema` guidance (not without it). It finds and names objects well (box IoU 0.81–0.94 on the render's visible machines, conveyors and pallet) but its floor points (0.4–1.0 m error), floor rectangles, view type and sizes are unreliable, so geometry is computed in code or entered by the user (ADR-036). Supported: one indoor photo with a visible floor and a floor rectangle whose four corners are visible and whose width the user knows; JPEG, PNG or WebP, at most 15 MB and 50 megapixels.
@@ -205,7 +205,7 @@ After M1 the user approved guided creation and described custom objects as the n
   - **Checks (local, 2026-10-14):** `pnpm check` exit 0 (contracts up to date; ESLint, Ruff, tsc, mypy clean; Vitest 10 + 138; pytest 551; build); `pnpm test:e2e` 22 passed. The smoke set is now 7 tests.
   - **Screenshots:** docs/img-01/*.jpg (classroom and factory render: proposal, scale, layout, world, photo-camera view, walk, reopened).
   - **Known failures** (docs/image-import.md): generic shape families, no textures; approximate colours (dark shadowed chairs stay grey or black); hidden depths are guesses; no walls, windows or room boundary; group outlines ("table with chairs") need tightening; the render's two control cabinets were missed; far objects near the horizon are uncertain; a fully visible floor rectangle is required; labels and counts vary between live runs; 25–100 s analysis.
-  - **CI:** `<pending>` (recorded after push).
+  - **CI:** https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38638851329 on `e756edf`: success for both jobs (pytest 551; browser smoke 7 passed, including the photo journey).
 
 ### IMG-02 - Multi-object layout and occlusion review
 

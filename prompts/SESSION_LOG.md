@@ -333,9 +333,9 @@ Append entries in chronological order. If a live repository session log already 
   - With `VOYAGER_API_KEY` in `.env`: `pnpm dev:api` and `pnpm dev:web`, then **Start → Start from a photo** with a file from fixtures/photos/.
   - `uv run python scripts/evaluate_image_import.py --record` (live; refreshes recordings).
   - `pnpm --filter @replay-world/web exec vitest run src/photo`; `pnpm --filter @replay-world/web exec playwright test e2e/photo.spec.ts`.
-- CI: commit `<pending>`; CI `<pending>` (recorded after push).
+- CI: commit `e756edf`; https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38638851329 success for both jobs (pytest 551; browser smoke 7 passed in 1.6 min).
 - Milestone status after this session: M2 in progress (GEN-01 done; GEN-02, GEN-03 open). M3 in progress (IMG-01 done; IMG-02, IMG-03 open).
-- Next concrete task: commit and push IMG-01 and record the CI run in place of `<pending>`; then GEN-02 (correct and reuse generated objects after placement), followed by GEN-03 to close M2.
+- Next concrete task: GEN-02 (correct and reuse generated objects after placement), followed by GEN-03 to close M2.
 
 ## Copy this template for a coding session
 
