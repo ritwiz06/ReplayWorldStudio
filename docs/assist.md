@@ -23,6 +23,7 @@ An edit request follows the same shape. The API returns a typed **intent** (move
 
 - **Key:** `VOYAGER_API_KEY` in the git-ignored `.env` at the repository root, or in the API process's environment. Only the API reads it (`services/api/src/replay_world_api/settings.py` takes only `RWS_*`/`VOYAGER_*` names from `.env`). It is held in a field excluded from `repr`, sent only as an `Authorization: Bearer` header to `VOYAGER_BASE_URL`, and never logged or returned (`GET /api/v1/assist/status` names the service and model, never the key). Vite exposes only `VITE_*` names to the browser. Checked on 2026-10-10: a production build and every tracked or new file in the repository were searched for the key value and none contained it, and `.env` is not tracked.
 - **Model:** `VOYAGER_MODEL` (default `qwen3-235b-a22b-instruct-2507`, the exact ID); endpoint `VOYAGER_BASE_URL` (default `https://openai.rc.asu.edu/v1`).
+- **Vision model (IMG-01):** `VOYAGER_VISION_MODEL` (default `qwen3-vl-32b-instruct`) proposes the objects in a photo, through the same endpoint and key. It receives a downscaled JPEG copy without metadata, only when the user chooses **Analyse**. What it is trusted with, the live results and the known failures are in [docs/image-import.md](image-import.md).
 - **What is sent:**
   - for a description, the description text and fixed instructions;
   - for an edit, the request plus each object's ID, name, kind, position, yaw and size, and the selected ID.
@@ -160,4 +161,4 @@ From the final timed run (`docs/gen-01/`, downscaled):
 - A proposal takes about 50–85 s with this model. A smaller model (for example `qwen3-30b-a3b-instruct-2507`) may be much faster; GEN-03 should compare models on a larger held-out set.
 - Layout quality varies from run to run. GEN-02 (correcting a placed generated object) and GEN-03 (evaluation with human review of visual plausibility) address this.
 - Only move and turn edits are supported, one object at a time. Directions are plan axes, not relative to the camera.
-- IMG-01 (one image to an editable world) is next. `qwen3-vl-32b-instruct` is the candidate, to be tested on real images first. Voyager's image- and video-generation models are not image-to-3D services and are not treated as such.
+- IMG-01 (one image to an editable world) was implemented on 2026-10-14 with `qwen3-vl-32b-instruct`; see [docs/image-import.md](image-import.md). Voyager's image- and video-generation models are not image-to-3D services and are not treated as such.

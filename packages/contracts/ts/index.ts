@@ -10,6 +10,8 @@ import type {
   GeneratedModelRestoreReport,
   GeometryDraft,
   HealthResponse,
+  ImageProposalResult,
+  StoredPhoto,
   ObjectProposalResult,
   Project,
   UpgradeReport,
@@ -19,7 +21,7 @@ import type {
 
 export type * from "./generated/contracts";
 
-export const SCHEMA_VERSION: Project["schema_version"] = "0.5.0";
+export const SCHEMA_VERSION: Project["schema_version"] = "0.6.0";
 
 /** One structural problem, located by a JSON Pointer such as `/scene/objects/2/dimensions`. */
 export interface ContractIssue {
@@ -70,3 +72,5 @@ export const validateGeneratedModel = validatorFor<GeneratedModel>("GeneratedMod
 export const validateGeneratedModelRestoreReport =
   validatorFor<GeneratedModelRestoreReport>("GeneratedModelRestoreReport");
 export const validateGeometryDraft = validatorFor<GeometryDraft>("GeometryDraft");
+export const validateImageProposalResult = validatorFor<ImageProposalResult>("ImageProposalResult");
+export const validateStoredPhoto = validatorFor<StoredPhoto>("StoredPhoto");

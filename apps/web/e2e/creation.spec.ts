@@ -44,11 +44,11 @@ test.describe("first visit", () => {
     test.setTimeout(150_000);
     await page.goto("/");
 
-    // The guided entry: three working choices and image import shown as upcoming.
+    // The guided entry: four working choices, starting from a photo among them (photo.spec.ts).
     const start = page.getByTestId("start-panel");
     await expect(start).toBeVisible();
-    await expect(start.getByTestId("start-image")).toContainText("Coming next");
-    await expect(start.getByTestId("start-image").getByRole("button")).toHaveCount(0);
+    await expect(start.getByTestId("start-image")).toContainText("Start from a photo");
+    await expect(start.getByTestId("start-image")).toBeEnabled();
     await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", "4/4 ready, 0 failed");
     await start.getByTestId("start-describe").click();
 
@@ -159,7 +159,7 @@ test("builds an object by hand when the description assistant is off", async ({ 
   // builder still works end to end.
   await page.route("**/api/v1/assist/status", (route) =>
     route.fulfill({
-      json: { available: false, mode: "off", service: null, base_url: null, model: null, message: "Language proposals are off: no provider is configured." },
+      json: { available: false, mode: "off", service: null, base_url: null, model: null, vision_model: null, message: "Language proposals are off: no provider is configured." },
     }),
   );
   await page.goto("/");

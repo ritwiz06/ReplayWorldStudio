@@ -1,6 +1,6 @@
-// The guided entry: three things a first-time user can do, each of which works, plus image
-// import shown as upcoming (it is planned as IMG-01, not built). The detailed editor stays one
-// click away and is what every choice leads into.
+// The guided entry: four things a first-time user can do - explore, describe an object, start
+// from a photo, open a project. The detailed editor stays one click away and is what every
+// choice leads into.
 import { type ChangeEvent, useEffect, useRef } from "react";
 
 interface Props {
@@ -9,11 +9,12 @@ interface Props {
   onExplore: () => void;
   onDescribe: () => void;
   onBuild: () => void;
+  onPhoto: () => void;
   onOpenFile: (file: File) => void;
   onClose: () => void;
 }
 
-export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onOpenFile, onClose }: Props) {
+export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onPhoto, onOpenFile, onClose }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -54,12 +55,14 @@ export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onOpenFi
           <strong>Open a project</strong>
           <span>{apiOnline ? "Continue from a project file you saved earlier (.json)." : "Needs the local API, which is not reachable."}</span>
         </button>
-        <div className="start-card start-card-upcoming" aria-disabled="true" data-testid="start-image">
-          <strong>
-            Start from a photo <span className="badge">Coming next</span>
-          </strong>
-          <span>Turn one picture into a reviewed, editable scene. Planned (IMG-01); not available yet.</span>
-        </div>
+        <button type="button" className="start-card" data-testid="start-image" disabled={!apiOnline} onClick={onPhoto}>
+          <strong>Start from a photo</strong>
+          <span>
+            {apiOnline
+              ? "Turn one photo of a room or work area into an editable 3D world. You check every object and set the scale with a rectangle on the floor."
+              : "Needs the local API, which is not reachable."}
+          </span>
+        </button>
       </div>
       <input ref={fileInput} type="file" accept=".json,application/json" hidden onChange={handleFile} aria-label="Project file to open" data-testid="start-file-input" />
       <div className="modal-actions start-footer">

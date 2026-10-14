@@ -20,10 +20,10 @@ describe("api client", () => {
     let posted: { url: string; body: unknown } | null = null;
     const report = {
       from_version: "0.2.0",
-      to_version: "0.5.0",
-      notes: ["schema_version 0.2.0 -> 0.3.0", "schema_version 0.3.0 -> 0.4.0", "schema_version 0.4.0 -> 0.5.0"],
+      to_version: "0.6.0",
+      notes: ["schema_version 0.2.0 -> 0.3.0", "schema_version 0.3.0 -> 0.4.0", "schema_version 0.4.0 -> 0.5.0", "schema_version 0.5.0 -> 0.6.0"],
       project: JSON.parse(fixture) as Project,
-      validation: { valid: true, schema_version: "0.5.0", project_id: "proj-foundation-fixture", object_count: 6, asset_count: 3, model_file_count: 0, known_parameter_count: 3, unknown_parameter_count: 3, edit_record_count: 0 },
+      validation: { valid: true, schema_version: "0.6.0", project_id: "proj-foundation-fixture", object_count: 6, asset_count: 3, model_file_count: 0, photo_file_count: 0, missing_source_files: [], known_parameter_count: 3, unknown_parameter_count: 3, edit_record_count: 0 },
     };
     const api: typeof fetch = (input, init) => {
       posted = { url: String(input), body: init?.body };

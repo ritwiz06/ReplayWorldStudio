@@ -497,7 +497,12 @@ def _asset_request(result: ObjectProposalResult, confirmed: bool) -> dict[str, A
 
     def review(axis: str) -> dict[str, Any]:
         d = getattr(p.dimensions, axis)
-        return {"basis": d.basis, "quote": d.quote, "confirmed": confirmed or d.basis == "stated"}
+        return {
+            "basis": d.basis,
+            "quote": d.quote,
+            "confirmed": confirmed or d.basis == "stated",
+            "source_ref": None,
+        }
 
     return {
         "name": p.name,

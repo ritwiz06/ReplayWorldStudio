@@ -54,10 +54,14 @@ interface FileRejectedProps {
   restorable: boolean;
   restore: { busy: boolean; messages: string[] } | undefined;
   onRestore: () => void;
+  /** The file's source photo is missing from this computer. */
+  photoMissing: { filename: string; sha256: string; busy: boolean; message: string | null } | undefined;
+  onAttachPhoto: (file: File) => void;
+  onOpenWithoutPhoto: () => void;
   onDismiss: () => void;
 }
 
-export function FileRejectedPanel({ filename, error, sceneKept, restorable, restore, onRestore, onDismiss }: FileRejectedProps) {
+export function FileRejectedPanel({ filename, error, sceneKept, restorable, restore, onRestore, photoMissing, onAttachPhoto, onOpenWithoutPhoto, onDismiss }: FileRejectedProps) {
   return (
     <div className="notice notice-warning" role="alert" data-testid="file-rejected">
       <h2>{filename} was rejected</h2>
@@ -79,7 +83,41 @@ export function FileRejectedPanel({ filename, error, sceneKept, restorable, rest
           ))}
         </ul>
       )}
+      {photoMissing && (
+        <p className="muted" data-testid="photo-missing">
+          Its source photo <strong>{photoMissing.filename}</strong> (sha256 {photoMissing.sha256.slice(0, 12)}…) is not in this computer&apos;s source
+          library. Attach the original file - it must be the very same file - or open the project without the photo: its objects and their evidence stay,
+          only the photo comparison is unavailable.
+        </p>
+      )}
+      {photoMissing?.message && (
+        <p className="status-error" role="alert" data-testid="photo-missing-message">
+          {photoMissing.message}
+        </p>
+      )}
       <div className="modal-actions">
+        {photoMissing && (
+          <>
+            <label className={`button button-primary${photoMissing.busy ? " disabled" : ""}`} data-testid="attach-photo">
+              {photoMissing.busy ? "Checking…" : "Attach the original photo…"}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+                disabled={photoMissing.busy}
+                data-testid="attach-photo-input"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (file) onAttachPhoto(file);
+                }}
+              />
+            </label>
+            <button type="button" className="button" data-testid="open-without-photo" onClick={onOpenWithoutPhoto}>
+              Open without the photo
+            </button>
+          </>
+        )}
         {restorable && (
           <button type="button" className="button button-primary" disabled={restore?.busy} data-testid="restore-models" onClick={onRestore}>
             {restore?.busy ? "Rebuilding…" : "Rebuild generated models and open"}

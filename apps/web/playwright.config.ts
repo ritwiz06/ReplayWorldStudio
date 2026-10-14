@@ -1,7 +1,7 @@
 import { cpSync, mkdirSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
-import { E2E_CATALOG_DIR } from "./e2e/paths";
+import { E2E_CATALOG_DIR, E2E_SOURCES_DIR } from "./e2e/paths";
 
 // Dedicated ports so the smoke test never reuses (or collides with) your dev servers.
 const API_PORT = 8010;
@@ -15,6 +15,9 @@ if (!process.env.TEST_WORKER_INDEX) {
   rmSync(E2E_CATALOG_DIR, { recursive: true, force: true });
   mkdirSync(E2E_CATALOG_DIR, { recursive: true });
   cpSync(`${repoRoot}assets/catalog/models`, `${E2E_CATALOG_DIR}/models`, { recursive: true });
+  // Photos stored by the photo-import tests (and removed by the missing-photo test).
+  rmSync(E2E_SOURCES_DIR, { recursive: true, force: true });
+  mkdirSync(E2E_SOURCES_DIR, { recursive: true });
 }
 
 export default defineConfig({
@@ -54,6 +57,7 @@ export default defineConfig({
         RWS_ENV_FILE: "none",
         RWS_ASSIST_PROVIDER: "recorded",
         RWS_CATALOG_DIR: E2E_CATALOG_DIR,
+        RWS_SOURCES_DIR: E2E_SOURCES_DIR,
       },
       reuseExistingServer: false,
       timeout: 60_000,

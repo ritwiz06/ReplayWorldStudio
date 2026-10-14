@@ -8,8 +8,10 @@ import {
   validateGeneratedModel,
   validateGeneratedModelRestoreReport,
   validateHealthResponse,
+  validateImageProposalResult,
   validateObjectProposalResult,
   validateProject,
+  validateStoredPhoto,
   validateUpgradeReport,
   validateValidationErrorResponse,
   validateValidationReport,
@@ -17,6 +19,7 @@ import {
   type EditProposalRequest,
   type GeneratedAssetRequest,
   type GeometryDraft,
+  type ImageAnalysisRequest,
   type ValidationIssue,
   type ValidationResult,
 } from "@replay-world/contracts";
@@ -38,7 +41,9 @@ export type ApiResult<T> = { ok: true; value: T } | { ok: false; error: ApiFailu
 
 interface RequestOptions {
   method?: "GET" | "POST";
-  body?: string;
+  body?: string | Blob;
+  /** Content type of a binary body (a photo); JSON otherwise. */
+  contentType?: string;
   signal?: AbortSignal | undefined;
   timeoutMs?: number;
 }
@@ -55,14 +60,15 @@ export function createApiClient(
   async function request<T>(
     path: string,
     validate: (data: unknown) => ValidationResult<T>,
-    { method = "GET", body, signal, timeoutMs = TIMEOUT_MS }: RequestOptions = {},
+    { method = "GET", body, contentType, signal, timeoutMs = TIMEOUT_MS }: RequestOptions = {},
   ): Promise<ApiResult<T>> {
     const timeout = AbortSignal.timeout(timeoutMs);
     let response: Response;
     try {
       response = await fetchImpl(`${baseUrl}${path}`, {
         method,
-        headers: body === undefined ? { Accept: "application/json" } : JSON_HEADERS,
+        headers:
+          body === undefined ? { Accept: "application/json" } : contentType ? { Accept: "application/json", "Content-Type": contentType } : JSON_HEADERS,
         body: body ?? null,
         signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
       });
@@ -104,9 +110,10 @@ export function createApiClient(
       request(`/api/v1/fixtures/${name}`, validateProject, { signal }),
     /** Where the API serves a catalog-library file; the path is validated server-side too. */
     catalogFileUrl: (uri: string) => `${baseUrl}/api/v1/catalog/files/${uri}`,
-    /** Sends the document text unchanged so the API remains the authority on validity. */
-    validateProjectDocument: (text: string, signal?: AbortSignal) =>
-      request("/api/v1/projects/validate", validateValidationReport, {
+    /** Sends the document text unchanged so the API remains the authority on validity. With
+     * `allowMissingSources`, absent source photos are listed instead of refusing the file. */
+    validateProjectDocument: (text: string, signal?: AbortSignal, allowMissingSources = false) =>
+      request(`/api/v1/projects/validate${allowMissingSources ? "?missing_sources=allow" : ""}`, validateValidationReport, {
         method: "POST",
         body: text,
         signal,
@@ -152,6 +159,29 @@ export function createApiClient(
         signal,
         timeoutMs: GENERATE_TIMEOUT_MS,
       }),
+    /** Propose the objects on the floor of a photo (sent to the configured vision model). */
+    analysePhoto: (body: ImageAnalysisRequest, signal?: AbortSignal) =>
+      request("/api/v1/assist/image-proposals", validateImageProposalResult, {
+        method: "POST",
+        body: JSON.stringify(body),
+        signal,
+        timeoutMs: ASSIST_TIMEOUT_MS,
+      }),
+    /** Store an original photo in the local source library. With `expectedSha256` (re-attaching
+     * a missing photo), a different file is refused and nothing is written. */
+    uploadPhoto: (file: Blob, filename: string, expectedSha256?: string, signal?: AbortSignal) => {
+      const query = new URLSearchParams({ filename });
+      if (expectedSha256) query.set("expected_sha256", expectedSha256);
+      return request(`/api/v1/sources/photos?${query.toString()}`, validateStoredPhoto, {
+        method: "POST",
+        body: file,
+        contentType: file.type || "application/octet-stream",
+        signal,
+        timeoutMs: GENERATE_TIMEOUT_MS,
+      });
+    },
+    /** Where the API serves a stored source photo. */
+    sourceFileUrl: (uri: string) => `${baseUrl}/api/v1/sources/files/${uri}`,
     /** Rebuild a project's missing generated models from their recorded specifications. */
     restoreGeneratedModels: (projectText: string, signal?: AbortSignal) =>
       request("/api/v1/catalog/generated-models/restore", validateGeneratedModelRestoreReport, {

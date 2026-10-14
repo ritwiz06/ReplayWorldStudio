@@ -19,13 +19,19 @@ from .models import (
     ContractModel,
     Extent3,
     GeometryDraft,
+    GeometryMaterial,
     GeometrySpec,
     GltfVisual,
+    ImageBox,
+    ImagePoint,
     LanguageModelRef,
     NonEmptyText,
     ObjectKind,
+    PhotoMediaType,
     PositiveLength,
+    Sha256Hex,
     ShortText,
+    SourceImage,
     StableId,
     UnknownProperty,
     Vec3,
@@ -54,6 +60,9 @@ class AssistStatus(ContractModel):
     service: NonEmptyText | None
     base_url: NonEmptyText | None
     model: NonEmptyText | None
+    vision_model: NonEmptyText | None = Field(
+        description="The model that looks at photos (image import), when one is configured."
+    )
     message: NonEmptyText
 
 
@@ -244,17 +253,27 @@ class GeneratedModel(ContractModel):
     glb_base64: str | None
 
 
-DimensionBasis = Literal["stated", "inferred", "entered"]
+DimensionBasis = Literal["stated", "inferred", "entered", "photo"]
 
 
 class ReviewedLength(ContractModel):
     """A dimension as the user left it after review."""
 
     basis: DimensionBasis = Field(
-        description="stated: in the description; inferred: estimated; entered: typed by the user."
+        description="stated: in the description; inferred: estimated; entered: typed by the user; "
+        "photo: derived from a photo with the user's scale reference (approximate)."
     )
     quote: NonEmptyText | None
     confirmed: bool
+    source_ref: NonEmptyText | None = Field(
+        description="For a photo-derived value: how it was derived and from which observation."
+    )
+
+    @model_validator(mode="after")
+    def _photo_values_cite_their_derivation(self) -> ReviewedLength:
+        if (self.basis == "photo") != (self.source_ref is not None):
+            raise ValueError("a photo-derived dimension (and only one) cites how it was derived")
+        return self
 
 
 class ReviewedDimensions(ContractModel):
@@ -268,7 +287,7 @@ class GeneratedAssetRequest(ContractModel):
 
     name: ShortText
     kind: Literal["equipment", "structure", "reference"]
-    method: Literal["described", "builder"]
+    method: Literal["described", "builder", "photo"]
     description: NonEmptyText | None
     language_model: LanguageModelRef | None
     spec: GeometryDraft
@@ -292,3 +311,105 @@ class GeneratedModelRestoreReport(ContractModel):
     """
 
     results: list[RestoredModel]
+
+
+# --- Image import (IMG-01) -------------------------------------------------------------------
+
+MAX_ANALYSIS_IMAGE_BYTES: Final = 4 * 1024 * 1024
+"""Largest analysis copy the browser may send (it downscales the photo to at most 1600 px)."""
+MAX_ANALYSIS_SIDE_PX: Final = 2048
+
+PhotoTemplate = Literal[
+    "box",
+    "cabinet",
+    "table",
+    "chair",
+    "shelf",
+    "sofa",
+    "tank",
+    "conveyor",
+    "machine",
+    "screen",
+    "plant",
+    "pallet",
+]
+"""Bounded shape families a photo object can be drawn with (provisional geometry)."""
+
+Facing = Literal["toward_camera", "left", "right", "away", "unknown"]
+
+
+class ImageAnalysisRequest(ContractModel):
+    """A metadata-free, downscaled copy of the user's photo, sent for object proposals.
+
+    ``original_sha256`` identifies the user's original file (it selects recorded answers in
+    offline tests); it is never sent to the language model.
+    """
+
+    media_type: PhotoMediaType
+    data_base64: Annotated[str, StringConstraints(min_length=16, max_length=6_000_000)]
+    width_px: int = Field(ge=16, le=MAX_ANALYSIS_SIDE_PX)
+    height_px: int = Field(ge=16, le=MAX_ANALYSIS_SIDE_PX)
+    original_sha256: Sha256Hex
+
+
+class ProposedPhotoObject(ContractModel):
+    """One object the vision model found, after the API's checks."""
+
+    id: StableId
+    label: ShortText
+    category: ShortText
+    template: PhotoTemplate
+    material: GeometryMaterial
+    box: ImageBox
+    floor_contact: ImagePoint | None
+    contact_basis: Literal["box_bottom", "model_point"] | None
+    on_floor: bool
+    visibility: Literal["full", "partly_hidden", "mostly_hidden"]
+    cut_off: list[Literal["left", "right", "top", "bottom"]] = Field(
+        description="Image edges the object's box touches: it may continue outside the photo."
+    )
+    facing: Facing
+    # The model's rough guess of width, height and depth; never a measurement. (No Field
+    # description beside a $ref: it duplicates the TypeScript interface.)
+    size_guess_m: Extent3
+    suggest_accept: bool
+    notes: list[NonEmptyText]
+
+
+class FloorRectangleSuggestion(ContractModel):
+    """A rectangle the model thinks lies on the floor: only a starting point for the user."""
+
+    label: ShortText
+    corners: list[ImagePoint] = Field(min_length=4, max_length=4)
+
+
+class ImageProposal(ContractModel):
+    objects: list[ProposedPhotoObject] = Field(max_length=40)
+    floor_rectangles: list[FloorRectangleSuggestion] = Field(max_length=3)
+    visible_text: list[NonEmptyText] = Field(max_length=20)
+
+
+class ImageProposalResult(ContractModel):
+    """The API's answer to a photo: proposed objects, or why there are none."""
+
+    outcome: Literal["proposal", "unsupported"]
+    proposal: ImageProposal | None
+    message: NonEmptyText | None
+    checks: list[NonEmptyText]
+    provider: ProviderRun
+
+    @model_validator(mode="after")
+    def _one_outcome(self) -> ImageProposalResult:
+        if (self.outcome == "proposal") != (self.proposal is not None) or (
+            self.outcome == "unsupported"
+        ) != (self.message is not None):
+            raise ValueError(f"an '{self.outcome}' result must carry exactly its own content")
+        return self
+
+
+class StoredPhoto(ContractModel):
+    """A photo stored in the local source library, ready to be recorded as a project source."""
+
+    filename: NonEmptyText
+    sha256: Sha256Hex
+    image: SourceImage

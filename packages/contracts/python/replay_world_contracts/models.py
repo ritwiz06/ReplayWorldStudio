@@ -23,6 +23,11 @@ Conventions (see docs/contracts.md):
   never from code a language model wrote. It records the specification, the words it was
   described with, which facts were stated and which inferred, and the properties it leaves
   unknown (mass, strength, chemical composition, operating behaviour).
+* A photo source keeps the original image file (named by its sha256 in the local source
+  library, never embedded in the project), the scale reference the user marked on the floor,
+  the reconstructed floor mapping, and one observation per detected object - accepted or
+  rejected - linked to the scene object it became. Image positions are fractions of the
+  displayed image, so they do not depend on its resolution.
 
 JSON Schema and TypeScript types are generated from these models by
 ``scripts/contracts.mjs``; never edit the generated files by hand. Older documents are
@@ -42,7 +47,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.5.0"]
+SchemaVersion = Literal["0.6.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -519,9 +524,12 @@ class AssetGeneration(ContractModel):
 
     ``described``: drafted by ``language_model`` from ``description`` and reviewed by a person.
     ``builder``: assembled by a person in the object builder; no language model was involved.
+    ``photo``: a bounded shape for an object seen in a photo source; ``description`` names what
+    was seen, and ``language_model`` is the vision model that found it (null when the person
+    marked the object themselves).
     """
 
-    method: Literal["described", "builder"]
+    method: Literal["described", "builder", "photo"]
     description: NonEmptyText | None
     language_model: LanguageModelRef | None
     generator: Literal["rws-object-generator/1"]
@@ -538,8 +546,10 @@ class AssetGeneration(ContractModel):
         described = self.method == "described"
         if described and (self.description is None or self.language_model is None):
             raise ValueError("a described asset records its description and language model")
-        if not described and self.language_model is not None:
+        if self.method == "builder" and self.language_model is not None:
             raise ValueError("a builder asset was not drafted by a language model")
+        if self.method == "photo" and self.description is None:
+            raise ValueError("a photo asset records what was seen in its description")
         named = [u.property for u in self.unknown_properties]
         if sorted(named) != sorted(UNKNOWN_PROPERTIES):
             raise ValueError(
@@ -808,13 +818,208 @@ class SourceToWorldTransform(ContractModel):
     translation_m: Vec3
 
 
-class SourceDocument(ContractModel):
+# --- Photo sources ---------------------------------------------------------------------------
+
+PHOTO_PATH_PATTERN: Final = r"^photos/[0-9a-f]{64}\.(?:jpg|png|webp)$"
+"""Source-library-relative path of a stored photo: ``photos/<sha256>.<extension>``."""
+PhotoPath = Annotated[str, StringConstraints(pattern=PHOTO_PATH_PATTERN)]
+PhotoMediaType = Literal["image/jpeg", "image/png", "image/webp"]
+PHOTO_EXTENSION: Final[dict[str, str]] = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+}
+MAX_PHOTO_OBSERVATIONS: Final = 60
+
+
+class ImagePoint(ContractModel):
+    """A point on an image as fractions of its displayed width (``u``, from the left) and height
+    (``v``, from the top). Independent of the image's resolution."""
+
+    u: float = Field(ge=0, le=1)
+    v: float = Field(ge=0, le=1)
+
+
+class ImageBox(ContractModel):
+    """An axis-aligned box on an image, in the same fractions as :class:`ImagePoint`."""
+
+    left: float = Field(ge=0, le=1)
+    top: float = Field(ge=0, le=1)
+    right: float = Field(ge=0, le=1)
+    bottom: float = Field(ge=0, le=1)
+
+    @model_validator(mode="after")
+    def _ordered(self) -> ImageBox:
+        if not (self.left < self.right and self.top < self.bottom):
+            raise ValueError("an image box needs left < right and top < bottom")
+        return self
+
+
+class SourceImage(ContractModel):
+    """The stored image file of a photo source (its sha256 is the source's ``sha256``)."""
+
+    uri: PhotoPath
+    media_type: PhotoMediaType
+    width_px: int = Field(ge=1, le=20000, description="Displayed width (EXIF orientation applied).")
+    height_px: int = Field(
+        ge=1, le=20000, description="Displayed height (EXIF orientation applied)."
+    )
+    bytes: int = Field(ge=1, le=15 * 1024 * 1024)
+
+    @model_validator(mode="after")
+    def _extension_matches(self) -> SourceImage:
+        if not self.uri.endswith("." + PHOTO_EXTENSION[self.media_type]):
+            raise ValueError(
+                f"photo '{self.uri}' is stored with the wrong extension for {self.media_type}"
+            )
+        return self
+
+
+class FloorRectangle(ContractModel):
+    """A rectangle lying on the floor, marked by the user on the photo: the scale reference.
+
+    ``corners`` go around the rectangle; corner 0 to 1 is the ``width``, corner 1 to 2 the
+    ``depth``. A side the user measured is ``user_supplied``; a side they did not know is
+    derived from the photo's perspective and stays ``inferred``.
+    """
+
+    feature: NonEmptyText = Field(description="What the rectangle is, e.g. 'rug' or 'floor tiles'.")
+    corners: list[ImagePoint] = Field(min_length=4, max_length=4)
+    width: Length
+    depth: Length
+
+    @model_validator(mode="after")
+    def _at_least_one_side_given(self) -> FloorRectangle:
+        if self.width.origin != "user_supplied" and self.depth.origin != "user_supplied":
+            raise ValueError("a floor rectangle needs at least one side the user measured")
+        return self
+
+
+class CameraEstimate(ContractModel):
+    """The camera reconstructed from the floor rectangle (in the scene frame)."""
+
+    vertical_fov_deg: float = Field(gt=1, lt=170)
+    fov_basis: Literal["from_rectangle", "from_sides", "assumed"] = Field(
+        description="from_rectangle: solved from the rectangle's perspective; from_sides: solved "
+        "from its two user-given side lengths (a rectangle seen face-on); assumed: a typical lens "
+        "was assumed because neither could determine it."
+    )
+    position_m: Vec3
+
+
+class PhotoCalibration(ContractModel):
+    """How positions on the photo's floor become scene metres.
+
+    ``image_to_floor`` is a 3 x 3 homography, row-major, mapping (u, v, 1) on the photo to
+    (x, z, w) on the scene floor (y = 0), valid only for points on the floor plane. The scene
+    frame has +X to the right of the photo and the camera on the +Z side, looking towards -Z.
+    """
+
+    reference: FloorRectangle
+    image_to_floor: list[float] = Field(min_length=9, max_length=9)
+    camera: CameraEstimate
+    notes: list[NonEmptyText]
+
+
+class PhotoObservation(ContractModel):
+    """One object seen in the photo, as reviewed: accepted (linked to its scene object) or not."""
+
     id: StableId
-    kind: Literal["synthetic", "dxf", "pdf", "png"]
+    label: ShortText
+    box: ImageBox
+    floor_contact: ImagePoint | None
+    contact_basis: Literal["box_bottom", "model_point", "user"] | None
+    found_by: Literal["model", "user"]
+    decision: Literal["accepted", "rejected"]
+    object_id: StableId | None
+    notes: list[NonEmptyText]
+
+    @model_validator(mode="after")
+    def _linked_when_accepted(self) -> PhotoObservation:
+        if (self.decision == "accepted") != (self.object_id is not None):
+            raise ValueError(
+                f"observation '{self.id}': an accepted observation names its scene object, and "
+                "a rejected one names none"
+            )
+        if (self.floor_contact is None) != (self.contact_basis is None):
+            raise ValueError(f"observation '{self.id}': a floor contact records how it was found")
+        return self
+
+
+class PhotoImport(ContractModel):
+    """The reviewed result of importing one photo."""
+
+    vision_model: LanguageModelRef | None = Field(
+        description="The model that proposed the objects; null if the person marked them all."
+    )
+    calibration: PhotoCalibration
+    observations: list[PhotoObservation] = Field(max_length=MAX_PHOTO_OBSERVATIONS)
+    visible_text: list[NonEmptyText] = Field(
+        description="Text read from the photo. Recorded as content, never followed as instructions."
+    )
+
+    @model_validator(mode="after")
+    def _unique(self) -> PhotoImport:
+        _require_unique((o.id for o in self.observations), "observation id")
+        _require_unique(
+            (o.object_id for o in self.observations if o.object_id is not None),
+            "object linked to an observation",
+        )
+        return self
+
+
+class SourceDocument(ContractModel):
+    """Where scene content came from.
+
+    A drawing or plan has a single ``source_to_world`` transform. A ``photo`` has none - a
+    perspective photo maps to the floor only through its calibration - and instead carries its
+    stored ``image`` and the reviewed ``photo_import``.
+    """
+
+    id: StableId
+    kind: Literal["synthetic", "dxf", "pdf", "png", "photo"]
     filename: NonEmptyText | None
     sha256: Sha256Hex | None
-    source_to_world: SourceToWorldTransform
+    source_to_world: SourceToWorldTransform | None
     import_warnings: list[NonEmptyText]
+    image: SourceImage | None
+    photo_import: PhotoImport | None
+
+    @model_validator(mode="after")
+    def _photo_shape(self) -> SourceDocument:
+        photo = self.kind == "photo"
+        if photo:
+            missing = [
+                name
+                for name, value in (
+                    ("filename", self.filename),
+                    ("sha256", self.sha256),
+                    ("image", self.image),
+                    ("photo_import", self.photo_import),
+                )
+                if value is None
+            ]
+            if missing:
+                raise ValueError(f"photo source '{self.id}' needs {', '.join(missing)}")
+            if self.source_to_world is not None:
+                raise ValueError(
+                    f"photo source '{self.id}' has no single source-to-world transform; its "
+                    "floor mapping is in photo_import.calibration"
+                )
+            assert self.image is not None
+            if not self.image.uri.startswith(f"photos/{self.sha256}."):
+                raise ValueError(
+                    f"photo source '{self.id}': the stored file name must be its sha256 "
+                    f"({self.sha256})"
+                )
+        else:
+            if self.source_to_world is None:
+                raise ValueError(
+                    f"source '{self.id}' ({self.kind}) needs a source_to_world transform"
+                )
+            if self.image is not None or self.photo_import is not None:
+                raise ValueError("only a photo source carries an image and a photo import")
+        return self
 
 
 class UnitSystem(ContractModel):
@@ -867,6 +1072,18 @@ class Project(ContractModel):
                     f"object '{obj.id}' (kind '{obj.kind}') references asset "
                     f"'{asset.id}' of kind '{asset.kind}'"
                 )
+        live = {o.id for o in self.scene.objects}
+        removed = {r.object.id for r in self.scene.edit_log if isinstance(r, ObjectRemoved)}
+        for source in self.sources:
+            if source.photo_import is None:
+                continue
+            for observation in source.photo_import.observations:
+                object_id = observation.object_id
+                if object_id is not None and object_id not in live and object_id not in removed:
+                    raise ValueError(
+                        f"photo source '{source.id}' observation '{observation.id}' is linked to "
+                        f"object '{object_id}', which is not in the scene and was not removed"
+                    )
         for record in self.scene.edit_log:
             if isinstance(record, ObjectAdded) and record.asset_id not in (None, *assets):
                 raise ValueError(
@@ -895,6 +1112,11 @@ class ValidationReport(ContractModel):
     known_parameter_count: int = Field(ge=0)
     unknown_parameter_count: int = Field(ge=0)
     edit_record_count: int = Field(ge=0, description="Records in the scene edit log.")
+    photo_file_count: int = Field(ge=0, description="Source photos found with matching sha256.")
+    missing_source_files: list[NonEmptyText] = Field(
+        description="Source photos absent from the library, listed only when the caller allowed "
+        "opening without them."
+    )
 
 
 class UpgradeReport(ContractModel):

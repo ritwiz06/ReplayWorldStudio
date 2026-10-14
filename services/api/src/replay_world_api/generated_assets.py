@@ -62,6 +62,11 @@ def _length(axis: str, value: float, review: ReviewedLength, source: str) -> Len
             )
         origin = "inferred"
         ref = f"Estimated by {source}; confirmed by the user before placement"
+    elif review.basis == "photo":
+        # Derived from the photo with the user's scale reference: approximate, and only as
+        # good as the floor reference and the object's outline.
+        origin = "inferred"
+        ref = review.source_ref or "Derived from the photo"
     else:
         origin = "user_supplied"
         ref = "Entered by the user while reviewing the generated object"
@@ -82,14 +87,21 @@ def create_generated_asset(request: GeneratedAssetRequest, catalog_dir: Path) ->
         request.language_model is None or not request.description
     ):
         raise AssistError(422, "A described object must record its description and language model.")
+    if request.method == "photo" and not request.description:
+        raise AssistError(422, "An object from a photo must record what was seen.")
     spec, _scale, _notes = fit_to_envelope(request.spec)
     model = build_model(spec)
     store_model(model, catalog_dir)
     visual = gltf_visual(model)
 
+    lm = request.language_model
     source = (
-        f"{request.language_model.service} {request.language_model.model} from the description"
-        if request.language_model is not None and request.method == "described"
+        f"{lm.service} {lm.model} from the description"
+        if lm is not None and request.method == "described"
+        else f"{lm.service} {lm.model} from the photo"
+        if lm is not None and request.method == "photo"
+        else "the photo"
+        if request.method == "photo"
         else "the object builder"
     )
     envelope = spec.envelope_m
@@ -100,12 +112,13 @@ def create_generated_asset(request: GeneratedAssetRequest, catalog_dir: Path) ->
         "depth": _length("depth", envelope.z, reviewed.depth, source),
     }
     described = request.method == "described"
+    keeps_words = request.method in ("described", "photo")
     generation = AssetGeneration.model_validate(
         {
             "method": request.method,
-            "description": request.description if described else None,
+            "description": request.description if keeps_words else None,
             "language_model": request.language_model.model_dump()
-            if described and request.language_model
+            if keeps_words and request.language_model
             else None,
             "generator": GENERATOR_VERSION,
             "spec": spec.model_dump(),
@@ -130,6 +143,8 @@ def create_generated_asset(request: GeneratedAssetRequest, catalog_dir: Path) ->
                 "reference": (
                     f"Described by the user; proposal by {source.removesuffix(DESCRIPTION_SUFFIX)}"
                     if described
+                    else f"Seen in a photo ({request.description}); provisional shape"
+                    if request.method == "photo"
                     else "Built by the user in the object builder"
                 ),
             },

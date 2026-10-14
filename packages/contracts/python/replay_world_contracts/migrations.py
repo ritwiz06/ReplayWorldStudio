@@ -22,6 +22,10 @@ each change, and the result is then validated like any other document.
     * every catalog asset gains ``generation: null``. Generated assets (and the ``generated``
       source kind) did not exist before 0.5.0, so no asset changes meaning.
 
+0.5.0 -> 0.6.0
+    * every source document gains ``image: null`` and ``photo_import: null``. Photo sources did
+      not exist before 0.6.0, so every existing source keeps its source-to-world transform.
+
 Steps run in sequence, so a 0.1.0 document passes through 0.2.0 on its way to the current
 version and its notes describe every step.
 """
@@ -156,10 +160,25 @@ def _from_0_4_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     return upgraded, [note]
 
 
+def _from_0_5_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    sources = []
+    for source in old["sources"]:
+        if "image" in source or "photo_import" in source:
+            raise MigrationError("malformed 0.5.0 document: photo sources only exist from 0.6.0")
+        sources.append({**copy.deepcopy(dict(source)), "image": None, "photo_import": None})
+    upgraded = {**copy.deepcopy(dict(old)), "schema_version": "0.6.0", "sources": sources}
+    note = (
+        f"schema_version 0.5.0 -> 0.6.0 (adds 'image: null' and 'photo_import: null' to "
+        f"{len(sources)} source{'' if len(sources) == 1 else 's'}; no values or evidence changed)"
+    )
+    return upgraded, [note]
+
+
 _STEPS: Final[dict[str, Step]] = {
     "0.1.0": _from_0_1_0,
     "0.2.0": _from_0_2_0,
     "0.3.0": _from_0_3_0,
     "0.4.0": _from_0_4_0,
+    "0.5.0": _from_0_5_0,
 }
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)

@@ -26,7 +26,7 @@ from typing import Any, Final, Literal, Protocol
 
 from ..settings import AssistSettings
 
-Task = Literal["object", "edit"]
+Task = Literal["object", "edit", "image"]
 
 MAX_OUTPUT_TOKENS: Final = 4096
 
@@ -59,7 +59,7 @@ class Provider(Protocol):
         *,
         task: Task,
         key: str,
-        messages: list[dict[str, str]],
+        messages: list[dict[str, Any]],
         schema: dict[str, Any],
         attempt: int,
     ) -> Completion:
@@ -76,12 +76,14 @@ class OpenAICompatibleProvider:
 
     mode: Literal["live", "recorded"] = "live"
 
-    def __init__(self, settings: AssistSettings, *, guided: bool = True) -> None:
+    def __init__(
+        self, settings: AssistSettings, *, guided: bool = True, model: str | None = None
+    ) -> None:
         if not settings.api_key:
             raise ValueError("an API key is required for the live provider")
         self.service = settings.service
         self.base_url = settings.base_url
-        self.model = settings.model
+        self.model = model or settings.model
         self._key = settings.api_key
         self._guided = guided  # False only to measure adherence without schema guidance
         self._timeout_s = settings.timeout_s
@@ -94,7 +96,7 @@ class OpenAICompatibleProvider:
         *,
         task: Task,
         key: str,
-        messages: list[dict[str, str]],
+        messages: list[dict[str, Any]],
         schema: dict[str, Any],
         attempt: int,
     ) -> Completion:
@@ -170,7 +172,9 @@ class RecordedProvider:
 
     mode: Literal["live", "recorded"] = "recorded"
 
-    def __init__(self, settings: AssistSettings) -> None:
+    def __init__(
+        self, settings: AssistSettings, tasks: tuple[Task, ...] = ("object", "edit", "image")
+    ) -> None:
         self.service = settings.service
         self.base_url = settings.base_url
         self._recordings: dict[str, list[str]] = {}
@@ -178,6 +182,8 @@ class RecordedProvider:
         directory = settings.recordings_dir
         for path in sorted(directory.glob("*.json")) if directory.is_dir() else []:
             data = json.loads(path.read_text(encoding="utf-8"))
+            if data["task"] not in tasks:
+                continue
             self._recordings[recording_key(data["task"], data["key"])] = list(data["responses"])
             models.add(str(data["model"]))
         # Recordings name the model that produced them; a mixed set reports all of them.
@@ -188,7 +194,7 @@ class RecordedProvider:
         *,
         task: Task,
         key: str,
-        messages: list[dict[str, str]],
+        messages: list[dict[str, Any]],
         schema: dict[str, Any],
         attempt: int,
     ) -> Completion:
@@ -206,7 +212,16 @@ def provider_from_settings(settings: AssistSettings) -> Provider | None:
     if settings.provider == "voyager" and settings.api_key:
         return OpenAICompatibleProvider(settings)
     if settings.provider == "recorded":
-        return RecordedProvider(settings)
+        return RecordedProvider(settings, tasks=("object", "edit"))
+    return None
+
+
+def vision_provider_from_settings(settings: AssistSettings) -> Provider | None:
+    """The provider for photos: same service, the vision-capable model."""
+    if settings.provider == "voyager" and settings.api_key:
+        return OpenAICompatibleProvider(settings, model=settings.vision_model)
+    if settings.provider == "recorded":
+        return RecordedProvider(settings, tasks=("image",))
     return None
 
 

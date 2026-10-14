@@ -1434,3 +1434,392 @@ kbd {
     width: calc(100% - 180px);
   }
 }
+
+/* ---------- IMG-01: start from a photo ---------- */
+.photo-import {
+  max-width: 1360px;
+  width: calc(100vw - 48px);
+  max-height: calc(100vh - 40px);
+}
+.photo-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 28px;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+}
+.photo-prepare,
+.photo-review {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 16px;
+  margin-top: 12px;
+  align-items: start;
+}
+.photo-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+}
+.photo-frame {
+  position: relative;
+  width: 100%;
+  max-height: calc(100vh - 170px);
+  background: #000;
+  border-radius: 6px;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+.photo-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+}
+.photo-stage.adding {
+  cursor: crosshair;
+}
+.photo-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.photo-svg .scale-rect {
+  fill: rgba(229, 173, 12, 0.18);
+  stroke: #e5ad0c;
+  stroke-width: 2;
+}
+.photo-svg .scale-width {
+  stroke: #ffd24d;
+  stroke-width: 4;
+}
+.photo-svg .footprint {
+  fill: rgba(124, 196, 255, 0.18);
+  stroke: #7cc4ff;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.photo-svg .footprint.selected {
+  fill: rgba(124, 196, 255, 0.35);
+  stroke-dasharray: none;
+}
+.photo-svg .new-box {
+  fill: rgba(255, 255, 255, 0.12);
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+.photo-box {
+  position: absolute;
+  border: 2px solid #57d39b;
+  border-radius: 2px;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.photo-box.rejected {
+  border: 2px dashed rgba(200, 200, 200, 0.7);
+}
+.photo-box.selected {
+  border-color: #ffd24d;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+  /* Above every floor point, so the selected outline's edges can always be grabbed. */
+  z-index: 4;
+}
+.photo-box.removed {
+  border-style: dotted;
+  opacity: 0.5;
+  cursor: default;
+}
+.photo-box-label {
+  position: absolute;
+  left: -2px;
+  top: -20px;
+  max-width: 180px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(17, 19, 22, 0.85);
+  color: #e3e7ec;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.edge-handle {
+  position: absolute;
+  background: #ffd24d;
+  border: 1px solid #111;
+}
+.edge-left,
+.edge-right {
+  top: 50%;
+  width: 8px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  cursor: ew-resize;
+}
+.edge-left {
+  left: 0;
+}
+.edge-right {
+  left: 100%;
+}
+.edge-top,
+.edge-bottom {
+  /* Off-centre: the floor point usually sits at the middle of the bottom edge. */
+  left: 28%;
+  width: 22px;
+  height: 8px;
+  transform: translate(-50%, -50%);
+  cursor: ns-resize;
+}
+.edge-top {
+  top: 0;
+}
+.edge-bottom {
+  top: 100%;
+}
+.contact-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #57d39b;
+  border: 2px solid #111;
+  transform: translate(-50%, -50%);
+  cursor: move;
+  z-index: 3;
+}
+.contact-handle.selected {
+  background: #ffd24d;
+  z-index: 5;
+}
+.corner-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e5ad0c;
+  border: 2px solid #111;
+  color: #111;
+  font: bold 11px/16px sans-serif;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  cursor: move;
+  z-index: 4;
+}
+.photo-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.photo-analysing {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(17, 19, 22, 0.85);
+}
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--muted);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.photo-tabs button {
+  flex: 1;
+}
+/* The panel scrolls as a whole; without this its children shrink instead (the tabs to nothing). */
+.photo-side > * {
+  flex-shrink: 0;
+}
+/* The tabs and the create footer stay in reach however long the object list grows. */
+.photo-side > .photo-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--panel);
+}
+.photo-side > .photo-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--panel);
+  padding-bottom: 2px;
+}
+.photo-objects {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.photo-object {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 4px;
+}
+.photo-object.rejected .photo-object-name {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.photo-object.open {
+  border-color: #ffd24d;
+}
+.photo-object-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+.photo-object-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.photo-object-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 8px 8px;
+}
+.photo-field {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.photo-field input,
+.photo-field select {
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+.photo-dims .size-row {
+  grid-template-columns: 58px auto minmax(0, 1fr);
+}
+.photo-scale {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.photo-scale .size-row {
+  grid-template-columns: 96px auto minmax(0, 1fr);
+}
+.photo-footer {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+.photo-plan {
+  width: 100%;
+  height: 300px;
+  background: #1a1d21;
+  border-radius: 6px;
+}
+.photo-plan .plan-floor {
+  fill: #23272c;
+}
+.photo-plan .plan-reference {
+  fill: rgba(229, 173, 12, 0.15);
+  stroke: #e5ad0c;
+  stroke-width: 0.03;
+}
+.photo-plan .plan-item rect {
+  fill: rgba(87, 211, 155, 0.25);
+  stroke: #57d39b;
+  stroke-width: 0.03;
+  cursor: pointer;
+}
+.photo-plan .plan-item.selected rect {
+  fill: rgba(255, 210, 77, 0.35);
+  stroke: #ffd24d;
+}
+.photo-plan .plan-front {
+  stroke: #ffd24d;
+  stroke-width: 0.03;
+}
+.photo-plan text {
+  fill: #e3e7ec;
+}
+.photo-plan .plan-camera {
+  fill: #7cc4ff;
+}
+.source-photo {
+  position: absolute;
+  left: 12px;
+  bottom: 40px;
+  z-index: 42;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: min(360px, 34%);
+}
+.source-photo:not(.open) {
+  width: auto;
+}
+.source-photo-toggle {
+  align-self: flex-start;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(24, 27, 31, 0.95);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.source-photo .photo-frame {
+  border: 1px solid var(--border);
+}
+.source-photo-caption {
+  margin: 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(17, 19, 22, 0.8);
+  color: #c3cad2;
+  font-size: 11px;
+}
+.source-photo-missing {
+  padding: 10px;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  background: rgba(24, 27, 31, 0.95);
+  font-size: 12px;
+}
+label.button.disabled {
+  opacity: 0.55;
+}
+@media (max-width: 1300px) {
+  .photo-prepare,
+  .photo-review {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}

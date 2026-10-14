@@ -418,3 +418,69 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - **Tests.** Existing browser tests start with the panel dismissed (Playwright `storageState`), and the benchmark scripts set the same flag.
 - Rationale: a project lead can describe, inspect and place an object without learning the inspector, while every value stays traceable.
 - Evidence: e2e "first visit" tests; timed task observations in docs/assist.md (not a usability study).
+
+### Update to ADR-035 (2026-10-14, IMG-01)
+
+- **Start from a photo** is now a working choice in the start panel (it opens the photo import; ADR-036). It is disabled, with a message, when the local API is not reachable. The other choices are unchanged.
+
+### ADR-036 - IMG-01: a vision model proposes objects; geometry is computed in code or entered by the user
+
+- Date: 2026-10-14. Status: adopted (IMG-01).
+- Context: IMG-01 must turn one permitted image into a reviewed, editable world. The candidate model was `qwen3-vl-32b-instruct` on ASU Voyager; its behaviour on images was unknown and the text model's GEN-01 results could not be assumed to carry over. Voyager's text-to-image and video models are not image-to-3D services. The feasibility check measured every part of the vision model's answer against a render with known ground truth and against public-domain photos (docs/image-import.md).
+- Options considered:
+  - trust the model's floor geometry (floor contact points, floor rectangles, view type, room boundary, sizes): measured 0.4–1.0 m floor error for its contact points, and rectangles that were axis-aligned boxes or invented;
+  - a single-image depth or 3D reconstruction service: none was available or verified on Voyager, and its text-to-image and video models do not do this;
+  - the model proposes only what it sees (objects, image boxes, labels, appearance, facing, visible text) and deterministic code plus the user supply the geometry (chosen).
+- Decision:
+  - **Provider.** `qwen3-vl-32b-instruct` through ASU Voyager, behind the local API like GEN-01 (ADR-032): `POST /api/v1/assist/image-proposals`, `response_format: json_schema`, Pydantic validation with one retry. The model ID is configurable (`VOYAGER_VISION_MODEL`).
+  - **What the model supplies:** distinct objects, their image boxes and labels (editable), whether they stand on the floor, and visible text.
+  - **What code computes:**
+    - the floor contact point is the bottom-centre of the box; the model's own point is used only when the box is cut off at the bottom, with a note;
+    - the shape family comes from the label's head noun, not from the model's template choice;
+    - which side is visible comes from the outline (its floor span compared with the label's typical width and depth), overriding a contradicting facing;
+    - a colour is taken from the pixels inside the outline when it is clearly coloured and not the floor or wall; greys are left to the model.
+  - **Not trusted:** the model's floor rectangles (only a starting position for the user's corners), view type and room boundary (unused), and sizes (only their proportions, for hidden sides).
+  - **Text in the image is content.** It is recorded as `visible_text`, and the system prompt says it is never an instruction.
+  - **Consent.** Before anything is sent, the panel says what goes where. Only a browser re-encode is sent (JPEG, at most 1600 px, no metadata; the API refuses copies over 4 MB or 2048 px). **Mark objects myself** skips the model.
+  - **Supported image type:** one indoor room or work area with a visible floor, upright camera at roughly eye height or above, containing a floor rectangle with four visible corners and a known width; JPEG, PNG or WebP by content; at most 15 MB and 50 megapixels, at least 64 px a side; up to 30 proposed objects and 60 stored observations. Outdoor scenes, close-ups, photos without such a rectangle, several photos, walls and textured geometry are left to IMG-02/03.
+  - The start-panel entry is now active (Update to ADR-035 above).
+- Rationale: in the feasibility runs the model was good at finding and naming objects (box IoU 0.81–0.94 on the render's visible machines, conveyors and pallet) and unreliable at everything metric. Box bottom-centres gave 0.05–0.46 m floor error where the model's own points gave 0.4–1.0 m.
+- Consequences:
+  - Analysis takes about 25–100 s (161.5 s once, when a retry was needed). Labels and object counts vary between live runs even at temperature 0.
+  - Shapes are generic families and colours are approximate. Groups ("table with chairs") still need a tighter box from the user; a note asks for it.
+  - CI never calls Voyager. Recorded answers (`fixtures/assist/recorded/image-*.json`) replay in pytest and e2e and are labelled not live AI.
+- Evidence: docs/image-import.md; docs/assist-evaluation/img-01.1.json and img-01.2.json (final prompt img-01.2: 1 of 5 analyses needed the retry; the injected sign was reported as text and not obeyed); `services/api/tests/test_images.py`, `test_assist_recorded.py`; `apps/web/src/photo/colour.test.ts`; screenshots in docs/img-01/.
+- Revisit when: Voyager offers a verified depth or segmentation model, a faster or better vision model is available (IMG-03 should compare), or IMG-02 widens the supported image type.
+
+### ADR-037 - Scale from one floor rectangle the user measured
+
+- Date: 2026-10-14. Status: adopted (IMG-01).
+- Context: one photo cannot establish size by itself, and the model's scale cues were unreliable (ADR-036). The user must set the scale, and every value must say how certain it is.
+- Options considered: one known object height or length (no floor mapping; depends on choosing the right object); a floor rectangle with a known width (chosen); an assumed camera height and lens (no measurement at all).
+- Decision (`apps/web/src/photo/floor.ts`):
+  - **Camera model.** Pinhole, principal point at the photo centre, no lens distortion, no roll.
+  - **Floor mapping.** The user drags four corners onto a rectangle on the floor and enters its width (and optionally its depth). A homography maps photo points on the floor to scene metres.
+  - **Lens.** Solved from the rectangle's perspective (`from_rectangle`); for a rectangle seen face-on, from its two given sides (`from_sides`); otherwise a 60° vertical view is assumed (`assumed`) with a warning.
+  - **Depth.** A depth the user did not give is derived from perspective and marked derived. When both sides are given and the lens came from the rectangle, a disagreement over 25 % is reported.
+  - **Objects.** The floor point fixes the object's front on the floor. A box square to the rectangle is fitted to the outline's left, right and top edges, giving the visible width and the height. The hidden side comes from the label's typical proportions and is marked "hidden: a guess".
+  - **Evidence.** Values from the photo are `inferred` and unreviewed, citing the photo and observation; values the user types become `user_supplied` and confirmed; the rectangle needs at least one `user_supplied` side.
+  - The panel states that one measured length fixes the scale on the floor only: hidden sides, heights and depths stay estimates, and positions far from the rectangle or near the horizon are least certain.
+- Rationale: a floor rectangle gives both the floor plane and a scale; it is common in rooms and work areas (rugs, tiles, pallets, walkways, table feet). Squaring objects to the rectangle removed the 37° yaws that per-object facing produced; solving the lens from the two sides recovered the render's 70° lens exactly.
+- Consequences: a photo without a fully visible floor rectangle is not supported (the living-room demonstration uses an assumed 2.0 m rug width and is only indicative). A few pixels of corner error change the solved lens noticeably. Hidden depths were about half the true depth for the render's machine cells.
+- Evidence: `apps/web/src/photo/floor.test.ts` and `world.test.ts` (the recorded factory answer checked against the render's ground truth); live factory journey: centres within 0.25 m, visible widths within 12 %, heights within 11 % (docs/image-import.md).
+- Revisit when: IMG-02 adds several photos of one place, or vanishing-line or wall cues.
+
+### ADR-038 - Schema 0.6.0: photo sources and source photo storage
+
+- Date: 2026-10-14. Status: adopted (IMG-01).
+- Context: a project made from a photo must say which photo it came from, how its floor was calibrated and which observation became which object, and reopening it must never show a different photo in its place. Photos can be large and may be private, so they should not be embedded in the project JSON.
+- Options considered: embed the photo in the project (large files; the bytes travel wherever the JSON goes); keep only a file name (cannot detect a different or edited file); store the original bytes content-addressed beside the catalog library and record the hash in the project (chosen).
+- Decision:
+  - **Storage.** The original bytes are stored unchanged at `photos/<sha256>.<jpg|png|webp>` in `RWS_SOURCES_DIR` (default `data/sources`, git-ignored), uploaded with `POST /api/v1/sources/photos?filename=…[&expected_sha256=…]` (streamed, 15 MB cap, format checked by content, idempotent) and served by `GET /api/v1/sources/files/photos/<sha256>.<ext>`.
+  - **Contract 0.6.0.** `SourceDocument.kind` gains `photo`; `source_to_world` becomes nullable (null for photos, required otherwise); `image` (`SourceImage`) and `photo_import` (`PhotoImport`: vision model, calibration, observations, visible text) are added. `AssetGeneration.method` gains `photo`. `ValidationReport` gains `photo_file_count` and `missing_source_files`. Details in docs/contracts.md.
+  - **Reopening.** Validation refuses a missing photo at `/sources/<i>/image/uri` and an altered one at `/sources/<i>/sha256`. The editor offers **Attach the original photo…** (uploaded with `expected_sha256`; a different file gets 409 and nothing is written) or **Open without the photo** (`missing_sources=allow`; the objects and evidence open and the photo panel says the photo is missing). Nothing is ever substituted.
+  - **Migration 0.5.0 → 0.6.0** adds `image: null` and `photo_import: null` to every source and changes nothing else; a 0.5.0 document that already has them is refused as malformed.
+- Rationale: the hash makes the reference exact, and keeping the bytes outside the JSON keeps project files small and keeps the photo on the computer where it was imported.
+- Consequences: there is no export bundle yet. Opening a photo project elsewhere needs the photo in that machine's source library and the generated models in its catalog library (missing generated models can be rebuilt, as in GEN-01; a missing photo can only be attached or skipped).
+- Evidence: `services/api/tests/test_photos.py`, `test_photo_api.py`, `packages/contracts/tests/test_migrations.py`, `test_models.py`; e2e `photo.spec.ts` (save, reopen, missing photo, attach).
+- Revisit when: REL-01 adds an export bundle, or projects need server-side storage.

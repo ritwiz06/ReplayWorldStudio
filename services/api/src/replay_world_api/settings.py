@@ -27,6 +27,7 @@ DEFAULT_CORS_ORIGINS: Final = (
 VOYAGER_SERVICE: Final = "ASU Voyager"
 VOYAGER_BASE_URL: Final = "https://openai.rc.asu.edu/v1"
 DEFAULT_ASSIST_MODEL: Final = "qwen3-235b-a22b-instruct-2507"
+DEFAULT_VISION_MODEL: Final = "qwen3-vl-32b-instruct"
 
 AssistProvider = Literal["voyager", "recorded", "off"]
 _PROVIDERS: Final[dict[str, AssistProvider]] = {
@@ -47,6 +48,7 @@ class AssistSettings:
     service: str = VOYAGER_SERVICE
     base_url: str = VOYAGER_BASE_URL
     model: str = DEFAULT_ASSIST_MODEL
+    vision_model: str = DEFAULT_VISION_MODEL
     # repr=False keeps the key out of tracebacks, logs and debug output.
     api_key: str = field(default="", repr=False)
     timeout_s: float = 150.0
@@ -60,6 +62,8 @@ class Settings:
     cors_origins: tuple[str, ...] = DEFAULT_CORS_ORIGINS
     fixtures_dir: Path = _REPO_ROOT / "fixtures"
     catalog_dir: Path = _REPO_ROOT / "assets" / "catalog"
+    # Local source library for project photos (git-ignored); see docs/image-import.md.
+    sources_dir: Path = _REPO_ROOT / "data" / "sources"
     assist: AssistSettings = field(default_factory=AssistSettings)
 
     @classmethod
@@ -76,12 +80,14 @@ class Settings:
         port = _integer(env, "RWS_API_PORT", defaults.port)
         fixtures = env.get("RWS_FIXTURES_DIR", "").strip()
         catalog = env.get("RWS_CATALOG_DIR", "").strip()
+        sources = env.get("RWS_SOURCES_DIR", "").strip()
         return cls(
             host=env.get("RWS_API_HOST", defaults.host),
             port=port,
             cors_origins=origins,
             fixtures_dir=Path(fixtures) if fixtures else defaults.fixtures_dir,
             catalog_dir=Path(catalog) if catalog else defaults.catalog_dir,
+            sources_dir=Path(sources) if sources else defaults.sources_dir,
             assist=_assist_from_env(env),
         )
 
@@ -103,6 +109,7 @@ def _assist_from_env(env: Mapping[str, str]) -> AssistSettings:
         provider=provider,
         base_url=env.get("VOYAGER_BASE_URL", "").strip().rstrip("/") or defaults.base_url,
         model=env.get("VOYAGER_MODEL", "").strip() or defaults.model,
+        vision_model=env.get("VOYAGER_VISION_MODEL", "").strip() or defaults.vision_model,
         api_key=key,
         timeout_s=timeout_s,
         recordings_dir=Path(recordings) if recordings else defaults.recordings_dir,

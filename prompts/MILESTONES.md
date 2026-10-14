@@ -31,6 +31,8 @@ The earlier M2 ("Drawing import", 32-48 h) and the old total (208-312 h for M0-M
 
 Remaining estimate (M2-M9): 296-468 focused hours. Add 20 % contingency: about 355-560 hours. At 15 hours per week (an unconfirmed assumption), that is about 24-37 weeks. M3 carries the most uncertainty because image understanding is a research problem; its range will be revised after the IMG-01 feasibility timebox. Actual hours for M0 and M1 were not tracked, so these ranges are not yet calibrated against observed pace.
 
+**Scope note (2026-10-14, IMG-01).** The feasibility check bounded IMG-01 to **one indoor photo with a visible floor and a floor rectangle the user measures** (docs/image-import.md, ADR-036, ADR-037). The vision model finds and names objects well but its floor geometry and sizes are unreliable, so the scale comes from the user's rectangle. The broader M3 goal stays in IMG-02/03: outdoor scenes, photos without a usable rectangle, several photos of one place, walls and room boundaries, and held-out evaluation against measured references. IMG-01 is done; M3 is in progress. M2 is still open (GEN-02, GEN-03). The M3 estimate is not revised, because hours were not tracked.
+
 ### Original baseline (superseded 2026-10-10)
 
 The original plan listed M2 "Drawing import" (32-48 h), M3 spatial checks (28-40 h), M4 production and comparison (40-60 h), M5 AI assistance (36-56 h) and M6 evaluation (28-44 h), for 208-312 hours in total (250-375 with contingency). It is kept for traceability only.

@@ -47,6 +47,8 @@ function sourceLabel(source: SceneSource | null): string {
       return `${source.filename} (accepted by API)`;
     case "upgrade":
       return `${source.filename} (upgraded from ${source.fromVersion}; not saved yet)`;
+    case "photo":
+      return `Built from the photo ${source.filename} (not saved yet)`;
     case "fixture":
       return source.name === "industrial-demo" ? "API industrial demo" : "API foundation fixture";
     default:
@@ -114,12 +116,20 @@ function SceneSummary({ project, source }: { project: Project; source: SceneSour
       </h3>
       <SceneEditLog project={project} />
       <h3 className="section-title">Sources</h3>
-      {project.sources.map((s) => (
-        <p key={s.id} className="source-line">
-          <code>{s.id}</code> · {s.kind} plan in {s.source_to_world.source_unit} →{" "}
-          {formatNumber(s.source_to_world.metres_per_source_unit, 3)} m per unit
-        </p>
-      ))}
+      {project.sources.length === 0 && <p className="muted">No sources.</p>}
+      {project.sources.map((s) =>
+        s.source_to_world ? (
+          <p key={s.id} className="source-line">
+            <code>{s.id}</code> · {s.kind} plan in {s.source_to_world.source_unit} →{" "}
+            {formatNumber(s.source_to_world.metres_per_source_unit, 3)} m per unit
+          </p>
+        ) : (
+          <p key={s.id} className="source-line">
+            <code>{s.id}</code> · photo {s.filename} · sha256 {s.sha256?.slice(0, 12)}…
+            {s.photo_import && ` · ${s.photo_import.observations.filter((o) => o.decision === "accepted").length} objects placed from it`}
+          </p>
+        ),
+      )}
       <p className="hint">Select an object in the list or the viewport to inspect its evidence.</p>
     </section>
   );

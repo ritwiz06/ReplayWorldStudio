@@ -173,6 +173,7 @@ After M1 the user approved guided creation and described custom objects as the n
 - Dependencies: GEN-01
 - Baseline status: planned
 - Done when: A placed generated object's specification can be reopened, corrected (size, parts, materials) and rebuilt as a new asset version; instances can be switched to the new version with one undoable command; the previous version and its record remain in the project.
+- Note (2026-10-14): still open after IMG-01. Objects created from a photo are generated assets (method `photo`); IMG-01 reviews them before creation, and afterwards only the generic editing (move, rotate, resize) applies, so GEN-02 should cover them too.
 - Evidence: not recorded
 
 ### GEN-03 - Evaluate described objects and language edits
@@ -189,9 +190,22 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P0
 - Dependencies: GEN-01
-- Baseline status: planned (next after GEN-01)
+- Status: **done** (2026-10-14; commit `<pending>`; CI `<pending>`). Supported case bounded by the feasibility check (below). GEN-02 and GEN-03 remain open, so M2 is not complete.
 - Done when: A user supplies one permitted image; a vision-capable model (candidate `qwen3-vl-32b-instruct`, tested on actual image inputs at the start of the issue) proposes the objects it can see with approximate floor positions and sizes; the user sets scale from one known dimension; each object is accepted, corrected or rejected and becomes a generated or catalog instance placed through the command path, with "inferred from image" evidence and occluded or unseen parts labelled; the image is stored as a source with its hash. Text-to-image or video-generation models are not used as image-to-3D services.
-- Evidence: not recorded
+- Evidence (details: docs/image-import.md, ADR-036..038):
+  - **Feasibility and supported case.** `qwen3-vl-32b-instruct` on ASU Voyager accepts images and returns schema-valid JSON with `json_schema` guidance (not without it). It finds and names objects well (box IoU 0.81–0.94 on the render's visible machines, conveyors and pallet) but its floor points (0.4–1.0 m error), floor rectangles, view type and sizes are unreliable, so geometry is computed in code or entered by the user (ADR-036). Supported: one indoor photo with a visible floor and a floor rectangle whose four corners are visible and whose width the user knows; JPEG, PNG or WebP, at most 15 MB and 50 megapixels.
+  - **Guided path.** **Start from a photo** in the start panel (previously "Coming next") opens: choose → ready (where the photo would be sent, **Analyse with ASU Voyager** or **Mark objects myself**) → analysing (elapsed time, **Cancel**) → failed (**Try again**) → review tabs **Objects**, **Scale**, **Layout** → **Create the 3D world**. The open project is untouched until Create, which goes through the unsaved-changes guard.
+  - **Proposals.** `POST /api/v1/assist/image-proposals` returns an `ImageProposalResult` (contract 0.6.0). Each object can be accepted, rejected (small items on furniture are suggested for rejection), re-boxed, given a new floor point, relabelled or re-sized; missed objects can be drawn by hand. Every size and the facing are tagged *from the photo, approximate*, *hidden: a guess* or *entered by you*.
+  - **Scale.** Four corners and a measured width (optionally depth); the reconstructed camera, lens basis (`from_rectangle`, `from_sides` or `assumed`) and every warning are shown, and each footprint is drawn back onto the photo (ADR-037).
+  - **World.** Each accepted object becomes a provisional generated model (GEN-01 generator, method `photo`) placed through the command path, with a floor slab and the scale reference. Photo-derived axes are `inferred`/unreviewed citing the photo and observation; typed values are `user_supplied`/confirmed. The source photo sits beside the 3D view with outlines linked to the objects, and **View from the photo's camera** matches the photo's viewpoint. Orbit, top, walk, editing, undo, save and reopen work as for any project.
+  - **Source photo.** Stored unchanged by sha256 in the local source library (`POST /api/v1/sources/photos`, 409 on a hash mismatch) and recorded as a `photo` source with its calibration and every observation. A missing photo is refused on open with **Attach the original photo…** or **Open without the photo**; nothing is substituted (ADR-038).
+  - **Live provider** (2026-10-14, final prompt `img-01.2`): 5 photos, 7–22 objects each, 29.5–81.2 s (161.5 s for the sign, whose first answer failed validation and the retry was valid); the injected sign was recorded as text and not obeyed. Live browser journeys: classroom (analysis 100.0 s, 23 objects, assumed 1.52 m table width, one desk moved, saved, reopened "accepted by API", 23/23 models verified) and factory render (32.6 s, 7 objects, 6 m × 1.8 m walkway, lens 70° solved from the two sides, camera at the render's position, one machine moved, saved, reopened). Factory placements against ground truth: centres within 0.25 m, visible widths within 12 %, heights within 11 %; hidden depths about half the true value for the machine cells.
+  - **Recorded, not live.** `fixtures/assist/recorded/image-*.json` replay the `img-01.2` answers in pytest and e2e; the UI labels them "Offline test provider … Not live AI", and their latencies are not measurements.
+  - **Tests:** `services/api/tests/test_images.py` (42), `test_photo_api.py` (25), `test_photos.py` (140), recorded image replays in `test_assist_recorded.py`; Vitest `src/photo/{floor,world,colour}.test.ts`; Playwright `e2e/photo.spec.ts` (2 tests, one `@smoke`).
+  - **Checks (local, 2026-10-14):** `pnpm check` exit 0 (contracts up to date; ESLint, Ruff, tsc, mypy clean; Vitest 10 + 138; pytest 551; build); `pnpm test:e2e` 22 passed. The smoke set is now 7 tests.
+  - **Screenshots:** docs/img-01/*.jpg (classroom and factory render: proposal, scale, layout, world, photo-camera view, walk, reopened).
+  - **Known failures** (docs/image-import.md): generic shape families, no textures; approximate colours (dark shadowed chairs stay grey or black); hidden depths are guesses; no walls, windows or room boundary; group outlines ("table with chairs") need tightening; the render's two control cabinets were missed; far objects near the horizon are uncertain; a fully visible floor rectangle is required; labels and counts vary between live runs; 25–100 s analysis.
+  - **CI:** `<pending>` (recorded after push).
 
 ### IMG-02 - Multi-object layout and occlusion review
 
@@ -199,6 +213,7 @@ After M1 the user approved guided creation and described custom objects as the n
 - Dependencies: IMG-01
 - Baseline status: planned
 - Done when: Several objects from one image keep their relative layout; overlaps and occlusions are listed for review; corrections are recorded; nothing hidden is presented as seen.
+- Note (2026-10-14, after IMG-01): IMG-01 already places several objects from one photo with their relative layout, marks hidden sides as guesses and records every observation (accepted or rejected). Left out of IMG-01 and open here or in IMG-03: outdoor scenes, close-ups, photos without a usable floor rectangle, several photos of one place, walls and room boundaries, textured or photo-matched geometry, and automatic scale without a user measurement. IMG-01's known failures this issue should address: no walls or room boundary; hidden depths guessed (about half the true depth for deep machine cells); group outlines ("table with chairs"); generic shapes and approximate colours; missed objects behind others.
 - Evidence: not recorded
 
 ### IMG-03 - Evaluate image import on held-out images
@@ -207,6 +222,7 @@ After M1 the user approved guided creation and described custom objects as the n
 - Dependencies: IMG-01
 - Baseline status: planned
 - Done when: Object precision and recall, scale error against measured references, and manual correction time are reported on held-out, permissioned images, split by scene type; failure cases are kept.
+- Note (2026-10-14, after IMG-01): IMG-01 measured placement only against one render with known ground truth and five development photos (docs/assist-evaluation/img-01.*.json). No real photo of a measured site exists yet, so scale error against a measured reference is still unmeasured; held-out photos and a second vision model are needed.
 - Evidence: not recorded
 
 ## M4 - Drawing import

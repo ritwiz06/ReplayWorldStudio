@@ -291,6 +291,52 @@ Append entries in chronological order. If a live repository session log already 
 - Milestone status after this session: M2 in progress; GEN-01 done.
 - Next concrete task: IMG-01 (user-designated). Start with a feasibility timebox testing `qwen3-vl-32b-instruct` on real, permissioned images.
 
+## 2026-10-14 - IMG-01 one photo to a reviewed, editable world (contract 0.6.0)
+
+- Active milestone / issue IDs: M3 / IMG-01 (M2 stays open: GEN-02, GEN-03).
+- Starting branch and relevant commit: `main` at `6ac224d`, CI green.
+- Goal and completion criteria: the IMG-01 acceptance in BACKLOG.md.
+  - A feasibility timebox with `qwen3-vl-32b-instruct` on real, permissioned images; a written supported image case.
+  - One permitted image → proposed objects → user-set scale from one known dimension → accept, correct or reject each object → generated instances placed through the command path, with image-inferred evidence and hidden parts labelled.
+  - The image stored as a source with its hash; no text-to-image or video model used as image-to-3D.
+- Work completed:
+  - **Feasibility** (docs/image-import.md). Image input and `json_schema` guidance work; without the schema an early probe returned malformed JSON. Measured against the factory render's ground truth: boxes and labels good (IoU 0.81–0.94); the model's floor points (0.4–1.0 m error), floor rectangles, view type, sizes, template choice, facing and colours unreliable. Supported case bounded to one indoor photo with a measurable floor rectangle (ADR-036).
+  - **Contract 0.6.0** (ADR-038). `photo` sources with `image` and `photo_import` (calibration, observations, visible text); nullable `source_to_world`; `AssetGeneration.method` `photo`; `ReviewedLength.source_ref`; `AssistStatus.vision_model`; `ValidationReport.photo_file_count` and `missing_source_files`; `ImageAnalysisRequest`, `ImageProposalResult`, `StoredPhoto`; migration 0.5.0 → 0.6.0. Fixtures upgraded.
+  - **API.** `assist/images.py` (vision proposals with retry; contact points from box bottoms; shape family from the label's head noun; small items on furniture suggested for rejection; visible text as content); `photos.py` (content checks, content-addressed storage in `RWS_SOURCES_DIR`, source-file checks on validate); endpoints `POST /api/v1/assist/image-proposals`, `POST /api/v1/sources/photos`, `GET /api/v1/sources/files/photos/…`, `?missing_sources=refuse|allow` on validate; `VOYAGER_VISION_MODEL`. `scripts/evaluate_image_import.py` runs the live evaluation and records answers.
+  - **Web.** `src/photo/floor.ts` (pinhole camera, homography, lens from the rectangle or the two sides or assumed, box fitting, ADR-037), `world.ts` (project, evidence, observations), `colour.ts` (pixel colours), `cameraView.ts`; `PhotoImport.tsx` (choose → ready → analysing → failed → Objects / Scale / Layout → Create) and `SourcePhoto.tsx` (source photo beside the 3D view, linked outlines, **View from the photo's camera**); start panel entry active; missing-photo recovery in `Notices.tsx`.
+- Issues found and fixed during the session (most from the live visual review):
+  - A duplicate React key in `App.tsx`'s source-photo panel.
+  - The review tabs collapsed in the photo side panel (`flex-shrink`).
+  - The bottom-edge drag handle sat under the floor point and could not be grabbed.
+  - A contradicting facing made one desk 10.5 m wide: the outline now decides which side is visible.
+  - Per-object facings gave 37° yaws: objects are now squared to the floor rectangle.
+  - A face-on rectangle could not reveal the lens: solving it from the two given sides recovered the render's 70° lens exactly.
+  - The model named materials, not colours (maroon chairs as black, red cabinets as wood): clear colours are now sampled from the pixels.
+  - The photo-camera view was clamped by the orbit controls' polar-angle limit, because photos are often taken looking almost level; the limit now allows that view's tilt.
+  - After **Open without the photo**, a cached copy was still shown as present.
+- Relevant files changed: packages/contracts/** (models, assist, migrations, schema, generated TS/JSON, tests), services/api/src/replay_world_api/{app,settings,generated_assets,photos}.py, services/api/src/replay_world_api/assist/{images,provider}.py, services/api/tests/{test_images,test_photo_api,test_photos,test_assist,test_assist_recorded,test_api,test_upgrade}.py, scripts/evaluate_image_import.py, fixtures/** (0.6.0, photos/, assist/recorded/image-*.json), apps/web/src/{App.tsx,styles.css,photo/*,components/{PhotoImport,SourcePhoto,StartPanel,Inspector,Notices}.tsx,hooks/useProject.ts,scene/CameraRig.tsx,api/client.ts,assist/{objectDraft,templates}.ts}, apps/web/e2e/{photo,creation,editing}.spec.ts, apps/web/e2e/paths.ts, apps/web/playwright.config.ts, .env.example, README.md, docs/{image-import.md,contracts.md,assist.md,assist-evaluation/img-01.*.json,img-01/}, prompts/{MILESTONES,BACKLOG,DECISIONS,PROJECT_STATE,SESSION_LOG}.md.
+- Commands run and actual outcomes:
+  - **`scripts/evaluate_image_import.py`** (live, results in docs/assist-evaluation/): `img-01.1` all 5 first answers valid (25.7–68.7 s); `img-01.2` (shipped) 4 of 5 first answers valid, the sign valid on retry (29.5–81.2 s; 161.5 s with the retry); the injected sign reported as text and not obeyed in every live run.
+  - **Live browser journeys** (dev servers, the user's key): classroom (100.0 s analysis, 23 objects, an assumed 1.52 m table width, one desk moved 0.5 m, saved, reopened "accepted by API", 23/23 models verified); factory render (32.6 s, 7 objects, 6 m × 1.8 m walkway, lens 70° from the two sides, camera at the render's position, centres within 0.25 m of ground truth, one machine moved, saved, reopened).
+  - **Local checks.** `pnpm check` exit 0 (contracts up to date; ESLint, Ruff, tsc, mypy clean; Vitest 10 + 138; pytest 551; build); `pnpm test:e2e` 22 passed (7 `@smoke`).
+- Visual evidence: docs/img-01/*.jpg (classroom and factory render: proposal, scale, layout, world, photo-camera view, walk, reopened).
+- Decisions changed and rationale: ADR-036 (vision model proposes, code and user supply geometry), ADR-037 (scale from one measured floor rectangle), ADR-038 (schema 0.6.0 and source photo storage); ADR-035 updated (Start from a photo active).
+- Known limitations / blockers: no blocker.
+  - Generic shapes, approximate colours, no textures; hidden depths guessed.
+  - No walls or room boundary; a fully visible floor rectangle is required.
+  - Group outlines need tightening; objects behind others can be missed.
+  - Labels and counts vary between live runs; 25–100 s analysis.
+  - No real photo of a measured site; demonstration sizes are assumptions.
+  - No export bundle: the photo must be in the source library of the machine that opens the project.
+- Exact reproduction commands and working directories: repo root.
+  - `uv sync --locked && pnpm install --frozen-lockfile && pnpm check && pnpm test:e2e`.
+  - With `VOYAGER_API_KEY` in `.env`: `pnpm dev:api` and `pnpm dev:web`, then **Start → Start from a photo** with a file from fixtures/photos/.
+  - `uv run python scripts/evaluate_image_import.py --record` (live; refreshes recordings).
+  - `pnpm --filter @replay-world/web exec vitest run src/photo`; `pnpm --filter @replay-world/web exec playwright test e2e/photo.spec.ts`.
+- CI: commit `<pending>`; CI `<pending>` (recorded after push).
+- Milestone status after this session: M2 in progress (GEN-01 done; GEN-02, GEN-03 open). M3 in progress (IMG-01 done; IMG-02, IMG-03 open).
+- Next concrete task: commit and push IMG-01 and record the CI run in place of `<pending>`; then GEN-02 (correct and reuse generated objects after placement), followed by GEN-03 to close M2.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

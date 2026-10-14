@@ -1,6 +1,6 @@
 # Contracts: units, frames, provenance and the schema pipeline
 
-Contract version **0.5.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, 0.4.0 → 0.5.0 in GEN-01, all 2026-10-10). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
+Contract version **0.6.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, 0.4.0 → 0.5.0 in GEN-01, all 2026-10-10; 0.5.0 → 0.6.0 in IMG-01, 2026-10-14). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
 
 ## One source of truth
 
@@ -40,6 +40,8 @@ packages/contracts/ts/generated/contracts.ts       (TypeScript types, committed)
 | Model file exists in the catalog library, stays inside it and has the recorded sha256 | API (on open) | browser re-checks the downloaded bytes |
 | Edit-record shapes (`object_edited` / `object_added` / `object_removed`), revision ≥ 1 | yes | yes |
 | Edit log describes the scene: increasing revisions ≤ scene revision, real changes only, edited axes `user_supplied`, removed IDs not reused, latest recorded values equal the scene's | yes | **no** (the browser's command engine produces consistent logs; the API checks every opened file) |
+| Photo source shape: a `photo` has a file name, sha256, `image` and `photo_import` and no `source_to_world`; other kinds the reverse; the stored path is named by the sha256; a floor rectangle has a `user_supplied` side; an accepted observation names its object and a rejected one none; linked objects exist or were removed | yes | **no** |
+| Source photo exists in the source library and has the recorded sha256 | API (on open; a missing file may be allowed with `missing_sources=allow`) | **no** |
 
 The browser only renders data that passed Ajv, and opens a local file only after the API accepted it. Python's `json.loads` accepts a bare `NaN` token, so the API's finite-number rule is what rejects `fixtures/invalid/nonfinite-coordinate.json`.
 
@@ -53,7 +55,7 @@ The browser only renders data that passed Ajv, and opens a local file only after
 
 ## Source-to-world transform
 
-`SourceToWorldTransform` maps a 2D plan point (u, v), in source units, to world metres:
+`SourceToWorldTransform` maps a 2D plan point (u, v), in source units, to world metres. Drawings and plans need one; a `photo` source has `source_to_world: null`, because a perspective photo maps to the floor only through its calibration (see [Photo sources](#photo-sources-060-img-01)):
 
 1. scale by `metres_per_source_unit` (for example 0.001 for millimetres);
 2. convention `plan_xy_to_world_x_neg_z`: plan +X → world +X, plan +Y (up the sheet) → world −Z;
@@ -86,11 +88,12 @@ Worked example (foundation fixture): the plan is in mm with translation (−10, 
   `uv run python -m replay_world_contracts.migrate OLD.json -o NEW.json`. The command validates the result, writes notes describing every change to stderr, and never modifies the input.
 - 0.1.0 → 0.2.0 is lossless and never strengthens evidence. The single box origin, source and review status are copied to all three axes; `representation: placeholder_box` becomes `asset_id: null`; an empty `catalog` is added. Unknown or newer versions are refused.
 - 0.2.0 → 0.3.0 changes only `schema_version`, because 0.3.0 is additive. Steps run in sequence, so a 0.1.0 file passes through every version and the notes list each step.
-- `POST /api/v1/projects/validate` answers a 0.1.0, 0.2.0 or 0.3.0 document with a single 422 issue at `/schema_version` that points to the editor's upgrade review and the migrate command, instead of a cascade of field errors.
+- `POST /api/v1/projects/validate` answers a document of an older version (0.1.0–0.5.0) with a single 422 issue at `/schema_version` that points to the editor's upgrade review and the migrate command, instead of a cascade of field errors.
 - 0.3.0 → 0.4.0 adds an empty `scene.edit_log` and changes nothing else. A 0.3.0 document that already has an `edit_log` is refused as malformed.
 - 0.4.0 → 0.5.0 adds `generation: null` to every catalog asset and changes nothing else. A 0.4.0 document whose assets already have `generation` is refused as malformed.
+- 0.5.0 → 0.6.0 adds `image: null` and `photo_import: null` to every source and changes nothing else: every existing source keeps its `source_to_world`. Its note reads `schema_version 0.5.0 -> 0.6.0 (adds 'image: null' and 'photo_import: null' to N source(s); no values or evidence changed)`. A 0.5.0 document whose sources already have either field is refused as malformed.
 - `fixtures/legacy/foundation-scene-0.1.0.json` is the exact 0.1.0 fixture, kept to test this path.
-- **In the editor (WRL-03).** Opening a file whose `schema_version` is any other string sends it to `POST /api/v1/projects/upgrade`. That endpoint runs the same `upgrade_document`, validates the result (contract and model files), and returns an `UpgradeReport` (`from_version`, `to_version`, `notes`, `project`, `validation`) without storing anything. The browser shows the notes and offers **Open upgraded project**, **Download upgraded file** (`<name>-0.5.0.json`) or **Cancel**; nothing is replaced or written before that choice. An unknown version gets one 422 issue at `/schema_version`, a malformed legacy file one issue at the document level, and errors after a successful upgrade are located in the upgraded document. In each case the current scene stays.
+- **In the editor (WRL-03).** Opening a file whose `schema_version` is any other string sends it to `POST /api/v1/projects/upgrade`. That endpoint runs the same `upgrade_document`, validates the result (contract and model files), and returns an `UpgradeReport` (`from_version`, `to_version`, `notes`, `project`, `validation`) without storing anything. The browser shows the notes and offers **Open upgraded project**, **Download upgraded file** (`<name>-0.6.0.json`) or **Cancel**; nothing is replaced or written before that choice. An unknown version gets one 422 issue at `/schema_version`, a malformed legacy file one issue at the document level, and errors after a successful upgrade are located in the upgraded document. In each case the current scene stays.
 
 ## Edits, revisions and the edit log (0.4.0)
 
@@ -191,3 +194,42 @@ An unconfirmed estimate is refused (422), so nothing is created until every esti
 
 `ObjectProposalResult` and `EditProposalResult` are API responses, not project records. Each carries an `outcome` (`proposal`, `clarification` or `unsupported`), its content, the API's `checks` (corrections in plain words), and a `ProviderRun`: the service, base URL, exact model ID, `live` or `recorded`, the number of attempts, whether the first answer was valid, and the latency. `EditIntent` holds one `move` (direction in plan terms, distance and unit as written, with a quote) or one `rotate` (clockwise or counterclockwise seen from above, angle in degrees). The browser turns it into an exact `set_transform` command and dry-runs that command with the engine before showing it. See [docs/assist.md](assist.md).
 
+## Photo sources (0.6.0, IMG-01)
+
+A project made from a photo records the photo as a source, the scale the user set, and every object the import saw, accepted or rejected. Decisions: ADR-036 to ADR-038; the workflow and measured results: [docs/image-import.md](image-import.md).
+
+**`SourceDocument`** gains the kind `photo`. A photo source has `filename`, `sha256`, `image` and `photo_import`, and `source_to_world: null`. Every other kind keeps a required `source_to_world` and has `image: null` and `photo_import: null`.
+
+| Record | Fields |
+| --- | --- |
+| `SourceImage` (`image`) | `uri` = `photos/<sha256>.<jpg\|png\|webp>` (named by the source's own sha256, extension matching the type), `media_type` (`image/jpeg`, `image/png`, `image/webp`), `width_px` and `height_px` as displayed (EXIF orientation applied), `bytes` ≤ 15 MiB |
+| `PhotoImport` (`photo_import`) | `vision_model` (the model that proposed the objects, or null if the user marked them all), `calibration`, `observations` (≤ 60, unique IDs, each object linked at most once), `visible_text` (text read from the photo, recorded as content, never followed) |
+| `PhotoCalibration` | `reference` (a `FloorRectangle`), `image_to_floor` (a 3 × 3 homography, row-major, mapping (u, v, 1) on the photo to (x, z, w) on the floor, y = 0, valid only for floor points), `camera` (`CameraEstimate`), `notes` |
+| `FloorRectangle` | `feature` (for example "rug"), four `corners` going around it (corner 0 → 1 is the width, 1 → 2 the depth), `width` and `depth` as `Length` with evidence; at least one side must be `user_supplied` |
+| `CameraEstimate` | `vertical_fov_deg`, `fov_basis` (`from_rectangle`: solved from the rectangle's perspective; `from_sides`: from its two given sides, for a rectangle seen face-on; `assumed`: a typical lens), `position_m` in the scene frame |
+| `PhotoObservation` | `id`, `label`, `box`, `floor_contact` and `contact_basis` (`box_bottom`, `model_point` or `user`; both null or both set), `found_by` (`model` or `user`), `decision` (`accepted` or `rejected`), `object_id` (set exactly when accepted), `notes` |
+
+Image positions (`ImagePoint`, `ImageBox`) are fractions (0–1) of the displayed width and height, from the top-left, so they do not depend on the photo's resolution. The scene frame of a photo project has +X to the right of the photo and the camera on the +Z side, looking towards −Z. Every accepted observation's `object_id` must be in the scene or have been removed through the edit log.
+
+**Objects from a photo** are generated assets (see [Generated objects](#generated-objects-050-gen-01)) with `generation.method: photo`. `description` names what was seen (required), and `language_model` is the vision model, or null for an object the user marked.
+
+**Dimension evidence** for photo objects (set in `apps/web/src/photo/world.ts` and `generated_assets.py`):
+
+| How the size was settled | `origin` | `review_status` | `source_ref` |
+| --- | --- | --- | --- |
+| Visible width or depth, measured from the outline with the user's floor rectangle (`ReviewedLength.basis: photo`) | `inferred` | `unreviewed` | `From photo <file> (<observation id>): the visible front (or side) projected onto the floor with the <feature> as scale reference (approximate)` |
+| Height, from the outline and the reconstructed camera (`basis: photo`) | `inferred` | `unreviewed` | `From photo <file> (<observation id>): estimated from the photo with the reconstructed camera (approximate)` |
+| Hidden side, from the label's typical proportions (`basis: photo`) | `inferred` | `unreviewed` | `From photo <file> (<observation id>): hidden in the photo; estimated from the typical proportions of a <label> (approximate)` |
+| Typed by the user while reviewing (`basis: entered`) | `user_supplied` | `confirmed` | `Entered by the user while reviewing the generated object` |
+
+`ReviewedLength.source_ref` is required exactly when `basis` is `photo`. The scale reference is drawn as a `reference` object: a side the user measured is `user_supplied`/`confirmed` (`Measured by the user: …`), and a depth they did not give is `inferred`/`unreviewed` (`Derived from the photo's perspective (approximate)`). The floor slab is a `default` placeholder sized around the objects, not the real room. One measured length never makes heights, hidden sides or derived depths exact.
+
+**Source photo storage and reopening (ADR-038).** The original bytes are stored unchanged at `photos/<sha256>.<ext>` in the source library `RWS_SOURCES_DIR` (default `data/sources`, git-ignored). They are uploaded with `POST /api/v1/sources/photos?filename=…[&expected_sha256=…]` (streamed, 15 MB cap, format by content, idempotent; returns a `StoredPhoto`) and served at `GET /api/v1/sources/files/photos/<sha256>.<ext>`. The project JSON never embeds the photo.
+
+- `POST /api/v1/projects/validate` checks every photo source. A missing file is refused at `/sources/<i>/image/uri`; a file with different bytes at `/sources/<i>/sha256`.
+- With `?missing_sources=allow` a missing photo is not an error; it is listed in the report instead. A file with the wrong hash is always refused.
+- Re-attaching uploads the chosen file with `expected_sha256`; a different file gets 409 and nothing is written. Nothing is ever substituted.
+
+**`ValidationReport`** gains `photo_file_count` (source photos found with the recorded sha256) and `missing_source_files` (photos absent from the library, listed only when the caller allowed opening without them).
+
+**Image analysis messages** (API requests and responses, not project records): `ImageAnalysisRequest` (the browser's metadata-free, downscaled copy: media type, base64 data, pixel size, and the original's sha256, which selects recorded answers in offline tests and is never sent to the model) and `ImageProposalResult` (`outcome` `proposal` or `unsupported`, the proposed objects, suggested floor rectangles and visible text, the API's `checks`, and the `ProviderRun`). `AssistStatus` gains `vision_model`.

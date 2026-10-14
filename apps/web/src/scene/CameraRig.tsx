@@ -17,9 +17,18 @@ export type CameraMode = "orbit" | "top" | "walk";
 type OrbitControlsImpl = ComponentRef<typeof OrbitControls>;
 type MapControlsImpl = ComponentRef<typeof MapControls>;
 
+/** A viewpoint to show, such as the camera that took a source photo (vertical field of view). */
+export interface FixedView {
+  position: Vec3Tuple;
+  target: Vec3Tuple;
+  fovDeg: number;
+}
+
 export interface ViewCommand {
-  type: "frame-selection" | "frame-all" | "reset-walk";
+  type: "frame-selection" | "frame-all" | "reset-walk" | "fixed-view";
   nonce: number;
+  /** For "fixed-view" only. */
+  view?: FixedView;
 }
 
 /** Camera state reported to the page (for overlays and tests). */
@@ -48,6 +57,8 @@ interface RigProps {
 const ORBIT_FOV = 45;
 const WALK_FOV = 70;
 const ANIMATION_MS = 450;
+/** Orbit tilt limit: just above the horizon, so the camera does not dip under the floor. */
+const MAX_POLAR = Math.PI / 2 - 0.04;
 
 const round = (v: Vector3): Vec3Tuple => [Math.round(v.x * 1000) / 1000, Math.round(v.y * 1000) / 1000, Math.round(v.z * 1000) / 1000];
 
@@ -103,11 +114,26 @@ function OrbitRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps)
     const target = controls.current.target;
     const direction = camera.position.clone().sub(target).normalize().toArray();
     const to =
-      cmd.type === "frame-selection" && selectedBox
-        ? frameBox(selectedBox, ORBIT_FOV, aspect, direction, 0.6, 1.2)
-        : cmd.type === "frame-all"
-          ? frameBox(sceneBox, ORBIT_FOV, aspect)
-          : null;
+      cmd.type === "fixed-view" && cmd.view
+        ? { position: cmd.view.position, target: cmd.view.target }
+        : cmd.type === "frame-selection" && selectedBox
+          ? frameBox(selectedBox, ORBIT_FOV, aspect, direction, 0.6, 1.2)
+          : cmd.type === "frame-all"
+            ? frameBox(sceneBox, ORBIT_FOV, aspect)
+            : null;
+    // A fixed view brings its own lens (a photo's); framing goes back to the orbit lens.
+    const fov = cmd.type === "fixed-view" && cmd.view ? cmd.view.fovDeg : ORBIT_FOV;
+    if (to && camera.fov !== fov) {
+      camera.fov = fov;
+      camera.updateProjectionMatrix();
+    }
+    // A photo is often taken looking almost level, beyond the orbit's usual tilt limit; allow
+    // that view's tilt (the camera stays where the photo was taken, above the floor).
+    if (to) {
+      const offset = new Vector3(...to.position).sub(new Vector3(...to.target));
+      const polar = Math.acos(Math.min(1, Math.max(-1, offset.y / Math.max(offset.length(), 1e-9))));
+      controls.current.maxPolarAngle = cmd.type === "fixed-view" ? Math.max(MAX_POLAR, polar + 0.01) : MAX_POLAR;
+    }
     if (to) {
       animation.current = { from: { position: camera.position.toArray(), target: target.toArray() }, to, start: performance.now() };
       invalidate();
@@ -136,7 +162,7 @@ function OrbitRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps)
       makeDefault
       enableDamping
       dampingFactor={0.12}
-      maxPolarAngle={Math.PI / 2 - 0.04}
+      maxPolarAngle={MAX_POLAR}
       minDistance={1.2}
       maxDistance={160}
     />

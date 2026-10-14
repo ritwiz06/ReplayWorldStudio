@@ -10,7 +10,9 @@ export type LoadFailure = ApiFailure | { kind: "file"; message: string };
 export type SceneSource =
   | { kind: "fixture"; name: FixtureName }
   | { kind: "file"; filename: string; report: ValidationReport }
-  | { kind: "upgrade"; filename: string; fromVersion: string };
+  | { kind: "upgrade"; filename: string; fromVersion: string }
+  /** A world just built from a photo; not saved yet. */
+  | { kind: "photo"; filename: string };
 
 export type SceneState =
   | { status: "loading" }
@@ -27,7 +29,19 @@ export type FileCheck =
       /** The file's text, kept when its only problem may be missing generated models. */
       restorable: string | null;
       restore?: { busy: boolean; messages: string[] };
+      /** A source photo the file names is not in this computer's source library. */
+      photoMissing?: { text: string; filename: string; sha256: string; busy: boolean; message: string | null };
     };
+
+/** The photo source a rejection is about, when the only problem is its missing file. */
+function missingPhoto(data: unknown, error: LoadFailure): { filename: string; sha256: string } | null {
+  if (error.kind !== "http" || typeof data !== "object" || data === null || !("sources" in data) || !Array.isArray(data.sources)) return null;
+  const sources = data.sources as { filename?: unknown; sha256?: unknown }[];
+  const about = error.issues.map((issue) => /^\/sources\/(\d+)\/image\/uri$/.exec(issue.path));
+  if (about.length === 0 || about.some((m) => !m)) return null;
+  const source = sources[Number(about[0]![1])];
+  return typeof source?.filename === "string" && typeof source.sha256 === "string" ? { filename: source.filename, sha256: source.sha256 } : null;
+}
 
 /** True when the API rejected the file because a generated model file is missing or damaged:
  * such models can be rebuilt from the specification recorded in the project itself. */
@@ -174,6 +188,11 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
 
       const verdict = await client.validateProjectDocument(text);
       if (!verdict.ok) {
+        const photo = missingPhoto(data, verdict.error);
+        if (photo) {
+          setFileCheck({ status: "rejected", filename, error: verdict.error, restorable: null, photoMissing: { text, ...photo, busy: false, message: null } });
+          return;
+        }
         reject(verdict.error, generatedModelProblem(data, verdict.error) ? text : null);
         return;
       }
@@ -191,6 +210,49 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
   );
 
   const dismissFileCheck = useCallback(() => setFileCheck({ status: "idle" }), []);
+
+  /** Re-attach the original photo a file names (it must have the recorded sha256), then open
+   * the file again through the usual checks. A different photo is refused; nothing is replaced. */
+  const attachPhotoAndReopen = useCallback(
+    async (photo: File) => {
+      if (fileCheck.status !== "rejected" || !fileCheck.photoMissing) return;
+      const check = fileCheck;
+      const missing = fileCheck.photoMissing;
+      setFileCheck({ ...check, photoMissing: { ...missing, busy: true, message: null } });
+      const stored = await client.uploadPhoto(photo, missing.filename, missing.sha256);
+      if (!stored.ok) {
+        const message =
+          stored.error.kind === "http" && stored.error.status === 409
+            ? `${photo.name} is not the original photo (its sha256 differs), so it was not used.`
+            : stored.error.message;
+        setFileCheck({ ...check, photoMissing: { ...missing, busy: false, message } });
+        return;
+      }
+      await openFile(new File([missing.text], check.filename, { type: "application/json" }));
+    },
+    [client, fileCheck, openFile],
+  );
+
+  /** Open a file whose photo is missing anyway: objects and evidence stay, the photo view does not. */
+  const openWithoutPhoto = useCallback(async () => {
+    if (fileCheck.status !== "rejected" || !fileCheck.photoMissing) return;
+    const { filename, photoMissing } = fileCheck;
+    const verdict = await client.validateProjectDocument(photoMissing.text, undefined, true);
+    const local = validateProject(JSON.parse(photoMissing.text));
+    if (!verdict.ok || !local.ok) {
+      setFileCheck({ ...fileCheck, photoMissing: { ...photoMissing, message: verdict.ok ? "The file does not match the contract." : verdict.error.message } });
+      return;
+    }
+    setFileCheck({ status: "idle" });
+    const project = local.value;
+    offerReplacement(`open ${filename}`, () => replace(project, { kind: "file", filename, report: verdict.value }, project.scene.revision));
+  }, [client, fileCheck, offerReplacement, replace]);
+
+  /** Open a project built in the editor (a world from a photo); it is unsaved until saved. */
+  const loadCreated = useCallback(
+    (project: Project, filename: string) => offerReplacement(`open the world built from ${filename}`, () => replace(project, { kind: "photo", filename }, null)),
+    [offerReplacement, replace],
+  );
 
   /** Rebuild the rejected file's missing generated models from its recorded specifications,
    * then open it again (through the same API checks) if every model could be restored. */
@@ -307,6 +369,9 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
     openFile,
     dismissFileCheck,
     restoreAndReopen,
+    attachPhotoAndReopen,
+    openWithoutPhoto,
+    loadCreated,
     execute,
     undo,
     redo,

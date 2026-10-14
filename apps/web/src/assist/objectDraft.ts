@@ -183,7 +183,7 @@ export function newPart(draft: ObjectDraft, shape: GeometryPart["shape"]): Geome
 }
 
 export function toAssetRequest(draft: ObjectDraft): GeneratedAssetRequest {
-  const review = (key: DimensionKey) => ({ ...draft.dimensions[key] });
+  const review = (key: DimensionKey) => ({ ...draft.dimensions[key], source_ref: null });
   return {
     name: draft.name.trim(),
     kind: "equipment",

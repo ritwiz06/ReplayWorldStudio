@@ -21,8 +21,11 @@ from .assist import (
     GeneratedModel,
     GeneratedModelRequest,
     GeneratedModelRestoreReport,
+    ImageAnalysisRequest,
+    ImageProposalResult,
     ObjectProposalRequest,
     ObjectProposalResult,
+    StoredPhoto,
 )
 from .models import (
     SCHEMA_VERSION,
@@ -50,6 +53,9 @@ ROOT_MODELS: Final[tuple[type[BaseModel], ...]] = (
     GeneratedModel,
     GeneratedAssetRequest,
     GeneratedModelRestoreReport,
+    ImageAnalysisRequest,
+    ImageProposalResult,
+    StoredPhoto,
 )
 BUNDLE_ID: Final = f"urn:replay-world:contracts:{SCHEMA_VERSION}"
 

@@ -188,7 +188,7 @@ test("edits, undoes and redoes, saves and reopens the demo with every value inta
   expect(first.download.suggestedFilename()).toBe("proj-industrial-demo-r14.json");
   await expect(page.getByTestId("save-state")).toHaveText("No unsaved changes");
   const saved = JSON.parse(first.text) as SavedProject;
-  expect(saved.schema_version).toBe("0.5.0");
+  expect(saved.schema_version).toBe("0.6.0");
   expect(saved.fixture?.kind).toBe("demonstration"); // still labelled synthetic
   expect(saved.scene.revision).toBe(14);
   expect(saved.scene.objects).toHaveLength(17);
@@ -276,27 +276,30 @@ test("reviews older project files before upgrading and keeps the scene for unkno
 
   // 0.1.0: the notes are shown and nothing changes until the user decides.
   await input.setInputFiles(repo("fixtures/legacy/foundation-scene-0.1.0.json").pathname);
-  await expect(review).toContainText("This file uses contract 0.1.0. The API upgraded a copy to 0.5.0");
+  await expect(review).toContainText("This file uses contract 0.1.0. The API upgraded a copy to 0.6.0");
   const notes = review.getByTestId("upgrade-notes");
   await expect(notes.locator("li").first()).toHaveText("schema_version 0.1.0 -> 0.2.0");
   await expect(notes).toContainText("obj-packing-station: box origin 'inferred' applied to width, height and depth");
-  await expect(notes.locator("li").nth(-2)).toHaveText("schema_version 0.3.0 -> 0.4.0 (adds an empty scene edit log; no values or evidence changed)");
-  await expect(notes.locator("li").last()).toHaveText("schema_version 0.4.0 -> 0.5.0 (adds 'generation: null' to 0 catalog assets; no values or evidence changed)");
+  await expect(notes.locator("li").nth(-3)).toHaveText("schema_version 0.3.0 -> 0.4.0 (adds an empty scene edit log; no values or evidence changed)");
+  await expect(notes.locator("li").nth(-2)).toHaveText("schema_version 0.4.0 -> 0.5.0 (adds 'generation: null' to 0 catalog assets; no values or evidence changed)");
+  await expect(notes.locator("li").last()).toHaveText("schema_version 0.5.0 -> 0.6.0 (adds 'image: null' and 'photo_import: null' to 1 source; no values or evidence changed)");
   await expect(source).toHaveText("API industrial demo");
   const [download] = await Promise.all([page.waitForEvent("download"), review.getByRole("button", { name: "Download upgraded file" }).click()]);
-  expect(download.suggestedFilename()).toBe("foundation-scene-0.1.0-0.5.0.json");
+  expect(download.suggestedFilename()).toBe("foundation-scene-0.1.0-0.6.0.json");
   const upgraded = JSON.parse(readFileSync((await download.path())!, "utf8")) as SavedProject;
-  expect([upgraded.schema_version, upgraded.scene.edit_log]).toEqual(["0.5.0", []]);
-  await expect(review).toContainText("Upgraded copy downloaded as foundation-scene-0.1.0-0.5.0.json");
+  expect([upgraded.schema_version, upgraded.scene.edit_log]).toEqual(["0.6.0", []]);
+  await expect(review).toContainText("Upgraded copy downloaded as foundation-scene-0.1.0-0.6.0.json");
   await review.getByRole("button", { name: "Cancel" }).click();
   await expect(source).toHaveText("API industrial demo");
 
   // 0.2.0: open the upgraded copy; it counts as unsaved until saved in the new version.
-  // The same content in contract 0.2.0: no edit log, and no generation records on assets.
-  const current = JSON.parse(read("fixtures/scenes/foundation-scene.json")) as { scene: Record<string, unknown>; catalog: Record<string, unknown>[] };
+  // The same content in contract 0.2.0: no edit log, no generation records on assets and no
+  // photo fields on sources.
+  const current = JSON.parse(read("fixtures/scenes/foundation-scene.json")) as { scene: Record<string, unknown>; catalog: Record<string, unknown>[]; sources: Record<string, unknown>[] };
   const { edit_log: _, ...legacyScene } = current.scene;
   const legacyCatalog = current.catalog.map(({ generation: _g, ...asset }) => asset);
-  await upload("plan-0.2.0.json", { ...current, schema_version: "0.2.0", catalog: legacyCatalog, scene: legacyScene });
+  const legacySources = current.sources.map(({ image: _i, photo_import: _p, ...source }) => source);
+  await upload("plan-0.2.0.json", { ...current, schema_version: "0.2.0", catalog: legacyCatalog, scene: legacyScene, sources: legacySources });
   await expect(review).toContainText("This file uses contract 0.2.0");
   await review.getByRole("button", { name: "Open upgraded project" }).click();
   await expect(source).toHaveText("plan-0.2.0.json (upgraded from 0.2.0; not saved yet)");

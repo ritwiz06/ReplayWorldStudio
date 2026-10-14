@@ -40,6 +40,7 @@ def test_fixture_column_plan_point_lands_at_its_world_position(fixture_text: str
     project = Project.model_validate_json(fixture_text)
     source = project.sources[0]
     t = source.source_to_world
+    assert t is not None, "a plan source always has a source-to-world transform"
     assert t.metres_per_source_unit == METRES_PER_UNIT[t.source_unit]
     column = next(o for o in project.scene.objects if o.id == "obj-column-c1")
     for axis in (column.dimensions.width, column.dimensions.depth):

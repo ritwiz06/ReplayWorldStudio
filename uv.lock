@@ -403,7 +403,7 @@ wheels = [
 
 [[package]]
 name = "replay-world-api"
-version = "0.5.0"
+version = "0.6.0"
 source = { editable = "services/api" }
 dependencies = [
     { name = "fastapi" },
@@ -420,7 +420,7 @@ requires-dist = [
 
 [[package]]
 name = "replay-world-contracts"
-version = "0.5.0"
+version = "0.6.0"
 source = { editable = "packages/contracts" }
 dependencies = [
     { name = "pydantic" },

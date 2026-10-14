@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.5.0",
+  "$id": "urn:replay-world:contracts:0.6.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.5.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.6.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -49,6 +49,15 @@
     },
     "GeneratedModelRestoreReport": {
       "$ref": "#/$defs/GeneratedModelRestoreReport"
+    },
+    "ImageAnalysisRequest": {
+      "$ref": "#/$defs/ImageAnalysisRequest"
+    },
+    "ImageProposalResult": {
+      "$ref": "#/$defs/ImageProposalResult"
+    },
+    "StoredPhoto": {
+      "$ref": "#/$defs/StoredPhoto"
     }
   },
   "required": [
@@ -66,18 +75,22 @@
     "GeneratedModelRequest",
     "GeneratedModel",
     "GeneratedAssetRequest",
-    "GeneratedModelRestoreReport"
+    "GeneratedModelRestoreReport",
+    "ImageAnalysisRequest",
+    "ImageProposalResult",
+    "StoredPhoto"
   ],
   "additionalProperties": false,
   "$defs": {
     "AssetGeneration": {
       "additionalProperties": false,
-      "description": "How a generated asset was made, so it can be reviewed, rebuilt and never mistaken for\na measured or vendor model.\n\n``described``: drafted by ``language_model`` from ``description`` and reviewed by a person.\n``builder``: assembled by a person in the object builder; no language model was involved.",
+      "description": "How a generated asset was made, so it can be reviewed, rebuilt and never mistaken for\na measured or vendor model.\n\n``described``: drafted by ``language_model`` from ``description`` and reviewed by a person.\n``builder``: assembled by a person in the object builder; no language model was involved.\n``photo``: a bounded shape for an object seen in a photo source; ``description`` names what\nwas seen, and ``language_model`` is the vision model that found it (null when the person\nmarked the object themselves).",
       "properties": {
         "method": {
           "enum": [
             "described",
-            "builder"
+            "builder",
+            "photo"
           ],
           "type": "string"
         },
@@ -249,6 +262,19 @@
             }
           ]
         },
+        "vision_model": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The model that looks at photos (image import), when one is configured."
+        },
         "message": {
           "maxLength": 500,
           "minLength": 1,
@@ -261,6 +287,7 @@
         "service",
         "base_url",
         "model",
+        "vision_model",
         "message"
       ],
       "title": "AssistStatus",
@@ -291,6 +318,36 @@
         "after"
       ],
       "title": "AxisChange",
+      "type": "object"
+    },
+    "CameraEstimate": {
+      "additionalProperties": false,
+      "description": "The camera reconstructed from the floor rectangle (in the scene frame).",
+      "properties": {
+        "vertical_fov_deg": {
+          "exclusiveMaximum": 170,
+          "exclusiveMinimum": 1,
+          "type": "number"
+        },
+        "fov_basis": {
+          "description": "from_rectangle: solved from the rectangle's perspective; from_sides: solved from its two user-given side lengths (a rectangle seen face-on); assumed: a typical lens was assumed because neither could determine it.",
+          "enum": [
+            "from_rectangle",
+            "from_sides",
+            "assumed"
+          ],
+          "type": "string"
+        },
+        "position_m": {
+          "$ref": "#/$defs/Vec3"
+        }
+      },
+      "required": [
+        "vertical_fov_deg",
+        "fov_basis",
+        "position_m"
+      ],
+      "title": "CameraEstimate",
       "type": "object"
     },
     "CatalogAsset": {
@@ -721,6 +778,65 @@
       "title": "FixtureLabel",
       "type": "object"
     },
+    "FloorRectangle": {
+      "additionalProperties": false,
+      "description": "A rectangle lying on the floor, marked by the user on the photo: the scale reference.\n\n``corners`` go around the rectangle; corner 0 to 1 is the ``width``, corner 1 to 2 the\n``depth``. A side the user measured is ``user_supplied``; a side they did not know is\nderived from the photo's perspective and stays ``inferred``.",
+      "properties": {
+        "feature": {
+          "description": "What the rectangle is, e.g. 'rug' or 'floor tiles'.",
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "corners": {
+          "items": {
+            "$ref": "#/$defs/ImagePoint"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+        },
+        "width": {
+          "$ref": "#/$defs/Length"
+        },
+        "depth": {
+          "$ref": "#/$defs/Length"
+        }
+      },
+      "required": [
+        "feature",
+        "corners",
+        "width",
+        "depth"
+      ],
+      "title": "FloorRectangle",
+      "type": "object"
+    },
+    "FloorRectangleSuggestion": {
+      "additionalProperties": false,
+      "description": "A rectangle the model thinks lies on the floor: only a starting point for the user.",
+      "properties": {
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "corners": {
+          "items": {
+            "$ref": "#/$defs/ImagePoint"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+        }
+      },
+      "required": [
+        "label",
+        "corners"
+      ],
+      "title": "FloorRectangleSuggestion",
+      "type": "object"
+    },
     "GeneratedAssetRequest": {
       "additionalProperties": false,
       "description": "Turn a reviewed proposal (or a builder result) into a catalog asset with a stored model.",
@@ -741,7 +857,8 @@
         "method": {
           "enum": [
             "described",
-            "builder"
+            "builder",
+            "photo"
           ],
           "type": "string"
         },
@@ -1175,7 +1292,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.5.0",
+          "const": "0.6.0",
           "type": "string"
         }
       },
@@ -1186,6 +1303,194 @@
         "schema_version"
       ],
       "title": "HealthResponse",
+      "type": "object"
+    },
+    "ImageAnalysisRequest": {
+      "additionalProperties": false,
+      "description": "A metadata-free, downscaled copy of the user's photo, sent for object proposals.\n\n``original_sha256`` identifies the user's original file (it selects recorded answers in\noffline tests); it is never sent to the language model.",
+      "properties": {
+        "media_type": {
+          "enum": [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+          ],
+          "type": "string"
+        },
+        "data_base64": {
+          "maxLength": 6000000,
+          "minLength": 16,
+          "type": "string"
+        },
+        "width_px": {
+          "maximum": 2048,
+          "minimum": 16,
+          "type": "integer"
+        },
+        "height_px": {
+          "maximum": 2048,
+          "minimum": 16,
+          "type": "integer"
+        },
+        "original_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "media_type",
+        "data_base64",
+        "width_px",
+        "height_px",
+        "original_sha256"
+      ],
+      "title": "ImageAnalysisRequest",
+      "type": "object"
+    },
+    "ImageBox": {
+      "additionalProperties": false,
+      "description": "An axis-aligned box on an image, in the same fractions as :class:`ImagePoint`.",
+      "properties": {
+        "left": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "top": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "right": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "bottom": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "left",
+        "top",
+        "right",
+        "bottom"
+      ],
+      "title": "ImageBox",
+      "type": "object"
+    },
+    "ImagePoint": {
+      "additionalProperties": false,
+      "description": "A point on an image as fractions of its displayed width (``u``, from the left) and height\n(``v``, from the top). Independent of the image's resolution.",
+      "properties": {
+        "u": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "v": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "u",
+        "v"
+      ],
+      "title": "ImagePoint",
+      "type": "object"
+    },
+    "ImageProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/ProposedPhotoObject"
+          },
+          "maxItems": 40,
+          "type": "array"
+        },
+        "floor_rectangles": {
+          "items": {
+            "$ref": "#/$defs/FloorRectangleSuggestion"
+          },
+          "maxItems": 3,
+          "type": "array"
+        },
+        "visible_text": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        }
+      },
+      "required": [
+        "objects",
+        "floor_rectangles",
+        "visible_text"
+      ],
+      "title": "ImageProposal",
+      "type": "object"
+    },
+    "ImageProposalResult": {
+      "additionalProperties": false,
+      "description": "The API's answer to a photo: proposed objects, or why there are none.",
+      "properties": {
+        "outcome": {
+          "enum": [
+            "proposal",
+            "unsupported"
+          ],
+          "type": "string"
+        },
+        "proposal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImageProposal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checks": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "provider": {
+          "$ref": "#/$defs/ProviderRun"
+        }
+      },
+      "required": [
+        "outcome",
+        "proposal",
+        "message",
+        "checks",
+        "provider"
+      ],
+      "title": "ImageProposalResult",
       "type": "object"
     },
     "KnownParameter": {
@@ -1703,6 +2008,177 @@
       "title": "ObjectRemoved",
       "type": "object"
     },
+    "PhotoCalibration": {
+      "additionalProperties": false,
+      "description": "How positions on the photo's floor become scene metres.\n\n``image_to_floor`` is a 3 x 3 homography, row-major, mapping (u, v, 1) on the photo to\n(x, z, w) on the scene floor (y = 0), valid only for points on the floor plane. The scene\nframe has +X to the right of the photo and the camera on the +Z side, looking towards -Z.",
+      "properties": {
+        "reference": {
+          "$ref": "#/$defs/FloorRectangle"
+        },
+        "image_to_floor": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 9,
+          "minItems": 9,
+          "type": "array"
+        },
+        "camera": {
+          "$ref": "#/$defs/CameraEstimate"
+        },
+        "notes": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "reference",
+        "image_to_floor",
+        "camera",
+        "notes"
+      ],
+      "title": "PhotoCalibration",
+      "type": "object"
+    },
+    "PhotoImport": {
+      "additionalProperties": false,
+      "description": "The reviewed result of importing one photo.",
+      "properties": {
+        "vision_model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LanguageModelRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The model that proposed the objects; null if the person marked them all."
+        },
+        "calibration": {
+          "$ref": "#/$defs/PhotoCalibration"
+        },
+        "observations": {
+          "items": {
+            "$ref": "#/$defs/PhotoObservation"
+          },
+          "maxItems": 60,
+          "type": "array"
+        },
+        "visible_text": {
+          "description": "Text read from the photo. Recorded as content, never followed as instructions.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "vision_model",
+        "calibration",
+        "observations",
+        "visible_text"
+      ],
+      "title": "PhotoImport",
+      "type": "object"
+    },
+    "PhotoObservation": {
+      "additionalProperties": false,
+      "description": "One object seen in the photo, as reviewed: accepted (linked to its scene object) or not.",
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "box": {
+          "$ref": "#/$defs/ImageBox"
+        },
+        "floor_contact": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImagePoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contact_basis": {
+          "anyOf": [
+            {
+              "enum": [
+                "box_bottom",
+                "model_point",
+                "user"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "found_by": {
+          "enum": [
+            "model",
+            "user"
+          ],
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "accepted",
+            "rejected"
+          ],
+          "type": "string"
+        },
+        "object_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notes": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "box",
+        "floor_contact",
+        "contact_basis",
+        "found_by",
+        "decision",
+        "object_id",
+        "notes"
+      ],
+      "title": "PhotoObservation",
+      "type": "object"
+    },
     "PlaceholderBoxVisual": {
       "additionalProperties": false,
       "description": "A plain labelled box sized from each instance's dimensions. Always provisional.",
@@ -1722,7 +2198,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.5.0",
+          "const": "0.6.0",
           "type": "string"
         },
         "id": {
@@ -1844,6 +2320,173 @@
       "title": "ProposedLength",
       "type": "object"
     },
+    "ProposedPhotoObject": {
+      "additionalProperties": false,
+      "description": "One object the vision model found, after the API's checks.",
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "category": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "template": {
+          "enum": [
+            "box",
+            "cabinet",
+            "table",
+            "chair",
+            "shelf",
+            "sofa",
+            "tank",
+            "conveyor",
+            "machine",
+            "screen",
+            "plant",
+            "pallet"
+          ],
+          "type": "string"
+        },
+        "material": {
+          "enum": [
+            "paint_light_grey",
+            "paint_anthracite",
+            "paint_white",
+            "paint_blue",
+            "paint_red",
+            "paint_green",
+            "paint_orange",
+            "safety_yellow",
+            "aluminium",
+            "stainless_steel",
+            "steel_dark",
+            "copper",
+            "rubber_black",
+            "plastic_black",
+            "plastic_grey",
+            "polycarbonate",
+            "glass_clear",
+            "hmi_screen",
+            "signal_green",
+            "signal_amber",
+            "signal_red",
+            "signal_white",
+            "estop_red",
+            "motor_blue",
+            "cardboard",
+            "wood",
+            "pallet_wood",
+            "concrete",
+            "fabric_grey",
+            "label_black"
+          ],
+          "type": "string"
+        },
+        "box": {
+          "$ref": "#/$defs/ImageBox"
+        },
+        "floor_contact": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ImagePoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contact_basis": {
+          "anyOf": [
+            {
+              "enum": [
+                "box_bottom",
+                "model_point"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "on_floor": {
+          "type": "boolean"
+        },
+        "visibility": {
+          "enum": [
+            "full",
+            "partly_hidden",
+            "mostly_hidden"
+          ],
+          "type": "string"
+        },
+        "cut_off": {
+          "description": "Image edges the object's box touches: it may continue outside the photo.",
+          "items": {
+            "enum": [
+              "left",
+              "right",
+              "top",
+              "bottom"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "facing": {
+          "enum": [
+            "toward_camera",
+            "left",
+            "right",
+            "away",
+            "unknown"
+          ],
+          "type": "string"
+        },
+        "size_guess_m": {
+          "$ref": "#/$defs/Extent3"
+        },
+        "suggest_accept": {
+          "type": "boolean"
+        },
+        "notes": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "category",
+        "template",
+        "material",
+        "box",
+        "floor_contact",
+        "contact_basis",
+        "on_floor",
+        "visibility",
+        "cut_off",
+        "facing",
+        "size_guess_m",
+        "suggest_accept",
+        "notes"
+      ],
+      "title": "ProposedPhotoObject",
+      "type": "object"
+    },
     "ProviderRun": {
       "additionalProperties": false,
       "description": "Which model answered, how, and how often it had to be asked.",
@@ -1958,11 +2601,12 @@
       "description": "A dimension as the user left it after review.",
       "properties": {
         "basis": {
-          "description": "stated: in the description; inferred: estimated; entered: typed by the user.",
+          "description": "stated: in the description; inferred: estimated; entered: typed by the user; photo: derived from a photo with the user's scale reference (approximate).",
           "enum": [
             "stated",
             "inferred",
-            "entered"
+            "entered",
+            "photo"
           ],
           "type": "string"
         },
@@ -1980,12 +2624,26 @@
         },
         "confirmed": {
           "type": "boolean"
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "For a photo-derived value: how it was derived and from which observation."
         }
       },
       "required": [
         "basis",
         "quote",
-        "confirmed"
+        "confirmed",
+        "source_ref"
       ],
       "title": "ReviewedLength",
       "type": "object"
@@ -2151,6 +2809,7 @@
     },
     "SourceDocument": {
       "additionalProperties": false,
+      "description": "Where scene content came from.\n\nA drawing or plan has a single ``source_to_world`` transform. A ``photo`` has none - a\nperspective photo maps to the floor only through its calibration - and instead carries its\nstored ``image`` and the reviewed ``photo_import``.",
       "properties": {
         "id": {
           "description": "Stable, lowercase identifier. Never reused for a different entity.",
@@ -2162,7 +2821,8 @@
             "synthetic",
             "dxf",
             "pdf",
-            "png"
+            "png",
+            "photo"
           ],
           "type": "string"
         },
@@ -2190,7 +2850,14 @@
           ]
         },
         "source_to_world": {
-          "$ref": "#/$defs/SourceToWorldTransform"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceToWorldTransform"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "import_warnings": {
           "items": {
@@ -2199,6 +2866,26 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "image": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceImage"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "photo_import": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PhotoImport"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -2207,9 +2894,55 @@
         "filename",
         "sha256",
         "source_to_world",
-        "import_warnings"
+        "import_warnings",
+        "image",
+        "photo_import"
       ],
       "title": "SourceDocument",
+      "type": "object"
+    },
+    "SourceImage": {
+      "additionalProperties": false,
+      "description": "The stored image file of a photo source (its sha256 is the source's ``sha256``).",
+      "properties": {
+        "uri": {
+          "pattern": "^photos/[0-9a-f]{64}\\.(?:jpg|png|webp)$",
+          "type": "string"
+        },
+        "media_type": {
+          "enum": [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+          ],
+          "type": "string"
+        },
+        "width_px": {
+          "description": "Displayed width (EXIF orientation applied).",
+          "maximum": 20000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "height_px": {
+          "description": "Displayed height (EXIF orientation applied).",
+          "maximum": 20000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "bytes": {
+          "maximum": 15728640,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "uri",
+        "media_type",
+        "width_px",
+        "height_px",
+        "bytes"
+      ],
+      "title": "SourceImage",
       "type": "object"
     },
     "SourceToWorldTransform": {
@@ -2250,6 +2983,31 @@
         "translation_m"
       ],
       "title": "SourceToWorldTransform",
+      "type": "object"
+    },
+    "StoredPhoto": {
+      "additionalProperties": false,
+      "description": "A photo stored in the local source library, ready to be recorded as a project source.",
+      "properties": {
+        "filename": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "image": {
+          "$ref": "#/$defs/SourceImage"
+        }
+      },
+      "required": [
+        "filename",
+        "sha256",
+        "image"
+      ],
+      "title": "StoredPhoto",
       "type": "object"
     },
     "Transform": {
@@ -2417,7 +3175,7 @@
           "type": "string"
         },
         "to_version": {
-          "const": "0.5.0",
+          "const": "0.6.0",
           "type": "string"
         },
         "notes": {
@@ -2559,7 +3317,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.5.0",
+          "const": "0.6.0",
           "type": "string"
         },
         "project_id": {
@@ -2592,6 +3350,20 @@
           "description": "Records in the scene edit log.",
           "minimum": 0,
           "type": "integer"
+        },
+        "photo_file_count": {
+          "description": "Source photos found with matching sha256.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "missing_source_files": {
+          "description": "Source photos absent from the library, listed only when the caller allowed opening without them.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -2603,7 +3375,9 @@
         "model_file_count",
         "known_parameter_count",
         "unknown_parameter_count",
-        "edit_record_count"
+        "edit_record_count",
+        "photo_file_count",
+        "missing_source_files"
       ],
       "title": "ValidationReport",
       "type": "object"

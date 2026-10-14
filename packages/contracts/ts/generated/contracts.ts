@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.5.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.6.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -24,9 +24,12 @@ export interface ReplayWorldContracts {
   GeneratedModel: GeneratedModel;
   GeneratedAssetRequest: GeneratedAssetRequest;
   GeneratedModelRestoreReport: GeneratedModelRestoreReport;
+  ImageAnalysisRequest: ImageAnalysisRequest;
+  ImageProposalResult: ImageProposalResult;
+  StoredPhoto: StoredPhoto;
 }
 export interface Project {
-  schema_version: "0.5.0";
+  schema_version: "0.6.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -57,16 +60,25 @@ export interface FixtureLabel {
   kind: "foundation" | "demonstration";
   note: string;
 }
+/**
+ * Where scene content came from.
+ *
+ * A drawing or plan has a single ``source_to_world`` transform. A ``photo`` has none - a
+ * perspective photo maps to the floor only through its calibration - and instead carries its
+ * stored ``image`` and the reviewed ``photo_import``.
+ */
 export interface SourceDocument {
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
   id: string;
-  kind: "synthetic" | "dxf" | "pdf" | "png";
+  kind: "synthetic" | "dxf" | "pdf" | "png" | "photo";
   filename: string | null;
   sha256: string | null;
-  source_to_world: SourceToWorldTransform;
+  source_to_world: SourceToWorldTransform | null;
   import_warnings: string[];
+  image: SourceImage | null;
+  photo_import: PhotoImport | null;
 }
 /**
  * Maps a 2D source plan (drawing) point to world metres.
@@ -94,6 +106,150 @@ export interface Vec3 {
   x: number;
   y: number;
   z: number;
+}
+/**
+ * The stored image file of a photo source (its sha256 is the source's ``sha256``).
+ */
+export interface SourceImage {
+  uri: string;
+  media_type: "image/jpeg" | "image/png" | "image/webp";
+  /**
+   * Displayed width (EXIF orientation applied).
+   */
+  width_px: number;
+  /**
+   * Displayed height (EXIF orientation applied).
+   */
+  height_px: number;
+  bytes: number;
+}
+/**
+ * The reviewed result of importing one photo.
+ */
+export interface PhotoImport {
+  /**
+   * The model that proposed the objects; null if the person marked them all.
+   */
+  vision_model: LanguageModelRef | null;
+  calibration: PhotoCalibration;
+  /**
+   * @maxItems 60
+   */
+  observations: PhotoObservation[];
+  /**
+   * Text read from the photo. Recorded as content, never followed as instructions.
+   */
+  visible_text: string[];
+}
+/**
+ * The language model that drafted a proposal: service, endpoint and exact model ID.
+ */
+export interface LanguageModelRef {
+  service: string;
+  base_url: string;
+  model: string;
+}
+/**
+ * How positions on the photo's floor become scene metres.
+ *
+ * ``image_to_floor`` is a 3 x 3 homography, row-major, mapping (u, v, 1) on the photo to
+ * (x, z, w) on the scene floor (y = 0), valid only for points on the floor plane. The scene
+ * frame has +X to the right of the photo and the camera on the +Z side, looking towards -Z.
+ */
+export interface PhotoCalibration {
+  reference: FloorRectangle;
+  /**
+   * @minItems 9
+   * @maxItems 9
+   */
+  image_to_floor: [number, number, number, number, number, number, number, number, number];
+  camera: CameraEstimate;
+  notes: string[];
+}
+/**
+ * A rectangle lying on the floor, marked by the user on the photo: the scale reference.
+ *
+ * ``corners`` go around the rectangle; corner 0 to 1 is the ``width``, corner 1 to 2 the
+ * ``depth``. A side the user measured is ``user_supplied``; a side they did not know is
+ * derived from the photo's perspective and stays ``inferred``.
+ */
+export interface FloorRectangle {
+  /**
+   * What the rectangle is, e.g. 'rug' or 'floor tiles'.
+   */
+  feature: string;
+  /**
+   * @minItems 4
+   * @maxItems 4
+   */
+  corners: [ImagePoint, ImagePoint, ImagePoint, ImagePoint];
+  width: Length;
+  depth: Length;
+}
+/**
+ * A point on an image as fractions of its displayed width (``u``, from the left) and height
+ * (``v``, from the top). Independent of the image's resolution.
+ */
+export interface ImagePoint {
+  u: number;
+  v: number;
+}
+/**
+ * A strictly positive length in metres that carries its own evidence.
+ */
+export interface Length {
+  /**
+   * Strictly positive length in metres.
+   */
+  value_m: number;
+  origin: "measured" | "user_supplied" | "supplier" | "inferred" | "default";
+  source_ref: string | null;
+  review_status: "unreviewed" | "confirmed";
+  uncertainty_m: UncertaintyBounds | null;
+}
+/**
+ * Inclusive bounds in the unit of the value they qualify. Not a calibrated probability.
+ */
+export interface UncertaintyBounds {
+  lower: number;
+  upper: number;
+}
+/**
+ * The camera reconstructed from the floor rectangle (in the scene frame).
+ */
+export interface CameraEstimate {
+  vertical_fov_deg: number;
+  /**
+   * from_rectangle: solved from the rectangle's perspective; from_sides: solved from its two user-given side lengths (a rectangle seen face-on); assumed: a typical lens was assumed because neither could determine it.
+   */
+  fov_basis: "from_rectangle" | "from_sides" | "assumed";
+  position_m: Vec3;
+}
+/**
+ * One object seen in the photo, as reviewed: accepted (linked to its scene object) or not.
+ */
+export interface PhotoObservation {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  id: string;
+  label: string;
+  box: ImageBox;
+  floor_contact: ImagePoint | null;
+  contact_basis: ("box_bottom" | "model_point" | "user") | null;
+  found_by: "model" | "user";
+  decision: "accepted" | "rejected";
+  object_id: string | null;
+  notes: string[];
+}
+/**
+ * An axis-aligned box on an image, in the same fractions as :class:`ImagePoint`.
+ */
+export interface ImageBox {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
 }
 /**
  * A reusable definition that scene objects instantiate by referencing its ``id``.
@@ -178,26 +334,6 @@ export interface Dimensions {
   depth: Length;
 }
 /**
- * A strictly positive length in metres that carries its own evidence.
- */
-export interface Length {
-  /**
-   * Strictly positive length in metres.
-   */
-  value_m: number;
-  origin: "measured" | "user_supplied" | "supplier" | "inferred" | "default";
-  source_ref: string | null;
-  review_status: "unreviewed" | "confirmed";
-  uncertainty_m: UncertaintyBounds | null;
-}
-/**
- * Inclusive bounds in the unit of the value they qualify. Not a calibrated probability.
- */
-export interface UncertaintyBounds {
-  lower: number;
-  upper: number;
-}
-/**
  * Where an asset definition came from. Vendor and third-party assets must cite it.
  *
  * ``generated`` marks an original provisional model built by the object generator from a
@@ -232,9 +368,12 @@ export interface UsageRights {
  *
  * ``described``: drafted by ``language_model`` from ``description`` and reviewed by a person.
  * ``builder``: assembled by a person in the object builder; no language model was involved.
+ * ``photo``: a bounded shape for an object seen in a photo source; ``description`` names what
+ * was seen, and ``language_model`` is the vision model that found it (null when the person
+ * marked the object themselves).
  */
 export interface AssetGeneration {
-  method: "described" | "builder";
+  method: "described" | "builder" | "photo";
   description: string | null;
   language_model: LanguageModelRef | null;
   generator: "rws-object-generator/1";
@@ -246,14 +385,6 @@ export interface AssetGeneration {
    */
   not_modelled: string[];
   unknown_properties: UnknownProperty[];
-}
-/**
- * The language model that drafted a proposal: service, endpoint and exact model ID.
- */
-export interface LanguageModelRef {
-  service: string;
-  base_url: string;
-  model: string;
 }
 /**
  * A bounded, data-only description of a generated model.
@@ -493,14 +624,14 @@ export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.5.0";
+  schema_version: "0.6.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.5.0";
+  schema_version: "0.6.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -517,6 +648,14 @@ export interface ValidationReport {
    * Records in the scene edit log.
    */
   edit_record_count: number;
+  /**
+   * Source photos found with matching sha256.
+   */
+  photo_file_count: number;
+  /**
+   * Source photos absent from the library, listed only when the caller allowed opening without them.
+   */
+  missing_source_files: string[];
 }
 /**
  * An older project document upgraded to the current contract and validated, for review.
@@ -529,7 +668,7 @@ export interface UpgradeReport {
    * Schema version of the submitted document.
    */
   from_version: string;
-  to_version: "0.5.0";
+  to_version: "0.6.0";
   notes: string[];
   project: Project;
   validation: ValidationReport;
@@ -560,6 +699,10 @@ export interface AssistStatus {
   service: string | null;
   base_url: string | null;
   model: string | null;
+  /**
+   * The model that looks at photos (image import), when one is configured.
+   */
+  vision_model: string | null;
   message: string;
 }
 export interface ObjectProposalRequest {
@@ -757,7 +900,7 @@ export interface GeneratedModel {
 export interface GeneratedAssetRequest {
   name: string;
   kind: "equipment" | "structure" | "reference";
-  method: "described" | "builder";
+  method: "described" | "builder" | "photo";
   description: string | null;
   language_model: LanguageModelRef | null;
   spec: GeometryDraft;
@@ -776,11 +919,15 @@ export interface ReviewedDimensions {
  */
 export interface ReviewedLength {
   /**
-   * stated: in the description; inferred: estimated; entered: typed by the user.
+   * stated: in the description; inferred: estimated; entered: typed by the user; photo: derived from a photo with the user's scale reference (approximate).
    */
-  basis: "stated" | "inferred" | "entered";
+  basis: "stated" | "inferred" | "entered" | "photo";
   quote: string | null;
   confirmed: boolean;
+  /**
+   * For a photo-derived value: how it was derived and from which observation.
+   */
+  source_ref: string | null;
 }
 /**
  * Result of rebuilding a project's missing generated models from their specifications.
@@ -798,4 +945,264 @@ export interface RestoredModel {
   uri: string;
   status: "present" | "restored" | "mismatch";
   message: string;
+}
+/**
+ * A metadata-free, downscaled copy of the user's photo, sent for object proposals.
+ *
+ * ``original_sha256`` identifies the user's original file (it selects recorded answers in
+ * offline tests); it is never sent to the language model.
+ */
+export interface ImageAnalysisRequest {
+  media_type: "image/jpeg" | "image/png" | "image/webp";
+  data_base64: string;
+  width_px: number;
+  height_px: number;
+  original_sha256: string;
+}
+/**
+ * The API's answer to a photo: proposed objects, or why there are none.
+ */
+export interface ImageProposalResult {
+  outcome: "proposal" | "unsupported";
+  proposal: ImageProposal | null;
+  message: string | null;
+  checks: string[];
+  provider: ProviderRun;
+}
+export interface ImageProposal {
+  /**
+   * @maxItems 40
+   */
+  objects: ProposedPhotoObject[];
+  /**
+   * @maxItems 3
+   */
+  floor_rectangles:
+    | []
+    | [FloorRectangleSuggestion]
+    | [FloorRectangleSuggestion, FloorRectangleSuggestion]
+    | [FloorRectangleSuggestion, FloorRectangleSuggestion, FloorRectangleSuggestion];
+  /**
+   * @maxItems 20
+   */
+  visible_text:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ];
+}
+/**
+ * One object the vision model found, after the API's checks.
+ */
+export interface ProposedPhotoObject {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  id: string;
+  label: string;
+  category: string;
+  template:
+    | "box"
+    | "cabinet"
+    | "table"
+    | "chair"
+    | "shelf"
+    | "sofa"
+    | "tank"
+    | "conveyor"
+    | "machine"
+    | "screen"
+    | "plant"
+    | "pallet";
+  material:
+    | "paint_light_grey"
+    | "paint_anthracite"
+    | "paint_white"
+    | "paint_blue"
+    | "paint_red"
+    | "paint_green"
+    | "paint_orange"
+    | "safety_yellow"
+    | "aluminium"
+    | "stainless_steel"
+    | "steel_dark"
+    | "copper"
+    | "rubber_black"
+    | "plastic_black"
+    | "plastic_grey"
+    | "polycarbonate"
+    | "glass_clear"
+    | "hmi_screen"
+    | "signal_green"
+    | "signal_amber"
+    | "signal_red"
+    | "signal_white"
+    | "estop_red"
+    | "motor_blue"
+    | "cardboard"
+    | "wood"
+    | "pallet_wood"
+    | "concrete"
+    | "fabric_grey"
+    | "label_black";
+  box: ImageBox;
+  floor_contact: ImagePoint | null;
+  contact_basis: ("box_bottom" | "model_point") | null;
+  on_floor: boolean;
+  visibility: "full" | "partly_hidden" | "mostly_hidden";
+  /**
+   * Image edges the object's box touches: it may continue outside the photo.
+   */
+  cut_off: ("left" | "right" | "top" | "bottom")[];
+  facing: "toward_camera" | "left" | "right" | "away" | "unknown";
+  size_guess_m: Extent3;
+  suggest_accept: boolean;
+  notes: string[];
+}
+/**
+ * A rectangle the model thinks lies on the floor: only a starting point for the user.
+ */
+export interface FloorRectangleSuggestion {
+  label: string;
+  /**
+   * @minItems 4
+   * @maxItems 4
+   */
+  corners: [ImagePoint, ImagePoint, ImagePoint, ImagePoint];
+}
+/**
+ * A photo stored in the local source library, ready to be recorded as a project source.
+ */
+export interface StoredPhoto {
+  filename: string;
+  sha256: string;
+  image: SourceImage;
 }

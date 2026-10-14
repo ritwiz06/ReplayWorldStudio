@@ -9,6 +9,8 @@ import { UnsavedChangesDialog, UpgradeReviewDialog } from "./components/Dialogs"
 import { Inspector } from "./components/Inspector";
 import { EditRejectedNotice, FileRejectedPanel, LoadErrorPanel, PlacementBanner } from "./components/Notices";
 import { ObjectList } from "./components/ObjectList";
+import { PhotoImport } from "./components/PhotoImport";
+import { SourcePhoto } from "./components/SourcePhoto";
 import { StartPanel } from "./components/StartPanel";
 import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
@@ -22,7 +24,7 @@ import { useAssistStatus } from "./hooks/useAssistStatus";
 import { summarise, useCatalogModels } from "./hooks/useCatalogModels";
 import { useHealth } from "./hooks/useHealth";
 import { useProject } from "./hooks/useProject";
-import type { CameraMode, CameraProbe, ViewCommand } from "./scene/CameraRig";
+import type { CameraMode, CameraProbe, FixedView, ViewCommand } from "./scene/CameraRig";
 import { type EditTool, SNAP_OFF, SNAP_ON } from "./scene/drag";
 import type { HandleProbe } from "./scene/EditHandles";
 import type { Vec3Tuple } from "./scene/fit";
@@ -86,8 +88,9 @@ export function App() {
     assist.status === "known" ? assist.assist.message : assist.status === "checking" ? "Checking the assistant…" : assist.message;
   const [start, setStart] = useState(() => !startSeen());
   const [create, setCreate] = useState<"describe" | "builder" | null>(null);
+  const [photoImport, setPhotoImport] = useState(false);
   const [rebuild, setRebuild] = useState<{ busy: boolean; message: string | null }>({ busy: false, message: null });
-  const overlayOpen = start || create !== null;
+  const overlayOpen = start || create !== null || photoImport;
   // Selection and placement belong to the project they were made in.
   const [selection, setSelection] = useState<{ loadId: number; id: string | null }>({ loadId: 0, id: null });
   const [placement, setPlacement] = useState<Placement | null>(null);
@@ -110,9 +113,25 @@ export function App() {
 
   const select = useCallback((id: string | null) => setSelection({ loadId, id }), [loadId]);
 
-  const issue = useCallback((type: ViewCommand["type"]) => {
-    setCommand((current) => ({ type, nonce: (current?.nonce ?? 0) + 1 }));
+  const issue = useCallback((type: ViewCommand["type"], view?: FixedView) => {
+    setCommand((current) => ({ type, nonce: (current?.nonce ?? 0) + 1, ...(view ? { view } : {}) }));
   }, []);
+  // A fixed view is shown in orbit mode; from another mode it waits until the orbit camera exists.
+  const pendingView = useRef<FixedView | null>(null);
+  const showView = useCallback(
+    (view: FixedView) => {
+      if (mode === "orbit") return issue("fixed-view", view);
+      pendingView.current = view;
+      setMode("orbit");
+    },
+    [issue, mode],
+  );
+  useEffect(() => {
+    if (mode !== "orbit" || !pendingView.current) return;
+    const view = pendingView.current;
+    pendingView.current = null;
+    issue("fixed-view", view);
+  }, [issue, mode]);
 
   // Camera state goes straight to a data attribute (for tests and debugging) instead of React
   // state, so the 3D scene does not re-render several times a second. Only the plan scale,
@@ -419,6 +438,9 @@ export function App() {
               restorable={fileCheck.restorable !== null}
               restore={fileCheck.restore}
               onRestore={() => void session.restoreAndReopen()}
+              photoMissing={fileCheck.photoMissing}
+              onAttachPhoto={(file) => void session.attachPhotoAndReopen(file)}
+              onOpenWithoutPhoto={() => void session.openWithoutPhoto()}
               onDismiss={session.dismissFileCheck}
             />
           )}
@@ -434,6 +456,7 @@ export function App() {
         )}
         {project && mode === "top" && <PlanOverlay pixelsPerMetre={pixelsPerMetre} />}
         {project && mode === "walk" && <WalkHud onReset={() => issue("reset-walk")} onExit={() => setMode("orbit")} />}
+        {project && <SourcePhoto key={`photo-${loadId}`} client={client} project={project} selectedId={selected?.id ?? null} onSelect={select} onView={showView} missingFiles={source?.kind === "file" ? source.report.missing_source_files : []} />}
         {project && mode !== "walk" && !activePlacement && (
           <ChangeBar
             key={loadId}
@@ -498,11 +521,27 @@ export function App() {
             closeStart();
             setCreate("builder");
           }}
+          onPhoto={() => {
+            closeStart();
+            setPhotoImport(true);
+          }}
           onOpenFile={(file) => {
             closeStart();
             void session.openFile(file);
           }}
           onClose={closeStart}
+        />
+      )}
+      {photoImport && !prompt && (
+        <PhotoImport
+          client={client}
+          assist={assist}
+          onClose={() => setPhotoImport(false)}
+          onCreated={(created, filename) => {
+            setPhotoImport(false);
+            if (mode === "walk") setMode("orbit");
+            session.loadCreated(created, filename);
+          }}
         />
       )}
       {create && !prompt && (

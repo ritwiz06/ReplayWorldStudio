@@ -5,9 +5,9 @@ from __future__ import annotations
 
 import base64
 import logging
-from typing import Annotated, Any, Final, NoReturn
+from typing import Annotated, Any, Final, Literal, NoReturn
 
-from fastapi import Body, FastAPI, HTTPException, Request
+from fastapi import Body, FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -23,10 +23,13 @@ from replay_world_contracts import (
     GeneratedModelRequest,
     GeneratedModelRestoreReport,
     HealthResponse,
+    ImageAnalysisRequest,
+    ImageProposalResult,
     KnownParameter,
     ObjectProposalRequest,
     ObjectProposalResult,
     Project,
+    StoredPhoto,
     UpgradeReport,
     ValidationErrorResponse,
     ValidationIssue,
@@ -40,11 +43,24 @@ from replay_world_contracts.migrations import (
 
 from . import __version__
 from .assist.edits import propose_edit
+from .assist.images import propose_image
 from .assist.proposals import AssistError, propose_object
-from .assist.provider import Provider, ProviderError, provider_from_settings
+from .assist.provider import (
+    Provider,
+    ProviderError,
+    provider_from_settings,
+    vision_provider_from_settings,
+)
 from .catalog_files import CatalogFileError, check_model_files, resolve_catalog_file
 from .generated_assets import create_generated_asset, restore_generated_models
 from .objects import GeneratorError, build_model, fit_to_envelope, gltf_visual, store_model
+from .photos import (
+    MAX_PHOTO_BYTES,
+    PhotoError,
+    check_source_files,
+    resolve_source_file,
+    store_photo,
+)
 from .settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -135,7 +151,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
 
     @app.post("/api/v1/projects/validate", openapi_extra=_PROJECT_BODY_DOC)
-    def validate_project(document: Annotated[Any, Body()]) -> ValidationReport:
+    def validate_project(
+        document: Annotated[Any, Body()],
+        missing_sources: Annotated[Literal["refuse", "allow"], Query()] = "refuse",
+    ) -> ValidationReport:
         version = document.get("schema_version") if isinstance(document, dict) else None
         if version in LEGACY_SCHEMA_VERSIONS:
             raise RequestValidationError(
@@ -152,7 +171,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 ]
             )
         project = _validated(document)
-        return _report(project, _checked_model_files(project))
+        models = _checked_model_files(project)
+        photos, missing = _checked_source_files(project, allow_missing=missing_sources == "allow")
+        return _report(project, models, photos, missing)
 
     @app.post("/api/v1/projects/upgrade", openapi_extra=_ANY_PROJECT_BODY_DOC)
     def upgrade_project(document: Annotated[Any, Body()]) -> UpgradeReport:
@@ -191,10 +212,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             to_version=SCHEMA_VERSION,
             notes=upgrade.notes,
             project=project,
-            validation=_report(project, _checked_model_files(project)),
+            validation=_report(
+                project, _checked_model_files(project), *_checked_source_files(project, False)
+            ),
         )
 
     provider = provider_from_settings(settings.assist)
+    vision = vision_provider_from_settings(settings.assist)
 
     @app.get("/api/v1/assist/status")
     def assist_status() -> AssistStatus:
@@ -206,6 +230,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 service=None,
                 base_url=None,
                 model=None,
+                vision_model=None,
                 message=(
                     "Language proposals are off: no provider is configured. Set VOYAGER_API_KEY "
                     "in the repository's .env and restart the API, or use the object builder."
@@ -218,6 +243,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             service=provider.service,
             base_url=provider.base_url,
             model=provider.model,
+            vision_model=vision.model if vision is not None else None,
             message=(
                 "Offline test provider: replays recorded answers. Not live AI."
                 if recorded
@@ -256,6 +282,70 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return propose_edit(_provider(), body)
         except (ProviderError, AssistError) as exc:
             _assist_failure(exc)
+
+    @app.post("/api/v1/assist/image-proposals")
+    def image_proposals(body: ImageAnalysisRequest) -> ImageProposalResult:
+        """Propose the objects standing on the floor of a photo. Nothing is stored or logged."""
+        if vision is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Photo analysis is off (no provider configured). Mark the objects "
+                "yourself, or set VOYAGER_API_KEY in .env and restart the API.",
+            )
+        try:
+            return propose_image(vision, body)
+        except (ProviderError, AssistError) as exc:
+            _assist_failure(exc)
+
+    @app.post(
+        "/api/v1/sources/photos",
+        openapi_extra={
+            "requestBody": {
+                "required": True,
+                "content": {
+                    media: {"schema": {"type": "string", "format": "binary"}}
+                    for media in ("image/jpeg", "image/png", "image/webp")
+                },
+            }
+        },
+    )
+    async def upload_photo(
+        request: Request,
+        filename: Annotated[str, Query(min_length=1, max_length=255)],
+        expected_sha256: Annotated[str | None, Query(pattern=r"^[0-9a-f]{64}$")] = None,
+    ) -> StoredPhoto:
+        """Store an original photo in the local source library, named by its sha256.
+
+        With ``expected_sha256`` (re-attaching a project's missing photo), a different file is
+        refused and nothing is written.
+        """
+        # Read at most one byte more than the limit, whatever Content-Length claims.
+        chunks: list[bytes] = []
+        size = 0
+        async for chunk in request.stream():
+            size += len(chunk)
+            if size > MAX_PHOTO_BYTES:
+                raise HTTPException(status_code=413, detail="The photo is larger than 15 MB.")
+            chunks.append(chunk)
+        data = b"".join(chunks)
+        try:
+            return store_photo(data, filename, settings.sources_dir, expected_sha256)
+        except PhotoError as exc:
+            status = {"too_large": 413, "hash_mismatch": 409, "unsafe": 400}.get(exc.kind, 422)
+            raise HTTPException(status_code=status, detail=exc.message) from None
+
+    @app.get("/api/v1/sources/files/{uri:path}", response_class=FileResponse)
+    def get_source_file(uri: str) -> FileResponse:
+        try:
+            path = resolve_source_file(settings.sources_dir, uri)
+        except PhotoError as exc:
+            raise HTTPException(
+                status_code=404 if exc.kind == "missing" else 400, detail=exc.message
+            ) from None
+        media = {"jpg": "image/jpeg", "png": "image/png", "webp": "image/webp"}[
+            uri.rsplit(".", 1)[1]
+        ]
+        return FileResponse(path, media_type=media, headers={"Cache-Control": "no-cache"})
 
     def _generated_model(body: GeneratedModelRequest, store: bool) -> GeneratedModel:
         try:
@@ -306,6 +396,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except GeneratorError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from None
 
+    def _checked_source_files(project: Project, allow_missing: bool) -> tuple[int, list[str]]:
+        verified, issues, missing = check_source_files(project, settings.sources_dir, allow_missing)
+        if issues:
+            raise RequestValidationError(issues)
+        return verified, missing
+
     def _checked_model_files(project: Project) -> int:
         model_files, file_issues = check_model_files(project, settings.catalog_dir)
         if file_issues:
@@ -333,7 +429,9 @@ def _validated(document: Any, upgraded_from: str | None = None) -> Project:
         ) from None
 
 
-def _report(project: Project, model_files: int) -> ValidationReport:
+def _report(
+    project: Project, model_files: int, photo_files: int, missing_sources: list[str]
+) -> ValidationReport:
     params = [p for o in project.scene.objects for p in o.parameters]
     known = sum(isinstance(p, KnownParameter) for p in params)
     return ValidationReport(
@@ -346,6 +444,8 @@ def _report(project: Project, model_files: int) -> ValidationReport:
         known_parameter_count=known,
         unknown_parameter_count=len(params) - known,
         edit_record_count=len(project.scene.edit_log),
+        photo_file_count=photo_files,
+        missing_source_files=missing_sources,
     )
 
 
