@@ -380,7 +380,7 @@ Append entries in chronological order. If a live repository session log already 
   - With `VOYAGER_API_KEY` in `.env`: `pnpm dev:api` and `pnpm dev:web`, select a generated object, then **Improve model…** in the inspector.
   - `uv run python scripts/evaluate_model_revisions.py [CASES] --record` (live; refreshes recordings).
   - `pnpm --filter @replay-world/web exec playwright test e2e/improve.spec.ts`.
-- CI: commit `<pending>`; CI `<pending>`.
+- CI: commit `cedfee3`; https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38797542923 success for both jobs (pytest 598; browser smoke 8 passed, including the improve journey).
 - Milestone status after this session: M2 in progress (GEN-01 and GEN-02 done; GEN-03 open). M3 in progress (IMG-01 done; IMG-02, IMG-03 open).
 - Next concrete task: GEN-03 (held-out evaluation of descriptions, edits and model revisions, at least two candidate models) to close M2.
 

@@ -171,7 +171,7 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P1
 - Dependencies: GEN-01
-- Status: **done** (2026-10-15; commit `<pending>`; CI `<pending>`). GEN-03 remains open, so M2 is not complete.
+- Status: **done** (2026-10-15; `cedfee3`; CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38797542923 green). GEN-03 remains open, so M2 is not complete.
 - Done when: A placed generated object's specification can be reopened, corrected (size, parts, materials) and rebuilt as a new asset version; instances can be switched to the new version with one undoable command; the previous version and its record remain in the project.
 - Note (2026-10-14): still open after IMG-01. Objects created from a photo are generated assets (method `photo`); IMG-01 reviews them before creation, and afterwards only the generic editing (move, rotate, resize) applies, so GEN-02 should cover them too.
 - Evidence (details: docs/assist.md, docs/contracts.md, ADR-039..041):
@@ -188,7 +188,7 @@ After M1 the user approved guided creation and described custom objects as the n
   - **Tests:** `packages/contracts/tests/test_asset_revisions.py` (11), `services/api/tests/test_revisions.py` (29), recorded revision replays in `test_assist_recorded.py`; Vitest `revisionDraft.test.ts` and `commands.test.ts` (selected only, all instances, measured size kept or adopted, stale-revision and wrong-asset conflicts, undo/redo exactness, change lists, evidence bases); Playwright `e2e/improve.spec.ts` (2 tests, one `@smoke`): a described object by hand with two instances (one with a measured width), an invalid specification (build error shown, Apply disabled), a failed build (nothing changed), the all-instances update keeping the measured width, undo/redo, save with both versions and evidence, reopen, missing new GLB refused then rebuilt with the recorded hash; and a photo-made object with a recorded proposal (cancel, propose, apply to its only instance, photo link and photo-inferred evidence kept).
   - **Checks (local, 2026-10-15):** `pnpm check` exit 0 (contracts, assets and fixtures up to date; ESLint, Ruff, tsc, mypy clean; Vitest 10 + 145; pytest 598; build); `pnpm test:e2e` 24 passed. The smoke set is now 8 tests.
   - **Known limits:** no openings within a single part (open structures only from separate panels); no slanted or curved surfaces beyond cylinders, frustums and spheres; no rotated parts; no hinges, doors or moving parts; no textures, labels or wire mesh (clear panels stand in for guards; mesh is reported, not imitated); no photo textures; panel proportions depend on the model (0.1 m top and bottom boards); fitting can rescale parts slightly, which the change list reports as "resized or moved"; proposals take about 30–110 s.
-  - **CI:** `<pending>`.
+  - **CI:** https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38797542923 on `cedfee3`: success for both jobs (pytest 598; browser smoke 8 passed).
 
 ### GEN-03 - Evaluate described objects and language edits
 
