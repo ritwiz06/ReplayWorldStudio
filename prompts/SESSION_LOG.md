@@ -422,7 +422,7 @@ Append entries in chronological order. If a live repository session log already 
   - `pnpm --filter @replay-world/web exec node scripts/assist/run-ts.mjs scripts/assist/score-gen03-edits.ts`, then `uv run python scripts/score_gen03.py`.
   - `uv run python scripts/evaluate_gen03.py --build-targets`, `pnpm --filter @replay-world/web exec node scripts/assist/render-gen03.ts`, then `uv run python scripts/unblind_gen03_review.py bench-results/gen-03-review/review-blind.json bench-results/gen-03-review/blind-key.json` and `uv run python scripts/score_gen03.py`.
 - Actual effort, if tracked: run 66.5 min; about 28 min of it development (tooling above), about 38 min idle waiting; then one scoring pass and the review (not timed).
-- CI: tooling commit `0aa5a21`, https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38805487436 green. Results commit `<pending>`; CI `<pending>`.
+- CI: tooling commit `0aa5a21`, https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38805487436 green. Results commit `142dcb8`; CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38812815362 green.
 - Milestone status after this session: M2 in progress (GEN-01, GEN-02 and GEN-03 done; GEN-04 open; M2 closes when GEN-04 passes). M3 in progress (IMG-01 done; IMG-02, IMG-03 open).
 - Next concrete task: GEN-04 (honest partial revisions): do the representable part of a mixed instruction and list the rest, copy unrepresentable features into `not_represented` when a revision is refused, and bound the part budget; develop on the GEN-02 development cases plus new ones, then run a fresh frozen set of at least 15 revision instructions once on the default against the same revision gates.
 

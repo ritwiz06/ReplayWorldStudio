@@ -194,7 +194,7 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P0
 - Dependencies: GEN-01
-- Status: **done** (2026-10-15; results commit `<pending>`; CI `<pending>`). The chosen default fails two revision gates, so M2 is **not** complete; GEN-04 is the corrective task.
+- Status: **done** (2026-10-15; results commit `142dcb8`; CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38812815362 green). The chosen default fails two revision gates, so M2 is **not** complete; GEN-04 is the corrective task.
 - Done when: A held-out set (at least 30 descriptions and 30 edit requests, including ambiguous, unsupported, missing-value and hostile-text cases) reports schema adherence, grounding of stated values, correct clarifications, unintended changes, visual distinctness review and manual correction time, for at least two candidate models; failures are categorised; the chosen default model is justified by the results.
 - Note (2026-10-15, after GEN-02): still open, so M2 is not complete. The held-out set should also include model-revision instructions (the `gen-02.x` cases in `scripts/model_revision_cases.json` are development cases, not held out): open structures, colour and part changes, size changes, unrepresentable requests and photo-made objects, reporting outcome, size kept or changed as asked, largest-part share for "open" requests, overlaps, not-represented listing, latency and a visual review.
 - Evidence (full report: docs/assist-evaluation/gen-03/report.md; Update to ADR-032, ADR-042):
@@ -214,7 +214,7 @@ After M1 the user approved guided creation and described custom objects as the n
   - **GEN-02 baselines re-examined:** revision wait median 49 s, p95 128 s and one 150 s timeout for the default (candidate median 12 s); the machine-guard failure did not recur with fresh wording (r06 baseline scored 2).
   - **Tooling:** `scripts/evaluate_gen03.py` (runner; resume keeps recorded errors unless `--retry-errors`; atomic writes), `scripts/score_gen03.py`, `scripts/unblind_gen03_review.py`, `apps/web/src/assist/editScoring.ts` (+ test), `apps/web/scripts/assist/{score-gen03-edits.ts,render-gen03.ts,run-ts.mjs}`; `tests/test_gen03_evaluation.py` (7). Two tooling faults found on first use after the run and fixed before scoring and review: the edit scorer needed a Vite-based launcher (`run-ts.mjs`) to load app modules, and the render script drew both options concurrently on one canvas (both sheets showed the same picture; now sequential). Blinding was not affected.
   - **Results:** docs/assist-evaluation/gen-03/{results/*.json, edit-scores.json, scores.json, review.json, report.md, renders/*.jpg}.
-  - **Checks (local):** `pnpm check` exit 0 (Vitest 10 + 150, pytest 605; re-run after the last tooling edits). CI for the results commit: `<pending>`.
+  - **Checks (local):** `pnpm check` exit 0 (Vitest 10 + 150, pytest 605; re-run after the last tooling edits). CI for the results commit: `142dcb8` (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38812815362 green).
   - **Not shown:** physical properties of provisional geometry; waiting times are scripted, one request at a time; correction effort is not a user study (no participants).
 
 ### GEN-04 - Honest partial revisions
