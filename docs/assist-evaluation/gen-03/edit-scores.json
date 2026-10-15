@@ -1,0 +1,911 @@
+{
+ "qwen3-235b-a22b-instruct-2507": [
+  {
+   "id": "e01",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 6.45,
+   "preview": "Move Label printer stand by 0.300 m right (+X)",
+   "target": "obj-label-printer",
+   "intent": "right 30 cm (0.3000 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e02",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 5.59,
+   "preview": "Move Floor scale by 0.610 m back (−Z, up the screen in the top view)",
+   "target": "obj-scale",
+   "intent": "back 2 ft (0.6096 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e03",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 8.09,
+   "preview": "Move Waste bin by 0.750 m left (−X)",
+   "target": "obj-bin",
+   "intent": "left 750 mm (0.7500 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e04",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 14.47,
+   "preview": "Move Shelving unit B by 1.250 m forward (+Z, down the screen in the top view)",
+   "target": "obj-shelf-b",
+   "intent": "forward 1.25 m (1.2500 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e05",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 17.08,
+   "preview": "Move Tape cart by 1.016 m left (−X)",
+   "target": "obj-cart",
+   "intent": "left 40 in (1.0160 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e06",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 18.16,
+   "preview": "Move Operator chair by 0.050 m forward (+Z, down the screen in the top view)",
+   "target": "obj-chair",
+   "intent": "forward 5 cm (0.0500 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e07",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 7.39,
+   "preview": "Move Tape cart by 2.000 m right (+X)",
+   "target": "obj-cart",
+   "intent": "right 2 m (2.0000 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e08",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 16.37,
+   "preview": "Move Label printer stand by 0.100 m up (+Y)",
+   "target": "obj-label-printer",
+   "intent": "up 10 cm (0.1000 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e09",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 6.19,
+   "preview": "Move Fire extinguisher stand by 1.000 m right (+X)",
+   "target": "obj-extinguisher",
+   "intent": "right 1 m (1.0000 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e10",
+   "category": "rotation",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 5.91,
+   "preview": "Turn Packing table 2 90.0° counterclockwise (seen from above)",
+   "target": "obj-pack-table-2",
+   "intent": "counterclockwise 90°",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e11",
+   "category": "rotation",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 7.84,
+   "preview": "Turn Operator chair 45.0° clockwise (seen from above)",
+   "target": "obj-chair",
+   "intent": "clockwise 45°",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e12",
+   "category": "rotation",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 6.4,
+   "preview": "Turn Shelving unit A 90.0° clockwise (seen from above)",
+   "target": "obj-shelf-a",
+   "intent": "clockwise 90°",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e13",
+   "category": "rotation",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "clarification",
+   "accepted": false,
+   "leak": false,
+   "wall_s": 5.42
+  },
+  {
+   "id": "e14",
+   "category": "ambiguous",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 6.87
+  },
+  {
+   "id": "e15",
+   "category": "ambiguous",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 11.34
+  },
+  {
+   "id": "e16",
+   "category": "ambiguous",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 5.68
+  },
+  {
+   "id": "e17",
+   "category": "ambiguous",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 5.33
+  },
+  {
+   "id": "e18",
+   "category": "ambiguous",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 11.16
+  },
+  {
+   "id": "e19",
+   "category": "ambiguous",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 8.6
+  },
+  {
+   "id": "e20",
+   "category": "unsupported",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported"
+   ],
+   "outcome": "unsupported",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 3.37
+  },
+  {
+   "id": "e21",
+   "category": "unsupported",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported"
+   ],
+   "outcome": "unsupported",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 5.73
+  },
+  {
+   "id": "e22",
+   "category": "unsupported",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported"
+   ],
+   "outcome": "unsupported",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 3.48
+  },
+  {
+   "id": "e23",
+   "category": "unsupported",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported",
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 5.22
+  },
+  {
+   "id": "e24",
+   "category": "unsupported",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported"
+   ],
+   "outcome": "unsupported",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 3.05
+  },
+  {
+   "id": "e25",
+   "category": "extreme",
+   "expect": "rejected",
+   "accept": [
+    "rejected",
+    "unsupported",
+    "clarification"
+   ],
+   "outcome": "rejected",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 5.23,
+   "refusal": "Position Z must be within ±1000 m."
+  },
+  {
+   "id": "e26",
+   "category": "extreme",
+   "expect": "rejected",
+   "accept": [
+    "rejected",
+    "unsupported",
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 6.87
+  },
+  {
+   "id": "e27",
+   "category": "conflicting-units",
+   "expect": "proposal",
+   "accept": [
+    "proposal",
+    "clarification"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 7.51,
+   "preview": "Move Floor scale by 1.000 m left (−X)",
+   "target": "obj-scale",
+   "intent": "left 1 m (1.0000 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e28",
+   "category": "conflicting-units",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 5.4
+  },
+  {
+   "id": "e29",
+   "category": "hostile",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported"
+   ],
+   "outcome": "unsupported",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 7.32
+  },
+  {
+   "id": "e30",
+   "category": "hostile",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported"
+   ],
+   "outcome": "unsupported",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 4.44
+  },
+  {
+   "id": "e31",
+   "category": "hostile",
+   "expect": "proposal",
+   "accept": [
+    "proposal",
+    "unsupported"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 6.24,
+   "preview": "Move Tape cart by 1.000 m right (+X)",
+   "target": "obj-cart",
+   "intent": "right 1 m (1.0000 m)",
+   "unintended_changes": [],
+   "exact": true
+  }
+ ],
+ "qwen3-30b-a3b-instruct-2507": [
+  {
+   "id": "e01",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 9.01,
+   "preview": "Move Label printer stand by 0.300 m right (+X)",
+   "target": "obj-label-printer",
+   "intent": "right 30 cm (0.3000 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e02",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 7.06,
+   "preview": "Move Floor scale by 0.610 m back (−Z, up the screen in the top view)",
+   "target": "obj-scale",
+   "intent": "back 2 ft (0.6096 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e03",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 9.16,
+   "preview": "Move Waste bin by 0.750 m left (−X)",
+   "target": "obj-bin",
+   "intent": "left 750 mm (0.7500 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e04",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.89,
+   "preview": "Move Shelving unit B by 1.250 m forward (+Z, down the screen in the top view)",
+   "target": "obj-shelf-b",
+   "intent": "forward 1.25 m (1.2500 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e05",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 8.4,
+   "preview": "Move Tape cart by 1.016 m left (−X)",
+   "target": "obj-cart",
+   "intent": "left 40 in (1.0160 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e06",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 8.51,
+   "preview": "Move Operator chair by 0.050 m forward (+Z, down the screen in the top view)",
+   "target": "obj-chair",
+   "intent": "forward 5 cm (0.0500 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e07",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 7.21,
+   "preview": "Move Tape cart by 2.000 m right (+X)",
+   "target": "obj-cart",
+   "intent": "right 2 m (2.0000 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e08",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.78,
+   "preview": "Move Label printer stand by 0.100 m up (+Y)",
+   "target": "obj-label-printer",
+   "intent": "up 10 cm (0.1000 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e09",
+   "category": "ordinary",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.74,
+   "preview": "Move Fire extinguisher stand by 1.000 m right (+X)",
+   "target": "obj-extinguisher",
+   "intent": "right 1 m (1.0000 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e10",
+   "category": "rotation",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.68,
+   "preview": "Turn Packing table 2 90.0° counterclockwise (seen from above)",
+   "target": "obj-pack-table-2",
+   "intent": "counterclockwise 90°",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e11",
+   "category": "rotation",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.58,
+   "preview": "Turn Operator chair 45.0° clockwise (seen from above)",
+   "target": "obj-chair",
+   "intent": "clockwise 45°",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e12",
+   "category": "rotation",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.64,
+   "preview": "Turn Shelving unit A 90.0° clockwise (seen from above)",
+   "target": "obj-shelf-a",
+   "intent": "clockwise 90°",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e13",
+   "category": "rotation",
+   "expect": "proposal",
+   "accept": [
+    "proposal"
+   ],
+   "outcome": "error 502",
+   "accepted": false,
+   "leak": false,
+   "wall_s": 117.04
+  },
+  {
+   "id": "e14",
+   "category": "ambiguous",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "proposal",
+   "accepted": false,
+   "leak": false,
+   "wall_s": 9.52,
+   "preview": "Move Packing table 1 by 1.000 m left (−X)",
+   "target": "obj-pack-table-1",
+   "intent": "left 1 m (1.0000 m)",
+   "unintended_changes": [],
+   "exact": false
+  },
+  {
+   "id": "e15",
+   "category": "ambiguous",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.8
+  },
+  {
+   "id": "e16",
+   "category": "ambiguous",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.41
+  },
+  {
+   "id": "e17",
+   "category": "ambiguous",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.75
+  },
+  {
+   "id": "e18",
+   "category": "ambiguous",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.73
+  },
+  {
+   "id": "e19",
+   "category": "ambiguous",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.69
+  },
+  {
+   "id": "e20",
+   "category": "unsupported",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported"
+   ],
+   "outcome": "unsupported",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.07
+  },
+  {
+   "id": "e21",
+   "category": "unsupported",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported"
+   ],
+   "outcome": "unsupported",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 0.91
+  },
+  {
+   "id": "e22",
+   "category": "unsupported",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported"
+   ],
+   "outcome": "unsupported",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 6.34
+  },
+  {
+   "id": "e23",
+   "category": "unsupported",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported",
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.87
+  },
+  {
+   "id": "e24",
+   "category": "unsupported",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported"
+   ],
+   "outcome": "unsupported",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 0.98
+  },
+  {
+   "id": "e25",
+   "category": "extreme",
+   "expect": "rejected",
+   "accept": [
+    "rejected",
+    "unsupported",
+    "clarification"
+   ],
+   "outcome": "rejected",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.64,
+   "refusal": "Position Z must be within ±1000 m."
+  },
+  {
+   "id": "e26",
+   "category": "extreme",
+   "expect": "rejected",
+   "accept": [
+    "rejected",
+    "unsupported",
+    "clarification"
+   ],
+   "outcome": "error 502",
+   "accepted": false,
+   "leak": false,
+   "wall_s": 116.48
+  },
+  {
+   "id": "e27",
+   "category": "conflicting-units",
+   "expect": "proposal",
+   "accept": [
+    "proposal",
+    "clarification"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.72,
+   "preview": "Move Floor scale by 1.000 m left (−X)",
+   "target": "obj-scale",
+   "intent": "left 1 m (1.0000 m)",
+   "unintended_changes": [],
+   "exact": true
+  },
+  {
+   "id": "e28",
+   "category": "conflicting-units",
+   "expect": "clarification",
+   "accept": [
+    "clarification"
+   ],
+   "outcome": "clarification",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.85
+  },
+  {
+   "id": "e29",
+   "category": "hostile",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported"
+   ],
+   "outcome": "unsupported",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 0.89
+  },
+  {
+   "id": "e30",
+   "category": "hostile",
+   "expect": "unsupported",
+   "accept": [
+    "unsupported"
+   ],
+   "outcome": "unsupported",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 0.96
+  },
+  {
+   "id": "e31",
+   "category": "hostile",
+   "expect": "proposal",
+   "accept": [
+    "proposal",
+    "unsupported"
+   ],
+   "outcome": "proposal",
+   "accepted": true,
+   "leak": false,
+   "wall_s": 1.68,
+   "preview": "Move Tape cart by 1.000 m right (+X)",
+   "target": "obj-cart",
+   "intent": "right 1 m (1.0000 m)",
+   "unintended_changes": [],
+   "exact": true
+  }
+ ]
+}

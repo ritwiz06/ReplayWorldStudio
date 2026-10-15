@@ -1,0 +1,1427 @@
+{
+ "reviewer": "Claude (the assistant running this evaluation), not a study participant",
+ "method": "Sheets from apps/web/scripts/assist/render-gen03.ts with the models shown as Option 1/2 in a random order per case; scored from the images before the key was opened. 2 = clearly the intended object (descriptions) or the change clearly visible and right (revisions); 1 = roughly or partly; 0 = not recognisable, missing or wrong. corrections = sizes or parts the reviewer would still fix before placing or applying. Renders are auto-framed, so pure size changes are hard to judge visually (scored 1 unless the proportions visibly change; the size itself is checked automatically). Floating or coinciding parts count against the score.",
+ "scored_at": "2026-10-15",
+ "sheets": {
+  "descriptions/d01-locker": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "tall box; doors not visible"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "tall box; doors not visible"
+   }
+  },
+  "descriptions/d02-tool-cart": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "stacked drawers on a base; casters barely visible"
+   },
+   "Option 2": {
+    "score": 0,
+    "corrections": 2,
+    "note": "one solid box; drawers and casters not visible"
+   }
+  },
+  "descriptions/d03-cafe-table": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "round top, pedestal, foot"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "square top, not round"
+   }
+  },
+  "descriptions/d04-sofa": {
+   "Option 1": {
+    "score": 0,
+    "corrections": 2,
+    "note": "wooden box with a thin plate; not a sofa"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "grey seat and backrest"
+   }
+  },
+  "descriptions/d05-pedestal-fan": {
+   "Option 1": {
+    "score": 0,
+    "corrections": 2,
+    "note": "thin white pole only"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "base, pole and a horizontal disc; head not facing forward"
+   }
+  },
+  "descriptions/d06-whiteboard": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 2,
+    "note": "dark panel; not white, no wheels"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 1,
+    "note": "white board on a small base; wheels not visible"
+   }
+  },
+  "descriptions/d07-office-desk": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "desk with legs and a pedestal on the right"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "desk with a pedestal on the right"
+   }
+  },
+  "descriptions/d08-pallet-truck": {
+   "Option 1": {
+    "score": 0,
+    "corrections": 2,
+    "note": "flat plate and a small block; no forks or handle"
+   },
+   "Option 2": {
+    "score": 0,
+    "corrections": 2,
+    "note": "flat plate with an orange part; no forks or handle"
+   }
+  },
+  "descriptions/d09-vending": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "dark box with a ledge; no glass front"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "white box with a blue panel; glass front not clear"
+   }
+  },
+  "descriptions/d10-rolling-ladder": {
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "steps and a rail, parts not joined"
+   },
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no model shown on the sheet"
+   }
+  },
+  "descriptions/d11-display-case": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "white box; no glass doors"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "grey box with a band; no glass doors"
+   }
+  },
+  "descriptions/d12-sink-unit": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "top on legs; legs rise above the top"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "box on legs; legs rise above the box"
+   }
+  },
+  "descriptions/d13-shelving-trolley": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 1,
+    "note": "four shelves; no wheels"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "four open shelves on casters"
+   }
+  },
+  "descriptions/d14-hospital-bed": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "bed frame, mattress, rails"
+   },
+   "Option 2": {
+    "score": 0,
+    "corrections": 2,
+    "note": "a grey crate with rails above"
+   }
+  },
+  "descriptions/d15-reception": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "counter with a raised part"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "dark box with a wooden top"
+   }
+  },
+  "descriptions/d16-dishwasher": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 0,
+    "note": "appliance box"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 0,
+    "note": "appliance box"
+   }
+  },
+  "descriptions/d17-mop-bucket": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "bucket with one wheel on its side"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "bucket, handle and wheels"
+   }
+  },
+  "descriptions/d18-bike-rack": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "base with six uprights"
+   },
+   "Option 2": {
+    "score": 0,
+    "corrections": 2,
+    "note": "yellow ellipse on posts"
+   }
+  },
+  "descriptions/d23-inch-shelf": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "shelf board with two brackets"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "plain slab"
+   }
+  },
+  "descriptions/d24-mixed-bench": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "low bench with legs"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "bench with legs"
+   }
+  },
+  "descriptions/d25-two-lengths": {
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "table"
+   },
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no model shown on the sheet"
+   }
+  },
+  "descriptions/d26-ft-m": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "white box"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "white box with stray pieces at the base"
+   }
+  },
+  "descriptions/d27-mixer": {
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "cylinder on a base with a cap"
+   },
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no model shown on the sheet"
+   }
+  },
+  "descriptions/d28-fridge": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "tall white box with panels sticking out"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "tall white box on feet"
+   }
+  },
+  "descriptions/d29-compressor": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "upright cylinder and blocks"
+   },
+   "Option 2": {
+    "score": 0,
+    "corrections": 2,
+    "note": "a vertical disc and a block"
+   }
+  },
+  "descriptions/d31-poison-size": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "tall dark box of ordinary size; no drawers visible"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no model shown on the sheet"
+   }
+  },
+  "revisions/r01": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "wooden sides and back, shelves open"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "wood added but blue uprights remain"
+   }
+  },
+  "revisions/r02": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "red seat and back, silver legs"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "red seat and back, silver legs"
+   }
+  },
+  "revisions/r03": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "three legs, but the board floats above"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "tray and legs, board floats above"
+   }
+  },
+  "revisions/r04": {
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "blue bins on the front; feet stick out"
+   },
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no model shown on the sheet"
+   }
+  },
+  "revisions/r05": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 0,
+    "note": "lower height not visible in an auto-framed render"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 0,
+    "note": "lower height not visible in an auto-framed render"
+   }
+  },
+  "revisions/r06": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "white lower cabinet, yellow frame and clear panels above"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "yellow band on a grey body; flickering lower half"
+   }
+  },
+  "revisions/r07": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "thin yellow lines on the belt surface, not rails"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "yellow rails along both sides"
+   }
+  },
+  "revisions/r08": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 0,
+    "note": "longer belt not visible in an auto-framed render"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 0,
+    "note": "longer belt not visible in an auto-framed render"
+   }
+  },
+  "revisions/r09": {
+   "Option 1": {
+    "score": 0,
+    "corrections": 2,
+    "note": "solid black box with a glass top; not a thin frame"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no model shown on the sheet"
+   }
+  },
+  "revisions/r10": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "two doors, panels protrude oddly"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "doors barely visible, no handles"
+   }
+  },
+  "revisions/r11": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "open shelves inside sides and back"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "shelves visible only at one side; front looks closed"
+   }
+  },
+  "revisions/r12": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "square top"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "square top"
+   }
+  },
+  "revisions/r13": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "monitor and keyboard on the top"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "monitor and keyboard on the top"
+   }
+  },
+  "revisions/r14": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "frame yellow, wheels kept"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "frame yellow, wheels kept"
+   }
+  },
+  "revisions/r15": {
+   "Option 1": {
+    "score": 1,
+    "corrections": 1,
+    "note": "cushions only as lines; small pillows"
+   },
+   "Option 2": {
+    "score": 1,
+    "corrections": 1,
+    "note": "small pillows; cushions not distinct"
+   }
+  },
+  "revisions/r19": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "twice as wide"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "twice as wide"
+   }
+  },
+  "revisions/r20": {
+   "Option 1": {
+    "score": 2,
+    "corrections": 0,
+    "note": "shorter"
+   },
+   "Option 2": {
+    "score": 2,
+    "corrections": 0,
+    "note": "shorter"
+   }
+  },
+  "descriptions/d19-stuff": {
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   }
+  },
+  "descriptions/d20-usual": {
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   }
+  },
+  "descriptions/d21-unit": {
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   }
+  },
+  "descriptions/d22-big": {
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   }
+  },
+  "descriptions/d30-reveal": {
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   }
+  },
+  "descriptions/d32-dev-mode": {
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   }
+  },
+  "revisions/r16": {
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   }
+  },
+  "revisions/r17": {
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   }
+  },
+  "revisions/r18": {
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   }
+  },
+  "revisions/r21": {
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   }
+  },
+  "revisions/r22": {
+   "Option 1": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   },
+   "Option 2": {
+    "score": null,
+    "corrections": null,
+    "note": "no sheet: neither model produced a model"
+   }
+  }
+ },
+ "key": {
+  "descriptions/d01-locker": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d02-tool-cart": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d03-cafe-table": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d04-sofa": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d05-pedestal-fan": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d06-whiteboard": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d07-office-desk": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d08-pallet-truck": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d09-vending": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d10-rolling-ladder": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d11-display-case": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d12-sink-unit": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d13-shelving-trolley": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d14-hospital-bed": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d15-reception": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d16-dishwasher": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d17-mop-bucket": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d18-bike-rack": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d19-stuff": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d20-usual": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d21-unit": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d22-big": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d23-inch-shelf": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d24-mixed-bench": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d25-two-lengths": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d26-ft-m": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d27-mixer": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d28-fridge": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d29-compressor": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d30-reveal": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "descriptions/d31-poison-size": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "descriptions/d32-dev-mode": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "revisions/r01": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r02": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r03": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r04": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r05": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "revisions/r06": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r07": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "revisions/r08": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r09": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "revisions/r10": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r11": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r12": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "revisions/r13": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r14": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r15": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r16": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r17": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r18": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r19": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  },
+  "revisions/r20": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r21": {
+   "Option 1": "qwen3-235b-a22b-instruct-2507",
+   "Option 2": "qwen3-30b-a3b-instruct-2507"
+  },
+  "revisions/r22": {
+   "Option 1": "qwen3-30b-a3b-instruct-2507",
+   "Option 2": "qwen3-235b-a22b-instruct-2507"
+  }
+ },
+ "models": {
+  "qwen3-235b-a22b-instruct-2507": {
+   "descriptions": {
+    "d01-locker": {
+     "score": 1,
+     "corrections": 1,
+     "note": "tall box; doors not visible"
+    },
+    "d02-tool-cart": {
+     "score": 0,
+     "corrections": 2,
+     "note": "one solid box; drawers and casters not visible"
+    },
+    "d03-cafe-table": {
+     "score": 2,
+     "corrections": 0,
+     "note": "round top, pedestal, foot"
+    },
+    "d04-sofa": {
+     "score": 2,
+     "corrections": 0,
+     "note": "grey seat and backrest"
+    },
+    "d05-pedestal-fan": {
+     "score": 1,
+     "corrections": 1,
+     "note": "base, pole and a horizontal disc; head not facing forward"
+    },
+    "d06-whiteboard": {
+     "score": 2,
+     "corrections": 1,
+     "note": "white board on a small base; wheels not visible"
+    },
+    "d07-office-desk": {
+     "score": 2,
+     "corrections": 0,
+     "note": "desk with a pedestal on the right"
+    },
+    "d08-pallet-truck": {
+     "score": 0,
+     "corrections": 2,
+     "note": "flat plate with an orange part; no forks or handle"
+    },
+    "d09-vending": {
+     "score": 1,
+     "corrections": 1,
+     "note": "dark box with a ledge; no glass front"
+    },
+    "d10-rolling-ladder": {
+     "score": 1,
+     "corrections": 1,
+     "note": "steps and a rail, parts not joined"
+    },
+    "d11-display-case": {
+     "score": 1,
+     "corrections": 1,
+     "note": "white box; no glass doors"
+    },
+    "d12-sink-unit": {
+     "score": 1,
+     "corrections": 1,
+     "note": "box on legs; legs rise above the box"
+    },
+    "d13-shelving-trolley": {
+     "score": 2,
+     "corrections": 0,
+     "note": "four open shelves on casters"
+    },
+    "d14-hospital-bed": {
+     "score": 2,
+     "corrections": 0,
+     "note": "bed frame, mattress, rails"
+    },
+    "d15-reception": {
+     "score": 2,
+     "corrections": 0,
+     "note": "counter with a raised part"
+    },
+    "d16-dishwasher": {
+     "score": 1,
+     "corrections": 0,
+     "note": "appliance box"
+    },
+    "d17-mop-bucket": {
+     "score": 2,
+     "corrections": 0,
+     "note": "bucket, handle and wheels"
+    },
+    "d18-bike-rack": {
+     "score": 0,
+     "corrections": 2,
+     "note": "yellow ellipse on posts"
+    },
+    "d19-stuff": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "d20-usual": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "d21-unit": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "d22-big": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "d23-inch-shelf": {
+     "score": 2,
+     "corrections": 0,
+     "note": "shelf board with two brackets"
+    },
+    "d24-mixed-bench": {
+     "score": 2,
+     "corrections": 0,
+     "note": "bench with legs"
+    },
+    "d25-two-lengths": {
+     "score": 2,
+     "corrections": 0,
+     "note": "table"
+    },
+    "d26-ft-m": {
+     "score": 1,
+     "corrections": 1,
+     "note": "white box"
+    },
+    "d27-mixer": {
+     "score": null,
+     "corrections": null,
+     "note": "no model shown on the sheet"
+    },
+    "d28-fridge": {
+     "score": 1,
+     "corrections": 1,
+     "note": "tall white box with panels sticking out"
+    },
+    "d29-compressor": {
+     "score": 1,
+     "corrections": 1,
+     "note": "upright cylinder and blocks"
+    },
+    "d30-reveal": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "d31-poison-size": {
+     "score": 1,
+     "corrections": 1,
+     "note": "tall dark box of ordinary size; no drawers visible"
+    },
+    "d32-dev-mode": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    }
+   },
+   "revisions": {
+    "r01": {
+     "score": 2,
+     "corrections": 0,
+     "note": "wooden sides and back, shelves open"
+    },
+    "r02": {
+     "score": 2,
+     "corrections": 0,
+     "note": "red seat and back, silver legs"
+    },
+    "r03": {
+     "score": 1,
+     "corrections": 1,
+     "note": "three legs, but the board floats above"
+    },
+    "r04": {
+     "score": null,
+     "corrections": null,
+     "note": "no model shown on the sheet"
+    },
+    "r05": {
+     "score": 1,
+     "corrections": 0,
+     "note": "lower height not visible in an auto-framed render"
+    },
+    "r06": {
+     "score": 2,
+     "corrections": 0,
+     "note": "white lower cabinet, yellow frame and clear panels above"
+    },
+    "r07": {
+     "score": 2,
+     "corrections": 0,
+     "note": "yellow rails along both sides"
+    },
+    "r08": {
+     "score": 1,
+     "corrections": 0,
+     "note": "longer belt not visible in an auto-framed render"
+    },
+    "r09": {
+     "score": null,
+     "corrections": null,
+     "note": "no model shown on the sheet"
+    },
+    "r10": {
+     "score": 1,
+     "corrections": 1,
+     "note": "two doors, panels protrude oddly"
+    },
+    "r11": {
+     "score": 2,
+     "corrections": 0,
+     "note": "open shelves inside sides and back"
+    },
+    "r12": {
+     "score": 2,
+     "corrections": 0,
+     "note": "square top"
+    },
+    "r13": {
+     "score": 2,
+     "corrections": 0,
+     "note": "monitor and keyboard on the top"
+    },
+    "r14": {
+     "score": 2,
+     "corrections": 0,
+     "note": "frame yellow, wheels kept"
+    },
+    "r15": {
+     "score": 1,
+     "corrections": 1,
+     "note": "cushions only as lines; small pillows"
+    },
+    "r16": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "r17": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "r18": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "r19": {
+     "score": 2,
+     "corrections": 0,
+     "note": "twice as wide"
+    },
+    "r20": {
+     "score": 2,
+     "corrections": 0,
+     "note": "shorter"
+    },
+    "r21": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "r22": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    }
+   }
+  },
+  "qwen3-30b-a3b-instruct-2507": {
+   "descriptions": {
+    "d01-locker": {
+     "score": 1,
+     "corrections": 1,
+     "note": "tall box; doors not visible"
+    },
+    "d02-tool-cart": {
+     "score": 1,
+     "corrections": 1,
+     "note": "stacked drawers on a base; casters barely visible"
+    },
+    "d03-cafe-table": {
+     "score": 1,
+     "corrections": 1,
+     "note": "square top, not round"
+    },
+    "d04-sofa": {
+     "score": 0,
+     "corrections": 2,
+     "note": "wooden box with a thin plate; not a sofa"
+    },
+    "d05-pedestal-fan": {
+     "score": 0,
+     "corrections": 2,
+     "note": "thin white pole only"
+    },
+    "d06-whiteboard": {
+     "score": 1,
+     "corrections": 2,
+     "note": "dark panel; not white, no wheels"
+    },
+    "d07-office-desk": {
+     "score": 2,
+     "corrections": 0,
+     "note": "desk with legs and a pedestal on the right"
+    },
+    "d08-pallet-truck": {
+     "score": 0,
+     "corrections": 2,
+     "note": "flat plate and a small block; no forks or handle"
+    },
+    "d09-vending": {
+     "score": 1,
+     "corrections": 1,
+     "note": "white box with a blue panel; glass front not clear"
+    },
+    "d10-rolling-ladder": {
+     "score": null,
+     "corrections": null,
+     "note": "no model shown on the sheet"
+    },
+    "d11-display-case": {
+     "score": 1,
+     "corrections": 1,
+     "note": "grey box with a band; no glass doors"
+    },
+    "d12-sink-unit": {
+     "score": 1,
+     "corrections": 1,
+     "note": "top on legs; legs rise above the top"
+    },
+    "d13-shelving-trolley": {
+     "score": 2,
+     "corrections": 1,
+     "note": "four shelves; no wheels"
+    },
+    "d14-hospital-bed": {
+     "score": 0,
+     "corrections": 2,
+     "note": "a grey crate with rails above"
+    },
+    "d15-reception": {
+     "score": 1,
+     "corrections": 1,
+     "note": "dark box with a wooden top"
+    },
+    "d16-dishwasher": {
+     "score": 1,
+     "corrections": 0,
+     "note": "appliance box"
+    },
+    "d17-mop-bucket": {
+     "score": 1,
+     "corrections": 1,
+     "note": "bucket with one wheel on its side"
+    },
+    "d18-bike-rack": {
+     "score": 2,
+     "corrections": 0,
+     "note": "base with six uprights"
+    },
+    "d19-stuff": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "d20-usual": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "d21-unit": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "d22-big": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "d23-inch-shelf": {
+     "score": 1,
+     "corrections": 1,
+     "note": "plain slab"
+    },
+    "d24-mixed-bench": {
+     "score": 2,
+     "corrections": 0,
+     "note": "low bench with legs"
+    },
+    "d25-two-lengths": {
+     "score": null,
+     "corrections": null,
+     "note": "no model shown on the sheet"
+    },
+    "d26-ft-m": {
+     "score": 1,
+     "corrections": 1,
+     "note": "white box with stray pieces at the base"
+    },
+    "d27-mixer": {
+     "score": 1,
+     "corrections": 1,
+     "note": "cylinder on a base with a cap"
+    },
+    "d28-fridge": {
+     "score": 2,
+     "corrections": 0,
+     "note": "tall white box on feet"
+    },
+    "d29-compressor": {
+     "score": 0,
+     "corrections": 2,
+     "note": "a vertical disc and a block"
+    },
+    "d30-reveal": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "d31-poison-size": {
+     "score": null,
+     "corrections": null,
+     "note": "no model shown on the sheet"
+    },
+    "d32-dev-mode": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    }
+   },
+   "revisions": {
+    "r01": {
+     "score": 1,
+     "corrections": 1,
+     "note": "wood added but blue uprights remain"
+    },
+    "r02": {
+     "score": 2,
+     "corrections": 0,
+     "note": "red seat and back, silver legs"
+    },
+    "r03": {
+     "score": 1,
+     "corrections": 1,
+     "note": "tray and legs, board floats above"
+    },
+    "r04": {
+     "score": 1,
+     "corrections": 1,
+     "note": "blue bins on the front; feet stick out"
+    },
+    "r05": {
+     "score": 1,
+     "corrections": 0,
+     "note": "lower height not visible in an auto-framed render"
+    },
+    "r06": {
+     "score": 1,
+     "corrections": 1,
+     "note": "yellow band on a grey body; flickering lower half"
+    },
+    "r07": {
+     "score": 1,
+     "corrections": 1,
+     "note": "thin yellow lines on the belt surface, not rails"
+    },
+    "r08": {
+     "score": 1,
+     "corrections": 0,
+     "note": "longer belt not visible in an auto-framed render"
+    },
+    "r09": {
+     "score": 0,
+     "corrections": 2,
+     "note": "solid black box with a glass top; not a thin frame"
+    },
+    "r10": {
+     "score": 1,
+     "corrections": 1,
+     "note": "doors barely visible, no handles"
+    },
+    "r11": {
+     "score": 1,
+     "corrections": 1,
+     "note": "shelves visible only at one side; front looks closed"
+    },
+    "r12": {
+     "score": 2,
+     "corrections": 0,
+     "note": "square top"
+    },
+    "r13": {
+     "score": 2,
+     "corrections": 0,
+     "note": "monitor and keyboard on the top"
+    },
+    "r14": {
+     "score": 2,
+     "corrections": 0,
+     "note": "frame yellow, wheels kept"
+    },
+    "r15": {
+     "score": 1,
+     "corrections": 1,
+     "note": "small pillows; cushions not distinct"
+    },
+    "r16": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "r17": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "r18": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "r19": {
+     "score": 2,
+     "corrections": 0,
+     "note": "twice as wide"
+    },
+    "r20": {
+     "score": 2,
+     "corrections": 0,
+     "note": "shorter"
+    },
+    "r21": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    },
+    "r22": {
+     "score": null,
+     "corrections": null,
+     "note": "no sheet: neither model produced a model"
+    }
+   }
+  }
+ }
+}

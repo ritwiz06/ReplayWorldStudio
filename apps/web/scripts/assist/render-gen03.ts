@@ -100,7 +100,10 @@ const cells: string[] = [];
 async function sheet(workflow: string, id: string, text: string, before: string | null) {
   const order = [...models].sort(() => random() - 0.5);
   key[`${workflow}/${id}`] = Object.fromEntries(order.map((m, i) => [`Option ${i + 1}`, m]));
-  const images = await Promise.all(order.map((m) => shot(`${m}/${id}.glb`)));
+  // One canvas: draw and capture one model at a time (drawing them together would capture the
+  // same picture twice).
+  const images: (string | null)[] = [];
+  for (const m of order) images.push(await shot(`${m}/${id}.glb`));
   if (images.every((i) => i === null)) return;
   const tile = (label: string, src: string | null) =>
     `<figure><figcaption>${label}</figcaption>${src ? `<img src="${src}">` : '<div class="none">no model</div>'}</figure>`;

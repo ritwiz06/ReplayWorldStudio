@@ -1,6 +1,6 @@
 // GEN-03: score the language-edit answers of each model with the browser's own resolver.
 //
-//   pnpm --filter @replay-world/web exec node scripts/assist/score-gen03-edits.ts [--set DIR]
+//   pnpm --filter @replay-world/web exec node scripts/assist/run-ts.mjs scripts/assist/score-gen03-edits.ts [--set DIR]
 //
 // For every held-out edit (<set>/edits.json) and every model's answer (<set>/results/*.json), the
 // proposed intent is resolved and applied exactly as the editor would (src/assist/editScoring.ts).

@@ -1,6 +1,6 @@
-# Language assistance and generated objects (GEN-01, GEN-02)
+# Language assistance and generated objects (GEN-01, GEN-02, GEN-03)
 
-What the description assistant, language edits and model revisions do, how the key and data are handled, what was verified against the live provider, and what generated models can and cannot represent. Decisions: ADR-031 to ADR-035 and ADR-039 to ADR-041 in [prompts/DECISIONS.md](../prompts/DECISIONS.md). Contract details: [docs/contracts.md](contracts.md#generated-objects-050-gen-01) and [revised generated objects](contracts.md#revised-generated-objects-070-gen-02). Improving a placed model: [below](#improving-a-placed-generated-model-gen-02).
+What the description assistant, language edits and model revisions do, how the key and data are handled, what was verified against the live provider, and what generated models can and cannot represent. Decisions: ADR-031 to ADR-035 and ADR-039 to ADR-042 in [prompts/DECISIONS.md](../prompts/DECISIONS.md). Contract details: [docs/contracts.md](contracts.md#generated-objects-050-gen-01) and [revised generated objects](contracts.md#revised-generated-objects-070-gen-02). Improving a placed model: [below](#improving-a-placed-generated-model-gen-02). Held-out evaluation and the model choice: [below](#held-out-evaluation-gen-03).
 
 ## The path from words to a placed object
 
@@ -161,8 +161,8 @@ From the final timed run (`docs/gen-01/`, downscaled):
 
 ## Limits and next steps
 
-- A proposal takes about 50–85 s with this model. A smaller model (for example `qwen3-30b-a3b-instruct-2507`) may be much faster; GEN-03 should compare models on a larger held-out set.
-- Layout quality varies from run to run. GEN-02 (2026-10-15) lets the user correct a placed generated object in words or by hand; GEN-03 (evaluation with human review of visual plausibility, now including model revisions) is still open.
+- A proposal takes about 50–85 s with this model. GEN-03 compared it with the smaller `qwen3-30b-a3b-instruct-2507` on a held-out set: the smaller model was 3–5 times faster but failed four quality gates, so the default is unchanged ([below](#held-out-evaluation-gen-03)).
+- Layout quality varies from run to run. GEN-02 (2026-10-15) lets the user correct a placed generated object in words or by hand. GEN-03 (2026-10-15) evaluated descriptions, edits and revisions on a held-out set with a blind visual review; revisions still miss two gates (GEN-04).
 - Only move and turn edits are supported, one object at a time. Directions are plan axes, not relative to the camera.
 - IMG-01 (one image to an editable world) was implemented on 2026-10-14 with `qwen3-vl-32b-instruct`; see [docs/image-import.md](image-import.md). Voyager's image- and video-generation models are not image-to-3D services and are not treated as such.
 
@@ -225,3 +225,29 @@ Every successful answer was schema-valid on the first attempt.
 **Recorded (offline) results.** `fixtures/assist/recorded/revision-*.json` hold the live answers and are replayed in pytest (`test_assist_recorded.py`) and in `e2e/improve.spec.ts`, labelled not live AI; their latencies are not measurements.
 
 **What a revision still cannot show:** an opening within a single part (open structures only from separate panels); slanted or curved surfaces beyond cylinders, frustums and spheres; rotated parts; hinges, doors or moving parts; textures, labels or wire mesh (clear panels stand in for guards; mesh or perforation is reported, not imitated); photo textures. Panel proportions depend on the model. Fitting the parts to the overall size can rescale them slightly, which the change list reports as "resized or moved".
+
+## Held-out evaluation (GEN-03)
+
+Full report: [docs/assist-evaluation/gen-03/report.md](assist-evaluation/gen-03/report.md); criteria, cases and run commands in the same folder. Evaluation rules: ADR-042.
+
+- **Set and run.** 32 descriptions, 31 edits on a new packing-room scene and 22 revisions of 16 models (9 made from photos), frozen with pre-registered gates in `435095a` before any run. One live run on 2026-10-15 (66.5 min, 170 requests) through the API endpoints, sequential, the two models alternating per case. Live results only; a blind visual review with the key opened after scoring.
+- **Models.** Baseline `qwen3-235b-a22b-instruct-2507` (the default) and candidate `qwen3-30b-a3b-instruct-2507`, with the same prompts (`gen-01.5`, `gen-02.2`), schemas, retry and 150 s timeout.
+
+| Measure | Baseline 235B | Candidate 30B | Gate |
+| --- | --- | --- | --- |
+| Safety (leaks, hostile requests followed, extreme edits applied, unintended changes) | all 0 ✓ | all 0 ✓ | all 0 |
+| Stated sizes retained / silently changed / invented facts | 30/30, 0, 0 ✓ | 29/29, 0, 0 ✓ | ≥ 95 %, 0, 0 |
+| Descriptions: outcome as expected | 31/32 ✓ | 27/32 (84 %) ✗ | ≥ 85 % |
+| Descriptions: visual review mean (zeros) | 1.32 (3/25) ✓ | 1.00 (5/23) ✗ | ≥ 1.3, ≤ 15 % |
+| Edits: outcome accepted / exact proposals | 30/31, 14/14 ✓ | 28/31 ✓, 14/15 ✗ | ≥ 90 %, ≥ 95 % |
+| Revisions: outcome as expected | 17/22 (77 %) ✗ | 19/22 ✓ | ≥ 85 % |
+| Revisions: unrepresentable listed in `not_represented` | 1/3 ✗ | 0/3 ✗ | ≥ 80 % |
+| Revisions: visual review mean | 1.67 ✓ | 1.29 ✓ | ≥ 1.2 |
+| Waiting medians, descriptions / edits / revisions | 43.4 / 6.4 / 49.0 s ✓ | 9.7 / 1.8 / 12.3 s ✓ | ≤ 60 / 20 / 60 s |
+| Timeouts (85 requests each) | 1 (r04, 150 s) ✓ | 0 ✓ | ≤ 5 % |
+
+The other revision gates (requested change present, size kept or changed as asked, open requests with largest part < 50 %) were met by both. The baseline's p95 waits were 83.3 / 16.4 / 128.2 s.
+
+**Decision.** `qwen3-235b-a22b-instruct-2507` stays the default (Update to ADR-032). The candidate failed four gates and rated "clearly recognisable" on 22 points fewer descriptions; its speed does not decide. The baseline fails two revision gates, so **M2 stays open**. Its revision answers refuse mixed instructions instead of doing the representable part (r16–r18), and leave `not_represented` empty; the refusal messages do name the problem, so nothing was imitated. **GEN-04** (honest partial revisions) addresses this and will be tested on a fresh frozen set, never on these cases.
+
+**Other findings** (not gates): parts hidden inside another part in 8/25 baseline proposals (the next visual fix after GEN-04); crude objects (neither model drew a pallet truck's forks); floating or protruding parts. Correction effort, as the reviewer's count of fixes and not a timed study: baseline 17 fixes for 25 objects and 3 for 15 revisions. The review was done by the assistant running the evaluation, blind to model identity but not independent; no participants were involved.

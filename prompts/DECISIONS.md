@@ -556,3 +556,36 @@ For a new decision, append: ID, date, status, context, options considered, decis
 - Consequences: proposals take about 30–110 s; a long instruction timed out at 150 s once. Panel proportions depend on the model (0.1 m top and bottom boards). Fitting can rescale parts slightly, reported as "resized or moved". The machine-guard result is only modestly closer to the photo. The checks catch misrepresentation, not ugliness.
 - Evidence: docs/assist-evaluation/gen-02.1.json and gen-02.2.json (every successful answer schema-valid on the first attempt); `services/api/tests/test_revisions.py`; recorded replays in `test_assist_recorded.py`; screenshots in docs/gen-02/.
 - Revisit when: GEN-03 evaluates revisions on held-out instructions, the generator gains openings or rotated parts, or a faster model is chosen.
+
+### Update to ADR-032 (2026-10-15, GEN-03)
+
+- **Evaluated confirmation.** ADR-032's "revisit when GEN-03 compares models (a faster model may suffice)" has been acted on. `qwen3-235b-a22b-instruct-2507` stays the default for object proposals, edits and model revisions; the decision is unchanged in substance. Evidence: one live run of both models on the frozen GEN-03 held-out set (32 descriptions, 31 edits, 22 revisions; 170 requests; docs/assist-evaluation/gen-03/report.md).
+- **`qwen3-30b-a3b-instruct-2507` rejected** by the pre-registered rule (it replaces the baseline only if it passes every gate and is at most 10 points worse on any quality measure; speed alone never decides). It failed four gates:
+  - description outcomes 27/32 (84 %; gate 85 %);
+  - visual review mean 1.00 with 5/23 zeros (gate ≥ 1.3 with ≤ 15 % zeros);
+  - exact edit proposals 14/15 (93 %; gate 95 %);
+  - unrepresentable features listed in `not_represented` 0/3 (gate 80 %).
+
+  It also rated "clearly recognisable" on 22 points fewer descriptions than the baseline (5/23 vs 11/25). It was 3–5 times faster (medians 9.7 / 1.8 / 12.3 s for descriptions / edits / revisions, against 43.4 / 6.4 / 49.0 s), which does not decide.
+- **The baseline is not cleared everywhere.** It passed every safety, measurement, description, edit and waiting gate, but failed two revision gates (outcomes 17/22; unrepresentable listing 1/3). That is a prompt and check problem for GEN-04, not a reason to change model.
+- `VOYAGER_MODEL` stays configurable. Revisit when Voyager offers a new text model, or GEN-04 shows the revision gates cannot be met with this one; any new comparison follows ADR-042.
+
+### ADR-042 - Evaluation rules for assistance models
+
+- Date: 2026-10-15. Status: adopted (GEN-03).
+- Context: GEN-03 had to choose a default text model and decide whether M2 can close, from live answers that vary between runs. A comparison set or threshold chosen after seeing results, recorded answers presented as live, or a reviewer who knows which model drew which picture would each make the result unreliable. GEN-04 and later evaluations (IMG-03, AI-01, QA-01) need the same rules.
+- Options considered:
+  - informal spot checks on development cases (fast, but the prompts were tuned on those cases, so they flatter the shipped model);
+  - a held-out set scored after the fact, thresholds chosen with the results in view (open to moving the goalposts);
+  - a held-out set and gates frozen and committed before any run, run once live, with a blind visual review (chosen).
+- Decision:
+  - **Pre-registered.** Cases, measures and gates are written and committed before any model sees the held-out set (GEN-03: `435095a`). A threshold is never changed after results are seen.
+  - **Held-out sets are used once.** A set that has been run is never reused for a revised claim; a fix is tested on a fresh, frozen set (GEN-04 does this for revisions). Development and pilot cases come from development sets only.
+  - **Live results only.** Reported results come from live calls through the real API endpoints. Recorded answers are for offline tests and are never reported as live.
+  - **Blind visual review.** Renders are labelled by option at random; the key stays closed until every sheet is scored, and the reviewer is named.
+  - **Run conditions.** Requests run sequentially with models alternating per case, so both see the same load. Future evaluations: a pilot on development cases first (to catch tooling faults), at most 2 requests in flight per model, backing off to 1 on any 429 or rising errors or timeouts, and the concurrency stated with every latency figure.
+  - **Diagnostics are not gates.** "Parts hidden inside another part" is reported as a diagnostic, not a pass/fail gate.
+- Rationale: in GEN-03 the gates fixed in advance decided both questions: the faster model was rejected on them, and the default's two revision failures keep M2 open instead of being explained away. Blinding keeps the reviewer's knowledge of which model is which out of the visual scores.
+- Consequences: an evaluation takes longer (GEN-03's sequential live run took 66.5 min), and every corrective claim needs new cases. Two tooling faults appeared only on first use after the run (the edit scorer's module loading; both render options drawn on one canvas); they were fixed before scoring and did not affect blinding, and a pilot on development cases is meant to catch such faults earlier. The reviewer was the assistant running the evaluation, not an independent person, and correction effort is a reviewer's count, not a timed study; reports say so.
+- Evidence: docs/assist-evaluation/gen-03/criteria.md (frozen in `435095a`), README.md (run commands and the pilot and concurrency rules), report.md, review.json; `tests/test_gen03_evaluation.py`.
+- Revisit when: an independent reviewer or a user study becomes available, a gate proves unmeasurable, or concurrency is needed and its effect on latency has been measured.

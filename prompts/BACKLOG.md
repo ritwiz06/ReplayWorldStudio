@@ -194,9 +194,40 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P0
 - Dependencies: GEN-01
-- Baseline status: planned
+- Status: **done** (2026-10-15; results commit `<pending>`; CI `<pending>`). The chosen default fails two revision gates, so M2 is **not** complete; GEN-04 is the corrective task.
 - Done when: A held-out set (at least 30 descriptions and 30 edit requests, including ambiguous, unsupported, missing-value and hostile-text cases) reports schema adherence, grounding of stated values, correct clarifications, unintended changes, visual distinctness review and manual correction time, for at least two candidate models; failures are categorised; the chosen default model is justified by the results.
 - Note (2026-10-15, after GEN-02): still open, so M2 is not complete. The held-out set should also include model-revision instructions (the `gen-02.x` cases in `scripts/model_revision_cases.json` are development cases, not held out): open structures, colour and part changes, size changes, unrepresentable requests and photo-made objects, reporting outcome, size kept or changed as asked, largest-part share for "open" requests, overlaps, not-represented listing, latency and a visual review.
+- Evidence (full report: docs/assist-evaluation/gen-03/report.md; Update to ADR-032, ADR-042):
+  - **Frozen before any run.** The held-out set (32 descriptions, 31 edits on a new packing-room scene, 22 revisions of 16 models, 9 made from photos) and the pre-registered gates (docs/assist-evaluation/gen-03/criteria.md) were committed and pushed in `435095a`; neither was changed after the run. The tooling was committed in `0aa5a21` (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38805487436 green) while the run was in progress.
+  - **Live run.** One run on 2026-10-15, 20:31:53–21:38:23 UTC (66.5 min): 170 requests, baseline `qwen3-235b-a22b-instruct-2507` and candidate `qwen3-30b-a3b-instruct-2507`, through the API endpoints in-process (same prompts `gen-01.5`/`gen-02.2`, schemas, one retry, 150 s timeout), sequential, models alternating per case. Not restarted or duplicated. Live results only; no recorded answers were used.
+  - **Blind visual review.** Renders labelled Option 1/2 at random; the key was opened after scoring. The reviewer was the assistant running the evaluation, not an independent person or a participant.
+  - **Baseline against the gates:**
+    - safety (prompt or key leaks, hostile requests followed, extreme edits applied, unintended scene changes): all 0 ✓;
+    - stated sizes retained 30/30 ✓; silently changed 0 ✓; invented physical facts 0 ✓;
+    - descriptions: outcome 31/32 ✓; visual review mean 1.32 with 3/25 zeros ✓;
+    - edits: outcome 30/31 ✓; exact proposals 14/14 ✓;
+    - revisions: outcome **17/22 (77 %) ✗** (gate 85 %); requested change present 10/11 ✓; size kept or changed as asked 15/15 ✓; open requests with largest part < 50 % 2/2 ✓; **unrepresentable listed in `not_represented` 1/3 ✗** (gate 80 %; 3/3 counting the refusal messages, which is not the gate's wording); visual review mean 1.67 ✓;
+    - waiting medians 43.4 / 6.4 / 49.0 s for descriptions / edits / revisions ✓ (p95 83.3 / 16.4 / 128.2 s); 1 timeout (r04, 150 s) of 85 requests ✓.
+  - **Candidate rejected** by the pre-registered rule (replace the baseline only if every gate passes and no quality measure is more than 10 points worse; speed never decides). It failed four gates: description outcomes 27/32 (84 %), visual review mean 1.00 with 5/23 zeros, exact edits 14/15 (93 %), unrepresentable listing 0/3; and it rated "clearly recognisable" on 22 points fewer descriptions. It was 3–5 times faster (medians 9.7 / 1.8 / 12.3 s vs 43.4 / 6.4 / 49.0 s). **The default stays `qwen3-235b-a22b-instruct-2507`.**
+  - **Failures categorised** (report.md, with case IDs): unrecognisable or crude geometry (neither model drew pallet-truck forks); parts hidden inside another part (diagnostic, not a gate: 8/25 baseline, 11/23 candidate proposals); floating or protruding parts; refusals instead of doing the representable part of a mixed revision (r16–r18); wrong outcomes (baseline d27, e13; candidate refused the four vague descriptions and guessed e14); timeouts and cut-off answers; unrelated parts changed.
+  - **Correction effort** (the reviewer's count of fixes before use, not a timed study): baseline 17 fixes for 25 objects and 3 for 15 revisions; candidate 24 for 23 and 10 for 17.
+  - **GEN-02 baselines re-examined:** revision wait median 49 s, p95 128 s and one 150 s timeout for the default (candidate median 12 s); the machine-guard failure did not recur with fresh wording (r06 baseline scored 2).
+  - **Tooling:** `scripts/evaluate_gen03.py` (runner; resume keeps recorded errors unless `--retry-errors`; atomic writes), `scripts/score_gen03.py`, `scripts/unblind_gen03_review.py`, `apps/web/src/assist/editScoring.ts` (+ test), `apps/web/scripts/assist/{score-gen03-edits.ts,render-gen03.ts,run-ts.mjs}`; `tests/test_gen03_evaluation.py` (7). Two tooling faults found on first use after the run and fixed before scoring and review: the edit scorer needed a Vite-based launcher (`run-ts.mjs`) to load app modules, and the render script drew both options concurrently on one canvas (both sheets showed the same picture; now sequential). Blinding was not affected.
+  - **Results:** docs/assist-evaluation/gen-03/{results/*.json, edit-scores.json, scores.json, review.json, report.md, renders/*.jpg}.
+  - **Checks (local):** `pnpm check` exit 0 (Vitest 10 + 150, pytest 605; re-run after the last tooling edits). CI for the results commit: `<pending>`.
+  - **Not shown:** physical properties of provisional geometry; waiting times are scripted, one request at a time; correction effort is not a user study (no participants).
+
+### GEN-04 - Honest partial revisions
+
+- Priority: P0
+- Dependencies: GEN-02, GEN-03
+- Baseline status: planned (added 2026-10-15 after GEN-03 as the M2 corrective task; M2 closes when it passes)
+- Done when:
+  - When an instruction mixes representable and unrepresentable requests, the revision does the representable part and lists the rest in `not_represented`; "unsupported" is kept for instructions with nothing representable in them.
+  - When the answer is "unsupported" because of unrepresentable features, those features are copied into `not_represented`.
+  - Revision answers have a bounded part budget so they finish well inside the 150 s timeout.
+  - Developed on the four GEN-02 development cases plus new development cases, never on the GEN-03 held-out set. Then a fresh, frozen set of at least 15 revision instructions (5 mixed-representability, 5 open structures, 5 colour or part changes) is run once on the default model and passes the same GEN-03 revision gates.
+- Note (2026-10-15): from the GEN-03 report. The default failed revision outcomes (17/22, 77 %) and unrepresentable listing in the field (1/3); r16–r18 were refused as "unsupported" instead of doing the representable part, and r04 timed out at 150 s. Hidden parts in object proposals (8/25, a diagnostic) are the next visual fix after this issue, not a gate.
 - Evidence: not recorded
 
 ## M3 - Image to editable world

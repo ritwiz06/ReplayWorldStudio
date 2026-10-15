@@ -384,6 +384,48 @@ Append entries in chronological order. If a live repository session log already 
 - Milestone status after this session: M2 in progress (GEN-01 and GEN-02 done; GEN-03 open). M3 in progress (IMG-01 done; IMG-02, IMG-03 open).
 - Next concrete task: GEN-03 (held-out evaluation of descriptions, edits and model revisions, at least two candidate models) to close M2.
 
+## 2026-10-15 - GEN-03 held-out evaluation of the Voyager text models
+
+- Active milestone / issue IDs: M2 / GEN-03 (M3 stays open: IMG-02, IMG-03).
+- Starting branch and relevant commit: `main` at `fc5713d` (GEN-02 records).
+- Goal and completion criteria: the GEN-03 acceptance in BACKLOG.md.
+  - A held-out set of at least 30 descriptions and 30 edits, plus model-revision instructions, run on at least two candidate models.
+  - Schema adherence, grounding of stated values, clarifications, unintended changes, a visual review and correction effort reported; failures categorised; the default model justified.
+  - Decide whether M2 can close under criteria fixed before the run.
+- Work completed:
+  - **Freeze.** 32 descriptions, 31 edits on a new packing-room scene (`edit-scene.json`) and 22 revisions of 16 models (9 made from photos), with pre-registered measures and gates (docs/assist-evaluation/gen-03/criteria.md), committed and pushed in `435095a` before any run. Neither was changed afterwards.
+  - **Run.** One live run, 20:31:53–21:38:23 UTC (13:31–14:38 local; 66.5 min): 170 requests, baseline `qwen3-235b-a22b-instruct-2507` and candidate `qwen3-30b-a3b-instruct-2507`, through the API endpoints in-process, sequential, models alternating per case. Not restarted or duplicated. Live results only.
+  - **Tooling, during the run.** Scorer and runner tests on synthetic fixtures; safe resume (atomic writes, recorded errors kept unless `--retry-errors`); edit scoring moved into the app's resolver module (`apps/web/src/assist/editScoring.ts`); blind-render and unblinding tools; the report template. Committed as `0aa5a21`; CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38805487436 green. The run used the runner committed later as `0aa5a21` minus its resume and atomic-write changes (the results record `435095a`, the HEAD when the run started); the run was not interrupted, so those changes did not apply.
+  - **Scoring.** One automatic scoring pass (`edit-scores.json`, `scores.json`).
+  - **Review.** Blind visual review of descriptions and revisions (Option 1/2 at random; the key opened after scoring), then unblinding (`review.json`). The reviewer was the assistant running the evaluation.
+  - **Report.** docs/assist-evaluation/gen-03/report.md with the results table, representative renders (`renders/*.jpg`), failures by category with case IDs, and the decision.
+- Issues found and fixed during the session (both found on first use after the run, fixed before scoring and review; blinding was not affected):
+  - The edit scorer could not load the app's modules under plain Node: a Vite-based launcher (`apps/web/scripts/assist/run-ts.mjs`) now runs it.
+  - The render script drew both options concurrently on one canvas, so both sheets showed the same picture: it now renders them one after the other.
+- Relevant files changed: docs/assist-evaluation/gen-03/** (set, criteria, README, results, scores, review, report, renders), scripts/{evaluate_gen03,score_gen03,unblind_gen03_review}.py, apps/web/src/assist/editScoring{,.test}.ts, apps/web/scripts/assist/{score-gen03-edits.ts,render-gen03.ts,run-ts.mjs}, tests/test_gen03_evaluation.py, README.md, docs/assist.md, prompts/{MILESTONES,BACKLOG,DECISIONS,PROJECT_STATE,SESSION_LOG}.md.
+- Commands run and actual outcomes:
+  - **Live run** (`uv run python scripts/evaluate_gen03.py`): baseline 1 timeout (r04, 150 s) in 85 requests; candidate 3 answers cut off mid-JSON after about 117–120 s and still invalid after the retry.
+  - **Baseline against the gates:** safety all 0 ✓; stated sizes retained 30/30 ✓, silently changed 0 ✓, invented facts 0 ✓; descriptions 31/32 ✓, visual mean 1.32 with 3/25 zeros ✓; edits 30/31 ✓, exact 14/14 ✓; revisions outcome **17/22 (77 %) ✗**, change present 10/11 ✓, size as asked 15/15 ✓, open < 50 % 2/2 ✓, **unrepresentable listed in the field 1/3 ✗** (3/3 counting refusal messages, not the gate's wording), visual mean 1.67 ✓; waiting medians 43.4 / 6.4 / 49.0 s ✓ (p95 83.3 / 16.4 / 128.2 s). Diagnostic: 8/25 proposals with parts hidden inside another part.
+  - **Candidate:** failed description outcomes 27/32 (84 %), visual review mean 1.00 with 5/23 zeros, exact edits 14/15 (93 %) and unrepresentable listing 0/3; 22 points fewer "clearly recognisable" descriptions; medians 9.7 / 1.8 / 12.3 s.
+  - **Correction effort** (reviewer's count, not a timed study): baseline 17 fixes for 25 objects and 3 for 15 revisions; candidate 24 for 23 and 10 for 17.
+  - **GEN-02 baselines re-examined:** the default's revision wait is median 49 s, p95 128 s, one 150 s timeout (candidate median 12 s); the machine-guard failure did not recur with fresh wording (r06 baseline scored 2).
+  - **Local checks.** `pnpm check` exit 0 (Vitest 10 + 150, pytest 605), re-run after the last tooling edits with the same counts.
+- Visual evidence: docs/assist-evaluation/gen-03/renders/*.jpg (tool cart, sofa, hospital bed, bike rack, shelving trolley; revisions r01, r06, r07, r09, r11).
+- Decisions changed and rationale: Update to ADR-032 (the default `qwen3-235b-a22b-instruct-2507` confirmed on the held-out set; `qwen3-30b-a3b-instruct-2507` rejected by the pre-registered rule; speed does not decide); ADR-042 (evaluation rules: pre-registered criteria, held-out sets used once, live results only, blind review, sequential alternating runs, a pilot and limited concurrency next time, hidden parts as a diagnostic).
+- Known limitations / blockers: no blocker.
+  - The default fails two revision gates: mixed instructions are refused instead of doing the representable part, and `not_represented` usually stays empty (r16–r18).
+  - Parts hidden inside another part (8/25 proposals); crude objects such as the pallet truck (no forks from either model), the tool cart and the bike rack; floating or protruding parts.
+  - Revision waits up to 128 s at p95, with one 150 s timeout.
+  - The review was blind but not independent; correction effort is not a user study; timings are scripted, one request at a time.
+- Exact reproduction commands and working directories: repo root, with `VOYAGER_API_KEY` in `.env`; see docs/assist-evaluation/gen-03/README.md.
+  - `uv run python scripts/evaluate_gen03.py` (live; resumes after an interruption).
+  - `pnpm --filter @replay-world/web exec node scripts/assist/run-ts.mjs scripts/assist/score-gen03-edits.ts`, then `uv run python scripts/score_gen03.py`.
+  - `uv run python scripts/evaluate_gen03.py --build-targets`, `pnpm --filter @replay-world/web exec node scripts/assist/render-gen03.ts`, then `uv run python scripts/unblind_gen03_review.py bench-results/gen-03-review/review-blind.json bench-results/gen-03-review/blind-key.json` and `uv run python scripts/score_gen03.py`.
+- Actual effort, if tracked: run 66.5 min; about 28 min of it development (tooling above), about 38 min idle waiting; then one scoring pass and the review (not timed).
+- CI: tooling commit `0aa5a21`, https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38805487436 green. Results commit `<pending>`; CI `<pending>`.
+- Milestone status after this session: M2 in progress (GEN-01, GEN-02 and GEN-03 done; GEN-04 open; M2 closes when GEN-04 passes). M3 in progress (IMG-01 done; IMG-02, IMG-03 open).
+- Next concrete task: GEN-04 (honest partial revisions): do the representable part of a mixed instruction and list the rest, copy unrepresentable features into `not_represented` when a revision is refused, and bound the part budget; develop on the GEN-02 development cases plus new ones, then run a fresh frozen set of at least 15 revision instructions once on the default against the same revision gates.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

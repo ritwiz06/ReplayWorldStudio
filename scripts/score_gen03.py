@@ -344,13 +344,18 @@ def summarise(
     scores = review.get(model)
     if scores:
         for workflow in ("descriptions", "revisions"):
-            values = [v["score"] for v in scores.get(workflow, {}).values()]
+            values = [
+                v["score"] for v in scores.get(workflow, {}).values() if v["score"] is not None
+            ]
             if values:
                 summary[workflow]["visual_review"] = {
                     "n": len(values),
                     "mean": round(statistics.mean(values), 2),
                     "zero": sum(v == 0 for v in values),
                     "two": sum(v == 2 for v in values),
+                    "corrections": sum(
+                        v["corrections"] or 0 for v in scores.get(workflow, {}).values()
+                    ),
                 }
     return summary
 

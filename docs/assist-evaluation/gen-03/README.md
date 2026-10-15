@@ -28,7 +28,7 @@ or written). Provider calls stay out of CI.
 uv run python scripts/evaluate_gen03.py
 
 # 2. Automatic scores (edits through the browser's own resolver, then everything else).
-pnpm --filter @replay-world/web exec node scripts/assist/score-gen03-edits.ts
+pnpm --filter @replay-world/web exec node scripts/assist/run-ts.mjs scripts/assist/score-gen03-edits.ts
 uv run python scripts/score_gen03.py
 
 # 3. Blind visual review: render the models, score the sheets by option without the key,
