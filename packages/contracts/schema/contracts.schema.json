@@ -1919,12 +1919,13 @@
     },
     "ModelRevisionProposalResult": {
       "additionalProperties": false,
-      "description": "A proposed specification change, checked and fitted; nothing is built or stored.\n\n``outcome`` is ``unsupported`` when the instruction is not a change to this object, or when\nthe proposal would misrepresent it (for example a solid block offered as an open shelf);\n``message`` then says why and ``spec`` is null.",
+      "description": "A proposed specification change, checked and fitted; nothing is built or stored.\n\nThree outcomes (GEN-04):\n\n* ``proposal``: the drawable part of the request, as a new specification. ``partial`` is\n  true when the request also asked for things the generator cannot show; they are listed in\n  ``not_represented``, each grounded in the user's own words.\n* ``unsupported``: nothing drawable was asked for (or the proposal would misrepresent the\n  object, such as a solid block offered as an open shelf); ``message`` says why,\n  ``not_represented`` lists what could not be shown, and nothing changes.\n* ``already_satisfied``: the current model already shows what was asked; ``message`` says\n  how, and no identical new version is made.",
       "properties": {
         "outcome": {
           "enum": [
             "proposal",
-            "unsupported"
+            "unsupported",
+            "already_satisfied"
           ],
           "type": "string"
         },
@@ -1962,6 +1963,9 @@
             }
           ]
         },
+        "partial": {
+          "type": "boolean"
+        },
         "size_changed": {
           "type": "boolean"
         },
@@ -1990,6 +1994,7 @@
         "message",
         "spec",
         "summary",
+        "partial",
         "size_changed",
         "not_represented",
         "checks",

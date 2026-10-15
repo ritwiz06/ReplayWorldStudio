@@ -306,7 +306,10 @@ def test_the_recorded_open_shelf_has_separate_panels_and_keeps_its_size() -> Non
     e = result.spec.envelope_m
     shares = [p.size_m.x * p.size_m.y * p.size_m.z / (e.x * e.y * e.z) for p in result.spec.parts]
     assert max(shares) < 0.1  # panels and shelves, no solid block standing in for the opening
-    assert sum("shelf" in p.label for p in result.spec.parts) >= 2
+    # At least two thin horizontal boards across the width (shelves, top or bottom), whatever
+    # the model calls them.
+    boards = [p for p in result.spec.parts if p.size_m.y < 0.05 and p.size_m.x > 0.5 * e.x]
+    assert len(boards) >= 2
 
 
 def test_the_recorded_colour_change_keeps_the_size_and_uses_the_colours() -> None:

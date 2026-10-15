@@ -238,5 +238,260 @@
       ]
     },
     "instruction": "make this a wooden pallet with cardboard boxes stacked on top of it instead of one solid block"
+  },
+  {
+    "label": "dev-mixed-cabinet",
+    "name": "Storage cabinet",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 0.8,
+        "y": 1.9,
+        "z": 0.4
+      },
+      "parts": [
+        {
+          "id": "body",
+          "label": "cabinet body",
+          "shape": "rounded_box",
+          "material": "wood",
+          "center_m": {
+            "x": 0,
+            "y": 1.0,
+            "z": 0
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 1.8,
+            "z": 0.4
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        },
+        {
+          "id": "plinth",
+          "label": "plinth",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+          },
+          "size_m": {
+            "x": 0.76,
+            "y": 0.1,
+            "z": 0.36
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        }
+      ]
+    },
+    "instruction": "put it on four wheels that actually turn and paint it blue"
+  },
+  {
+    "label": "dev-unsupported-cabinet",
+    "name": "Storage cabinet",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 0.8,
+        "y": 1.9,
+        "z": 0.4
+      },
+      "parts": [
+        {
+          "id": "body",
+          "label": "cabinet body",
+          "shape": "rounded_box",
+          "material": "wood",
+          "center_m": {
+            "x": 0,
+            "y": 1.0,
+            "z": 0
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 1.8,
+            "z": 0.4
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        },
+        {
+          "id": "plinth",
+          "label": "plinth",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+          },
+          "size_m": {
+            "x": 0.76,
+            "y": 0.1,
+            "z": 0.36
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        }
+      ]
+    },
+    "instruction": "make it fireproof and soundproof"
+  },
+  {
+    "label": "dev-satisfied-cabinet",
+    "name": "Storage cabinet",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 0.8,
+        "y": 1.9,
+        "z": 0.4
+      },
+      "parts": [
+        {
+          "id": "body",
+          "label": "cabinet body",
+          "shape": "rounded_box",
+          "material": "wood",
+          "center_m": {
+            "x": 0,
+            "y": 1.0,
+            "z": 0
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 1.8,
+            "z": 0.4
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        },
+        {
+          "id": "plinth",
+          "label": "plinth",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+          },
+          "size_m": {
+            "x": 0.76,
+            "y": 0.1,
+            "z": 0.36
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        }
+      ]
+    },
+    "instruction": "make it wooden"
+  },
+  {
+    "label": "dev-many-bins",
+    "name": "Storage cabinet",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 0.8,
+        "y": 1.9,
+        "z": 0.4
+      },
+      "parts": [
+        {
+          "id": "body",
+          "label": "cabinet body",
+          "shape": "rounded_box",
+          "material": "wood",
+          "center_m": {
+            "x": 0,
+            "y": 1.0,
+            "z": 0
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 1.8,
+            "z": 0.4
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        },
+        {
+          "id": "plinth",
+          "label": "plinth",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+          },
+          "size_m": {
+            "x": 0.76,
+            "y": 0.1,
+            "z": 0.36
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        }
+      ]
+    },
+    "instruction": "make it a cubby shelf with twelve open cubbies and a plastic bin in each"
+  },
+  {
+    "label": "photo-pallet-mixed",
+    "name": "Stacked cardboard boxes on pallet",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 1.286,
+        "y": 1.044,
+        "z": 0.857
+      },
+      "parts": [
+        {
+          "id": "body",
+          "label": "body",
+          "shape": "rounded_box",
+          "material": "pallet_wood",
+          "center_m": {
+            "x": 0,
+            "y": 0.522,
+            "z": 0
+          },
+          "size_m": {
+            "x": 1.286,
+            "y": 1.044,
+            "z": 0.857
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        }
+      ]
+    },
+    "instruction": "put it on four caster wheels that actually roll and stack two cardboard boxes on it"
   }
 ]

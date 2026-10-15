@@ -365,15 +365,23 @@ class ModelRevisionProposalRequest(ContractModel):
 class ModelRevisionProposalResult(ContractModel):
     """A proposed specification change, checked and fitted; nothing is built or stored.
 
-    ``outcome`` is ``unsupported`` when the instruction is not a change to this object, or when
-    the proposal would misrepresent it (for example a solid block offered as an open shelf);
-    ``message`` then says why and ``spec`` is null.
+    Three outcomes (GEN-04):
+
+    * ``proposal``: the drawable part of the request, as a new specification. ``partial`` is
+      true when the request also asked for things the generator cannot show; they are listed in
+      ``not_represented``, each grounded in the user's own words.
+    * ``unsupported``: nothing drawable was asked for (or the proposal would misrepresent the
+      object, such as a solid block offered as an open shelf); ``message`` says why,
+      ``not_represented`` lists what could not be shown, and nothing changes.
+    * ``already_satisfied``: the current model already shows what was asked; ``message`` says
+      how, and no identical new version is made.
     """
 
-    outcome: Literal["proposal", "unsupported"]
+    outcome: Literal["proposal", "unsupported", "already_satisfied"]
     message: NonEmptyText | None
     spec: GeometrySpec | None
     summary: NonEmptyText | None
+    partial: bool
     size_changed: bool
     not_represented: list[NonEmptyText]
     checks: list[NonEmptyText]
@@ -383,8 +391,12 @@ class ModelRevisionProposalResult(ContractModel):
     def _consistent(self) -> ModelRevisionProposalResult:
         if (self.outcome == "proposal") != (self.spec is not None):
             raise ValueError("a proposal (and only a proposal) carries a specification")
-        if self.outcome == "unsupported" and self.message is None:
-            raise ValueError("an unsupported outcome explains why in 'message'")
+        if self.outcome != "proposal" and self.message is None:
+            raise ValueError(f"an '{self.outcome}' outcome explains itself in 'message'")
+        if self.partial != (self.outcome == "proposal" and bool(self.not_represented)):
+            raise ValueError(
+                "'partial' marks exactly the proposals that leave requested features unshown"
+            )
         return self
 
 

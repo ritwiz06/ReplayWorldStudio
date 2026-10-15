@@ -69,14 +69,37 @@ class RawObjectAnswer(_Raw):
     parts: list[RawPart]
 
 
+class RawCounts(_Raw):
+    x: int
+    y: int
+    z: int
+
+
+class RawRepeat(_Raw):
+    """One new part copied along X, Y and Z: ``counts`` copies per axis, ``step_m`` apart (centre
+    to centre); the given part is the first copy. Keeps answers short for repeated items."""
+
+    part: RawPart
+    counts: RawCounts
+    step_m: RawVec
+
+
 class RawRevisionAnswer(_Raw):
-    outcome: Literal["revision", "unsupported"]
-    message: str | None
+    """A revision as changes to the current parts (GEN-04): parts not listed are kept as they
+    are, so the answer stays short and unrelated parts cannot drift."""
+
+    outcome: Literal["revision", "unsupported", "already_satisfied"]
+    message: str | None = Field(description="For unsupported or already_satisfied: why.")
     summary: str | None = Field(description="What changed, in one sentence.")
     envelope_m: RawVec
-    parts: list[RawPart] = Field(description="The complete revised parts list.")
+    remove: list[str] = Field(description="IDs of current parts to remove.")
+    change: list[RawPart] = Field(description="Current parts (same id) with new values.")
+    add: list[RawPart] = Field(description="New parts, with new ids.")
+    repeat: list[RawRepeat] = Field(
+        description="Rows or grids of identical new parts (bins, slats, shelves, posts)."
+    )
     not_representable: list[str] = Field(
-        description="Requested features the generator cannot depict; never imitated."
+        description="Requested features the generator cannot show, in the user's words."
     )
 
 

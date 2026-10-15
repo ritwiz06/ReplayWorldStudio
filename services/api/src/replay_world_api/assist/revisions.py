@@ -1,15 +1,19 @@
-"""Instruction -> proposed change to a generated model's specification (GEN-02).
+"""Instruction -> proposed change to a generated model's specification (GEN-02, GEN-04).
 
-The language model proposes the complete revised parts list; this module decides what reaches
-the user:
+The language model answers with changes to the current parts (remove, change, add); every part
+it does not mention is kept exactly. This module decides what reaches the user:
 
 1. the answer must parse and match the requested schema (one retry with the problems listed);
+   a change or removal must name an existing part;
 2. parts are repaired as for a new object and fitted to the overall size by the deterministic
-   generator (never by model-written code);
+   generator (never by model-written code); a revision needing more parts than the generator
+   allows is an explicit limitation, never silently cut;
 3. the overall size is kept unless the instruction asks for a different one;
-4. an answer that changes nothing, or that keeps a solid block where the user asked for
-   something open, is not offered as a proposal;
-5. requested features the generator cannot depict are listed, never imitated.
+4. three outcomes: a proposal (``partial`` when some requested things cannot be shown),
+   ``unsupported`` (nothing drawable, or a proposal that would misrepresent the object: no
+   change, or a solid block where the user asked for something open) and
+   ``already_satisfied`` (the current model already shows it; no identical version is made);
+5. what cannot be shown is listed, grounded in the user's own words, and never imitated.
 
 Nothing is built or stored here: the user reviews the proposal, and only then does the API
 build the revision as a new asset (see ``generated_assets.create_asset_revision``).
@@ -34,6 +38,7 @@ from replay_world_contracts import (
 )
 from replay_world_contracts.models import (
     GEOMETRY_MAX_ENVELOPE_M,
+    GEOMETRY_MAX_PARTS,
     GEOMETRY_MIN_ENVELOPE_M,
     GEOMETRY_MIN_PART_M,
     GeometryPart,
@@ -41,9 +46,9 @@ from replay_world_contracts.models import (
 
 from ..objects import fit_to_envelope
 from . import prompts
-from .answers import RawRevisionAnswer, provider_schema
+from .answers import RawPart, RawRepeat, RawRevisionAnswer, provider_schema
 from .lengths import find_lengths
-from .proposals import MAX_ATTEMPTS, AssistError, _parts, _text, describe_problems
+from .proposals import MAX_ATTEMPTS, AssistError, _parts, _text, _Unusable, describe_problems
 from .provider import Provider
 
 REVISION_SCHEMA: Final = provider_schema(RawRevisionAnswer)
@@ -57,40 +62,105 @@ _SIZE_WORDS: Final = re.compile(
     r"|lower|size|height|width|depth|tall|wide|long|deep|scale)\b",
     re.IGNORECASE,
 )
+# "Open" as a structure (open shelves, open front), not as an action ("a lid that can open").
 _OPEN_WORDS: Final = re.compile(
+    r"(?<!can )(?<!to )(?<!that )(?<!which )(?<!will )(?<!and )"
     r"\b(?:open|opening|hollow|empty|without\s+doors?|no\s+doors?|no\s+front|frame\s+only"
     r"|see-through|cage|shelves)\b",
     re.IGNORECASE,
 )
-# Requested features the generator cannot depict, and how they are listed when the model did
-# not list them itself.
+# Requested features the generator cannot show, recognised in the user's own words. Each is
+# listed with the words that asked for it, so nothing is invented from the model's prose.
 _UNREPRESENTABLE: Final = (
     (
         re.compile(
-            r"\b(?:curved?|bent|slanted|sloped|sloping|angled|diagonal(?:ly)?|tilted|rotated)\b",
+            r"\b(?:curved?|curving|bends?|bent|slanted|sloped|sloping|angled|diagonal(?:ly)?"
+            r"|tilted|rotated|rounded\s+arch)\b",
             re.IGNORECASE,
         ),
-        "Curved, slanted or rotated surfaces (the generator has only axis-aligned boxes, "
+        "curved, slanted or rotated surfaces are not available (only axis-aligned boxes, "
         "cylinders, frustums and spheres)",
     ),
     (
         re.compile(r"\b(?:holes?|perforated|perforations?|mesh|grilles?|slots?)\b", re.IGNORECASE),
-        "Holes, slots or perforations",
+        "holes, slots and perforations cannot be shown",
     ),
     (
         re.compile(
-            r"\b(?:textures?|textured|logos?|printed|text|labels?|patterns?|patterned|grain)\b",
+            r"\b(?:textures?|textured|logos?|printed|print|text|lettering|labels?|engrav\w*"
+            r"|patterns?|patterned|grain|stickers?)\b",
             re.IGNORECASE,
         ),
-        "Textures, printing and patterns",
+        "textures, printing, labels and patterns cannot be shown",
     ),
     (
         re.compile(
-            r"\b(?:hinges?|hinged|opening\s+doors?|sliding|moving|rotating|animated)\b",
+            r"\b(?:hinges?|hinged|sliding|rolling|spinning|swivel\w*|folding|lockable"
+            r"|motori[sz]ed|motors?|working|functional|lights?\s+up|glow(?:s|ing)?|heat(?:s|ing|ed)?"
+            r"|cool(?:s|ing)|refrigerat\w*|powered|electric\w*|battery|actually\s+\w+"
+            r"|opening\s+(?:doors?|lids?|drawers?)"
+            r"|(?:that|which|can|could|to)\s+(?:open|opens|close|closes|turn|turns|roll|rolls"
+            r"|spin|spins|move|moves|slide|slides|swivel|swivels|fold|folds|lock|locks|rotate"
+            r"|rotates))\b",
             re.IGNORECASE,
         ),
-        "Moving or hinged parts",
+        "anything that works or moves is drawn as a fixed shape only",
     ),
+    (
+        re.compile(
+            r"\b(?:fireproof|fire-?resistant|waterproof|water-?resistant|rust-?proof|strength"
+            r"|load[- ]bearing|load\s+capacity|weigh(?:s|ing|t)?|light-?weight|chemical\w*"
+            r"|antibacterial|magnetic|insulated|soundproof|bulletproof)\b",
+            re.IGNORECASE,
+        ),
+        "material properties (strength, weight, fire or water resistance, chemistry) are not "
+        "modelled",
+    ),
+)
+_WORD: Final = re.compile(r"[a-z]{4,}")
+_STOP: Final = frozenset(
+    [
+        "that",
+        "this",
+        "with",
+        "from",
+        "into",
+        "them",
+        "they",
+        "their",
+        "there",
+        "make",
+        "made",
+        "have",
+        "just",
+        "only",
+        "also",
+        "would",
+        "should",
+        "could",
+        "like",
+        "more",
+        "less",
+        "very",
+        "each",
+        "some",
+        "what",
+        "when",
+        "then",
+        "than",
+        "your",
+        "about",
+        "cannot",
+        "shown",
+        "show",
+        "model",
+        "generator",
+        "object",
+        "part",
+        "parts",
+        "feature",
+        "features",
+    ]
 )
 
 
@@ -169,7 +239,20 @@ def propose_revision(
                 first_attempt_valid=first_valid,
                 latency_ms=latency,
             )
-            return _result(answer, request, run)
+            return _result(answer, request, run, retry_open=attempt + 1 < MAX_ATTEMPTS)
+        except _NotOpen as solid:
+            # Once, tell the model which part keeps the object closed; the second answer is
+            # judged as it is (refused if it is still solid).
+            messages += [
+                {"role": "assistant", "content": completion.content},
+                {
+                    "role": "user",
+                    "content": f"That answer keeps the solid part “{solid.label}” (id "
+                    f"{solid.part_id}) filling {solid.share * 100:.0f} % of the object, so it is "
+                    "not open. Put its id in remove and build the open structure from separate "
+                    "panels. Reply again with corrected JSON only.",
+                },
+            ]
         except (ValidationError, ValueError) as exc:
             last_problem = describe_problems(exc)
             messages += [
@@ -188,34 +271,65 @@ def propose_revision(
 
 
 def _unsupported(
-    message: str, run: ProviderRun, not_represented: list[str], checks: list[str]
+    message: str,
+    run: ProviderRun,
+    not_represented: list[str],
+    checks: list[str],
+    outcome: str = "unsupported",
 ) -> ModelRevisionProposalResult:
-    return ModelRevisionProposalResult(
-        outcome="unsupported",
-        message=message,
-        spec=None,
-        summary=None,
-        size_changed=False,
-        not_represented=not_represented,
-        checks=checks,
-        provider=run,
+    return ModelRevisionProposalResult.model_validate(
+        {
+            "outcome": outcome,
+            "message": message,
+            "spec": None,
+            "summary": None,
+            "partial": False,
+            "size_changed": False,
+            "not_represented": not_represented,
+            "checks": checks,
+            "provider": run,
+        }
     )
 
 
+class _NotOpen(Exception):
+    """An "open" request answered with a solid part still filling the object."""
+
+    def __init__(self, part_id: str, label: str, share: float) -> None:
+        super().__init__(part_id)
+        self.part_id, self.label, self.share = part_id, label, share
+
+
 def _result(
-    answer: RawRevisionAnswer, request: ModelRevisionProposalRequest, run: ProviderRun
+    answer: RawRevisionAnswer,
+    request: ModelRevisionProposalRequest,
+    run: ProviderRun,
+    retry_open: bool = False,
 ) -> ModelRevisionProposalResult:
     instruction = request.instruction
+    checks: list[str] = []
+    not_represented = _not_represented(answer.not_representable, instruction, checks)
     if answer.outcome == "unsupported":
-        message = _text(answer.message, 500, "This is not a change to this object.")
-        return _unsupported(message, run, [], [])
-    parts, checks = _parts(answer.parts)
-    # A part the revision keeps keeps where it came from; only new parts take the answer's basis.
-    current = {p.id: p for p in request.spec.parts}
-    parts = [
-        p.model_copy(update={"basis": current[p.id].basis}) if p.id in current else p for p in parts
-    ]
+        message = _text(
+            answer.message, 500, "Nothing in this request can be shown by the generator."
+        )
+        return _unsupported(message, run, not_represented, checks)
+    if answer.outcome == "already_satisfied":
+        message = _text(answer.message, 500, "The current model already shows this.")
+        return _unsupported(message, run, not_represented, checks, "already_satisfied")
 
+    parts, part_checks = _apply_changes(answer, request.spec.parts)
+    checks += part_checks
+    if len(parts) > GEOMETRY_MAX_PARTS:
+        # Never cut parts silently: the user sees the limit and can simplify the request.
+        return _unsupported(
+            f"This change would need {len(parts)} parts; the generator draws at most "
+            f"{GEOMETRY_MAX_PARTS}. Nothing was changed: ask for fewer repeated items, or change "
+            "the parts by hand.",
+            run,
+            not_represented,
+            checks,
+        )
     parts, overlap_checks = separate_overlaps(parts)
     checks += overlap_checks
 
@@ -224,6 +338,8 @@ def _result(
         raw = answer.envelope_m
         target = Extent3(x=_clamp(raw.x), y=_clamp(raw.y), z=_clamp(raw.z))
     else:
+        # The object's recorded size is kept: parts that reach outside it are fitted back in
+        # (the fit says so), rather than growing a size that carries its own evidence.
         target = envelope
         checks.append("Size kept: the instruction did not ask for a different size.")
     draft = GeometryDraft.model_validate(
@@ -238,15 +354,24 @@ def _result(
     size_changed = any(
         abs(getattr(spec.envelope_m, a) - getattr(envelope, a)) > SIZE_TOLERANCE_M for a in "xyz"
     )
-    not_represented = _not_represented(answer.not_representable, instruction)
 
     if _geometry(spec) == _geometry(request.spec):
         return _unsupported("The proposal does not change the model.", run, not_represented, checks)
+    if _imitates_a_property(instruction, spec, request.spec):
+        return _unsupported(
+            "Only colours changed, but the request was for properties a colour cannot give. "
+            "Nothing was changed.",
+            run,
+            not_represented,
+            checks,
+        )
     if _OPEN_WORDS.search(instruction):
         e = spec.envelope_m
-        largest = max(p.size_m.x * p.size_m.y * p.size_m.z for p in spec.parts)
-        share = largest / (e.x * e.y * e.z)
+        solid = max(spec.parts, key=lambda p: p.size_m.x * p.size_m.y * p.size_m.z)
+        share = solid.size_m.x * solid.size_m.y * solid.size_m.z / (e.x * e.y * e.z)
         if share >= SOLID_SHARE:
+            if retry_open:
+                raise _NotOpen(solid.id, solid.label, share)
             return _unsupported(
                 f"The proposal still has a solid block filling {share * 100:.0f} % of the "
                 "object, so it would not be open. Nothing was changed; try the part controls "
@@ -260,11 +385,84 @@ def _result(
         message=None,
         spec=spec,
         summary=_text(answer.summary, 300, f"Changed as asked: “{instruction}”"),
+        partial=bool(not_represented),
         size_changed=size_changed,
         not_represented=not_represented,
         checks=checks,
         provider=run,
     )
+
+
+MAX_COPIES: Final = 2 * GEOMETRY_MAX_PARTS
+
+
+def _expand(repeats: list[RawRepeat]) -> list[RawPart]:
+    """Each repeat as its copies, ids numbered from 1. A repeat asking for more copies than the
+    object could ever hold is unusable (asked again), never cut short."""
+    out: list[RawPart] = []
+    for r in repeats:
+        counts = (r.counts.x, r.counts.y, r.counts.z)
+        if min(counts) < 1 or counts[0] * counts[1] * counts[2] > MAX_COPIES:
+            raise _Unusable(f"repeat counts must be 1 or more, with at most {MAX_COPIES} copies")
+        n = 0
+        for i in range(counts[0]):
+            for j in range(counts[1]):
+                for k in range(counts[2]):
+                    n += 1
+                    centre = r.part.center_m.model_copy(
+                        update={
+                            "x": r.part.center_m.x + i * r.step_m.x,
+                            "y": r.part.center_m.y + j * r.step_m.y,
+                            "z": r.part.center_m.z + k * r.step_m.z,
+                        }
+                    )
+                    out.append(
+                        r.part.model_copy(update={"id": f"{r.part.id}-{n}", "center_m": centre})
+                    )
+    return out
+
+
+def _apply_changes(
+    answer: RawRevisionAnswer, current: list[GeometryPart]
+) -> tuple[list[GeometryPart], list[str]]:
+    """The current parts with the answer's removals, changes and additions applied.
+
+    Every part the answer does not mention is kept unchanged (with its id, values and basis). A
+    removal or change naming a part that does not exist makes the answer unusable (it is asked
+    again), so a typo can never drop or duplicate a part silently.
+    """
+    by_id = {p.id: p for p in current}
+    unknown = [i for i in answer.remove if i not in by_id] + [
+        p.id for p in answer.change if p.id not in by_id
+    ]
+    if unknown:
+        raise _Unusable(f"remove and change must name existing part ids; unknown: {unknown[:5]}")
+    changed, checks = _parts(answer.change) if answer.change else ([], [])
+    added, add_checks = (
+        _parts([*answer.add, *_expand(answer.repeat)])
+        if (answer.add or answer.repeat)
+        else ([], [])
+    )
+    checks += add_checks
+    # A changed part keeps where it came from; new parts take the answer's basis.
+    replaced = {
+        p.id: p.model_copy(update={"basis": by_id[p.id].basis}) for p in changed if p.id in by_id
+    }
+    removed = set(answer.remove)
+    kept = [replaced.get(p.id, p) for p in current if p.id not in removed]
+    used = {p.id for p in kept}
+    fresh = []
+    for part in added:
+        part_id, n = part.id, 2
+        while part_id in used:
+            part_id = f"{part.id}-{n}"[:40]
+            n += 1
+        used.add(part_id)
+        fresh.append(part.model_copy(update={"id": part_id}))
+    parts = kept + fresh
+    if not parts:
+        raise _Unusable("a revision must leave at least one part")
+    return parts, checks
 
 
 _BOXES: Final = ("box", "rounded_box")
@@ -367,9 +565,78 @@ def _geometry(spec: GeometrySpec) -> tuple[object, ...]:
     )
 
 
-def _not_represented(items: list[str], instruction: str) -> list[str]:
-    listed = [text for text in (_text(item, 300, "") for item in items) if text]
-    for pattern, what in _UNREPRESENTABLE:
-        if pattern.search(instruction) and not any(pattern.search(item) for item in listed):
-            listed.append(what)
+_PROPERTY: Final = _UNREPRESENTABLE[-1][0]
+_APPEARANCE_WORDS: Final = re.compile(
+    r"\b(?:colou?rs?|paint\w*|red|blue|green|yellow|orange|white|black|gr[ae]y|silver|brown"
+    r"|beige|pink|purple|wood\w*|steel|metal\w*|alumin\w*|chrome|glass|plastic|fabric"
+    r"|concrete|copper|cardboard|finish|look)\b",
+    re.IGNORECASE,
+)
+
+
+def _imitates_a_property(instruction: str, spec: GeometrySpec, current: GeometrySpec) -> bool:
+    """A material-only change offered for a request that asks only for material properties
+    ("make it fireproof"): a colour would merely suggest the property, so it is not offered."""
+    if not _PROPERTY.search(instruction) or _APPEARANCE_WORDS.search(instruction):
+        return False
+    shape = [(p.shape, p.center_m, p.size_m, p.axis, p.taper, p.narrow_end) for p in spec.parts]
+    before = [(p.shape, p.center_m, p.size_m, p.axis, p.taper, p.narrow_end) for p in current.parts]
+    return shape == before and spec.envelope_m == current.envelope_m
+
+
+def _stem(word: str) -> str:
+    for suffix in ("ing", "ed", "es", "s"):
+        if word.endswith(suffix) and len(word) - len(suffix) >= 4:
+            return word[: -len(suffix)]
+    return word
+
+
+def _words(text: str) -> set[str]:
+    return {_stem(w) for w in _WORD.findall(text.lower()) if w not in _STOP}
+
+
+def _clause(instruction: str, match: re.Match[str]) -> str:
+    """The part of the instruction around a match, as the user wrote it (at most ~60 chars)."""
+    bounds = [
+        m.end()
+        for m in re.finditer(r"[,;.]|\band\b|\bbut\b", instruction)
+        if m.end() <= match.start()
+    ]
+    start = bounds[-1] if bounds else 0
+    end_match = re.search(r"[,;.]|\band\b|\bbut\b", instruction[match.end() :])
+    end = match.end() + (end_match.start() if end_match else len(instruction) - match.end())
+    words = instruction[start:end].strip()
+    return words if len(words) <= 60 else instruction[match.start() : match.end()]
+
+
+def _not_represented(items: list[str], instruction: str, checks: list[str]) -> list[str]:
+    """What cannot be shown, grounded in the instruction.
+
+    The model's own list is kept only where an entry shares a word with the instruction, so it
+    cannot invent requests the user never made; each feature the instruction asks for that the
+    generator cannot show is then added in the user's words if the model did not list it.
+    """
+    asked = _words(instruction)
+    listed: list[str] = []
+    dropped = 0
+    for item in items:
+        text = _text(item, 300, "")
+        if not text:
+            continue
+        if _words(text) & asked:
+            listed.append(text)
+        else:
+            dropped += 1
+    if dropped:
+        checks.append(
+            f"Left out {dropped} listed limitation{'' if dropped == 1 else 's'} that the "
+            "instruction did not ask for."
+        )
+    for pattern, why in _UNREPRESENTABLE:
+        for match in pattern.finditer(instruction):
+            clause = _clause(instruction, match)
+            # Already listed when an entry shares a word with this part of the request.
+            if any(_words(clause) & _words(item) for item in listed):
+                continue
+            listed.append(f"“{clause}”: {why}")
     return list(dict.fromkeys(listed))[:MAX_NOT_REPRESENTED]

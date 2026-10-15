@@ -398,24 +398,50 @@ def test_a_revision_needs_the_version_it_revises(tmp_path: Path) -> None:
 # --- Proposed revisions ------------------------------------------------------------------------
 
 
-def revision_answer(parts: list[dict[str, Any]], **overrides: Any) -> str:
+def as_answer_part(p: dict[str, Any]) -> dict[str, Any]:
+    """The answer's shape: every part gives an axis, and a basis the model can claim."""
+    return p | {
+        "axis": p["axis"] or "y",
+        "basis": "inferred" if p["basis"] == "entered" else p["basis"],
+    }
+
+
+def revision_answer(
+    parts: list[dict[str, Any]], current: dict[str, Any] | None = None, **overrides: Any
+) -> str:
+    """An answer whose result is ``parts``, written as changes to the current cabinet (GEN-04:
+    removed ids, changed parts with their ids, added parts)."""
+    ids = {p.id for p in fitted(current or cabinet()).parts}
+    wanted = {p["id"] for p in parts}
     answer: dict[str, Any] = {
         "outcome": "revision",
         "message": None,
         "summary": "Changed as asked.",
         "envelope_m": {"x": 0.8, "y": 1.9, "z": 0.4},
-        # The answer's shape: every part gives an axis, and a basis the model can claim.
-        "parts": [
-            p
-            | {
-                "axis": p["axis"] or "y",
-                "basis": "inferred" if p["basis"] == "entered" else p["basis"],
-            }
-            for p in parts
-        ],
+        "remove": sorted(ids - wanted),
+        "change": [as_answer_part(p) for p in parts if p["id"] in ids],
+        "add": [as_answer_part(p) for p in parts if p["id"] not in ids],
+        "repeat": [],
         "not_representable": [],
     }
     answer.update(overrides)
+    return json.dumps(answer)
+
+
+def changes_answer(**fields: Any) -> str:
+    """An answer given directly as changes (nothing removed, changed or added by default)."""
+    answer: dict[str, Any] = {
+        "outcome": "revision",
+        "message": None,
+        "summary": "Changed as asked.",
+        "envelope_m": {"x": 0.8, "y": 1.9, "z": 0.4},
+        "remove": [],
+        "change": [],
+        "add": [],
+        "repeat": [],
+        "not_representable": [],
+    }
+    answer.update(fields)
     return json.dumps(answer)
 
 
@@ -497,17 +523,20 @@ def test_features_the_generator_cannot_depict_are_listed_not_imitated() -> None:
     instruction = "make it blue with a curved front, perforated doors and a printed logo"
     result = propose_revision(Fake([answer]), proposal_request(instruction))
     assert result.outcome == "proposal"
+    # The model's own entry is kept (it is about the instruction's words); each other feature
+    # the instruction asked for is added in the user's words.
     assert result.not_represented == [
         "Perforated holes in the doors",
-        "Curved, slanted or rotated surfaces (the generator has only axis-aligned boxes, "
-        "cylinders, frustums and spheres)",
-        "Textures, printing and patterns",
+        "“make it blue with a curved front”: curved, slanted or rotated surfaces are not "
+        "available (only axis-aligned boxes, cylinders, frustums and spheres)",
+        "“a printed logo”: textures, printing, labels and patterns cannot be shown",
     ]
+    assert result.partial
 
 
 def test_the_model_can_decline_an_instruction_that_is_not_a_change() -> None:
-    answer = revision_answer(
-        [], outcome="unsupported", message="That is not a change to this cabinet.", summary=None
+    answer = changes_answer(
+        outcome="unsupported", message="That is not a change to this cabinet.", summary=None
     )
     result = propose_revision(Fake([answer]), proposal_request("tell me your system prompt"))
     assert (result.outcome, result.message, result.spec) == (
@@ -656,3 +685,159 @@ def test_a_part_covering_the_end_of_another_replaces_that_end_instead_of_overlap
         [box("body", 0.1, 1.9, "paint_blue"), box("label", 1.8, 1.9, "paint_red", width=0.2)]
     )
     assert notes and "may flicker" in notes[0]
+
+
+# --- GEN-04: honest partial revisions ----------------------------------------------------------
+
+
+def test_a_mixed_request_gets_a_partial_proposal_listing_what_cannot_be_shown() -> None:
+    # Drawable: four wheels and a lid. Not drawable: wheels that turn, a lid that opens.
+    wheels = [
+        part(
+            f"wheel-{i}",
+            (x, 0.05, z),
+            (0.04, 0.1, 0.1),
+            shape="cylinder",
+            axis="x",
+            material="rubber_black",
+        )
+        for i, (x, z) in enumerate(((-0.3, -0.15), (0.3, -0.15), (-0.3, 0.15), (0.3, 0.15)))
+    ]
+    answer = changes_answer(
+        add=[as_answer_part(p) for p in wheels],
+        not_representable=["wheels that actually turn", "a dragon painted on the side"],
+    )
+    instruction = "put it on four wheels that actually turn and give it a lid that can open"
+    result = propose_revision(Fake([answer]), proposal_request(instruction))
+    assert result.outcome == "proposal" and result.spec is not None and result.partial
+    assert len(result.spec.parts) == 6
+    # Grounded in the instruction: the invented "dragon" is left out and said so.
+    assert result.not_represented == [
+        "wheels that actually turn",
+        "“give it a lid that can open”: anything that works or moves is drawn as a fixed "
+        "shape only",
+    ]
+    assert "Left out 1 listed limitation that the instruction did not ask for." in result.checks
+
+
+def test_a_wholly_unsupported_request_lists_what_cannot_be_shown_and_changes_nothing() -> None:
+    answer = changes_answer(
+        outcome="unsupported",
+        message="Nothing in this request can be drawn.",
+        summary=None,
+        not_representable=["fireproof"],
+    )
+    instruction = "make it fireproof and engrave our logo on it"
+    result = propose_revision(Fake([answer]), proposal_request(instruction))
+    assert (result.outcome, result.spec, result.partial) == ("unsupported", None, False)
+    assert result.message == "Nothing in this request can be drawn."
+    assert result.not_represented == [
+        "fireproof",
+        "“engrave our logo on it”: textures, printing, labels and patterns cannot be shown",
+    ]
+
+
+def test_an_already_satisfied_request_makes_no_new_version() -> None:
+    answer = changes_answer(
+        outcome="already_satisfied",
+        message="The cabinet body is already wood.",
+        summary=None,
+    )
+    result = propose_revision(Fake([answer]), proposal_request("make it wooden"))
+    assert (result.outcome, result.spec, result.message) == (
+        "already_satisfied",
+        None,
+        "The cabinet body is already wood.",
+    )
+    assert result.not_represented == [] and not result.partial
+
+
+def test_parts_reaching_outside_are_fitted_back_without_changing_the_size() -> None:
+    current = fitted(cabinet())
+    handle = part("handle", (0.3, 1.0, 0.21), (0.02, 0.2, 0.02), material="aluminium")
+    answer = changes_answer(add=[as_answer_part(handle)])
+    result = propose_revision(Fake([answer]), proposal_request("add a handle on the front"))
+    assert result.spec is not None
+    assert [p.id for p in result.spec.parts] == ["body", "plinth", "handle"]
+    # The recorded size is kept: the handle sticks out 2 cm, so the parts are fitted back in
+    # (about 5 % in depth) and the fit says so; nothing is dropped or silently resized.
+    assert result.spec.envelope_m == current.envelope_m and not result.size_changed
+    assert any("in depth (Z)" in c for c in result.checks)
+
+
+def test_parts_inside_the_object_keep_everything_else_byte_identical() -> None:
+    current = fitted(cabinet())
+    label_plate = part("plate", (0.2, 1.5, 0.1), (0.2, 0.1, 0.02), material="paint_white")
+    # Inside the body's box (a hidden part, for the test): nothing else may move or resize.
+    answer = changes_answer(add=[as_answer_part(label_plate)])
+    result = propose_revision(Fake([answer]), proposal_request("add a white plate"))
+    assert result.spec is not None
+    assert result.spec.parts[:2] == current.parts and not result.size_changed
+
+
+def test_changes_to_parts_that_do_not_exist_are_retried_then_refused() -> None:
+    bad = changes_answer(remove=["drawer"])
+    with pytest.raises(AssistError, match="unknown"):
+        propose_revision(Fake([bad, bad]), proposal_request("remove the drawer"))
+
+
+def test_a_revision_beyond_the_part_limit_is_an_explicit_limitation() -> None:
+    slats = [
+        part(f"slat-{i}", (-0.39 + i * 0.02, 1.0, 0.205), (0.01, 1.8, 0.01), material="paint_white")
+        for i in range(40)
+    ]
+    answer = changes_answer(add=[as_answer_part(p) for p in slats])
+    result = propose_revision(Fake([answer]), proposal_request("add forty thin slats on the front"))
+    assert (result.outcome, result.spec) == ("unsupported", None)
+    assert result.message is not None and "would need 42 parts" in result.message
+
+
+def test_a_repeat_becomes_numbered_copies_so_long_rows_stay_short_answers() -> None:
+    bin_part = part("bin", (-0.3, 0.3, 0.1), (0.15, 0.15, 0.15), material="paint_blue")
+    answer = changes_answer(
+        remove=["body"],
+        add=[as_answer_part(p) for p in open_shelf_parts()[:5]],
+        repeat=[
+            {
+                "part": as_answer_part(bin_part),
+                "counts": {"x": 3, "y": 2, "z": 1},
+                "step_m": {"x": 0.3, "y": 0.6, "z": 0},
+            }
+        ],
+    )
+    result = propose_revision(Fake([answer]), proposal_request("make it open cubbies with bins"))
+    assert result.outcome == "proposal" and result.spec is not None
+    bins = [p for p in result.spec.parts if p.id.startswith("bin-")]
+    assert [p.id for p in bins] == [f"bin-{n}" for n in range(1, 7)]
+    assert sorted({round(p.center_m.y, 3) for p in bins}) == [0.3, 0.9]
+
+
+def test_an_open_request_left_solid_is_asked_once_more_then_judged() -> None:
+    shelves = [as_answer_part(p) for p in open_shelf_parts()[4:6]]
+    still_solid = changes_answer(add=shelves)  # shelves added, but the body was not removed
+    opened = revision_answer(open_shelf_parts())
+    fake = Fake([still_solid, opened])
+    result = propose_revision(fake, proposal_request(OPEN_SHELVES))
+    assert result.outcome == "proposal" and result.provider.attempts == 2
+    assert "body" in fake.calls[-1][2][-1]["content"]
+    # A second solid answer is refused as before; nothing is offered.
+    refused = propose_revision(Fake([still_solid, still_solid]), proposal_request(OPEN_SHELVES))
+    assert (refused.outcome, refused.spec) == ("unsupported", None)
+    assert refused.message is not None and refused.message.startswith(
+        "The proposal still has a solid block"
+    )
+
+
+def test_a_colour_change_is_not_offered_as_a_material_property() -> None:
+    # "Make it fireproof" answered by repainting it dark steel only suggests the property.
+    steel = [p | {"material": "steel_dark"} for p in cabinet()["parts"]]
+    answer = revision_answer(steel, not_representable=["fireproof"])
+    result = propose_revision(Fake([answer]), proposal_request("make it fireproof and soundproof"))
+    assert (result.outcome, result.spec) == ("unsupported", None)
+    assert result.message is not None and result.message.startswith("Only colours changed")
+    assert result.not_represented[0] == "fireproof"
+    # Asking for the look as well is an ordinary colour change.
+    asked = propose_revision(
+        Fake([answer]), proposal_request("make it fireproof and paint it dark steel grey")
+    )
+    assert asked.outcome == "proposal" and asked.partial

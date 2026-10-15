@@ -83,7 +83,7 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [instruction, setInstruction] = useState("");
   const [asking, setAsking] = useState<{ startedAt: number; controller: AbortController } | null>(null);
-  const [askNotice, setAskNotice] = useState<{ tone: "error" | "warning"; text: string } | null>(null);
+  const [askNotice, setAskNotice] = useState<{ tone: "error" | "warning" | "info"; text: string; unshown: string[] } | null>(null);
   const [oldPreview, setOldPreview] = useState<Preview>({ status: "building" });
   const [newPreview, setNewPreview] = useState<Preview>({ status: "building" });
   const [scope, setScope] = useState<"selected" | "all">("selected");
@@ -175,10 +175,14 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
     }
     if (controller.signal.aborted) return;
     setAsking(null);
-    if (!result.ok) return setAskNotice({ tone: "error", text: `${result.error.message} Nothing was changed; the controls below still work.` });
+    if (!result.ok) return setAskNotice({ tone: "error", text: `${result.error.message} Nothing was changed; the controls below still work.`, unshown: [] });
     const answer = result.value;
+    if (answer.outcome === "already_satisfied") {
+      // The model already shows it: no identical new version is made.
+      return setAskNotice({ tone: "info", text: `Already shown: ${answer.message ?? "the current model already matches this request."} Nothing was changed.`, unshown: answer.not_represented });
+    }
     if (answer.outcome !== "proposal" || !answer.spec) {
-      return setAskNotice({ tone: "warning", text: answer.message ?? "The request could not be turned into a change." });
+      return setAskNotice({ tone: "warning", text: `${answer.message ?? "The request could not be turned into a change."} Nothing was changed.`, unshown: answer.not_represented });
     }
     const proposed = answer.spec;
     setDraft(proposed);
@@ -197,7 +201,7 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
   function cancelAsk() {
     asking?.controller.abort();
     setAsking(null);
-    setAskNotice({ tone: "warning", text: "Cancelled. Nothing was changed." });
+    setAskNotice({ tone: "warning", text: "Cancelled. Nothing was changed.", unshown: [] });
   }
 
   async function apply() {
@@ -300,9 +304,10 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
             </div>
           )}
           {askNotice && (
-            <p className={askNotice.tone === "error" ? "status-error small" : "status-warn small"} role="alert" data-testid="improve-ask-notice">
-              {askNotice.text}
-            </p>
+            <div className={askNotice.tone === "error" ? "status-error small" : askNotice.tone === "info" ? "small" : "status-warn small"} role="alert" data-testid="improve-ask-notice">
+              <p>{askNotice.text}</p>
+              {askNotice.unshown.length > 0 && <UnshownList items={askNotice.unshown} />}
+            </div>
           )}
           {proposal && (
             <div className="improve-proposal" data-testid="improve-proposal">
@@ -313,7 +318,10 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
               </p>
               {proposal.notRepresented.length > 0 && (
                 <div className="status-warn small" data-testid="improve-not-represented">
-                  The shape generator cannot show: {proposal.notRepresented.join("; ")}. These are not imitated in the model.
+                  <p data-testid="improve-partial">
+                    <strong>Partial:</strong> only the part the shape generator can draw is shown below. Not shown, and not imitated:
+                  </p>
+                  <UnshownList items={proposal.notRepresented} />
                 </div>
               )}
               {proposal.checks.length > 0 && (
@@ -439,7 +447,9 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
           )}
           <div className="modal-actions">
             <button type="button" className="button button-primary" disabled={!canApply} data-testid="improve-apply" onClick={() => void apply()}>
-              {applying.busy ? applying.status : chosen.length === 1 ? "Apply to this object" : `Apply to ${chosen.length} objects`}
+              {applying.busy
+                ? applying.status
+                : `${proposal?.notRepresented.length ? "Apply the drawable part" : "Apply"} to ${chosen.length === 1 ? "this object" : `${chosen.length} objects`}`}
             </button>
             <button type="button" className="button" disabled={applying.busy || (sameSpec(draft, base) && !proposal)} data-testid="improve-reset" onClick={reset}>
               Start over
@@ -449,6 +459,17 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
         </section>
       </div>
     </dialog>
+  );
+}
+
+/** What the request asked for that the model does not show, in the user's words. */
+function UnshownList({ items }: { items: readonly string[] }) {
+  return (
+    <ul className="create-checks" data-testid="improve-unshown">
+      {items.map((item, i) => (
+        <li key={i}>{item}</li>
+      ))}
+    </ul>
   );
 }
 

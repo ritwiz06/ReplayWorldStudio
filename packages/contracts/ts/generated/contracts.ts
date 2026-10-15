@@ -1593,15 +1593,23 @@ export interface ModelRevisionProposalRequest {
 /**
  * A proposed specification change, checked and fitted; nothing is built or stored.
  *
- * ``outcome`` is ``unsupported`` when the instruction is not a change to this object, or when
- * the proposal would misrepresent it (for example a solid block offered as an open shelf);
- * ``message`` then says why and ``spec`` is null.
+ * Three outcomes (GEN-04):
+ *
+ * * ``proposal``: the drawable part of the request, as a new specification. ``partial`` is
+ *   true when the request also asked for things the generator cannot show; they are listed in
+ *   ``not_represented``, each grounded in the user's own words.
+ * * ``unsupported``: nothing drawable was asked for (or the proposal would misrepresent the
+ *   object, such as a solid block offered as an open shelf); ``message`` says why,
+ *   ``not_represented`` lists what could not be shown, and nothing changes.
+ * * ``already_satisfied``: the current model already shows what was asked; ``message`` says
+ *   how, and no identical new version is made.
  */
 export interface ModelRevisionProposalResult {
-  outcome: "proposal" | "unsupported";
+  outcome: "proposal" | "unsupported" | "already_satisfied";
   message: string | null;
   spec: GeometrySpec | null;
   summary: string | null;
+  partial: boolean;
   size_changed: boolean;
   not_represented: string[];
   checks: string[];

@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "dc8b4e4ea198e83d:make it wooden",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-04.3",
+  "recorded_at": "2026-10-15",
+  "note": "Raw answers from the live language model for the revision instruction above, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\"add\":[],\"change\":[{\"axis\":\"y\",\"basis\":\"inferred\",\"center_m\":{\"x\":0.0,\"y\":0.05,\"z\":0.0},\"id\":\"plinth\",\"label\":\"plinth\",\"material\":\"wood\",\"narrow_end\":null,\"shape\":\"box\",\"size_m\":{\"x\":0.76,\"y\":0.1,\"z\":0.36},\"taper\":null}],\"envelope_m\":{\"x\":0.8,\"y\":1.9,\"z\":0.4},\"message\":null,\"not_representable\":[],\"outcome\":\"revision\",\"remove\":[],\"repeat\":[],\"summary\":\"Changed the plinth material from steel_dark to wood to make the entire cabinet wooden.\"}"
+  ]
+}

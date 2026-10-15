@@ -272,3 +272,60 @@ test("improve a photo-made object with a proposal: cancel, propose, apply to it 
   expect(after.json.sources[0]!.photo_import!.observations.find((o) => o.id === observation.id)!.object_id).toBe(pallet.id);
   expect(after.json.catalog.find((a) => a.id === original.id)).toEqual(original);
 });
+
+const MIXED = "put it on four caster wheels that actually roll and stack two cardboard boxes on it";
+
+test("a mixed request becomes a partial revision: the drawable part is applied, the rest listed; refusals change nothing", async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.goto("/");
+  await objects(page, 15);
+  await worldFromPhoto(page);
+  const before = await save(page);
+  const pallet = before.json.scene.objects.find((o) => o.name.startsWith("Stacked cardboard boxes"))!;
+  const original = before.json.catalog.find((a) => a.id === pallet.asset_id)!;
+
+  await objectList(page, /^Stacked cardboard boxes/).click();
+  await page.getByTestId("improve-model-open").click();
+  const dialog = page.getByTestId("improve-model");
+  await expect(dialog.getByTestId("improve-preview-old")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+
+  // "Already shown" and "nothing drawable" answers (fixed API responses) leave everything as it is.
+  const proposals = "**/api/v1/assist/model-revisions";
+  const provider = { service: "ASU Voyager", base_url: "https://openai.rc.asu.edu/v1", model: "qwen3-235b-a22b-instruct-2507", mode: "recorded", attempts: 1, first_attempt_valid: true, latency_ms: 1 };
+  const reply = (body: object) => page.route(proposals, (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }));
+  await reply({ outcome: "already_satisfied", message: "The boxes are already cardboard.", spec: null, summary: null, partial: false, size_changed: false, not_represented: [], checks: [], provider });
+  await dialog.getByTestId("improve-instruction").fill("make the boxes cardboard");
+  await dialog.getByTestId("improve-propose").click();
+  await expect(dialog.getByTestId("improve-ask-notice")).toContainText("Already shown: The boxes are already cardboard. Nothing was changed.");
+  await expect(dialog.getByTestId("improve-no-changes")).toBeVisible();
+  await page.unroute(proposals);
+  await reply({ outcome: "unsupported", message: "Nothing in this request can be drawn.", spec: null, summary: null, partial: false, size_changed: false, not_represented: ["“make it fireproof”: material properties are not modelled"], checks: [], provider });
+  await dialog.getByTestId("improve-instruction").fill("make it fireproof");
+  await dialog.getByTestId("improve-propose").click();
+  await expect(dialog.getByTestId("improve-ask-notice")).toContainText("Nothing in this request can be drawn. Nothing was changed.");
+  await expect(dialog.getByTestId("improve-unshown")).toContainText("make it fireproof");
+  await expect(dialog.getByTestId("improve-apply")).toBeDisabled();
+  await page.unroute(proposals);
+
+  // The recorded live answer to a mixed request: boxes drawn, rolling listed before Apply.
+  await dialog.getByTestId("improve-instruction").fill(MIXED);
+  await dialog.getByTestId("improve-propose").click();
+  await expect(dialog.getByTestId("improve-partial")).toBeVisible();
+  await expect(dialog.getByTestId("improve-unshown")).toContainText("roll");
+  await expect(dialog.getByTestId("improve-preview-new")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+  await expect(dialog.getByTestId("improve-changes")).toContainText("cardboard");
+  await expect(dialog.getByTestId("improve-apply")).toHaveText("Apply the drawable part to this object");
+  await dialog.getByTestId("improve-apply").click();
+  await expect(dialog).toBeHidden({ timeout: 30_000 });
+
+  const after = await save(page);
+  const v2 = after.json.catalog.find((a) => a.generation?.revision?.revises === original.id)!;
+  expect(v2.generation!.revision!.instruction).toBe(MIXED);
+  expect(v2.generation!.revision!.not_represented.join(" ")).toContain("roll");
+  for (const axis of ["width", "height", "depth"] as const) expect(v2.nominal_dimensions[axis]).toEqual(original.nominal_dimensions[axis]);
+  expect(after.json.scene.objects.find((o) => o.id === pallet.id)).toMatchObject({ asset_id: v2.id, dimensions: pallet.dimensions });
+  // One undo returns the pallet to its previous model.
+  await page.getByTestId("undo").click();
+  const undone = await save(page);
+  expect(undone.json.scene.objects.find((o) => o.id === pallet.id)!.asset_id).toBe(original.id);
+});

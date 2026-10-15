@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "dc8b4e4ea198e83d:put it on four wheels that actually turn and paint it blue",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-04.3",
+  "recorded_at": "2026-10-15",
+  "note": "Raw answers from the live language model for the revision instruction above, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"add\": [],\n  \"change\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.0,\n        \"z\": 0.0\n      },\n      \"id\": \"body\",\n      \"label\": \"cabinet body\",\n      \"material\": \"paint_blue\",\n      \"narrow_end\": null,\n      \"shape\": \"rounded_box\",\n      \"size_m\": {\n        \"x\": 0.8,\n        \"y\": 1.8,\n        \"z\": 0.4\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.05,\n        \"z\": 0.0\n      },\n      \"id\": \"plinth\",\n      \"label\": \"plinth\",\n      \"material\": \"paint_blue\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.76,\n        \"y\": 0.1,\n        \"z\": 0.36\n      },\n      \"taper\": null\n    }\n  ],\n  \"envelope_m\": {\n    \"x\": 0.8,\n    \"y\": 1.9,\n    \"z\": 0.4\n  },\n  \"message\": null,\n  \"not_representable\": [\n    \"wheels that actually turn\"\n  ],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [\n    {\n      \"counts\": {\n        \"x\": 2,\n        \"y\": 1,\n        \"z\": 2\n      },\n      \"part\": {\n        \"axis\": \"y\",\n        \"basis\": \"inferred\",\n        \"center_m\": {\n          \"x\": 0.3,\n          \"y\": 0.05,\n          \"z\": 0.1\n        },\n        \"id\": \"wheel\",\n        \"label\": \"wheel\",\n        \"material\": \"steel_dark\",\n        \"narrow_end\": null,\n        \"shape\": \"cylinder\",\n        \"size_m\": {\n          \"x\": 0.06,\n          \"y\": 0.08,\n          \"z\": 0.06\n        },\n        \"taper\": null\n      },\n      \"step_m\": {\n        \"x\": -0.6,\n        \"y\": 0,\n        \"z\": 0.2\n      }\n    }\n  ],\n  \"summary\": \"Painted the cabinet body and plinth blue and added four fixed wheels; turning wheels cannot be shown.\"\n}"
+  ]
+}

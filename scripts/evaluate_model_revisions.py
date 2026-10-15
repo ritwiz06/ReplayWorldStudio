@@ -106,6 +106,8 @@ def main(argv: list[str]) -> int:
             "attempts": result.provider.attempts,
             "first_attempt_valid": result.provider.first_attempt_valid,
             "latency_s": round(result.provider.latency_ms / 1000, 1),
+            "answer_chars": [len(a) for a in recorder.answers.get(keys[case["label"]], [])],
+            "partial": result.partial,
             "summary": result.summary,
             "size_changed": result.size_changed,
             "checks": result.checks,

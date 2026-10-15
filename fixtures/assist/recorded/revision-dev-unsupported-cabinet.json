@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "dc8b4e4ea198e83d:make it fireproof and soundproof",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-04.3",
+  "recorded_at": "2026-10-15",
+  "note": "Raw answers from the live language model for the revision instruction above, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"add\": [],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.8,\n    \"y\": 1.9,\n    \"z\": 0.4\n  },\n  \"message\": \"Fireproof and soundproof properties cannot be represented with materials or changes the generator can show.\",\n  \"not_representable\": [\n    \"fireproof\",\n    \"soundproof\"\n  ],\n  \"outcome\": \"unsupported\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"The instruction cannot be represented because material properties like fireproof and soundproof cannot be shown.\"\n}"
+  ]
+}

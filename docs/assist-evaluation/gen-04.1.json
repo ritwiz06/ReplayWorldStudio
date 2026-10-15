@@ -1,0 +1,253 @@
+{
+  "date": "2026-10-15T22:39:06+00:00",
+  "service": "ASU Voyager",
+  "base_url": "https://openai.rc.asu.edu/v1",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-04.1",
+  "mode": "live, schema-guided",
+  "cases": [
+    {
+      "label": "cabinet-open-shelves",
+      "instruction": "make this a bookshelf with open shelves instead of a solid cabinet",
+      "outcome": "unsupported",
+      "message": "The proposal still has a solid block filling 92 % of the object, so it would not be open. Nothing was changed; try the part controls instead.",
+      "attempts": 1,
+      "first_attempt_valid": true,
+      "latency_s": 58.6,
+      "answer_chars": [
+        2185
+      ],
+      "partial": false,
+      "summary": null,
+      "size_changed": false,
+      "checks": [
+        "“shelf” sits inside “cabinet body” and shares its faces, so they may flicker; adjust them in the part list if they do.",
+        "“shelf” sits inside “cabinet body” and shares its faces, so they may flicker; adjust them in the part list if they do.",
+        "“shelf” sits inside “cabinet body” and shares its faces, so they may flicker; adjust them in the part list if they do.",
+        "Size kept: the instruction did not ask for a different size.",
+        "Parts were scaled ×1.03 in width (X) to fit the 0.800 m envelope.",
+        "Parts were scaled ×1.03 in height (Y) to fit the 1.900 m envelope.",
+        "Parts were scaled ×1.08 in depth (Z) to fit the 0.400 m envelope."
+      ],
+      "not_represented": [],
+      "parts_before": 2,
+      "parts_after": null,
+      "largest_part_share_before": 0.947
+    },
+    {
+      "label": "cabinet-blue-red-top",
+      "instruction": "paint it blue and add a red top",
+      "outcome": "proposal",
+      "message": null,
+      "attempts": 1,
+      "first_attempt_valid": true,
+      "latency_s": 20.0,
+      "answer_chars": [
+        999
+      ],
+      "partial": false,
+      "summary": "Painted the cabinet body blue and added a red top panel.",
+      "size_changed": false,
+      "checks": [
+        "“cabinet body” was shortened so “top” forms its end instead of overlapping it.",
+        "Size kept: the instruction did not ask for a different size."
+      ],
+      "not_represented": [],
+      "parts_before": 2,
+      "parts_after": 3,
+      "largest_part_share_before": 0.947,
+      "largest_part_share_after": 0.895,
+      "parts": [
+        "cabinet body (rounded_box, paint_blue, 0.800 x 1.700 x 0.400 m)",
+        "plinth (box, steel_dark, 0.760 x 0.100 x 0.360 m)",
+        "top (box, paint_red, 0.800 x 0.100 x 0.400 m)"
+      ]
+    },
+    {
+      "label": "photo-machine-guard",
+      "instruction": "add a yellow safety guard above the white lower cabinet: four yellow corner posts with clear panels between them; keep the screen and the stack light",
+      "outcome": "proposal",
+      "message": null,
+      "attempts": 1,
+      "first_attempt_valid": true,
+      "latency_s": 72.8,
+      "answer_chars": [
+        3429
+      ],
+      "partial": false,
+      "summary": "Added a yellow safety guard with four corner posts and clear panels around the machine, keeping the control panel and stack light.",
+      "size_changed": false,
+      "checks": [],
+      "not_represented": [],
+      "parts_before": 4,
+      "parts_after": 12,
+      "largest_part_share_before": 0.809,
+      "largest_part_share_after": 0.809,
+      "parts": [
+        "plinth (box, paint_anthracite, 2.129 x 0.144 x 0.942 m)",
+        "machine body (rounded_box, plastic_grey, 2.129 x 1.870 x 0.942 m)",
+        "control panel (box, hmi_screen, 0.456 x 0.288 x 0.004 m)",
+        "stack light (cylinder, signal_green, 0.106 x 0.288 x 0.073 m)",
+        "safety post (cylinder, safety_yellow, 0.050 x 2.158 x 0.050 m)",
+        "safety post (cylinder, safety_yellow, 0.050 x 2.158 x 0.050 m)",
+        "safety post (cylinder, safety_yellow, 0.050 x 2.158 x 0.050 m)",
+        "safety post (cylinder, safety_yellow, 0.050 x 2.158 x 0.050 m)",
+        "safety panel (box, glass_clear, 1.980 x 2.158 x 0.010 m)",
+        "safety panel (box, glass_clear, 1.980 x 2.158 x 0.010 m)",
+        "safety panel (box, glass_clear, 0.010 x 2.158 x 0.790 m)",
+        "safety panel (box, glass_clear, 0.010 x 2.158 x 0.790 m)"
+      ]
+    },
+    {
+      "label": "photo-pallet-boxes",
+      "instruction": "make this a wooden pallet with cardboard boxes stacked on top of it instead of one solid block",
+      "outcome": "proposal",
+      "message": null,
+      "attempts": 1,
+      "first_attempt_valid": true,
+      "latency_s": 25.9,
+      "answer_chars": [
+        848
+      ],
+      "partial": false,
+      "summary": "Replaced the solid block with two parts: a wooden pallet at the bottom and stacked cardboard boxes on top, using appropriate materials and sizes within the same envelope.",
+      "size_changed": false,
+      "checks": [
+        "Size kept: the instruction did not ask for a different size.",
+        "Parts were scaled ×1.11 in height (Y) to fit the 1.044 m envelope."
+      ],
+      "not_represented": [],
+      "parts_before": 1,
+      "parts_after": 2,
+      "largest_part_share_before": 1.0,
+      "largest_part_share_after": 0.894,
+      "parts": [
+        "wooden pallet (box, pallet_wood, 1.286 x 0.221 x 0.857 m)",
+        "stacked cardboard boxes (box, cardboard, 1.286 x 0.933 x 0.857 m)"
+      ]
+    },
+    {
+      "label": "dev-mixed-cabinet",
+      "instruction": "put it on four wheels that actually turn and paint it blue",
+      "outcome": "proposal",
+      "message": null,
+      "attempts": 1,
+      "first_attempt_valid": true,
+      "latency_s": 47.4,
+      "answer_chars": [
+        2610
+      ],
+      "partial": true,
+      "summary": "Painted the cabinet blue and added four fixed wheels; the turning function of the wheels cannot be shown.",
+      "size_changed": false,
+      "checks": [
+        "Size kept: the instruction did not ask for a different size."
+      ],
+      "not_represented": [
+        "wheels that actually turn"
+      ],
+      "parts_before": 2,
+      "parts_after": 6,
+      "largest_part_share_before": 0.947,
+      "largest_part_share_after": 0.947,
+      "parts": [
+        "cabinet body (rounded_box, paint_blue, 0.800 x 1.800 x 0.400 m)",
+        "plinth (box, paint_blue, 0.760 x 0.100 x 0.360 m)",
+        "wheel (cylinder, steel_dark, 0.060 x 0.100 x 0.060 m)",
+        "wheel (cylinder, steel_dark, 0.060 x 0.100 x 0.060 m)",
+        "wheel (cylinder, steel_dark, 0.060 x 0.100 x 0.060 m)",
+        "wheel (cylinder, steel_dark, 0.060 x 0.100 x 0.060 m)"
+      ]
+    },
+    {
+      "label": "dev-unsupported-cabinet",
+      "instruction": "make it fireproof and soundproof",
+      "outcome": "unsupported",
+      "message": "The current model already represents a storage cabinet with a wooden body and steel plinth; adding fireproof and soundproof properties cannot be shown with appearance-only materials or structural changes.",
+      "attempts": 1,
+      "first_attempt_valid": true,
+      "latency_s": 9.9,
+      "answer_chars": [
+        566
+      ],
+      "partial": false,
+      "summary": null,
+      "size_changed": false,
+      "checks": [],
+      "not_represented": [
+        "fireproof",
+        "soundproof"
+      ],
+      "parts_before": 2,
+      "parts_after": null,
+      "largest_part_share_before": 0.947
+    },
+    {
+      "label": "dev-satisfied-cabinet",
+      "instruction": "make it wooden",
+      "outcome": "proposal",
+      "message": null,
+      "attempts": 1,
+      "first_attempt_valid": true,
+      "latency_s": 10.8,
+      "answer_chars": [
+        429
+      ],
+      "partial": false,
+      "summary": "Changed the plinth material from steel_dark to wood to make the entire cabinet wooden.",
+      "size_changed": false,
+      "checks": [
+        "Size kept: the instruction did not ask for a different size."
+      ],
+      "not_represented": [],
+      "parts_before": 2,
+      "parts_after": 2,
+      "largest_part_share_before": 0.947,
+      "largest_part_share_after": 0.947,
+      "parts": [
+        "cabinet body (rounded_box, wood, 0.800 x 1.800 x 0.400 m)",
+        "plinth (box, wood, 0.760 x 0.100 x 0.360 m)"
+      ]
+    },
+    {
+      "label": "dev-many-bins",
+      "outcome": "error",
+      "error": "ASU Voyager did not answer within 150 s."
+    },
+    {
+      "label": "photo-pallet-mixed",
+      "instruction": "put it on four caster wheels that actually roll and stack two cardboard boxes on it",
+      "outcome": "proposal",
+      "message": null,
+      "attempts": 1,
+      "first_attempt_valid": true,
+      "latency_s": 77.8,
+      "answer_chars": [
+        3038
+      ],
+      "partial": true,
+      "summary": "Added four caster wheels and two stacked cardboard boxes; changed the body to a thin pallet; cannot represent rolling.",
+      "size_changed": false,
+      "checks": [
+        "Size kept: the instruction did not ask for a different size.",
+        "Parts were scaled ×1.02 in height (Y) to fit the 1.044 m envelope."
+      ],
+      "not_represented": [
+        "caster wheels that actually roll"
+      ],
+      "parts_before": 1,
+      "parts_after": 7,
+      "largest_part_share_before": 1.0,
+      "largest_part_share_after": 0.085,
+      "parts": [
+        "pallet (box, pallet_wood, 1.286 x 0.045 x 0.857 m)",
+        "caster wheel (cylinder, rubber_black, 0.100 x 0.102 x 0.100 m)",
+        "caster wheel (cylinder, rubber_black, 0.100 x 0.102 x 0.100 m)",
+        "caster wheel (cylinder, rubber_black, 0.100 x 0.102 x 0.100 m)",
+        "caster wheel (cylinder, rubber_black, 0.100 x 0.102 x 0.100 m)",
+        "cardboard box (box, cardboard, 0.600 x 0.409 x 0.400 m)",
+        "cardboard box (box, cardboard, 0.500 x 0.204 x 0.300 m)"
+      ]
+    }
+  ]
+}
