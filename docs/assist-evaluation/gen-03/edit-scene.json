@@ -1,0 +1,500 @@
+{
+  "schema_version": "0.7.0",
+  "id": "proj-gen03-packing-room",
+  "name": "GEN-03 held-out edit scene (packing room)",
+  "units": {
+    "length": "m",
+    "time": "s",
+    "mass": "kg",
+    "angle": "rad"
+  },
+  "world_frame": {
+    "handedness": "right",
+    "up_axis": "+Y",
+    "floor_plane": "XZ"
+  },
+  "fixture": null,
+  "sources": [],
+  "catalog": [],
+  "scene": {
+    "id": "scene-gen03-packing-room",
+    "name": "Packing room",
+    "revision": 0,
+    "objects": [
+      {
+        "id": "obj-floor",
+        "name": "Floor",
+        "kind": "structure",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 0,
+            "y": 0.0,
+            "z": 0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 12,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.1,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 8,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-pack-table-1",
+        "name": "Packing table 1",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": -3.0,
+            "y": 0.0,
+            "z": -1.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.6,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.9,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.8,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-pack-table-2",
+        "name": "Packing table 2",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": -3.0,
+            "y": 0.0,
+            "z": 1.5
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.6,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.9,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.8,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-label-printer",
+        "name": "Label printer stand",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": -1.2,
+            "y": 0.0,
+            "z": -1.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.6,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.1,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.5,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-scale",
+        "name": "Floor scale",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 0.5,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.0,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.1,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1.0,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-shelf-a",
+        "name": "Shelving unit A",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 3.5,
+            "y": 0.0,
+            "z": -3.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.2,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 2.0,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.5,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-shelf-b",
+        "name": "Shelving unit B",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 3.5,
+            "y": 0.0,
+            "z": -1.5
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.2,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 2.0,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.5,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-bin",
+        "name": "Waste bin",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": -4.5,
+            "y": 0.0,
+            "z": 3.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.5,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.8,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.5,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-cart",
+        "name": "Tape cart",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 1.5,
+            "y": 0.0,
+            "z": 2.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.8,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.0,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.5,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-extinguisher",
+        "name": "Fire extinguisher stand",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 5.0,
+            "y": 0.0,
+            "z": 3.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.4,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.2,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.3,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-chair",
+        "name": "Operator chair",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": -1.5,
+            "y": 0.0,
+            "z": 0.5
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 1.5708,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.6,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.0,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.6,
+            "origin": "default",
+            "source_ref": "Synthetic held-out scene for GEN-03 edits",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      }
+    ],
+    "edit_log": []
+  }
+}
