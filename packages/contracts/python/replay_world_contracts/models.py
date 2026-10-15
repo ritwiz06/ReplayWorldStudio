@@ -47,7 +47,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.6.0"]
+SchemaVersion = Literal["0.7.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -518,6 +518,43 @@ class UnknownProperty(ContractModel):
     reason: NonEmptyText
 
 
+MAX_REVISION_CHANGES: Final = 40
+MAX_REVISION_VERSION: Final = 999
+REVISION_INSTRUCTION_MAX_CHARS: Final = 300
+
+
+class AssetRevision(ContractModel):
+    """How a generated asset corrects an earlier one (GEN-02).
+
+    A revision is a new, immutable asset with its own ID, specification and model file; the
+    asset it ``revises`` stays in the catalog unchanged, so every version remains identifiable
+    and hash-checked. ``version`` counts from the original (1, never recorded here). The
+    original description or photo observation stays in the generation record; this record holds
+    only the later correction: the user's instruction (if any), the language model that proposed
+    the specification change (null when the user changed it by hand), the changes in plain words
+    and what was asked for but cannot be represented by the generator.
+    """
+
+    revises: StableId
+    version: int = Field(ge=2, le=MAX_REVISION_VERSION)
+    instruction: (
+        Annotated[str, StringConstraints(min_length=1, max_length=REVISION_INSTRUCTION_MAX_CHARS)]
+        | None
+    )
+    language_model: LanguageModelRef | None
+    changes: list[NonEmptyText] = Field(min_length=1, max_length=MAX_REVISION_CHANGES)
+    not_represented: list[NonEmptyText] = Field(
+        max_length=20,
+        description="Requested features the bounded generator cannot depict; never imitated.",
+    )
+
+    @model_validator(mode="after")
+    def _proposals_come_from_an_instruction(self) -> AssetRevision:
+        if self.language_model is not None and self.instruction is None:
+            raise ValueError("a revision proposed by a language model records the instruction")
+        return self
+
+
 class AssetGeneration(ContractModel):
     """How a generated asset was made, so it can be reviewed, rebuilt and never mistaken for
     a measured or vendor model.
@@ -540,6 +577,9 @@ class AssetGeneration(ContractModel):
         description="Things the description mentioned that the model does not represent."
     )
     unknown_properties: list[UnknownProperty]
+    # The correction this asset makes to an earlier generated asset; null for an original.
+    # (No Field description beside a $ref; see CatalogAsset.generation.)
+    revision: AssetRevision | None
 
     @model_validator(mode="after")
     def _consistent(self) -> AssetGeneration:
@@ -716,7 +756,51 @@ class ObjectRemoved(ContractModel):
     object: SceneObject
 
 
-EditRecord = Annotated[ObjectEdited | ObjectAdded | ObjectRemoved, Field(discriminator="type")]
+class RevisedInstance(ContractModel):
+    """One object switched to a revised asset, with any of its dimensions that changed."""
+
+    object_id: StableId
+    dimensions: list[AxisChange]
+
+
+class AssetRevised(ContractModel):
+    """Objects switched from one generated asset to its revision, as one step.
+
+    Every listed object referenced ``asset_before`` and now references ``asset_after``. An axis
+    appears in ``dimensions`` only when the object's value or evidence changed: the previous
+    value and its evidence stay in ``before``, and ``after`` carries the evidence of how the new
+    value was established (copied from the revised asset), which is not necessarily
+    ``user_supplied`` - a model revision that keeps an inferred size keeps it inferred.
+    """
+
+    type: Literal["asset_revised"]
+    revision: int = Field(ge=1, description="Scene revision this edit produced.")
+    asset_before: StableId
+    asset_after: StableId
+    objects: list[RevisedInstance] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _records_a_real_change(self) -> AssetRevised:
+        if self.asset_before == self.asset_after:
+            raise ValueError(f"edit at revision {self.revision} revises an asset into itself")
+        _require_unique((o.object_id for o in self.objects), f"object in edit {self.revision}")
+        for item in self.objects:
+            _require_unique(
+                (c.axis for c in item.dimensions),
+                f"axis of '{item.object_id}' in edit {self.revision}",
+            )
+            for change in item.dimensions:
+                if change.before == change.after:
+                    raise ValueError(
+                        f"edit at revision {self.revision} records an unchanged {change.axis} "
+                        f"for '{item.object_id}'"
+                    )
+        return self
+
+
+EditRecord = Annotated[
+    ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised, Field(discriminator="type")
+]
 
 
 class Scene(ContractModel):
@@ -766,27 +850,51 @@ class Scene(ContractModel):
                 )
 
         latest: dict[tuple[str, str], tuple[int, Transform | Length]] = {}
+        # The asset each object references according to the log: set when it is added, and
+        # followed through every revision of that asset.
+        asset_ref: dict[str, tuple[int, str | None]] = {}
         for record in self.edit_log:
             if isinstance(record, ObjectRemoved):
                 continue
-            object_id = record.object_id
-            if object_id not in live and removed.get(object_id, -1) < record.revision:
-                raise ValueError(
-                    f"edit_log revision {record.revision} refers to object '{object_id}', which "
-                    "is not in the scene and was not removed later"
-                )
-            if isinstance(record, ObjectAdded):
-                obj = live.get(object_id)
-                if obj is not None and obj.asset_id != record.asset_id:
+            object_ids = (
+                [o.object_id for o in record.objects]
+                if isinstance(record, AssetRevised)
+                else [record.object_id]
+            )
+            for object_id in object_ids:
+                if object_id not in live and removed.get(object_id, -1) < record.revision:
                     raise ValueError(
-                        f"object '{object_id}' was added at revision {record.revision} from "
-                        f"asset {record.asset_id!r} but now references {obj.asset_id!r}"
+                        f"edit_log revision {record.revision} refers to object '{object_id}', "
+                        "which is not in the scene and was not removed later"
                     )
+            if isinstance(record, ObjectAdded):
+                asset_ref[record.object_id] = (record.revision, record.asset_id)
+                continue
+            if isinstance(record, AssetRevised):
+                for item in record.objects:
+                    known = asset_ref.get(item.object_id)
+                    if known is not None and known[1] != record.asset_before:
+                        raise ValueError(
+                            f"edit_log revision {record.revision} revises asset "
+                            f"'{record.asset_before}' of object '{item.object_id}', which then "
+                            f"referenced {known[1]!r}"
+                        )
+                    asset_ref[item.object_id] = (record.revision, record.asset_after)
+                    for change in item.dimensions:
+                        latest[(item.object_id, change.axis)] = (record.revision, change.after)
                 continue
             if record.transform is not None:
-                latest[(object_id, "transform")] = (record.revision, record.transform.after)
+                latest[(record.object_id, "transform")] = (record.revision, record.transform.after)
             for change in record.dimensions:
-                latest[(object_id, change.axis)] = (record.revision, change.after)
+                latest[(record.object_id, change.axis)] = (record.revision, change.after)
+
+        for object_id, (revision, asset_id) in asset_ref.items():
+            obj = live.get(object_id)
+            if obj is not None and obj.asset_id != asset_id:
+                raise ValueError(
+                    f"edit_log revision {revision} leaves object '{object_id}' referencing asset "
+                    f"{asset_id!r}, but it now references {obj.asset_id!r}"
+                )
 
         for (object_id, field), (revision, after) in latest.items():
             obj = live.get(object_id)
@@ -879,19 +987,29 @@ class FloorRectangle(ContractModel):
     """A rectangle lying on the floor, marked by the user on the photo: the scale reference.
 
     ``corners`` go around the rectangle; corner 0 to 1 is the ``width``, corner 1 to 2 the
-    ``depth``. A side the user measured is ``user_supplied``; a side they did not know is
-    derived from the photo's perspective and stays ``inferred``.
+    ``depth``. A side the user gave is ``user_supplied``; a side they did not know is derived
+    from the photo's perspective and stays ``inferred``. ``size_basis`` says how the user knows
+    the sides they gave: ``measured`` (measured, or known exactly from a drawing), ``assumed``
+    (a typical size, not measured; such a side stays unreviewed) or ``not_stated`` (projects
+    made before 0.7.0 did not ask).
     """
 
     feature: NonEmptyText = Field(description="What the rectangle is, e.g. 'rug' or 'floor tiles'.")
     corners: list[ImagePoint] = Field(min_length=4, max_length=4)
     width: Length
     depth: Length
+    size_basis: Literal["measured", "assumed", "not_stated"]
 
     @model_validator(mode="after")
     def _at_least_one_side_given(self) -> FloorRectangle:
         if self.width.origin != "user_supplied" and self.depth.origin != "user_supplied":
-            raise ValueError("a floor rectangle needs at least one side the user measured")
+            raise ValueError("a floor rectangle needs at least one side the user gave")
+        if self.size_basis == "assumed":
+            for side in (self.width, self.depth):
+                if side.origin == "user_supplied" and side.review_status == "confirmed":
+                    raise ValueError(
+                        "an assumed scale size cannot be marked confirmed; it was not measured"
+                    )
         return self
 
 
@@ -1089,6 +1207,32 @@ class Project(ContractModel):
                 raise ValueError(
                     f"edit_log revision {record.revision} adds an instance of asset "
                     f"'{record.asset_id}', which is not in the catalog"
+                )
+            if isinstance(record, AssetRevised):
+                for asset_id in (record.asset_before, record.asset_after):
+                    if asset_id not in assets:
+                        raise ValueError(
+                            f"edit_log revision {record.revision} names asset '{asset_id}', "
+                            "which is not in the catalog"
+                        )
+        # Every revision keeps the version it corrects, so each version stays identifiable.
+        for asset in self.catalog:
+            revision = asset.generation.revision if asset.generation else None
+            if revision is None:
+                continue
+            earlier = assets.get(revision.revises)
+            if earlier is None or earlier.generation is None:
+                raise ValueError(
+                    f"asset '{asset.id}' revises '{revision.revises}', which is not a generated "
+                    "asset in the catalog"
+                )
+            earlier_version = (
+                earlier.generation.revision.version if earlier.generation.revision else 1
+            )
+            if revision.version != earlier_version + 1:
+                raise ValueError(
+                    f"asset '{asset.id}' is version {revision.version} but revises version "
+                    f"{earlier_version} ('{earlier.id}')"
                 )
         return self
 

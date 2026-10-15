@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "dc8b4e4ea198e83d:paint it blue and add a red top",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-02.2",
+  "recorded_at": "2026-10-15",
+  "note": "Raw answers from the live language model for the revision instruction above, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"envelope_m\": {\n    \"x\": 0.8,\n    \"y\": 1.9,\n    \"z\": 0.4\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"parts\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.0,\n        \"z\": 0.0\n      },\n      \"id\": \"body\",\n      \"label\": \"cabinet body\",\n      \"material\": \"paint_blue\",\n      \"narrow_end\": null,\n      \"shape\": \"rounded_box\",\n      \"size_m\": {\n        \"x\": 0.8,\n        \"y\": 1.8,\n        \"z\": 0.4\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.05,\n        \"z\": 0.0\n      },\n      \"id\": \"plinth\",\n      \"label\": \"plinth\",\n      \"material\": \"paint_blue\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.76,\n        \"y\": 0.1,\n        \"z\": 0.36\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.85,\n        \"z\": 0.0\n      },\n      \"id\": \"top\",\n      \"label\": \"top panel\",\n      \"material\": \"paint_red\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.8,\n        \"y\": 0.1,\n        \"z\": 0.4\n      },\n      \"taper\": null\n    }\n  ],\n  \"summary\": \"Painted the cabinet blue and added a red top panel.\"\n}"
+  ]
+}

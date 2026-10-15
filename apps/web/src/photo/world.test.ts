@@ -19,6 +19,7 @@ const scale: ScaleInput & { widthM: number } = {
   feature: "walkway between floor grid lines 6 m apart",
   widthM: 6,
   depthM: 1.8,
+  sizeBasis: "measured",
 };
 
 function item(id: string, label: string, template: ReviewItem["template"], box: ReviewItem["box"], facing: ReviewItem["facing"], size: [number, number, number]): ReviewItem {
@@ -127,5 +128,29 @@ describe("photo world", () => {
     const reference = project.scene.objects.find((o) => o.id === "obj-scale-reference")!;
     expect([reference.dimensions.width.origin, reference.dimensions.depth.origin]).toEqual(["user_supplied", "user_supplied"]);
     expect(source.photo_import!.calibration.camera.fov_basis).toBe("from_sides");
+    expect(source.photo_import!.calibration.reference.size_basis).toBe("measured");
+    expect(reference.dimensions.width).toMatchObject({ review_status: "confirmed", source_ref: expect.stringContaining("Measured by the user") });
+  });
+
+  it("records an assumed scale as an assumption, never as a measurement", () => {
+    const cal = calibrate();
+    const placed = placeItems(cal, items);
+    const sha = "b".repeat(64);
+    const assumed = { ...scale, depthM: null, sizeBasis: "assumed" as const };
+    const project = buildPhotoProject({
+      stored: { filename: "classroom.jpg", sha256: sha, image: { uri: `photos/${sha}.jpg`, media_type: "image/jpeg", width_px: 1024, height_px: 684, bytes: 1000 } },
+      scale: assumed,
+      calibration: cal,
+      items: [],
+      placed,
+      assets: new Map(),
+      visionModel: null,
+      visibleText: [],
+    });
+    const reference = project.sources[0]!.photo_import!.calibration.reference;
+    expect(reference.size_basis).toBe("assumed");
+    expect(reference.width).toMatchObject({ origin: "user_supplied", review_status: "unreviewed" });
+    expect(reference.width.source_ref).toMatch(/^Assumed by the user: .*not measured$/);
+    expect(JSON.stringify(project)).not.toContain("Measured by the user");
   });
 });

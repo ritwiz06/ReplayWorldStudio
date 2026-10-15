@@ -33,6 +33,8 @@ Remaining estimate (M2-M9): 296-468 focused hours. Add 20 % contingency: about 3
 
 **Scope note (2026-10-14, IMG-01).** The feasibility check bounded IMG-01 to **one indoor photo with a visible floor and a floor rectangle the user measures** (docs/image-import.md, ADR-036, ADR-037). The vision model finds and names objects well but its floor geometry and sizes are unreliable, so the scale comes from the user's rectangle. The broader M3 goal stays in IMG-02/03: outdoor scenes, photos without a usable rectangle, several photos of one place, walls and room boundaries, and held-out evaluation against measured references. IMG-01 is done; M3 is in progress. M2 is still open (GEN-02, GEN-03). The M3 estimate is not revised, because hours were not tracked.
 
+**Scope note (2026-10-15, GEN-02).** GEN-02 is done: a placed generated object (described, builder or photo) can be corrected in words or by hand and saved as a new version, applied to one or all instances in one undoable step (ADR-039..041). M2 stays **in progress** until GEN-03; GEN-03's held-out set now also includes model-revision instructions. The bounded generator still cannot show openings within one part, slanted or curved surfaces beyond its shapes, rotated or moving parts, or textures, so a correction can make an object more recognisable but not exact. The M2 estimate is not revised, because hours were not tracked.
+
 ### Original baseline (superseded 2026-10-10)
 
 The original plan listed M2 "Drawing import" (32-48 h), M3 spatial checks (28-40 h), M4 production and comparison (40-60 h), M5 AI assistance (36-56 h) and M6 evaluation (28-44 h), for 208-312 hours in total (250-375 with contingency). It is kept for traceability only.

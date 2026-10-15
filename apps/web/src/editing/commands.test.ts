@@ -231,3 +231,111 @@ describe("generated objects", () => {
     expect(twice.ok ? null : twice.rejection.message).toMatch(/already has an asset/);
   });
 });
+
+describe("revising a generated asset", () => {
+  const at = (x: number, z: number): Transform => ({ position_m: { x, y: 0, z }, rotation_rad: { order: "XYZ", x: 0, y: 0, z: 0 } });
+
+  /** A project with two instances of one generated asset; the second has a measured width. */
+  function twoInstances() {
+    const asset = generatedAsset();
+    let project = apply(demo(), { type: "add_generated_instance", asset, objectId: "obj-a", name: "Conveyor A", transform: at(4, 3) }).project;
+    project = apply(project, { type: "add_instance", assetId: asset.id, objectId: "obj-b", name: "Conveyor B", transform: at(4, 5) }).project;
+    project = apply(project, { type: "set_dimensions", objectId: "obj-b", values: { width: 2.4 } }).project;
+    return { project, asset };
+  }
+
+  /** Version 2: a wider model (width entered by the user); height and depth evidence kept. */
+  function revision(previous: ReturnType<typeof generatedAsset>) {
+    const revised = structuredClone(previous) as typeof previous;
+    revised.id = "asset-gen-guarded-conveyor-9f8e7d6c";
+    revised.name = "Guarded conveyor (v2)";
+    if (revised.visual.type === "gltf") revised.visual = { ...revised.visual, uri: "generated/" + "9".repeat(64) + ".glb", sha256: "9".repeat(64) };
+    revised.nominal_dimensions = {
+      ...previous.nominal_dimensions,
+      width: { value_m: 2.6, origin: "user_supplied", source_ref: "Entered by the user while improving the model", review_status: "confirmed", uncertainty_m: null },
+    };
+    revised.generation = {
+      ...previous.generation!,
+      revision: { revises: previous.id, version: 2, instruction: null, language_model: null, changes: ["Width 2.200 → 2.600 m"], not_represented: [] },
+    };
+    return revised;
+  }
+
+  it("switches only the selected instance in one step, and undo restores the exact references and sizes", () => {
+    const { project, asset } = twoInstances();
+    const v2 = revision(asset);
+    const result = apply(project, {
+      type: "revise_asset",
+      asset: v2,
+      previousAssetId: asset.id,
+      objects: [{ objectId: "obj-a", dimensions: { width: v2.nominal_dimensions.width } }],
+    });
+    const next = result.project;
+    // Both versions stay in the catalog; only the selected object changed.
+    expect(next.catalog.filter((a) => a.source.kind === "generated").map((a) => a.id)).toEqual([asset.id, v2.id]);
+    expect(objectOf(next, "obj-a")).toMatchObject({ asset_id: v2.id, dimensions: { width: v2.nominal_dimensions.width, height: asset.nominal_dimensions.height } });
+    expect(objectOf(next, "obj-b")).toBe(objectOf(project, "obj-b"));
+    expect(next.scene.edit_log.at(-1)).toEqual({
+      type: "asset_revised",
+      revision: project.scene.revision + 1,
+      asset_before: asset.id,
+      asset_after: v2.id,
+      objects: [{ object_id: "obj-a", dimensions: [{ axis: "width", before: asset.nominal_dimensions.width, after: v2.nominal_dimensions.width }] }],
+    });
+    expect(validateProject(next).ok).toBe(true);
+
+    const undone = revertChange(next, result.change, next.scene.revision, next.scene.revision);
+    if (!undone.ok) throw new Error(undone.rejection.message);
+    expect([undone.project.catalog, undone.project.scene.objects, undone.project.scene.edit_log]).toEqual([project.catalog, project.scene.objects, project.scene.edit_log]);
+    const redone = reapplyChange(undone.project, result.change, undone.project.scene.revision);
+    if (!redone.ok) throw new Error(redone.rejection.message);
+    expect([redone.project.catalog, redone.project.scene.objects]).toEqual([next.catalog, next.scene.objects]);
+  });
+
+  it("updates every instance at once, keeping a measured size unless asked otherwise", () => {
+    const { project, asset } = twoInstances();
+    const v2 = revision(asset);
+    const measuredB = objectOf(project, "obj-b").dimensions.width;
+    const { project: next, change } = apply(project, {
+      type: "revise_asset",
+      asset: v2,
+      previousAssetId: asset.id,
+      // B keeps its measured 2.4 m width (no width given for it); A follows the new model.
+      objects: [
+        { objectId: "obj-a", dimensions: { width: v2.nominal_dimensions.width } },
+        { objectId: "obj-b", dimensions: {} },
+      ],
+    });
+    expect([objectOf(next, "obj-a").asset_id, objectOf(next, "obj-b").asset_id]).toEqual([v2.id, v2.id]);
+    expect(objectOf(next, "obj-b").dimensions.width).toBe(measuredB);
+    expect(change.label).toBe("Improve the model of 2 objects");
+    const record = next.scene.edit_log.at(-1);
+    expect(record?.type === "asset_revised" ? record.objects.map((o) => [o.object_id, o.dimensions.length]) : null).toEqual([
+      ["obj-a", 1],
+      ["obj-b", 0],
+    ]);
+    const undone = revertChange(next, change, next.scene.revision, next.scene.revision);
+    if (!undone.ok) throw new Error(undone.rejection.message);
+    expect(undone.project.scene.objects).toEqual(project.scene.objects);
+  });
+
+  it("changes nothing when any object no longer uses the old asset, or the scene moved on", () => {
+    const { project, asset } = twoInstances();
+    const v2 = revision(asset);
+    const command: EditCommand = {
+      type: "revise_asset",
+      asset: v2,
+      previousAssetId: asset.id,
+      objects: [
+        { objectId: "obj-a", dimensions: {} },
+        { objectId: "obj-cell-filling", dimensions: {} },
+      ],
+    };
+    const wrong = applyCommand(project, { baseRevision: project.scene.revision, command });
+    expect(wrong).toMatchObject({ ok: false, rejection: { kind: "conflict" } });
+    const stale = applyCommand(project, { baseRevision: project.scene.revision - 1, command: { ...command, objects: [{ objectId: "obj-a", dimensions: {} }] } });
+    expect(stale).toMatchObject({ ok: false, rejection: { kind: "conflict" } });
+    const notARevision = applyCommand(project, { baseRevision: project.scene.revision, command: { ...command, asset: { ...v2, generation: { ...v2.generation!, revision: null } } } });
+    expect(notARevision).toMatchObject({ ok: false, rejection: { kind: "invalid" } });
+  });
+});

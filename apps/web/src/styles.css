@@ -1823,3 +1823,73 @@ label.button.disabled {
     grid-template-columns: minmax(0, 1fr) 320px;
   }
 }
+
+/* ---------- GEN-02: improve a placed generated model ---------- */
+.improve-model {
+  max-width: 1280px;
+  width: calc(100vw - 48px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+.improve-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 8px 0 12px;
+}
+.improve-compare figure {
+  margin: 0;
+}
+.improve-compare figcaption {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.improve-compare .model-preview {
+  height: 260px;
+}
+.improve-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.improve-controls textarea {
+  width: 100%;
+  resize: vertical;
+}
+.improve-colours {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.improve-colours li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.improve-colours select {
+  margin-left: auto;
+}
+.improve-plan {
+  margin: 6px 0;
+  padding-left: 18px;
+}
+.improve-plan li {
+  margin-bottom: 4px;
+}
+.improve-proposal {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  margin: 8px 0;
+}
+.improve-parts {
+  margin-top: 10px;
+}
+@media (max-width: 1000px) {
+  .improve-compare,
+  .improve-body {
+    grid-template-columns: 1fr;
+  }
+}

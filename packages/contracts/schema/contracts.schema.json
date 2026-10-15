@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.6.0",
+  "$id": "urn:replay-world:contracts:0.7.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.6.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.7.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -58,6 +58,15 @@
     },
     "StoredPhoto": {
       "$ref": "#/$defs/StoredPhoto"
+    },
+    "GeneratedAssetRevisionRequest": {
+      "$ref": "#/$defs/GeneratedAssetRevisionRequest"
+    },
+    "ModelRevisionProposalRequest": {
+      "$ref": "#/$defs/ModelRevisionProposalRequest"
+    },
+    "ModelRevisionProposalResult": {
+      "$ref": "#/$defs/ModelRevisionProposalResult"
     }
   },
   "required": [
@@ -78,7 +87,10 @@
     "GeneratedModelRestoreReport",
     "ImageAnalysisRequest",
     "ImageProposalResult",
-    "StoredPhoto"
+    "StoredPhoto",
+    "GeneratedAssetRevisionRequest",
+    "ModelRevisionProposalRequest",
+    "ModelRevisionProposalResult"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -153,6 +165,16 @@
             "$ref": "#/$defs/UnknownProperty"
           },
           "type": "array"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AssetRevision"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -164,9 +186,119 @@
         "stated_facts",
         "inferred_facts",
         "not_modelled",
-        "unknown_properties"
+        "unknown_properties",
+        "revision"
       ],
       "title": "AssetGeneration",
+      "type": "object"
+    },
+    "AssetRevised": {
+      "additionalProperties": false,
+      "description": "Objects switched from one generated asset to its revision, as one step.\n\nEvery listed object referenced ``asset_before`` and now references ``asset_after``. An axis\nappears in ``dimensions`` only when the object's value or evidence changed: the previous\nvalue and its evidence stay in ``before``, and ``after`` carries the evidence of how the new\nvalue was established (copied from the revised asset), which is not necessarily\n``user_supplied`` - a model revision that keeps an inferred size keeps it inferred.",
+      "properties": {
+        "type": {
+          "const": "asset_revised",
+          "type": "string"
+        },
+        "revision": {
+          "description": "Scene revision this edit produced.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "asset_before": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "asset_after": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/RevisedInstance"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "revision",
+        "asset_before",
+        "asset_after",
+        "objects"
+      ],
+      "title": "AssetRevised",
+      "type": "object"
+    },
+    "AssetRevision": {
+      "additionalProperties": false,
+      "description": "How a generated asset corrects an earlier one (GEN-02).\n\nA revision is a new, immutable asset with its own ID, specification and model file; the\nasset it ``revises`` stays in the catalog unchanged, so every version remains identifiable\nand hash-checked. ``version`` counts from the original (1, never recorded here). The\noriginal description or photo observation stays in the generation record; this record holds\nonly the later correction: the user's instruction (if any), the language model that proposed\nthe specification change (null when the user changed it by hand), the changes in plain words\nand what was asked for but cannot be represented by the generator.",
+      "properties": {
+        "revises": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "version": {
+          "maximum": 999,
+          "minimum": 2,
+          "type": "integer"
+        },
+        "instruction": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "language_model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LanguageModelRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "changes": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 40,
+          "minItems": 1,
+          "type": "array"
+        },
+        "not_represented": {
+          "description": "Requested features the bounded generator cannot depict; never imitated.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        }
+      },
+      "required": [
+        "revises",
+        "version",
+        "instruction",
+        "language_model",
+        "changes",
+        "not_represented"
+      ],
+      "title": "AssetRevision",
       "type": "object"
     },
     "AssetSource": {
@@ -780,7 +912,7 @@
     },
     "FloorRectangle": {
       "additionalProperties": false,
-      "description": "A rectangle lying on the floor, marked by the user on the photo: the scale reference.\n\n``corners`` go around the rectangle; corner 0 to 1 is the ``width``, corner 1 to 2 the\n``depth``. A side the user measured is ``user_supplied``; a side they did not know is\nderived from the photo's perspective and stays ``inferred``.",
+      "description": "A rectangle lying on the floor, marked by the user on the photo: the scale reference.\n\n``corners`` go around the rectangle; corner 0 to 1 is the ``width``, corner 1 to 2 the\n``depth``. A side the user gave is ``user_supplied``; a side they did not know is derived\nfrom the photo's perspective and stays ``inferred``. ``size_basis`` says how the user knows\nthe sides they gave: ``measured`` (measured, or known exactly from a drawing), ``assumed``\n(a typical size, not measured; such a side stays unreviewed) or ``not_stated`` (projects\nmade before 0.7.0 did not ask).",
       "properties": {
         "feature": {
           "description": "What the rectangle is, e.g. 'rug' or 'floor tiles'.",
@@ -801,13 +933,22 @@
         },
         "depth": {
           "$ref": "#/$defs/Length"
+        },
+        "size_basis": {
+          "enum": [
+            "measured",
+            "assumed",
+            "not_stated"
+          ],
+          "type": "string"
         }
       },
       "required": [
         "feature",
         "corners",
         "width",
-        "depth"
+        "depth",
+        "size_basis"
       ],
       "title": "FloorRectangle",
       "type": "object"
@@ -928,6 +1069,73 @@
         "not_modelled"
       ],
       "title": "GeneratedAssetRequest",
+      "type": "object"
+    },
+    "GeneratedAssetRevisionRequest": {
+      "additionalProperties": false,
+      "description": "Build a revision of a generated asset as a new asset; the previous one is not changed.",
+      "properties": {
+        "previous": {
+          "$ref": "#/$defs/CatalogAsset"
+        },
+        "spec": {
+          "$ref": "#/$defs/GeometryDraft"
+        },
+        "dimensions": {
+          "$ref": "#/$defs/RevisedDimensions"
+        },
+        "instruction": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "minLength": 3,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "language_model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LanguageModelRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "changes": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 40,
+          "minItems": 1,
+          "type": "array"
+        },
+        "not_represented": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        }
+      },
+      "required": [
+        "previous",
+        "spec",
+        "dimensions",
+        "instruction",
+        "language_model",
+        "changes",
+        "not_represented"
+      ],
+      "title": "GeneratedAssetRevisionRequest",
       "type": "object"
     },
     "GeneratedModel": {
@@ -1292,7 +1500,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.6.0",
+          "const": "0.7.0",
           "type": "string"
         }
       },
@@ -1681,6 +1889,113 @@
         "max"
       ],
       "title": "ModelBounds",
+      "type": "object"
+    },
+    "ModelRevisionProposalRequest": {
+      "additionalProperties": false,
+      "description": "Ask the language model for a bounded change to a generated model's specification.",
+      "properties": {
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/$defs/GeometrySpec"
+        },
+        "instruction": {
+          "maxLength": 300,
+          "minLength": 3,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "spec",
+        "instruction"
+      ],
+      "title": "ModelRevisionProposalRequest",
+      "type": "object"
+    },
+    "ModelRevisionProposalResult": {
+      "additionalProperties": false,
+      "description": "A proposed specification change, checked and fitted; nothing is built or stored.\n\n``outcome`` is ``unsupported`` when the instruction is not a change to this object, or when\nthe proposal would misrepresent it (for example a solid block offered as an open shelf);\n``message`` then says why and ``spec`` is null.",
+      "properties": {
+        "outcome": {
+          "enum": [
+            "proposal",
+            "unsupported"
+          ],
+          "type": "string"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "spec": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GeometrySpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "size_changed": {
+          "type": "boolean"
+        },
+        "not_represented": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "checks": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "provider": {
+          "$ref": "#/$defs/ProviderRun"
+        }
+      },
+      "required": [
+        "outcome",
+        "message",
+        "spec",
+        "summary",
+        "size_changed",
+        "not_represented",
+        "checks",
+        "provider"
+      ],
+      "title": "ModelRevisionProposalResult",
       "type": "object"
     },
     "MoveIntent": {
@@ -2198,7 +2513,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.6.0",
+          "const": "0.7.0",
           "type": "string"
         },
         "id": {
@@ -2648,6 +2963,73 @@
       "title": "ReviewedLength",
       "type": "object"
     },
+    "RevisedDimensions": {
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "$ref": "#/$defs/RevisedLength"
+        },
+        "height": {
+          "$ref": "#/$defs/RevisedLength"
+        },
+        "depth": {
+          "$ref": "#/$defs/RevisedLength"
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "depth"
+      ],
+      "title": "RevisedDimensions",
+      "type": "object"
+    },
+    "RevisedInstance": {
+      "additionalProperties": false,
+      "description": "One object switched to a revised asset, with any of its dimensions that changed.",
+      "properties": {
+        "object_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "dimensions": {
+          "items": {
+            "$ref": "#/$defs/AxisChange"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "object_id",
+        "dimensions"
+      ],
+      "title": "RevisedInstance",
+      "type": "object"
+    },
+    "RevisedLength": {
+      "additionalProperties": false,
+      "description": "How one overall dimension of a revised model was settled.\n\nkept: unchanged, so the previous value and its evidence carry over exactly (a change of\nparts or colours never turns an estimate into a measurement); entered: typed by the user;\nproposed: changed by a language model's proposal and confirmed by the user.",
+      "properties": {
+        "basis": {
+          "enum": [
+            "kept",
+            "entered",
+            "proposed"
+          ],
+          "type": "string"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "basis",
+        "confirmed"
+      ],
+      "title": "RevisedLength",
+      "type": "object"
+    },
     "RotateIntent": {
       "additionalProperties": false,
       "properties": {
@@ -2718,6 +3100,9 @@
               },
               {
                 "$ref": "#/$defs/ObjectRemoved"
+              },
+              {
+                "$ref": "#/$defs/AssetRevised"
               }
             ],
             "type": "object"
@@ -3175,7 +3560,7 @@
           "type": "string"
         },
         "to_version": {
-          "const": "0.6.0",
+          "const": "0.7.0",
           "type": "string"
         },
         "notes": {
@@ -3317,7 +3702,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.6.0",
+          "const": "0.7.0",
           "type": "string"
         },
         "project_id": {

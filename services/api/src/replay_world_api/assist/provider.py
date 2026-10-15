@@ -26,7 +26,7 @@ from typing import Any, Final, Literal, Protocol
 
 from ..settings import AssistSettings
 
-Task = Literal["object", "edit", "image"]
+Task = Literal["object", "edit", "image", "revision"]
 
 MAX_OUTPUT_TOKENS: Final = 4096
 
@@ -65,8 +65,9 @@ class Provider(Protocol):
     ) -> Completion:
         """Return the model's raw text for ``messages``.
 
-        ``key`` identifies the request for recordings (the description, or the edit request and
-        selection); ``attempt`` counts from 0 and is only used to replay retries.
+        ``key`` identifies the request for recordings (the description, the edit request and
+        selection, or the specification's hash and the revision instruction); ``attempt``
+        counts from 0 and is only used to replay retries.
         """
         ...
 
@@ -173,7 +174,9 @@ class RecordedProvider:
     mode: Literal["live", "recorded"] = "recorded"
 
     def __init__(
-        self, settings: AssistSettings, tasks: tuple[Task, ...] = ("object", "edit", "image")
+        self,
+        settings: AssistSettings,
+        tasks: tuple[Task, ...] = ("object", "edit", "image", "revision"),
     ) -> None:
         self.service = settings.service
         self.base_url = settings.base_url
@@ -212,7 +215,7 @@ def provider_from_settings(settings: AssistSettings) -> Provider | None:
     if settings.provider == "voyager" and settings.api_key:
         return OpenAICompatibleProvider(settings)
     if settings.provider == "recorded":
-        return RecordedProvider(settings, tasks=("object", "edit"))
+        return RecordedProvider(settings, tasks=("object", "edit", "revision"))
     return None
 
 

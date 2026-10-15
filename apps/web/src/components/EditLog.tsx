@@ -39,12 +39,18 @@ function recordTitle(record: EditRecord, project: Project): string {
       const what = [record.transform ? "placement" : null, ...record.dimensions.map((c) => c.axis)].filter(Boolean).join(", ");
       return `Edited ${name(record.object_id)}: ${what}`;
     }
+    case "asset_revised": {
+      const who = record.objects.length === 1 ? name(record.objects[0]!.object_id) : `${record.objects.length} objects`;
+      return `Improved the model of ${who}: ${record.asset_before} → ${record.asset_after}`;
+    }
   }
 }
 
 /** Records about one object, newest first, with before/after values and replaced evidence. */
 export function ObjectEditLog({ project, objectId }: { project: Project; objectId: string }) {
-  const records = project.scene.edit_log.filter((r) => r.type !== "object_removed" && r.object_id === objectId).reverse();
+  const records = project.scene.edit_log
+    .filter((r) => (r.type === "asset_revised" ? r.objects.some((o) => o.object_id === objectId) : r.type !== "object_removed" && r.object_id === objectId))
+    .reverse();
   if (records.length === 0) return <p className="muted">No edits recorded for this object.</p>;
   return (
     <ol className="edit-log" data-testid="object-edit-log">
@@ -62,6 +68,21 @@ export function ObjectEditLog({ project, objectId }: { project: Project; objectI
                   <div className="muted">Was: {evidence(c.before)}</div>
                 </li>
               ))}
+            </ul>
+          ) : record.type === "asset_revised" ? (
+            <ul>
+              <li>
+                Model {record.asset_before} → {record.asset_after}
+              </li>
+              {record.objects
+                .find((o) => o.object_id === objectId)
+                ?.dimensions.map((c) => (
+                  <li key={c.axis}>
+                    {AXIS_LABEL[c.axis]} {metres(c.before.value_m)} → {metres(c.after.value_m)}
+                    <div className="muted">Was: {evidence(c.before)}</div>
+                    <div className="muted">Now: {evidence(c.after)}</div>
+                  </li>
+                ))}
             </ul>
           ) : null}
         </li>

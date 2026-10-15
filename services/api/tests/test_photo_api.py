@@ -68,6 +68,7 @@ def photo_project(stored: StoredPhoto) -> str:
                     "corners": corners,
                     "width": {"value_m": 2.0, **side, "uncertainty_m": None},
                     "depth": {"value_m": 1.4, **side, "uncertainty_m": None},
+                    "size_basis": "measured",
                 },
                 "image_to_floor": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
                 "camera": {

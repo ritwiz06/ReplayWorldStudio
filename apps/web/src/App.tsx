@@ -6,6 +6,7 @@ import { CatalogPanel } from "./components/CatalogPanel";
 import { ChangeBar } from "./components/ChangeBar";
 import { CreateObject } from "./components/CreateObject";
 import { UnsavedChangesDialog, UpgradeReviewDialog } from "./components/Dialogs";
+import { ImproveModel } from "./components/ImproveModel";
 import { Inspector } from "./components/Inspector";
 import { EditRejectedNotice, FileRejectedPanel, LoadErrorPanel, PlacementBanner } from "./components/Notices";
 import { ObjectList } from "./components/ObjectList";
@@ -89,8 +90,10 @@ export function App() {
   const [start, setStart] = useState(() => !startSeen());
   const [create, setCreate] = useState<"describe" | "builder" | null>(null);
   const [photoImport, setPhotoImport] = useState(false);
+  /** The object whose generated model is being improved. */
+  const [improve, setImprove] = useState<string | null>(null);
   const [rebuild, setRebuild] = useState<{ busy: boolean; message: string | null }>({ busy: false, message: null });
-  const overlayOpen = start || create !== null || photoImport;
+  const overlayOpen = start || create !== null || photoImport || improve !== null;
   // Selection and placement belong to the project they were made in.
   const [selection, setSelection] = useState<{ loadId: number; id: string | null }>({ loadId: 0, id: null });
   const [placement, setPlacement] = useState<Placement | null>(null);
@@ -493,6 +496,7 @@ export function App() {
             onDuplicate: startDuplicate,
             onRemove: remove,
           }}
+          onImprove={() => selected && setImprove(selected.id)}
         />
       </aside>
       <StatusBar project={project} mode={mode} models={summary} savedAs={session.savedAs} dirty={session.dirty} />
@@ -541,6 +545,22 @@ export function App() {
             setPhotoImport(false);
             if (mode === "walk") setMode("orbit");
             session.loadCreated(created, filename);
+          }}
+        />
+      )}
+      {improve && project && !prompt && project.scene.objects.some((o) => o.id === improve && project.catalog.some((a) => a.id === o.asset_id && a.generation)) && (
+        <ImproveModel
+          client={client}
+          assist={assist}
+          project={project}
+          object={project.scene.objects.find((o) => o.id === improve)!}
+          onClose={() => setImprove(null)}
+          onApply={(request) => {
+            const outcome = run(request);
+            if (!outcome) return "The scene is not editable right now.";
+            if (!outcome.ok) return outcome.rejection.message;
+            setImprove(null);
+            return null;
           }}
         />
       )}

@@ -8,6 +8,7 @@
 // edit prepared before an undo (or any other change) can never be applied to a newer state.
 import {
   validateProject,
+  type AssetRevised,
   type CatalogAsset,
   type Dimensions,
   type Length,
@@ -34,7 +35,18 @@ export type EditCommand =
   /** Add a generated asset (built and stored by the API) to the catalog and place one instance of
    * it, as one step: undo removes both. */
   | { type: "add_generated_instance"; asset: CatalogAsset; objectId: string; name: string; transform: Transform }
+  /** Switch objects from a generated asset to its revision (built and stored by the API), as one
+   * step: the revision joins the catalog (the previous version stays), every listed object
+   * references it, and each axis given in `dimensions` takes that value and evidence. Either
+   * every object changes or none does; undo restores the exact previous references and sizes. */
+  | { type: "revise_asset"; asset: CatalogAsset; previousAssetId: string; objects: RevisedObjectRequest[] }
   | { type: "remove_object"; objectId: string };
+
+/** One object to switch to a revised asset; axes not listed keep the object's own value. */
+export interface RevisedObjectRequest {
+  objectId: string;
+  dimensions: Partial<Record<Axis, Length>>;
+}
 
 export interface CommandRequest {
   /** The scene revision the command was prepared against. */
@@ -51,7 +63,7 @@ export interface Rejection {
   field?: string;
 }
 
-export type EditRecord = ObjectEdited | ObjectAdded | ObjectRemoved;
+export type EditRecord = ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised;
 type DraftOf<T> = T extends unknown ? Omit<T, "revision"> : never;
 export type EditRecordDraft = DraftOf<EditRecord>;
 
@@ -81,7 +93,9 @@ export interface Change {
   label: string;
   /** The object the change is about (selected after undo or redo when it exists). */
   objectId: string;
-  patch: ObjectPatch;
+  /** One patch per changed object; several only when one step changes several objects (a model
+   * revision applied to every instance). Patches that replace objects keep their indices. */
+  patches: ObjectPatch[];
   /** Set when the command also changed the catalog (a generated asset was added). */
   catalogPatch?: CatalogPatch;
   /** The edit record without its revision; the revision is assigned when (re)applied. */
@@ -147,6 +161,7 @@ export function usedObjectIds(project: Project): Set<string> {
   const ids = new Set(project.scene.objects.map((o) => o.id));
   for (const record of project.scene.edit_log) {
     if (record.type === "object_removed") ids.add(record.object.id);
+    else if (record.type === "asset_revised") for (const o of record.objects) ids.add(o.object_id);
     else ids.add(record.object_id);
     if (record.type === "object_added" && record.duplicate_of) ids.add(record.duplicate_of);
   }
@@ -189,7 +204,7 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
         change: {
           label: `${describeTransform(before.transform, transform)} ${before.name}`,
           objectId: before.id,
-          patch: { index, before, after: { ...before, transform } },
+          patches: [{ index, before, after: { ...before, transform } }],
           record: { type: "object_edited", object_id: before.id, transform: { before: before.transform, after: transform }, dimensions: [] },
         },
       };
@@ -224,7 +239,7 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
         change: {
           label: `Resize ${before.name} (${changed.join(", ")})`,
           objectId: before.id,
-          patch: { index, before, after: { ...before, dimensions } },
+          patches: [{ index, before, after: { ...before, dimensions } }],
           record: {
             type: "object_edited",
             object_id: before.id,
@@ -255,7 +270,7 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
         change: {
           label: `Add ${command.name}`,
           objectId: after.id,
-          patch: { index: objects.length, before: null, after },
+          patches: [{ index: objects.length, before: null, after }],
           record: { type: "object_added", object_id: after.id, asset_id: asset.id, duplicate_of: null },
         },
       };
@@ -278,7 +293,7 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
         change: {
           label: `Duplicate ${source.name}`,
           objectId: after.id,
-          patch: { index: index + 1, before: null, after },
+          patches: [{ index: index + 1, before: null, after }],
           record: { type: "object_added", object_id: after.id, asset_id: source.asset_id, duplicate_of: source.id },
         },
       };
@@ -309,9 +324,64 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
         change: {
           label: `Add ${command.name}`,
           objectId: after.id,
-          patch: { index: objects.length, before: null, after },
+          patches: [{ index: objects.length, before: null, after }],
           catalogPatch: { index: project.catalog.length, before: null, after: added },
           record: { type: "object_added", object_id: after.id, asset_id: added.id, duplicate_of: null },
+        },
+      };
+    }
+
+    case "revise_asset": {
+      const asset = command.asset;
+      const revision = asset.generation?.revision;
+      if (asset.source.kind !== "generated" || !revision || revision.revises !== command.previousAssetId) {
+        return reject("invalid", `'${asset.id}' is not a revision of '${command.previousAssetId}'.`);
+      }
+      if (!project.catalog.some((a) => a.id === command.previousAssetId)) {
+        return reject("not_found", `No catalog asset '${command.previousAssetId}' in this project.`);
+      }
+      const existing = project.catalog.find((a) => a.id === asset.id);
+      if (existing && JSON.stringify(existing) !== JSON.stringify(asset)) {
+        return reject("invalid", `The catalog already has a different asset '${asset.id}'.`);
+      }
+      if (command.objects.length === 0) return reject("invalid", "Choose at least one object to update.");
+      if (new Set(command.objects.map((o) => o.objectId)).size !== command.objects.length) {
+        return reject("invalid", "An object is listed twice.");
+      }
+      // Check every object before changing any, so the step applies to all of them or to none.
+      const patches: ObjectPatch[] = [];
+      const items: AssetRevised["objects"][number][] = [];
+      for (const request of command.objects) {
+        const index = indexOf(request.objectId);
+        const before = objects[index];
+        if (!before) return reject("not_found", `No object '${request.objectId}' in the scene.`);
+        if (before.asset_id !== command.previousAssetId) {
+          return reject("conflict", `${before.name} no longer uses '${command.previousAssetId}'; nothing was changed.`);
+        }
+        const dimensions: Dimensions = { ...before.dimensions };
+        const changes: AssetRevised["objects"][number]["dimensions"] = [];
+        for (const axis of AXIS_ORDER) {
+          const after = request.dimensions[axis];
+          if (!after) continue;
+          const problem = checkLength(axis, after.value_m);
+          if (problem) return { ok: false, rejection: problem };
+          if (JSON.stringify(after) === JSON.stringify(before.dimensions[axis])) continue;
+          dimensions[axis] = structuredClone(after);
+          changes.push({ axis, before: before.dimensions[axis], after: dimensions[axis] });
+        }
+        patches.push({ index, before, after: { ...before, asset_id: asset.id, dimensions } });
+        items.push({ object_id: before.id, dimensions: changes });
+      }
+      const first = patches[0]!.before!;
+      const label = patches.length === 1 ? `Improve the model of ${first.name}` : `Improve the model of ${patches.length} objects`;
+      return {
+        ok: true,
+        change: {
+          label,
+          objectId: first.id,
+          patches,
+          ...(existing ? {} : { catalogPatch: { index: project.catalog.length, before: null, after: structuredClone(asset) } }),
+          record: { type: "asset_revised", asset_before: command.previousAssetId, asset_after: asset.id, objects: items as AssetRevised["objects"] },
         },
       };
     }
@@ -325,7 +395,7 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
         change: {
           label: `Remove ${before.name}`,
           objectId: before.id,
-          patch: { index, before, after: null },
+          patches: [{ index, before, after: null }],
           record: { type: "object_removed", object: before },
         },
       };
@@ -333,11 +403,13 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
   }
 }
 
-function patchObjects(objects: readonly SceneObject[], patch: ObjectPatch): SceneObject[] {
+function patchObjects(objects: readonly SceneObject[], patches: readonly ObjectPatch[]): SceneObject[] {
   const next = [...objects];
-  if (patch.before === null && patch.after !== null) next.splice(patch.index, 0, patch.after);
-  else if (patch.after === null) next.splice(patch.index, 1);
-  else next[patch.index] = patch.after;
+  for (const patch of patches) {
+    if (patch.before === null && patch.after !== null) next.splice(patch.index, 0, patch.after);
+    else if (patch.after === null) next.splice(patch.index, 1);
+    else next[patch.index] = patch.after;
+  }
   return next;
 }
 
@@ -352,10 +424,12 @@ function patchCatalog(catalog: readonly CatalogAsset[], patch: CatalogPatch | un
 
 const invert = <P extends ObjectPatch | CatalogPatch>(patch: P): P => ({ ...patch, before: patch.after, after: patch.before });
 
-/** The patch can be applied: the object at its index is exactly the expected snapshot. */
-function patchApplies(objects: readonly SceneObject[], patch: ObjectPatch): boolean {
-  if (patch.before === null) return patch.index <= objects.length && !objects.some((o) => o.id === patch.after?.id);
-  return objects[patch.index] === patch.before;
+/** The patches can be applied: each object at its index is exactly the expected snapshot. (A
+ * change with several patches only replaces objects, so the indices do not shift.) */
+function patchesApply(objects: readonly SceneObject[], patches: readonly ObjectPatch[]): boolean {
+  return patches.every((patch) =>
+    patch.before === null ? patch.index <= objects.length && !objects.some((o) => o.id === patch.after?.id) : objects[patch.index] === patch.before,
+  );
 }
 
 function catalogPatchApplies(catalog: readonly CatalogAsset[], patch: CatalogPatch | undefined): boolean {
@@ -383,18 +457,18 @@ export function applyCommand(project: Project, request: CommandRequest): Result<
   if (conflict) return { ok: false, rejection: conflict };
   const prepared = prepare(project, request.command);
   if (!prepared.ok) return prepared;
-  const { patch, catalogPatch } = prepared.change;
-  const next = commit(project, patch, catalogPatch, (revision) => [...project.scene.edit_log, stamp(prepared.change.record, revision)]);
+  const { patches, catalogPatch } = prepared.change;
+  const next = commit(project, patches, catalogPatch, (revision) => [...project.scene.edit_log, stamp(prepared.change.record, revision)]);
   const problem = guard(next);
   return problem ? { ok: false, rejection: problem } : { ok: true, project: next, change: prepared.change };
 }
 
-function commit(project: Project, patch: ObjectPatch, catalogPatch: CatalogPatch | undefined, log: (revision: number) => EditRecord[]): Project {
+function commit(project: Project, patches: readonly ObjectPatch[], catalogPatch: CatalogPatch | undefined, log: (revision: number) => EditRecord[]): Project {
   const revision = project.scene.revision + 1;
   return {
     ...project,
     catalog: catalogPatch ? patchCatalog(project.catalog, catalogPatch) : project.catalog,
-    scene: { ...project.scene, revision, objects: patchObjects(project.scene.objects, patch), edit_log: log(revision) },
+    scene: { ...project.scene, revision, objects: patchObjects(project.scene.objects, patches), edit_log: log(revision) },
   };
 }
 
@@ -406,11 +480,11 @@ export function revertChange(project: Project, change: Change, recordRevision: n
   const conflict = checkRevision(project, baseRevision);
   if (conflict) return { ok: false, rejection: conflict };
   const log = project.scene.edit_log;
-  const inverse = invert(change.patch);
+  const inverse = change.patches.map(invert).reverse();
   const catalogInverse = change.catalogPatch && invert(change.catalogPatch);
   if (
     log.at(-1)?.revision !== recordRevision ||
-    !patchApplies(project.scene.objects, inverse) ||
+    !patchesApply(project.scene.objects, inverse) ||
     !catalogPatchApplies(project.catalog, catalogInverse)
   ) {
     return reject("conflict", "The scene no longer matches this step, so it cannot be undone.");
@@ -422,11 +496,11 @@ export function revertChange(project: Project, change: Change, recordRevision: n
 export function reapplyChange(project: Project, change: Change, baseRevision: number): Result<{ project: Project }> {
   const conflict = checkRevision(project, baseRevision);
   if (conflict) return { ok: false, rejection: conflict };
-  if (!patchApplies(project.scene.objects, change.patch) || !catalogPatchApplies(project.catalog, change.catalogPatch)) {
+  if (!patchesApply(project.scene.objects, change.patches) || !catalogPatchApplies(project.catalog, change.catalogPatch)) {
     return reject("conflict", "The scene no longer matches this step, so it cannot be redone.");
   }
   return {
     ok: true,
-    project: commit(project, change.patch, change.catalogPatch, (revision) => [...project.scene.edit_log, stamp(change.record, revision)]),
+    project: commit(project, change.patches, change.catalogPatch, (revision) => [...project.scene.edit_log, stamp(change.record, revision)]),
   };
 }

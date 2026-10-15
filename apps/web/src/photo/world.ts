@@ -1,6 +1,6 @@
 // From a reviewed photo to an editable world (IMG-01). The review holds the user's decisions
 // (which objects, their outlines, floor points, shapes, colours, typed sizes) and the floor
-// rectangle they measured; this module turns them into placements with explicit evidence,
+// rectangle of known size; this module turns them into placements with explicit evidence,
 // the requests that build each object's provisional model, and finally the new project with
 // its photo source. Nothing here talks to the API; nothing is applied until the user creates
 // the world.
@@ -51,6 +51,8 @@ export interface ScaleInput {
   feature: string;
   widthM: number | null;
   depthM: number | null;
+  /** How the user knows the sizes they entered; null until they say (required to create). */
+  sizeBasis: "measured" | "assumed" | null;
 }
 
 export function reviewItemsFrom(proposal: ImageProposal): ReviewItem[] {
@@ -206,6 +208,13 @@ const length = (value: number, origin: Length["origin"], ref: string, confirmed:
   uncertainty_m: null,
 });
 
+/** Evidence text for a scale side the user gave: measured, or an assumption, said plainly. */
+function givenRef(scale: ScaleInput, side: "width" | "depth"): string {
+  return scale.sizeBasis === "measured"
+    ? `Measured by the user: the ${scale.feature}'s ${side}`
+    : `Assumed by the user: a typical ${side} for the ${scale.feature}, not measured`;
+}
+
 const yawOnly = (yaw: number) => ({ order: "XYZ" as const, x: 0, y: yaw, z: 0 });
 
 function uniqueName(names: Set<string>, name: string): string {
@@ -287,10 +296,12 @@ export function buildPhotoProject(input: WorldInput): Project {
     },
     parameters: [],
   };
-  // The rectangle the user measured, drawn on the floor where the photo puts it.
+  // The scale rectangle, drawn on the floor where the photo puts it. Its given sides are the
+  // user's: measured (confirmed) or an assumed typical size (unreviewed), never more than that.
   const [c0, c1] = corners;
   const yaw = c0 && c1 ? Math.atan2(-(c1.z - c0.z), c1.x - c0.x) : 0;
   const depthGiven = scale.depthM !== null;
+  const measured = scale.sizeBasis === "measured";
   const reference: SceneObject = {
     id: "obj-scale-reference",
     name: `Scale reference: ${scale.feature}`.slice(0, 500),
@@ -298,10 +309,10 @@ export function buildPhotoProject(input: WorldInput): Project {
     asset_id: null,
     transform: { position_m: { x: 0, y: 0, z: 0 }, rotation_rad: yawOnly(mm(yaw)) },
     dimensions: {
-      width: length(cal.widthM, "user_supplied", `Measured by the user: the ${scale.feature}'s width`, true),
+      width: length(cal.widthM, "user_supplied", givenRef(scale, "width"), measured),
       height: length(0.005, "default", "Drawn as a thin marking on the floor", false),
       depth: depthGiven
-        ? length(cal.depthM, "user_supplied", `Measured by the user: the ${scale.feature}'s depth`, true)
+        ? length(cal.depthM, "user_supplied", givenRef(scale, "depth"), measured)
         : length(cal.depthM, "inferred", `Derived from the photo's perspective (approximate)`, false),
     },
     parameters: [],
@@ -347,6 +358,7 @@ export function buildPhotoProject(input: WorldInput): Project {
               corners: [{ ...scale.corners[0] }, { ...scale.corners[1] }, { ...scale.corners[2] }, { ...scale.corners[3] }],
               width: reference.dimensions.width,
               depth: reference.dimensions.depth,
+              size_basis: scale.sizeBasis ?? "not_stated",
             },
             image_to_floor: [...cal.imageToFloor],
             camera: { vertical_fov_deg: cal.verticalFovDeg, fov_basis: cal.fovBasis, position_m: { ...cal.camera } },

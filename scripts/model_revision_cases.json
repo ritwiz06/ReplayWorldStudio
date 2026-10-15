@@ -1,0 +1,242 @@
+[
+  {
+    "label": "cabinet-open-shelves",
+    "name": "Storage cabinet",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 0.8,
+        "y": 1.9,
+        "z": 0.4
+      },
+      "parts": [
+        {
+          "id": "body",
+          "label": "cabinet body",
+          "shape": "rounded_box",
+          "material": "wood",
+          "center_m": {
+            "x": 0,
+            "y": 1.0,
+            "z": 0
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 1.8,
+            "z": 0.4
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        },
+        {
+          "id": "plinth",
+          "label": "plinth",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+          },
+          "size_m": {
+            "x": 0.76,
+            "y": 0.1,
+            "z": 0.36
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        }
+      ]
+    },
+    "instruction": "make this a bookshelf with open shelves instead of a solid cabinet"
+  },
+  {
+    "label": "cabinet-blue-red-top",
+    "name": "Storage cabinet",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 0.8,
+        "y": 1.9,
+        "z": 0.4
+      },
+      "parts": [
+        {
+          "id": "body",
+          "label": "cabinet body",
+          "shape": "rounded_box",
+          "material": "wood",
+          "center_m": {
+            "x": 0,
+            "y": 1.0,
+            "z": 0
+          },
+          "size_m": {
+            "x": 0.8,
+            "y": 1.8,
+            "z": 0.4
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        },
+        {
+          "id": "plinth",
+          "label": "plinth",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+          },
+          "size_m": {
+            "x": 0.76,
+            "y": 0.1,
+            "z": 0.36
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        }
+      ]
+    },
+    "instruction": "paint it blue and add a red top"
+  },
+  {
+    "label": "photo-machine-guard",
+    "name": "Center machine with yellow safety cage",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 2.129,
+        "y": 2.302,
+        "z": 0.946
+      },
+      "parts": [
+        {
+          "id": "plinth",
+          "label": "plinth",
+          "shape": "box",
+          "material": "paint_anthracite",
+          "center_m": {
+            "x": 0,
+            "y": 0.071938,
+            "z": -0.002093
+          },
+          "size_m": {
+            "x": 2.129,
+            "y": 0.143876,
+            "z": 0.941814
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "body",
+          "label": "machine body",
+          "shape": "rounded_box",
+          "material": "plastic_grey",
+          "center_m": {
+            "x": 0,
+            "y": 1.079062,
+            "z": -0.002093
+          },
+          "size_m": {
+            "x": 2.129,
+            "y": 1.870376,
+            "z": 0.941814
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "panel",
+          "label": "control panel",
+          "shape": "box",
+          "material": "hmi_screen",
+          "center_m": {
+            "x": 0.684321,
+            "y": 1.438751,
+            "z": 0.470907
+          },
+          "size_m": {
+            "x": 0.456214,
+            "y": 0.28775,
+            "z": 0.004186
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "light",
+          "label": "stack light",
+          "shape": "cylinder",
+          "material": "signal_green",
+          "center_m": {
+            "x": -0.912429,
+            "y": 2.158125,
+            "z": -0.316031
+          },
+          "size_m": {
+            "x": 0.10645,
+            "y": 0.28775,
+            "z": 0.073254
+          },
+          "axis": "y",
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        }
+      ]
+    },
+    "instruction": "add a yellow safety guard above the white lower cabinet: four yellow corner posts with clear panels between them; keep the screen and the stack light"
+  },
+  {
+    "label": "photo-pallet-boxes",
+    "name": "Stacked cardboard boxes on pallet",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 1.286,
+        "y": 1.044,
+        "z": 0.857
+      },
+      "parts": [
+        {
+          "id": "body",
+          "label": "body",
+          "shape": "rounded_box",
+          "material": "pallet_wood",
+          "center_m": {
+            "x": 0,
+            "y": 0.522,
+            "z": 0
+          },
+          "size_m": {
+            "x": 1.286,
+            "y": 1.044,
+            "z": 0.857
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        }
+      ]
+    },
+    "instruction": "make this a wooden pallet with cardboard boxes stacked on top of it instead of one solid block"
+  }
+]

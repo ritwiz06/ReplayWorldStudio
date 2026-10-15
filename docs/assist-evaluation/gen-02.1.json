@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-15T19:19:03+00:00",
+  "service": "ASU Voyager",
+  "base_url": "https://openai.rc.asu.edu/v1",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-02.1",
+  "mode": "live, schema-guided",
+  "cases": [
+    {
+      "label": "cabinet-open-shelves",
+      "instruction": "make this a bookshelf with open shelves instead of a solid cabinet",
+      "outcome": "proposal",
+      "message": null,
+      "attempts": 1,
+      "first_attempt_valid": true,
+      "latency_s": 67.5,
+      "summary": "Replaced the solid cabinet body with open bookshelf structure: two sides, a back, a top, a bottom, and three shelves, all wood, keeping the plinth.",
+      "size_changed": false,
+      "checks": [
+        "Size kept: the instruction did not ask for a different size."
+      ],
+      "not_represented": [],
+      "parts_before": 2,
+      "parts_after": 9,
+      "largest_part_share_before": 0.947,
+      "largest_part_share_after": 0.048,
+      "parts": [
+        "left side panel (box, wood, 0.020 x 1.900 x 0.400 m)",
+        "right side panel (box, wood, 0.020 x 1.900 x 0.400 m)",
+        "back panel (box, wood, 0.760 x 1.900 x 0.020 m)",
+        "top panel (box, wood, 0.760 x 0.100 x 0.380 m)",
+        "bottom panel (box, wood, 0.760 x 0.100 x 0.380 m)",
+        "shelf (box, wood, 0.760 x 0.100 x 0.380 m)",
+        "shelf (box, wood, 0.760 x 0.100 x 0.380 m)",
+        "shelf (box, wood, 0.760 x 0.100 x 0.380 m)",
+        "plinth (box, steel_dark, 0.760 x 0.100 x 0.360 m)"
+      ]
+    },
+    {
+      "label": "cabinet-blue-red-top",
+      "instruction": "paint it blue and add a red top",
+      "outcome": "proposal",
+      "message": null,
+      "attempts": 1,
+      "first_attempt_valid": true,
+      "latency_s": 39.8,
+      "summary": "Painted the cabinet blue and added a red top panel.",
+      "size_changed": false,
+      "checks": [
+        "Size kept: the instruction did not ask for a different size."
+      ],
+      "not_represented": [],
+      "parts_before": 2,
+      "parts_after": 3,
+      "largest_part_share_before": 0.947,
+      "largest_part_share_after": 0.947,
+      "parts": [
+        "cabinet body (rounded_box, paint_blue, 0.800 x 1.800 x 0.400 m)",
+        "plinth (box, paint_blue, 0.760 x 0.100 x 0.360 m)",
+        "top (box, paint_red, 0.800 x 0.100 x 0.400 m)"
+      ]
+    }
+  ]
+}

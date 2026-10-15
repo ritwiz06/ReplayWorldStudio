@@ -1,6 +1,6 @@
-# Language assistance and generated objects (GEN-01)
+# Language assistance and generated objects (GEN-01, GEN-02)
 
-What the description assistant and language edits do, how the key and data are handled, what was verified against the live provider, and what generated models can and cannot represent. Decisions: ADR-031 to ADR-035 in [prompts/DECISIONS.md](../prompts/DECISIONS.md). Contract details: [docs/contracts.md](contracts.md#generated-objects-050-gen-01).
+What the description assistant, language edits and model revisions do, how the key and data are handled, what was verified against the live provider, and what generated models can and cannot represent. Decisions: ADR-031 to ADR-035 and ADR-039 to ADR-041 in [prompts/DECISIONS.md](../prompts/DECISIONS.md). Contract details: [docs/contracts.md](contracts.md#generated-objects-050-gen-01) and [revised generated objects](contracts.md#revised-generated-objects-070-gen-02). Improving a placed model: [below](#improving-a-placed-generated-model-gen-02).
 
 ## The path from words to a placed object
 
@@ -26,10 +26,11 @@ An edit request follows the same shape. The API returns a typed **intent** (move
 - **Vision model (IMG-01):** `VOYAGER_VISION_MODEL` (default `qwen3-vl-32b-instruct`) proposes the objects in a photo, through the same endpoint and key. It receives a downscaled JPEG copy without metadata, only when the user chooses **Analyse**. What it is trusted with, the live results and the known failures are in [docs/image-import.md](image-import.md).
 - **What is sent:**
   - for a description, the description text and fixed instructions;
-  - for an edit, the request plus each object's ID, name, kind, position, yaw and size, and the selected ID.
+  - for an edit, the request plus each object's ID, name, kind, position, yaw and size, and the selected ID;
+  - for a model revision (GEN-02), the instruction plus the object's name and its current specification (overall size and part list); no photo and nothing else from the scene.
 
   Nothing else from the project is sent. The UI says where the text goes before you send it.
-- **No key:** `GET /api/v1/assist/status` reports `off`. Describing and language edits are disabled with that message, and the **object builder** and the whole editor keep working.
+- **No key:** `GET /api/v1/assist/status` reports `off`. Describing, language edits and proposed model changes are disabled with that message (`POST /api/v1/assist/model-revisions` answers 503), and the **object builder**, changing a model by hand and the whole editor keep working.
 - **Offline tests:** `RWS_ASSIST_PROVIDER=recorded` replays real answers saved in `fixtures/assist/recorded/`. Everything it produces is labelled `recorded` ("recorded offline test answer (not live AI)") and it never calls the network. The browser test suite and pytest use it; CI never calls Voyager.
 
 ## Trust rules
@@ -44,6 +45,8 @@ An edit request follows the same shape. The API returns a typed **intent** (move
 | Mass, strength, chemical composition and operating behaviour are **always unknown**; mentioned masses or rates are listed as *not modelled*. | contract `AssetGeneration` | A picture establishes none of them. |
 | Edits: the target must be in the scene; "the selected …" must fit the selection; words that fit several objects get a question; the distance (with unit), angle and direction must appear in the request. | `assist/edits.py` | Ask instead of guessing. |
 | Every edit is resolved and dry-run by the existing command engine (revision, limits, contract) before it is shown; a refusal leaves the project unchanged. | `apps/web/src/assist/editIntent.ts` | One validation path for every edit (ADR-023). |
+| Revisions: the size is kept unless the instruction mentions a size or length; an "open" request whose proposal keeps one part filling ≥ 50 % of the object is refused; an identical proposal is refused; unrepresentable features are listed, never imitated; a part buried at the end of a larger one is separated. | `assist/revisions.py` | A proposal must not misrepresent the object (ADR-041). |
+| A revision is a new asset; a dimension that did not change keeps its value and evidence exactly; a proposed size must be confirmed. | `generated_assets.py` | A colour or part change is not a measurement (ADR-039, ADR-040). |
 
 ## What generated models can and cannot represent
 
@@ -153,12 +156,72 @@ From the final timed run (`docs/gen-01/`, downscaled):
   - `test_assist_recorded.py`: the recorded live answers are replayed through the whole pipeline (three descriptions → three different, valid models; vague and hostile inputs are refused; all edit outcomes), and **pinned sha256 values** show that the generator builds the same bytes on macOS and Linux;
   - `test_object_generator.py`: the generator itself.
 - **Vitest:** edit resolution, the review state, templates and the `add_generated_instance` command.
-- **Playwright** (`e2e/creation.spec.ts`, using the recorded provider): the full first-visit journey with undo, save, reopen, deleting the model and rebuilding it; the other start choices; the builder with the assistant off; language edits including ambiguity and refusal.
+- **Playwright** (`e2e/creation.spec.ts`, using the recorded provider): the full first-visit journey with undo, save, reopen, deleting the model and rebuilding it; the other start choices; the builder with the assistant off; language edits including ambiguity and refusal. `e2e/improve.spec.ts` (GEN-02): improving a described object by hand for two instances (one with a measured width), and a photo-made object with a recorded proposal; see [below](#improving-a-placed-generated-model-gen-02).
 - **CI never calls Voyager.**
 
 ## Limits and next steps
 
 - A proposal takes about 50–85 s with this model. A smaller model (for example `qwen3-30b-a3b-instruct-2507`) may be much faster; GEN-03 should compare models on a larger held-out set.
-- Layout quality varies from run to run. GEN-02 (correcting a placed generated object) and GEN-03 (evaluation with human review of visual plausibility) address this.
+- Layout quality varies from run to run. GEN-02 (2026-10-15) lets the user correct a placed generated object in words or by hand; GEN-03 (evaluation with human review of visual plausibility, now including model revisions) is still open.
 - Only move and turn edits are supported, one object at a time. Directions are plan axes, not relative to the camera.
 - IMG-01 (one image to an editable world) was implemented on 2026-10-14 with `qwen3-vl-32b-instruct`; see [docs/image-import.md](image-import.md). Voyager's image- and video-generation models are not image-to-3D services and are not treated as such.
+
+## Improving a placed generated model (GEN-02)
+
+**Improve model…** in the inspector (for any object whose asset is generated: described, builder or photo) reopens the exact recorded specification. The dialog shows the current version, rebuilt from its specification (the same sha256 as the stored file), next to the proposed one. The user can:
+
+- **ask for a change** in words: **Propose the change** sends the instruction and this model's part list (no photo, no scene) to `qwen3-235b-a22b-instruct-2507` through the local API, with elapsed time and **Cancel**;
+- **change it by hand**, without any language model: a colour per material group, the overall width, height and depth (the parts scale with them), or the full part list (change, add or remove parts);
+- review the **Changes** in plain words; a proposed size change must be confirmed;
+- choose **Only <object>** or **All N objects that use <asset>**, with the exact effect on each object and axis;
+- **Apply**: the API builds the revision as a new asset (a failed build changes nothing), and one revision-checked `revise_asset` command switches the chosen objects. One undo reverts it.
+
+Versions, the edit record and the evidence rules are in [docs/contracts.md](contracts.md#revised-generated-objects-070-gen-02).
+
+```mermaid
+flowchart LR
+  I["Instruction"] --> API["Local API"]
+  S["Current part list"] --> API
+  API -->|"instruction + part list only"| V["ASU Voyager\n(qwen3-235b-a22b-instruct-2507)"]
+  V -->|"complete revised parts (schema-guided)"| API
+  API -->|"schema check, retry once; repair and fit;\nsize kept unless asked; overlaps separated;\nopenness guard; not-represented listed"| P["Proposal (nothing built)"]
+  P --> B["Dialog: compare, adjust by hand,\nconfirm sizes, choose objects"]
+  B -->|"Apply"| G["API: new asset\ngenerated/<sha256>.glb"]
+  G -->|"revise_asset (one undo step)"| W["Project"]
+```
+
+**Prompt `gen-02.2`** (`assist/prompts.py`, `REVISION_SYSTEM`) asks for the complete revised parts list (unchanged parts keep their IDs and values), keeps the overall size unless the instruction asks for another, forbids overlapping or face-sharing parts (split a part to colour part of a surface), asks for thin panels (about 0.02–0.03 m) and slender posts, models open structures as separate panels with real empty space (never a solid block standing in for an opening), and lists features the generator cannot depict in `not_representable` without imitating them. Text in the instruction that is not about changing this object is ignored.
+
+**Deterministic checks** (`assist/revisions.py`), applied after schema validation:
+
+| Check | Effect |
+| --- | --- |
+| The instruction has no length and no size word ("bigger", "taller", "width", …) | The overall size is forced back to the current one ("Size kept: the instruction did not ask for a different size.") |
+| Overlap separation | A box part that covers the whole end of a larger box part shortens the larger one, so they meet instead of overlapping (a red top inside a blue body). Other parts inside another that share its faces are reported, not moved. |
+| An "open" request (open, hollow, without doors, cage, shelves, …) whose proposal still has one part filling ≥ 50 % of the overall box | Refused as `unsupported`; nothing changes, and the user is pointed to the part controls. |
+| The proposal builds the same geometry as the current model | Refused ("The proposal does not change the model."). |
+| The instruction asks for curved, slanted or rotated surfaces, holes or perforations, textures or printing, or moving or hinged parts, and the model did not list them | Added to the not-represented list. The dialog says "The shape generator cannot show: … These are not imitated in the model." |
+
+When the revision is applied, the API also refuses a model identical to the current one and checks how each overall dimension was settled (kept, entered or proposed and confirmed).
+
+### Live results (2026-10-15)
+
+`uv run python scripts/evaluate_model_revisions.py [CASES] [--record]` runs the cases in `scripts/model_revision_cases.json` against Voyager and writes docs/assist-evaluation/<prompt version>.json; `--record` refreshes `fixtures/assist/recorded/revision-*.json`. These four are development cases, not a held-out set (GEN-03).
+
+| Prompt | Case | Latency | Parts | Largest part's share of the envelope | Result |
+| --- | --- | --- | --- | --- | --- |
+| gen-02.1 | cabinet → "a bookshelf with open shelves instead of a solid cabinet" | 67.5 s | 2 → 9 | 0.947 → 0.048 | Separate sides, back, top, bottom and shelves, but shelves 0.1 m thick. |
+| gen-02.1 | "paint it blue and add a red top" | 39.8 s | 2 → 3 | 0.947 → 0.947 | The red top overlapped the body. |
+| gen-02.2 | open bookshelf | 75.9 s | 2 → 9 | 0.947 → 0.047 | Shelves 0.02 m; top and bottom boards still 0.1 m. |
+| gen-02.2 | blue with a red top | 36.9 s | 2 → 3 | 0.947 → 0.947 | Still overlapped; now trimmed by overlap separation. |
+| gen-02.2 | photo pallet: "make this a wooden pallet with cardboard boxes stacked on top of it instead of one solid block" | 29.4 s | 1 → 3 | 1.0 → 0.117 | A pallet base and two cartons; size kept. |
+| gen-02.2 | photo machine guard, long instruction | > 150 s | - | - | Timed out. |
+| gen-02.2 | photo machine guard, shorter instruction ("add a yellow safety guard above the white lower cabinet: four yellow corner posts with clear panels between them; …") | 106.2 s | 4 → 12 | 0.809 → 0.74 | Four yellow posts and four clear panels around the machine; the grey body kept its full height. |
+
+Every successful answer was schema-valid on the first attempt.
+
+**Live browser demonstration** (2026-10-15, dev servers, the user's key; the factory photo analysis replayed from its recording, the two revisions live): the pallet proposal took 42.3 s (a wooden pallet with 4 cardboard boxes) and the machine proposal 110.4 s; the machine body was then recoloured white by hand ("then adjusted by you"). Both were applied (scene revision 2), saved and reopened "accepted by API" with models 7/7 verified. The pallet became clearly more recognisable. The machine improved only modestly: the photo shows a white lower cabinet with a yellow guard above it, and the proposal put posts and clear panels around a full-height body instead. Screenshots: [docs/image-import.md](image-import.md#improving-photo-made-objects-gen-02).
+
+**Recorded (offline) results.** `fixtures/assist/recorded/revision-*.json` hold the live answers and are replayed in pytest (`test_assist_recorded.py`) and in `e2e/improve.spec.ts`, labelled not live AI; their latencies are not measurements.
+
+**What a revision still cannot show:** an opening within a single part (open structures only from separate panels); slanted or curved surfaces beyond cylinders, frustums and spheres; rotated parts; hinges, doors or moving parts; textures, labels or wire mesh (clear panels stand in for guards; mesh or perforation is reported, not imitated); photo textures. Panel proportions depend on the model. Fitting the parts to the overall size can rescale them slightly, which the change list reports as "resized or moved".

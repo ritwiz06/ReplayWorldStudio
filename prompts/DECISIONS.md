@@ -484,3 +484,75 @@ For a new decision, append: ID, date, status, context, options considered, decis
 - Consequences: there is no export bundle yet. Opening a photo project elsewhere needs the photo in that machine's source library and the generated models in its catalog library (missing generated models can be rebuilt, as in GEN-01; a missing photo can only be attached or skipped).
 - Evidence: `services/api/tests/test_photos.py`, `test_photo_api.py`, `packages/contracts/tests/test_migrations.py`, `test_models.py`; e2e `photo.spec.ts` (save, reopen, missing photo, attach).
 - Revisit when: REL-01 adds an export bundle, or projects need server-side storage.
+
+### Update to ADR-037 (2026-10-15, GEN-02)
+
+- **Audit finding.** ADR-037 assumed the user *measured* the rectangle, but the editor recorded every side it was given as measured: the scale step tagged it "measured by you" and the reference's evidence read "Measured by the user: …". The classroom demonstration's 1.52 m table width was an assumption (a standard 60-inch table), so its record overstated what was known.
+- **Change.** The scale step now asks **How do you know these sizes?**: "I measured them, or know them exactly (a drawing, a standard tile)" or "They are an assumption (a typical size); the world will say so". **Create the 3D world** stays disabled until it is answered.
+  - A measured side stays `user_supplied`/`confirmed` ("Measured by the user: the <feature>'s <side>").
+  - An assumed side is `user_supplied` but `unreviewed` ("Assumed by the user: a typical <side> for the <feature>, not measured"), and the panel adds "An assumed length sets the scale, so every size and distance is only as right as that assumption."
+  - Contract 0.7.0 records the answer as `FloorRectangle.size_basis` (`measured`, `assumed` or `not_stated`); an assumed side cannot be marked confirmed. Migration 0.6.0 → 0.7.0 gives existing photo projects `not_stated`: 0.6.0 did not ask, so neither claim is made.
+- The decision itself (scale from one floor rectangle of known size) is unchanged; "measured" in ADR-037 now reads "measured or assumed, and recorded as which".
+
+### ADR-039 - Generated-asset revisions are new immutable assets with lineage
+
+- Date: 2026-10-15. Status: adopted (GEN-02, contract 0.7.0).
+- Context: a placed generated object (described, builder or photo) must be correctable after placement (size, parts, materials) and the correction reusable by other instances, while the previous version and its record stay in the project. Generated models are content-addressed and hash-checked (ADR-031), and a photo object's record must keep distinguishing what the photo showed from what was changed later.
+- Options considered:
+  - edit the asset in place (rewrite its specification and model file): every instance changes silently, the old file and its hash are lost, and the record could no longer say what the description or photo produced;
+  - copy the object's specification into a new, unrelated asset: nothing links the versions, and the original description or observation is lost or duplicated without explanation;
+  - a new immutable asset per revision that names the asset it revises (chosen).
+- Decision:
+  - **New asset.** Every accepted revision is a new catalog asset with its own ID (`asset-gen-<slug>-<sha8>`), its own specification and its own `generated/<sha256>.glb`, named "<base> (vN)". No existing file is overwritten; the previous asset stays in the catalog unchanged.
+  - **Lineage.** `AssetGeneration.revision` (`AssetRevision`) records `revises`, `version` (the original is version 1 and records `revision: null`), the `instruction` (null when changed by hand), the `language_model` that proposed the specification change (null when by hand; a model requires an instruction), the `changes` in plain words and what was asked for but is `not_represented`.
+  - **Original kept distinct.** The revision copies the original generation fields unchanged (method `described`/`builder`/`photo`, description, the original drafting or vision model, stated and inferred facts), so the original description or photo observation is never confused with a later correction. A photo observation keeps pointing at the same object ID, which now references the revision.
+  - **Validation.** Project validation requires `revises` to name a generated asset in the catalog, with `version` one above that asset's version.
+  - **Building.** `POST /api/v1/catalog/generated-assets/revisions` fits the edited draft, builds it with the GEN-01 generator and stores it; it refuses a model identical to the current one, and a failed build writes nothing and changes nothing in the project.
+  - **Migration 0.6.0 → 0.7.0** adds `revision: null` to every generated asset (and `size_basis: not_stated` to photo scale references, Update to ADR-037) and refuses documents that already have them.
+- Rationale: the content hash already makes a model file immutable; making the asset immutable too keeps every version identifiable, hash-checked and rebuildable, and undo only has to restore references.
+- Consequences: the catalog grows with each accepted revision, and older versions stay even when no object uses them (unused assets are allowed). There is no command to delete an old version. Each version's model file must be present, or rebuildable with its recorded hash, to open the project.
+- Evidence: `packages/contracts/tests/test_asset_revisions.py`, `test_migrations.py`; `services/api/tests/test_revisions.py`; e2e `improve.spec.ts` (both versions saved, reopened and hash-checked; a missing new GLB refused, then rebuilt with the recorded hash; the photo link kept).
+- Revisit when: projects need to prune unused versions, or REL-01's export bundle needs to choose which versions to package.
+
+### ADR-040 - One-step instance updates and dimension evidence for revisions
+
+- Date: 2026-10-15. Status: adopted (GEN-02, contract 0.7.0).
+- Context: switching instances to a revision must be one undoable step that applies to every chosen object or to none. Instances may have their own sizes (edited, or measured on site) that differ from the asset's nominal size, and a revision must never upgrade the evidence of a size nobody re-established (for example, turning an image-inferred size into a measured one because the colour changed).
+- Options considered:
+  - one `set_dimensions`-style command per object plus a catalog change: several undo steps, and a partial failure could leave mixed versions;
+  - force every instance to the new nominal size: discards measured or edited sizes;
+  - one `revise_asset` command recorded as one `asset_revised` edit, with a per-axis rule shown before Apply (chosen).
+- Decision:
+  - **Record.** `asset_revised` {`revision`, `asset_before`, `asset_after`, `objects`: [{`object_id`, `dimensions`: [`AxisChange` before/after]}]} switches one or all instances in one step. The scene validator follows each object's asset reference through `object_added` and `asset_revised` records and requires it to equal the scene's; both assets must be in the catalog.
+  - **All or nothing.** The browser's `revise_asset` command checks every chosen object before changing any. An object that no longer uses the old asset, or a stale scene revision, is a conflict, and nothing changes. Undo restores the exact prior asset references, dimensions and catalog.
+  - **Per-instance sizes.** An axis whose value and evidence equal the old asset's nominal follows the new nominal (value and evidence copied). An axis with the object's own value or evidence is kept, and the model is stretched to it, unless the user ticks "use <new size> instead". The dialog lists this per object and axis before Apply.
+  - **Evidence of the revised asset's sizes** (per overall dimension, set by the API):
+    - `kept`: unchanged; the previous value and evidence are copied exactly;
+    - `entered`: typed by the user; `user_supplied`, `confirmed`, "Entered by the user while improving the model (previously X m, origin)";
+    - `proposed`: changed by the language model and confirmed by the user; `inferred`, `confirmed`, citing the model and the instruction.
+
+    The API refuses `kept` for a changed axis, `proposed` for an unchanged axis, and an unconfirmed proposal.
+  - Unlike `object_edited`, an `asset_revised` axis's `after` need not be `user_supplied`: following a revised nominal keeps the evidence that nominal has, which may be `inferred`.
+- Rationale: one record keeps undo exact and the log readable; copying evidence instead of re-labelling it keeps a photo estimate an estimate.
+- Consequences: an object stretched to its own size can look distorted (the existing stretched-model badge applies). Edit records still have no author or time (ADR-024).
+- Evidence: `commands.test.ts` and `revisionDraft.test.ts` (selected only, all instances, measured size kept and adopted, stale-revision and wrong-asset conflicts, undo/redo exactness, change lists, evidence bases); `test_asset_revisions.py`; `test_revisions.py`; e2e `improve.spec.ts` (two instances, one with a measured width kept).
+
+### ADR-041 - Bounded revision proposals: representability rules, openness guard, overlap separation
+
+- Date: 2026-10-15. Status: adopted (GEN-02).
+- Context: users ask for changes the generator may not be able to depict ("open shelves", "a mesh guard", "rounded corners"). The first live answers showed two failure modes that schema guidance does not catch: an "open" object built from thick or solid blocks, and a part "painted" by burying a thin part inside another (the red top inside the blue body, which renders as flickering faces). A proposal must never imitate an unrepresentable feature or claim an opening it does not have.
+- Options considered: let the model rewrite the object from scratch (loses the parts the user did not ask about); accept any schema-valid answer (the failure modes above reach the user); a complete revised parts list from the model, followed by deterministic checks that refuse or repair before the user sees it (chosen).
+- Decision:
+  - **Provider.** `POST /api/v1/assist/model-revisions`: ASU Voyager `qwen3-235b-a22b-instruct-2507` through the local API, `json_schema`, Pydantic validation with one retry (ADR-032); 503 when no provider is configured. Only the instruction and the model's part list are sent (no photo, no scene). Nothing is built or stored by a proposal.
+  - **Prompt `gen-02.2`.** The complete parts list; size kept unless asked; thin panels and slender posts; no overlapping or face-sharing parts; open structures as separate panels with real empty space; features the generator cannot depict listed in `not_representable` and never imitated.
+  - **Deterministic checks** (`assist/revisions.py`):
+    - the overall size is forced back when the instruction has no length or size words;
+    - an "open" request whose proposal still has one part filling ≥ 50 % of the envelope volume is refused (`unsupported`, nothing changed);
+    - a proposal identical to the current model is refused;
+    - curved, slanted or rotated surfaces, holes or perforations, textures or printing, and moving or hinged parts named in the instruction are added to the not-represented list when the model did not list them;
+    - overlap separation: a box part covering the whole end of a larger box part trims the larger one, so the two meet; other face-sharing overlaps are reported, not moved.
+  - **Review.** The dialog shows the proposal next to the current version, a plain-words change list, "The shape generator cannot show: … These are not imitated in the model.", and requires confirming a proposed size. The user can adjust a proposal by hand; the dialog then says "then adjusted by you", and the recorded change list adds "Adjusted by the user after the proposal".
+- Rationale: in `gen-02.1` the open-shelf answer had 0.1 m shelves and the red top overlapped the body; `gen-02.2` gave 0.02 m shelves but the top still overlapped, which separation now trims. The openness guard keeps a solid block from being presented as open.
+- Consequences: proposals take about 30–110 s; a long instruction timed out at 150 s once. Panel proportions depend on the model (0.1 m top and bottom boards). Fitting can rescale parts slightly, reported as "resized or moved". The machine-guard result is only modestly closer to the photo. The checks catch misrepresentation, not ugliness.
+- Evidence: docs/assist-evaluation/gen-02.1.json and gen-02.2.json (every successful answer schema-valid on the first attempt); `services/api/tests/test_revisions.py`; recorded replays in `test_assist_recorded.py`; screenshots in docs/gen-02/.
+- Revisit when: GEN-03 evaluates revisions on held-out instructions, the generator gains openings or rotated parts, or a faster model is chosen.

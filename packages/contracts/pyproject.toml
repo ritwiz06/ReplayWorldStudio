@@ -1,6 +1,6 @@
 [project]
 name = "replay-world-contracts"
-version = "0.6.0"
+version = "0.7.0"
 description = "Versioned world contracts (Pydantic source of truth) for Replay World Studio."
 requires-python = ">=3.14,<3.15"
 dependencies = [

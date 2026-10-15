@@ -524,6 +524,7 @@ def test_visual_passes_the_catalog_asset_checks(example: str) -> None:
                     {"property": p, "reason": "Not established by a generated model."}
                     for p in UNKNOWN_PROPERTIES
                 ],
+                "revision": None,
             },
         }
     )

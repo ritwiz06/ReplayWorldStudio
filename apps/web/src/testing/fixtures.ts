@@ -85,6 +85,7 @@ export function generatedAsset(id = "asset-gen-guarded-conveyor-0a1b2c3d"): Cata
         property,
         reason: "Not established.",
       })),
+      revision: null,
     },
   } satisfies CatalogAsset);
 }

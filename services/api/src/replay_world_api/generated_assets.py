@@ -9,6 +9,10 @@ rules live here, in one place:
 * an estimate stays ``inferred`` and must have been confirmed by the user before placement;
 * a value the user typed becomes ``user_supplied``;
 * mass, strength, chemical composition and operating behaviour stay unknown.
+
+A revision (GEN-02) is a new asset with its own model file; the previous asset and its file are
+never changed. An unchanged dimension keeps its value and evidence exactly, so changing parts or
+colours never turns an estimate into a measurement.
 """
 
 from __future__ import annotations
@@ -22,13 +26,15 @@ from replay_world_contracts import (
     AssetGeneration,
     CatalogAsset,
     GeneratedAssetRequest,
+    GeneratedAssetRevisionRequest,
     GeneratedModelRestoreReport,
     Length,
     Project,
     RestoredModel,
     ReviewedLength,
+    RevisedLength,
 )
-from replay_world_contracts.models import GltfVisual
+from replay_world_contracts.models import MAX_REVISION_VERSION, GltfVisual
 
 from .assist.proposals import AssistError, unknown_properties
 from .catalog_files import sha256_of
@@ -40,6 +46,11 @@ GENERATED_TERMS: Final = (
     "Original provisional model built by this project's own generator from the recorded "
     "geometry specification; no third-party content. The project owner has not chosen a license."
 )
+NAME_MAX_CHARS: Final = 80
+"""As for a new generated asset's name (``ShortText``)."""
+KEPT_TOLERANCE_M: Final = 1e-6
+_VERSION_SUFFIX: Final = re.compile(r" \(v\d+\)$")
+_REVISION_REFERENCE: Final = re.compile(r"; revision \d+ by the user$")
 
 
 def _slug(text: str) -> str:
@@ -126,6 +137,7 @@ def create_generated_asset(request: GeneratedAssetRequest, catalog_dir: Path) ->
             "inferred_facts": request.inferred_facts,
             "not_modelled": request.not_modelled,
             "unknown_properties": [u.model_dump() for u in unknown_properties()],
+            "revision": None,
         }
     )
     return CatalogAsset.model_validate(
@@ -157,6 +169,144 @@ def create_generated_asset(request: GeneratedAssetRequest, catalog_dir: Path) ->
             "generation": generation.model_dump(),
         }
     )
+
+
+def _revised_length(
+    axis: str,
+    value: float,
+    previous: Length,
+    review: RevisedLength,
+    request: GeneratedAssetRevisionRequest,
+) -> Length:
+    changed = abs(value - previous.value_m) > KEPT_TOLERANCE_M
+    if review.basis == "kept":
+        if changed:
+            raise AssistError(
+                422,
+                f"The {axis} changed from {previous.value_m:g} m to {value:g} m; mark it as "
+                "entered or proposed (nothing was saved).",
+            )
+        # Value and evidence carry over exactly: a change of parts or colours is not a
+        # measurement, so an estimate stays an estimate.
+        return previous
+    before = f"previously {previous.value_m:.3f} m, {previous.origin}"
+    origin: Literal["user_supplied", "inferred"]
+    if review.basis == "entered":
+        origin = "user_supplied"
+        ref = f"Entered by the user while improving the model ({before})"
+    else:
+        if not changed:
+            raise AssistError(
+                422, f"The {axis} did not change; keep it or enter it (nothing was saved)."
+            )
+        if not review.confirmed:
+            raise AssistError(
+                422, f"Confirm the proposed {axis} before applying the change (nothing was saved)."
+            )
+        lm, instruction = request.language_model, request.instruction
+        if lm is None or instruction is None:
+            raise AssistError(
+                422,
+                f"A proposed {axis} must record the instruction and the language model that "
+                "proposed it.",
+            )
+        origin = "inferred"
+        ref = (
+            f"Proposed by {lm.service} {lm.model} from the instruction “{instruction}”; "
+            f"confirmed by the user ({before})"
+        )
+    return Length.model_validate(
+        {
+            "value_m": value,
+            "origin": origin,
+            "source_ref": ref[:500],
+            "review_status": "confirmed",
+            "uncertainty_m": None,
+        }
+    )
+
+
+def create_asset_revision(
+    request: GeneratedAssetRevisionRequest, catalog_dir: Path
+) -> CatalogAsset:
+    """Build, store and describe a revision of a generated asset. Raises AssistError on refusal.
+
+    The revision is a new asset with its own ID and model file; the previous asset and its file
+    are left as they are, so every version stays identifiable. Nothing is written on refusal.
+    """
+    previous = request.previous
+    earlier = previous.generation
+    if (
+        previous.source.kind != "generated"
+        or earlier is None
+        or not isinstance(previous.visual, GltfVisual)
+    ):
+        raise AssistError(
+            422,
+            "Only a generated object can be improved; this asset was not made by the generator.",
+        )
+    if request.language_model is not None and request.instruction is None:
+        raise AssistError(422, "A change proposed by a language model must record the instruction.")
+    version = (earlier.revision.version if earlier.revision else 1) + 1
+    if version > MAX_REVISION_VERSION:
+        raise AssistError(422, f"An object can have at most {MAX_REVISION_VERSION} versions.")
+    spec, _scale, _notes = fit_to_envelope(request.spec)
+    model = build_model(spec)
+    if model.sha256 == previous.visual.sha256:
+        raise AssistError(
+            422, "The revised model is identical to the current one; nothing to apply."
+        )
+
+    envelope = spec.envelope_m
+    nominal = previous.nominal_dimensions
+    revised = request.dimensions
+    dimensions = {
+        "width": _revised_length("width", envelope.x, nominal.width, revised.width, request),
+        "height": _revised_length("height", envelope.y, nominal.height, revised.height, request),
+        "depth": _revised_length("depth", envelope.z, nominal.depth, revised.depth, request),
+    }
+    generation = AssetGeneration.model_validate(
+        {
+            # The original description, drafting model and facts stay; the correction is added.
+            **earlier.model_dump(),
+            "spec": spec.model_dump(),
+            "not_modelled": list(dict.fromkeys(earlier.not_modelled)),
+            "revision": {
+                "revises": previous.id,
+                "version": version,
+                "instruction": request.instruction,
+                "language_model": request.language_model.model_dump()
+                if request.language_model
+                else None,
+                "changes": request.changes,
+                "not_represented": request.not_represented,
+            },
+        }
+    )
+    base = _VERSION_SUFFIX.sub("", previous.name)
+    suffix = f" (v{version})"
+    reference = _REVISION_REFERENCE.sub("", previous.source.reference or "")
+    note = f"; revision {version} by the user" if reference else f"Revision {version} by the user"
+    asset = CatalogAsset.model_validate(
+        {
+            "id": f"asset-gen-{_slug(base)}-{model.sha256[:8]}",
+            "name": base[: NAME_MAX_CHARS - len(suffix)].rstrip() + suffix,
+            "kind": previous.kind,
+            "visual": gltf_visual(model).model_dump(),
+            "nominal_dimensions": {
+                axis: length.model_dump() for axis, length in dimensions.items()
+            },
+            "source": {
+                "kind": "generated",
+                "author": GENERATED_AUTHOR,
+                "reference": reference[: 500 - len(note)] + note,
+            },
+            "rights": previous.rights.model_dump(),
+            "generation": generation.model_dump(),
+        }
+    )
+    store_model(model, catalog_dir)  # never replaces an existing file
+    return asset
 
 
 def restore_generated_models(project: Project, catalog_dir: Path) -> GeneratedModelRestoreReport:

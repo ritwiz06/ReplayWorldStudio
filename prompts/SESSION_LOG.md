@@ -337,6 +337,53 @@ Append entries in chronological order. If a live repository session log already 
 - Milestone status after this session: M2 in progress (GEN-01 done; GEN-02, GEN-03 open). M3 in progress (IMG-01 done; IMG-02, IMG-03 open).
 - Next concrete task: GEN-02 (correct and reuse generated objects after placement), followed by GEN-03 to close M2.
 
+## 2026-10-15 - GEN-02 correct and reuse generated objects after placement (contract 0.7.0)
+
+- Active milestone / issue IDs: M2 / GEN-02 (M3 stays open: IMG-02, IMG-03).
+- Starting branch and relevant commit: `main` at `ca86469`, CI green.
+- Goal and completion criteria: the GEN-02 acceptance in BACKLOG.md.
+  - Reopen a placed generated object's specification, correct size, parts and materials, and rebuild it as a new asset version.
+  - Switch one or all instances to the new version with one undoable command; the previous version and its record stay in the project.
+  - Cover photo-made objects too (the IMG-01 note), and audit IMG-01's scale wording.
+- Work completed:
+  - **Contract 0.7.0** (ADR-039, ADR-040). `AssetRevision` and `AssetGeneration.revision`; `AssetRevised` and `RevisedInstance` in the edit log (the scene validator follows asset references through added and revised records); Project validation of `revises` and `version`; `FloorRectangle.size_basis`; `GeneratedAssetRevisionRequest`, `ModelRevisionProposalRequest`/`Result`; migration 0.6.0 → 0.7.0. Fixtures upgraded.
+  - **API.** `generated_assets.create_asset_revision` (a new asset and file, never overwriting; kept/entered/proposed evidence; identical model refused); `assist/revisions.py` (proposals with retry; size kept unless asked; openness guard; identical proposal refused; not-represented additions; `separate_overlaps`); prompt `gen-02.2`; endpoints `POST /api/v1/assist/model-revisions` and `POST /api/v1/catalog/generated-assets/revisions`. `scripts/evaluate_model_revisions.py` with `scripts/model_revision_cases.json`.
+  - **Web.** `components/ImproveModel.tsx` (old and proposed previews, ask with elapsed time and **Cancel**, colours, overall size, `PartsEditor.tsx`, change list, size confirmation, scope and per-object plan, Apply); `assist/revisionDraft.ts` (change list, evidence bases, instance plan, version chain); the `revise_asset` command in `editing/commands.ts`; **Improve model…** and version details in the inspector.
+  - **IMG-01 audit.** The scale step asks "How do you know these sizes?"; Create waits for the answer; assumed sides are recorded as assumptions, unreviewed, with `size_basis: assumed` (Update to ADR-037).
+- Issues found and fixed during the session (most from review and the live browser run):
+  - The dialog was not modal and was drawn under the photo panel: it now opens with `showModal()`.
+  - Identical change lines (for example several shelves) produced duplicate React keys: identical lines are now counted ("3 × “shelf”: resized or moved").
+  - Cancelling a proposal left an unhandled `AbortError`: it is now caught and reported as "Cancelled. Nothing was changed."
+  - The live blue cabinet's red top sat inside the blue body (flickering faces) with both prompts: `separate_overlaps` now trims the larger part.
+  - Open shelves came back 0.1 m thick with `gen-02.1`: the prompt now asks for thin panels (`gen-02.2`: 0.02 m shelves; top and bottom boards still 0.1 m).
+  - The machine-guard case timed out at 150 s with a long instruction: rerun with a shorter one (106.2 s).
+  - The scale step called an assumed size "measured by you" (audit above).
+  - The API agent's work was interrupted by a network failure and resumed; its changes were reviewed afterwards.
+- Relevant files changed: packages/contracts/** (models, assist, migrations, schema, generated TS/JSON, tests incl. test_asset_revisions.py), services/api/src/replay_world_api/{app,generated_assets}.py, services/api/src/replay_world_api/assist/{revisions,prompts,answers,provider}.py, services/api/tests/{test_revisions,test_assist_recorded,test_upgrade,test_api,test_object_generator,test_photo_api,test_photos}.py, scripts/{evaluate_model_revisions.py,model_revision_cases.json}, fixtures/** (0.7.0, assist/recorded/revision-*.json), apps/web/src/{App.tsx,styles.css,assist/{revisionDraft,objectDraft}.ts,components/{ImproveModel,PartsEditor,Inspector,CreateObject,EditLog,PhotoImport}.tsx,editing/commands.ts,photo/world.ts,scene/ModelPreview.tsx,api/client.ts,testing/fixtures.ts} and their tests, apps/web/e2e/{improve,photo,editing}.spec.ts, README.md, docs/{assist.md,contracts.md,image-import.md,assist-evaluation/gen-02.*.json,gen-02/}, prompts/{MILESTONES,BACKLOG,DECISIONS,PROJECT_STATE,SESSION_LOG}.md.
+- Commands run and actual outcomes:
+  - **`scripts/evaluate_model_revisions.py`** (live, results in docs/assist-evaluation/):
+    - `gen-02.1`: open shelves 67.5 s, 2 → 9 parts, largest part share 0.947 → 0.048 (separate panels, shelves 0.1 m thick); blue + red top 39.8 s (the red top overlapped the body);
+    - `gen-02.2` (shipped): cabinet → open bookshelf 75.9 s, 9 parts, largest share 0.047, shelves 0.02 m; blue + red top 36.9 s (still overlapped; now trimmed deterministically); photo pallet 29.4 s, 1 → 3 parts, largest share 1.0 → 0.117; photo machine guard: long instruction timed out at 150 s, shorter one 106.2 s, 4 → 12 parts (four yellow posts, four clear panels, grey body kept full height);
+    - every successful answer was schema-valid on the first attempt.
+  - **Live browser demonstration** (dev servers, the user's key; the factory photo analysis replayed from its recording, the revisions live): pallet proposal 42.3 s (a wooden pallet with 4 cardboard boxes); machine proposal 110.4 s, then the body recoloured white by hand ("then adjusted by you"); both applied (scene revision 2), saved, reopened "accepted by API", models 7/7 verified.
+  - **Local checks.** `pnpm check` exit 0 (contracts, assets and fixtures up to date; ESLint, Ruff, tsc, mypy clean; Vitest 10 + 145; pytest 598; build); `pnpm test:e2e` 24 passed (8 `@smoke`).
+- Visual evidence: docs/gen-02/*.jpg (photo world before, pallet and machine dialogs, world after, machine close-up, reopened). The pallet became clearly more recognisable. The machine improved only modestly: yellow corner posts and clear panels wrap a full-height white body, whereas the photo shows a white lower cabinet with a yellow guard above it.
+- Decisions changed and rationale: ADR-039 (revisions are new immutable assets with lineage), ADR-040 (one-step instance updates; kept/entered/proposed evidence; own sizes kept unless adopted), ADR-041 (bounded revision proposals: representability, openness guard, overlap separation); ADR-037 updated (scale size basis).
+- Known limitations / blockers: no blocker.
+  - Proposals take about 30–110 s; a long instruction can time out at 150 s.
+  - No openings within one part, slanted or curved surfaces beyond cylinders, frustums and spheres, rotated parts, hinges, doors or moving parts, textures, labels, mesh or photo textures; clear panels stand in for guards.
+  - Panel proportions depend on the model; fitting can rescale parts slightly ("resized or moved").
+  - Every accepted revision adds a catalog asset; unused versions cannot be deleted.
+  - Revision proposals are evaluated only on 4 development cases; GEN-03 needs held-out instructions.
+- Exact reproduction commands and working directories: repo root.
+  - `uv sync --locked && pnpm install --frozen-lockfile && pnpm check && pnpm test:e2e`.
+  - With `VOYAGER_API_KEY` in `.env`: `pnpm dev:api` and `pnpm dev:web`, select a generated object, then **Improve model…** in the inspector.
+  - `uv run python scripts/evaluate_model_revisions.py [CASES] --record` (live; refreshes recordings).
+  - `pnpm --filter @replay-world/web exec playwright test e2e/improve.spec.ts`.
+- CI: commit `<pending>`; CI `<pending>`.
+- Milestone status after this session: M2 in progress (GEN-01 and GEN-02 done; GEN-03 open). M3 in progress (IMG-01 done; IMG-02, IMG-03 open).
+- Next concrete task: GEN-03 (held-out evaluation of descriptions, edits and model revisions, at least two candidate models) to close M2.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

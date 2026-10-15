@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.6.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.7.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -27,9 +27,12 @@ export interface ReplayWorldContracts {
   ImageAnalysisRequest: ImageAnalysisRequest;
   ImageProposalResult: ImageProposalResult;
   StoredPhoto: StoredPhoto;
+  GeneratedAssetRevisionRequest: GeneratedAssetRevisionRequest;
+  ModelRevisionProposalRequest: ModelRevisionProposalRequest;
+  ModelRevisionProposalResult: ModelRevisionProposalResult;
 }
 export interface Project {
-  schema_version: "0.6.0";
+  schema_version: "0.7.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -170,8 +173,11 @@ export interface PhotoCalibration {
  * A rectangle lying on the floor, marked by the user on the photo: the scale reference.
  *
  * ``corners`` go around the rectangle; corner 0 to 1 is the ``width``, corner 1 to 2 the
- * ``depth``. A side the user measured is ``user_supplied``; a side they did not know is
- * derived from the photo's perspective and stays ``inferred``.
+ * ``depth``. A side the user gave is ``user_supplied``; a side they did not know is derived
+ * from the photo's perspective and stays ``inferred``. ``size_basis`` says how the user knows
+ * the sides they gave: ``measured`` (measured, or known exactly from a drawing), ``assumed``
+ * (a typical size, not measured; such a side stays unreviewed) or ``not_stated`` (projects
+ * made before 0.7.0 did not ask).
  */
 export interface FloorRectangle {
   /**
@@ -185,6 +191,7 @@ export interface FloorRectangle {
   corners: [ImagePoint, ImagePoint, ImagePoint, ImagePoint];
   width: Length;
   depth: Length;
+  size_basis: "measured" | "assumed" | "not_stated";
 }
 /**
  * A point on an image as fractions of its displayed width (``u``, from the left) and height
@@ -385,6 +392,7 @@ export interface AssetGeneration {
    */
   not_modelled: string[];
   unknown_properties: UnknownProperty[];
+  revision: AssetRevision | null;
 }
 /**
  * A bounded, data-only description of a generated model.
@@ -478,6 +486,169 @@ export interface UnknownProperty {
   reason: string;
 }
 /**
+ * How a generated asset corrects an earlier one (GEN-02).
+ *
+ * A revision is a new, immutable asset with its own ID, specification and model file; the
+ * asset it ``revises`` stays in the catalog unchanged, so every version remains identifiable
+ * and hash-checked. ``version`` counts from the original (1, never recorded here). The
+ * original description or photo observation stays in the generation record; this record holds
+ * only the later correction: the user's instruction (if any), the language model that proposed
+ * the specification change (null when the user changed it by hand), the changes in plain words
+ * and what was asked for but cannot be represented by the generator.
+ */
+export interface AssetRevision {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  revises: string;
+  version: number;
+  instruction: string | null;
+  language_model: LanguageModelRef | null;
+  /**
+   * @minItems 1
+   * @maxItems 40
+   */
+  changes: [string, ...string[]];
+  /**
+   * Requested features the bounded generator cannot depict; never imitated.
+   *
+   * @maxItems 20
+   */
+  not_represented:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ];
+}
+/**
  * Placed objects plus the record of every edit in effect.
  *
  * ``revision`` advances by one for every accepted edit, undo and redo, so a command prepared
@@ -496,7 +667,7 @@ export interface Scene {
    */
   revision: number;
   objects: SceneObject[];
-  edit_log: (ObjectEdited | ObjectAdded | ObjectRemoved)[];
+  edit_log: (ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised)[];
 }
 export interface SceneObject {
   /**
@@ -620,18 +791,56 @@ export interface ObjectRemoved {
   revision: number;
   object: SceneObject;
 }
+/**
+ * Objects switched from one generated asset to its revision, as one step.
+ *
+ * Every listed object referenced ``asset_before`` and now references ``asset_after``. An axis
+ * appears in ``dimensions`` only when the object's value or evidence changed: the previous
+ * value and its evidence stay in ``before``, and ``after`` carries the evidence of how the new
+ * value was established (copied from the revised asset), which is not necessarily
+ * ``user_supplied`` - a model revision that keeps an inferred size keeps it inferred.
+ */
+export interface AssetRevised {
+  type: "asset_revised";
+  /**
+   * Scene revision this edit produced.
+   */
+  revision: number;
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  asset_before: string;
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  asset_after: string;
+  /**
+   * @minItems 1
+   */
+  objects: [RevisedInstance, ...RevisedInstance[]];
+}
+/**
+ * One object switched to a revised asset, with any of its dimensions that changed.
+ */
+export interface RevisedInstance {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  object_id: string;
+  dimensions: AxisChange[];
+}
 export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.6.0";
+  schema_version: "0.7.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.6.0";
+  schema_version: "0.7.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -668,7 +877,7 @@ export interface UpgradeReport {
    * Schema version of the submitted document.
    */
   from_version: string;
-  to_version: "0.6.0";
+  to_version: "0.7.0";
   notes: string[];
   project: Project;
   validation: ValidationReport;
@@ -1205,4 +1414,196 @@ export interface StoredPhoto {
   filename: string;
   sha256: string;
   image: SourceImage;
+}
+/**
+ * Build a revision of a generated asset as a new asset; the previous one is not changed.
+ */
+export interface GeneratedAssetRevisionRequest {
+  previous: CatalogAsset;
+  spec: GeometryDraft;
+  dimensions: RevisedDimensions;
+  instruction: string | null;
+  language_model: LanguageModelRef | null;
+  /**
+   * @minItems 1
+   * @maxItems 40
+   */
+  changes: [string, ...string[]];
+  /**
+   * @maxItems 20
+   */
+  not_represented:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ];
+}
+export interface RevisedDimensions {
+  width: RevisedLength;
+  height: RevisedLength;
+  depth: RevisedLength;
+}
+/**
+ * How one overall dimension of a revised model was settled.
+ *
+ * kept: unchanged, so the previous value and its evidence carry over exactly (a change of
+ * parts or colours never turns an estimate into a measurement); entered: typed by the user;
+ * proposed: changed by a language model's proposal and confirmed by the user.
+ */
+export interface RevisedLength {
+  basis: "kept" | "entered" | "proposed";
+  confirmed: boolean;
+}
+/**
+ * Ask the language model for a bounded change to a generated model's specification.
+ */
+export interface ModelRevisionProposalRequest {
+  name: string;
+  spec: GeometrySpec;
+  instruction: string;
+}
+/**
+ * A proposed specification change, checked and fitted; nothing is built or stored.
+ *
+ * ``outcome`` is ``unsupported`` when the instruction is not a change to this object, or when
+ * the proposal would misrepresent it (for example a solid block offered as an open shelf);
+ * ``message`` then says why and ``spec`` is null.
+ */
+export interface ModelRevisionProposalResult {
+  outcome: "proposal" | "unsupported";
+  message: string | null;
+  spec: GeometrySpec | null;
+  summary: string | null;
+  size_changed: boolean;
+  not_represented: string[];
+  checks: string[];
+  provider: ProviderRun;
 }

@@ -1,3 +1,4 @@
+import { versionsOf } from "../assist/revisionDraft";
 import type { CatalogAsset, Dimensions, Length, Project, SceneObject } from "@replay-world/contracts";
 import {
   AXES,
@@ -32,13 +33,15 @@ interface Props {
   selected: SceneObject | null;
   models: ModelStates;
   edit: EditControls;
+  /** Open "Improve model" for the selected object (generated assets only). */
+  onImprove: () => void;
 }
 
-export function Inspector({ project, source, selected, models, edit }: Props) {
+export function Inspector({ project, source, selected, models, edit, onImprove }: Props) {
   if (!project) return <p className="muted panel-pad">Inspector is empty until a scene loads.</p>;
   if (!selected) return <SceneSummary project={project} source={source} />;
   const asset = project.catalog.find((a) => a.id === selected.asset_id) ?? null;
-  return <ObjectDetails project={project} object={selected} asset={asset} model={asset ? models.get(asset.id) : undefined} edit={edit} />;
+  return <ObjectDetails project={project} object={selected} asset={asset} model={asset ? models.get(asset.id) : undefined} edit={edit} onImprove={onImprove} />;
 }
 
 function sourceLabel(source: SceneSource | null): string {
@@ -221,7 +224,21 @@ function VisualDetails({ object, asset, model }: { object: SceneObject; asset: C
   );
 }
 
-function AssetDetails({ object, asset, model }: { object: SceneObject; asset: CatalogAsset; model: ModelState | undefined }) {
+function AssetDetails({
+  project,
+  object,
+  asset,
+  model,
+  editable,
+  onImprove,
+}: {
+  project: Project;
+  object: SceneObject;
+  asset: CatalogAsset;
+  model: ModelState | undefined;
+  editable: boolean;
+  onImprove: () => void;
+}) {
   const differing = axesDifferingFromNominal(object.dimensions, asset);
   const { source, rights } = asset;
   return (
@@ -254,7 +271,14 @@ function AssetDetails({ object, asset, model }: { object: SceneObject; asset: Ca
         <dt>Nominal size</dt>
         <dd>{formatFootprint(asset.nominal_dimensions)}</dd>
       </dl>
-      {asset.generation && <GenerationDetails generation={asset.generation} />}
+      {asset.generation && (
+        <>
+          <button type="button" className="button button-small" disabled={!editable} data-testid="improve-model-open" onClick={onImprove}>
+            Improve model…
+          </button>
+          <GenerationDetails project={project} asset={asset} />
+        </>
+      )}
       {differing.length === 0 ? (
         <p className="muted">This instance uses the catalog nominal size.</p>
       ) : (
@@ -267,8 +291,11 @@ function AssetDetails({ object, asset, model }: { object: SceneObject; asset: Ca
 }
 
 /** How a generated asset was made: the words, the model, what was stated or assumed, unknowns. */
-function GenerationDetails({ generation }: { generation: NonNullable<CatalogAsset["generation"]> }) {
+function GenerationDetails({ project, asset }: { project: Project; asset: CatalogAsset }) {
+  const generation = asset.generation!;
   const lm = generation.language_model;
+  const revision = generation.revision;
+  const versions = versionsOf(project, asset);
   return (
     <div className="generation-details" data-testid="generation-details">
       <p className="placeholder-note">
@@ -277,7 +304,13 @@ function GenerationDetails({ generation }: { generation: NonNullable<CatalogAsse
       </p>
       <dl className="facts">
         <dt>Made by</dt>
-        <dd>{generation.method === "described" && lm ? `Described by the user; drafted by ${lm.service} ${lm.model}` : "Built in the object builder"}</dd>
+        <dd>
+          {generation.method === "described" && lm
+            ? `Described by the user; drafted by ${lm.service} ${lm.model}`
+            : generation.method === "photo"
+              ? `Seen in a photo${lm ? `; found by ${lm.service} ${lm.model}` : "; marked by the user"}`
+              : "Built in the object builder"}
+        </dd>
         {generation.description && (
           <>
             <dt>Words</dt>
@@ -296,6 +329,25 @@ function GenerationDetails({ generation }: { generation: NonNullable<CatalogAsse
         )}
         <dt>Unknown</dt>
         <dd>{generation.unknown_properties.map((u) => u.property.replaceAll("_", " ")).join(", ")}</dd>
+        {revision && (
+          <>
+            <dt>Corrected</dt>
+            <dd data-testid="revision-details">
+              Version {revision.version}, revising {revision.revises}
+              {revision.instruction ? `; asked: “${revision.instruction}”` : "; changed by hand"}
+              {revision.language_model ? ` (proposed by ${revision.language_model.model}, reviewed by the user)` : ""}. {revision.changes.join("; ")}.
+              {revision.not_represented.length > 0 && ` Not representable: ${revision.not_represented.join("; ")}.`}
+            </dd>
+          </>
+        )}
+        {versions.length > 1 && (
+          <>
+            <dt>Versions</dt>
+            <dd data-testid="asset-versions">
+              {versions.map((v) => `v${v.generation?.revision?.version ?? 1} ${v.id}${v.id === asset.id ? " (this one)" : ""}`).join(" · ")}
+            </dd>
+          </>
+        )}
       </dl>
     </div>
   );
@@ -307,9 +359,10 @@ interface DetailsProps {
   asset: CatalogAsset | null;
   model: ModelState | undefined;
   edit: EditControls;
+  onImprove: () => void;
 }
 
-function ObjectDetails({ project, object, asset, model, edit }: DetailsProps) {
+function ObjectDetails({ project, object, asset, model, edit, onImprove }: DetailsProps) {
   const { position_m: p, rotation_rad: r } = object.transform;
   return (
     <section aria-label="Object inspector" className="panel-pad" data-testid="object-inspector">
@@ -327,7 +380,7 @@ function ObjectDetails({ project, object, asset, model, edit }: DetailsProps) {
 
       <h3 className="section-title">Catalog asset</h3>
       {asset ? (
-        <AssetDetails object={object} asset={asset} model={model} />
+        <AssetDetails project={project} object={object} asset={asset} model={model} editable={edit.editable} onImprove={onImprove} />
       ) : (
         <p className="muted">None - this object is scene geometry.</p>
       )}

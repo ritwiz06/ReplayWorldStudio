@@ -164,7 +164,11 @@ def _asset_swap(d: dict[str, Any]) -> None:
         (_restore_removed, "'obj-process-station' was removed at revision 9; IDs are never reused"),
         (_drift_width, "a width for object 'obj-packing-station' that differs from the scene"),
         (_ghost_edit, "refers to object 'obj-never-existed', which is not in the scene"),
-        (_asset_swap, "added at revision 4 from asset 'asset-generic-belt-conveyor'"),
+        (
+            _asset_swap,
+            "revision 4 leaves object 'obj-generic-processing-station' referencing asset "
+            "'asset-generic-belt-conveyor', but it now references 'asset-generic-processing-",
+        ),
         (_record_set(4, "asset_id", None), "must name a catalog asset or the object it copies"),
     ],
     ids=[

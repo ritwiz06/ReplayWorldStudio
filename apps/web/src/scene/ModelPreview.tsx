@@ -62,7 +62,7 @@ function Frame({ extents: [w, h, d] }: { extents: Vec3Tuple }) {
   return null;
 }
 
-export function ModelPreview({ model, busy }: { model: GeneratedModel | null; busy: boolean }) {
+export function ModelPreview({ model, busy, testId = "model-preview" }: { model: GeneratedModel | null; busy: boolean; testId?: string }) {
   const [shown, setShown] = useState<Verified | null>(null);
   const [failure, setFailure] = useState<{ key: string; message: string } | null>(null);
   const key = model?.visual.sha256 ?? "";
@@ -91,7 +91,7 @@ export function ModelPreview({ model, busy }: { model: GeneratedModel | null; bu
   return (
     <div
       className="model-preview"
-      data-testid="model-preview"
+      data-testid={testId}
       data-state={state}
       data-sha256={current ? key : ""}
       data-extents={extents ? extents.map((v) => formatFixed(v, 3)).join(",") : ""}

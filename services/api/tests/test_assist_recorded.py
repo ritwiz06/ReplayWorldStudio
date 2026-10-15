@@ -19,13 +19,16 @@ from replay_world_api.assist.edits import propose_edit
 from replay_world_api.assist.images import propose_image
 from replay_world_api.assist.proposals import propose_object
 from replay_world_api.assist.provider import RecordedProvider
-from replay_world_api.objects import build_model
+from replay_world_api.assist.revisions import propose_revision, revision_key
+from replay_world_api.objects import build_model, fit_to_envelope
 from replay_world_api.photos import inspect_photo
 from replay_world_api.settings import AssistSettings
 from replay_world_contracts import (
     EditProposalRequest,
+    GeometryDraft,
     ImageAnalysisRequest,
     ImageProposalResult,
+    ModelRevisionProposalRequest,
     Project,
 )
 
@@ -53,10 +56,12 @@ DESCRIBED = {
 }
 
 
-# Photos are answered by the vision model; descriptions and edits by the language model.
+# Photos are answered by the vision model; descriptions, edits and revisions by the language
+# model.
 LIVE_MODELS = {
     "object": "qwen3-235b-a22b-instruct-2507",
     "edit": "qwen3-235b-a22b-instruct-2507",
+    "revision": "qwen3-235b-a22b-instruct-2507",
     "image": "qwen3-vl-32b-instruct",
 }
 
@@ -264,3 +269,50 @@ def test_the_classroom_tables_named_with_their_chairs_are_flagged() -> None:
         any("the label names a group" in note for note in o.notes) for o in grouped
     )
     assert {o.template for o in grouped} == {"table"}
+
+
+# Revision cases, as scripts/evaluate_model_revisions.py runs and records them.
+REVISION_CASES = {
+    case["label"]: case
+    for case in json.loads((ROOT / "scripts" / "model_revision_cases.json").read_text())
+}
+REVISED = sorted(path.stem.removeprefix("revision-") for path in RECORDINGS.glob("revision-*.json"))
+
+
+def revision_request(label: str) -> ModelRevisionProposalRequest:
+    case = REVISION_CASES[label]
+    spec, _scale, _notes = fit_to_envelope(GeometryDraft.model_validate(case["spec"]))
+    return ModelRevisionProposalRequest(
+        name=case["name"], spec=spec, instruction=case["instruction"]
+    )
+
+
+@pytest.mark.parametrize("label", REVISED)
+def test_every_revision_recording_replays_for_its_case(label: str) -> None:
+    request = revision_request(label)
+    assert recording(f"revision-{label}")["key"] == revision_key(request)
+    result = propose_revision(PROVIDER, request)
+    assert result.provider.mode == "recorded"
+    if result.spec is not None:
+        model = build_model(result.spec)
+        assert model.sha256 != build_model(request.spec).sha256
+
+
+def test_the_recorded_open_shelf_has_separate_panels_and_keeps_its_size() -> None:
+    request = revision_request("cabinet-open-shelves")
+    result = propose_revision(PROVIDER, request)
+    assert result.outcome == "proposal" and result.spec is not None
+    assert result.spec.envelope_m == request.spec.envelope_m and not result.size_changed
+    e = result.spec.envelope_m
+    shares = [p.size_m.x * p.size_m.y * p.size_m.z / (e.x * e.y * e.z) for p in result.spec.parts]
+    assert max(shares) < 0.1  # panels and shelves, no solid block standing in for the opening
+    assert sum("shelf" in p.label for p in result.spec.parts) >= 2
+
+
+def test_the_recorded_colour_change_keeps_the_size_and_uses_the_colours() -> None:
+    request = revision_request("cabinet-blue-red-top")
+    result = propose_revision(PROVIDER, request)
+    assert result.outcome == "proposal" and result.spec is not None
+    assert result.spec.envelope_m == request.spec.envelope_m and not result.size_changed
+    assert {"paint_blue", "paint_red"} <= {p.material for p in result.spec.parts}
+    assert "Size kept: the instruction did not ask for a different size." in result.checks

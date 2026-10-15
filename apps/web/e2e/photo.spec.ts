@@ -30,7 +30,7 @@ interface Saved {
     image: { uri: string; media_type: string; width_px: number; height_px: number };
     photo_import: {
       vision_model: { model: string };
-      calibration: { camera: { fov_basis: string; position_m: { x: number; y: number; z: number } }; reference: { width: { origin: string } } };
+      calibration: { camera: { fov_basis: string; position_m: { x: number; y: number; z: number } }; reference: { size_basis: string; width: { origin: string; source_ref: string } } };
       observations: { id: string; decision: string; object_id: string | null }[];
     };
   }[];
@@ -138,6 +138,10 @@ test("a photo becomes a reviewed, editable 3D world that saves, reopens and surv
   await markRectangle(page, WALKWAY);
   await page.getByTestId("photo-feature").fill("walkway between floor grid lines");
   await setLength(page, "photo-scale-width", "6");
+  // Create waits until the user says whether the size is measured or assumed.
+  await expect(page.getByTestId("photo-needs-basis")).toBeVisible();
+  await expect(page.getByTestId("photo-create")).toBeDisabled();
+  await page.getByTestId("photo-basis-measured").check();
   await expect(page.getByTestId("photo-create")).toBeEnabled();
   await setLength(page, "photo-scale-depth", "1.8");
   await expect(page.getByTestId("photo-scale-summary")).toContainText("Camera about 1.60 m above the floor, 70° view (from your two side lengths)");
@@ -184,13 +188,14 @@ test("a photo becomes a reviewed, editable 3D world that saves, reopens and surv
   // Save: the photo is an identified, hash-checked source; image-inferred and user values differ.
   const file = await save(page);
   const saved = JSON.parse(file.text) as Saved;
-  expect(saved.schema_version).toBe("0.6.0");
+  expect(saved.schema_version).toBe("0.7.0");
   const source = saved.sources[0]!;
   expect([source.kind, source.filename, source.sha256, source.source_to_world]).toEqual(["photo", "factory-walk.png", FACTORY_SHA, null]);
   expect(source.image).toMatchObject({ uri: `photos/${FACTORY_SHA}.png`, media_type: "image/png", width_px: 1328, height_px: 1000 });
   expect(source.photo_import.vision_model.model).toBe("qwen3-vl-32b-instruct");
   expect(source.photo_import.calibration.camera.fov_basis).toBe("from_sides");
   expect(source.photo_import.calibration.reference.width.origin).toBe("user_supplied");
+  expect(source.photo_import.calibration.reference.size_basis).toBe("measured");
   const decisions = Object.fromEntries(source.photo_import.observations.map((o) => [o.id, o.decision]));
   expect(decisions).toEqual({ "obs-1": "accepted", "obs-2": "accepted", "obs-3": "accepted", "obs-4": "accepted", "obs-5": "rejected", "obs-6": "rejected", "obs-7": "rejected" });
   const ids = new Set(saved.scene.objects.map((o) => o.id));
@@ -256,8 +261,10 @@ test("a second photo with different contents builds its own world; closing the i
   await page.getByTestId("photo-analyse").click();
   await expect(page.getByTestId("photo-stage")).toBeVisible();
   await page.getByTestId("photo-tab-scale").click();
-  await page.getByTestId("photo-feature").fill("rug (assumed 2.0 m wide)");
+  await page.getByTestId("photo-feature").fill("rug");
   await setLength(page, "photo-scale-width", "2.0");
+  await page.getByTestId("photo-basis-assumed").check();
+  await expect(page.getByTestId("photo-scale")).toContainText("assumed by you");
   await page.getByTestId("photo-create").click();
   await expect(page.getByTestId("photo-import")).toBeHidden({ timeout: 60_000 });
   await expect(page.getByTestId("scene-source")).toHaveText("Built from the photo living-room.webp (not saved yet)");

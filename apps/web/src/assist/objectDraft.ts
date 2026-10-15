@@ -3,6 +3,7 @@
 // of how each dimension was settled. The API builds the model; this module only keeps the
 // user's decisions and turns them into the request that creates the catalog asset.
 import type {
+  Extent3,
   GeneratedAssetRequest,
   GeometryDraft,
   GeometryPart,
@@ -162,9 +163,9 @@ export function setParts(draft: ObjectDraft, parts: GeometryPart[]): ObjectDraft
 let partCounter = 0;
 
 /** A new part on top of the object's current centre, to be adjusted by the user. */
-export function newPart(draft: ObjectDraft, shape: GeometryPart["shape"]): GeometryPart {
-  const e = draft.spec.envelope_m;
-  const used = new Set(draft.spec.parts.map((p) => p.id));
+export function newPart(parts: readonly GeometryPart[], envelope: Extent3, shape: GeometryPart["shape"]): GeometryPart {
+  const e = envelope;
+  const used = new Set(parts.map((p) => p.id));
   let id = `part-${++partCounter}`;
   while (used.has(id)) id = `part-${++partCounter}`;
   const size = Math.max(0.05, micro(Math.min(e.x, e.z) / 3));

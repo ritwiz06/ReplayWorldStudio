@@ -9,6 +9,7 @@ import {
   validateGeneratedModelRestoreReport,
   validateHealthResponse,
   validateImageProposalResult,
+  validateModelRevisionProposalResult,
   validateObjectProposalResult,
   validateProject,
   validateStoredPhoto,
@@ -18,8 +19,10 @@ import {
   type ContractIssue,
   type EditProposalRequest,
   type GeneratedAssetRequest,
+  type GeneratedAssetRevisionRequest,
   type GeometryDraft,
   type ImageAnalysisRequest,
+  type ModelRevisionProposalRequest,
   type ValidationIssue,
   type ValidationResult,
 } from "@replay-world/contracts";
@@ -154,6 +157,23 @@ export function createApiClient(
     /** Create a catalog asset from a reviewed proposal; its model is stored and hash-pinned. */
     createGeneratedAsset: (body: GeneratedAssetRequest, signal?: AbortSignal) =>
       request("/api/v1/catalog/generated-assets", validateCatalogAsset, {
+        method: "POST",
+        body: JSON.stringify(body),
+        signal,
+        timeoutMs: GENERATE_TIMEOUT_MS,
+      }),
+    /** Propose a bounded change to a generated model's specification from one instruction (sent
+     * to the configured language model); nothing is built or stored. */
+    proposeModelRevision: (body: ModelRevisionProposalRequest, signal?: AbortSignal) =>
+      request("/api/v1/assist/model-revisions", validateModelRevisionProposalResult, {
+        method: "POST",
+        body: JSON.stringify(body),
+        signal,
+        timeoutMs: ASSIST_TIMEOUT_MS,
+      }),
+    /** Build a revision of a generated asset as a new catalog asset; the previous one is unchanged. */
+    reviseGeneratedAsset: (body: GeneratedAssetRevisionRequest, signal?: AbortSignal) =>
+      request("/api/v1/catalog/generated-assets/revisions", validateCatalogAsset, {
         method: "POST",
         body: JSON.stringify(body),
         signal,

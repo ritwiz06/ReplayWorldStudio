@@ -35,15 +35,20 @@ def _read(path: str) -> dict[str, Any]:
 
 
 def _as_version(current: dict[str, Any], version: str) -> dict[str, Any]:
-    """The same content in an older contract (no photo fields on sources; no generation records
-    before 0.5.0; no edit log before 0.4.0)."""
-    photo_keys = ("image", "photo_import")
-    sources = [{k: v for k, v in s.items() if k not in photo_keys} for s in current["sources"]]
-    catalog = current["catalog"]
-    if version != "0.5.0":
-        catalog = [{k: v for k, v in a.items() if k != "generation"} for a in catalog]
+    """The same content in an older contract (no asset revisions or scale size bases before
+    0.7.0; no photo fields on sources before 0.6.0; no generation records before 0.5.0; no edit
+    log before 0.4.0)."""
+    if version == "0.6.0":
+        sources = [_without_size_basis(s) for s in current["sources"]]
+    else:
+        photo_keys = ("image", "photo_import")
+        sources = [{k: v for k, v in s.items() if k not in photo_keys} for s in current["sources"]]
+    if version in ("0.5.0", "0.6.0"):
+        catalog = [_without_revision(a) for a in current["catalog"]]
+    else:
+        catalog = [{k: v for k, v in a.items() if k != "generation"} for a in current["catalog"]]
     scene = current["scene"]
-    if version not in ("0.4.0", "0.5.0"):
+    if version not in ("0.4.0", "0.5.0", "0.6.0"):
         scene = {k: v for k, v in scene.items() if k != "edit_log"}
     return {
         **current,
@@ -52,6 +57,21 @@ def _as_version(current: dict[str, Any], version: str) -> dict[str, Any]:
         "catalog": catalog,
         "scene": scene,
     }
+
+
+def _without_revision(asset: dict[str, Any]) -> dict[str, Any]:
+    generation = asset["generation"]
+    if generation is None:
+        return asset
+    return {**asset, "generation": {k: v for k, v in generation.items() if k != "revision"}}
+
+
+def _without_size_basis(source: dict[str, Any]) -> dict[str, Any]:
+    if source["photo_import"] is None:
+        return source
+    old = json.loads(json.dumps(source))
+    del old["photo_import"]["calibration"]["reference"]["size_basis"]
+    return dict(old)
 
 
 def _upgrade(client: TestClient, body: str) -> tuple[int, Any]:
@@ -67,11 +87,12 @@ def test_upgrades_a_0_1_0_file_through_every_step(client: TestClient) -> None:
     status, payload = _upgrade(client, LEGACY.read_text())
     assert status == 200
     report = UpgradeReport.model_validate(payload)
-    assert (report.from_version, report.to_version) == ("0.1.0", "0.6.0")
+    assert (report.from_version, report.to_version) == ("0.1.0", "0.7.0")
     assert report.notes[0] == "schema_version 0.1.0 -> 0.2.0"
-    assert report.notes[-3].startswith("schema_version 0.3.0 -> 0.4.0")
-    assert report.notes[-2].startswith("schema_version 0.4.0 -> 0.5.0")
-    assert report.notes[-1].startswith("schema_version 0.5.0 -> 0.6.0")
+    assert report.notes[-4].startswith("schema_version 0.3.0 -> 0.4.0")
+    assert report.notes[-3].startswith("schema_version 0.4.0 -> 0.5.0")
+    assert report.notes[-2].startswith("schema_version 0.5.0 -> 0.6.0")
+    assert report.notes[-1].startswith("schema_version 0.6.0 -> 0.7.0")
     inferred = "box origin 'inferred' applied to width, height and depth"
     assert any(inferred in note for note in report.notes)
     assert report.project.scene.edit_log == []
@@ -80,7 +101,7 @@ def test_upgrades_a_0_1_0_file_through_every_step(client: TestClient) -> None:
     assert Project.model_validate_json(report.project.model_dump_json()) == report.project
 
 
-@pytest.mark.parametrize("version", ["0.2.0", "0.3.0", "0.4.0", "0.5.0"])
+@pytest.mark.parametrize("version", ["0.2.0", "0.3.0", "0.4.0", "0.5.0", "0.6.0"])
 def test_upgrades_newer_legacy_versions_without_changing_values(
     client: TestClient, version: str
 ) -> None:
@@ -97,7 +118,7 @@ def test_a_current_document_passes_through_with_no_notes(client: TestClient) -> 
     status, payload = _upgrade(client, (FIXTURES / "scenes" / "foundation-scene.json").read_text())
     assert status == 200
     report = UpgradeReport.model_validate(payload)
-    assert (report.from_version, report.notes) == ("0.6.0", [])
+    assert (report.from_version, report.notes) == ("0.7.0", [])
 
 
 @pytest.mark.parametrize("version", ["9.9.9", "0.0.1", None, 3])
@@ -110,7 +131,7 @@ def test_unknown_versions_are_refused_at_schema_version(
     [(loc, msg)] = _issues(payload)
     assert loc == ["body", "schema_version"]
     assert "unsupported schema_version" in msg
-    assert "supported: 0.1.0, 0.2.0, 0.3.0, 0.4.0, 0.5.0, 0.6.0" in msg
+    assert "supported: 0.1.0, 0.2.0, 0.3.0, 0.4.0, 0.5.0, 0.6.0, 0.7.0" in msg
 
 
 def test_a_malformed_legacy_document_fails_with_one_issue(client: TestClient) -> None:

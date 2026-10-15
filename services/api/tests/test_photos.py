@@ -668,6 +668,7 @@ def photo_source(stored: StoredPhoto, source_id: str = "src-photo-office") -> di
                     "corners": corners,
                     "width": length(2.0, "user_supplied"),
                     "depth": length(1.4, "inferred"),
+                    "size_basis": "assumed",
                 },
                 "image_to_floor": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
                 "camera": {

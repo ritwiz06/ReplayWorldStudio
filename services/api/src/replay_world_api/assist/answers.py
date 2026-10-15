@@ -69,6 +69,17 @@ class RawObjectAnswer(_Raw):
     parts: list[RawPart]
 
 
+class RawRevisionAnswer(_Raw):
+    outcome: Literal["revision", "unsupported"]
+    message: str | None
+    summary: str | None = Field(description="What changed, in one sentence.")
+    envelope_m: RawVec
+    parts: list[RawPart] = Field(description="The complete revised parts list.")
+    not_representable: list[str] = Field(
+        description="Requested features the generator cannot depict; never imitated."
+    )
+
+
 class RawTarget(_Raw):
     reference: Literal["selected", "named"]
     object_id: str | None

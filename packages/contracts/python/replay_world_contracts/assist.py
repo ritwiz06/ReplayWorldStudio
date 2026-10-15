@@ -16,6 +16,9 @@ from typing import Annotated, Final, Literal
 from pydantic import Field, StringConstraints, model_validator
 
 from .models import (
+    MAX_REVISION_CHANGES,
+    REVISION_INSTRUCTION_MAX_CHARS,
+    CatalogAsset,
     ContractModel,
     Extent3,
     GeometryDraft,
@@ -311,6 +314,78 @@ class GeneratedModelRestoreReport(ContractModel):
     """
 
     results: list[RestoredModel]
+
+
+# --- Correcting a generated object (GEN-02) -----------------------------------------------
+
+RevisionText = Annotated[
+    str, StringConstraints(min_length=3, max_length=REVISION_INSTRUCTION_MAX_CHARS)
+]
+RevisedBasis = Literal["kept", "entered", "proposed"]
+
+
+class RevisedLength(ContractModel):
+    """How one overall dimension of a revised model was settled.
+
+    kept: unchanged, so the previous value and its evidence carry over exactly (a change of
+    parts or colours never turns an estimate into a measurement); entered: typed by the user;
+    proposed: changed by a language model's proposal and confirmed by the user.
+    """
+
+    basis: RevisedBasis
+    confirmed: bool
+
+
+class RevisedDimensions(ContractModel):
+    width: RevisedLength
+    height: RevisedLength
+    depth: RevisedLength
+
+
+class GeneratedAssetRevisionRequest(ContractModel):
+    """Build a revision of a generated asset as a new asset; the previous one is not changed."""
+
+    previous: CatalogAsset
+    spec: GeometryDraft
+    dimensions: RevisedDimensions
+    instruction: RevisionText | None
+    language_model: LanguageModelRef | None
+    changes: list[NonEmptyText] = Field(min_length=1, max_length=MAX_REVISION_CHANGES)
+    not_represented: list[NonEmptyText] = Field(max_length=20)
+
+
+class ModelRevisionProposalRequest(ContractModel):
+    """Ask the language model for a bounded change to a generated model's specification."""
+
+    name: ShortText
+    spec: GeometrySpec
+    instruction: RevisionText
+
+
+class ModelRevisionProposalResult(ContractModel):
+    """A proposed specification change, checked and fitted; nothing is built or stored.
+
+    ``outcome`` is ``unsupported`` when the instruction is not a change to this object, or when
+    the proposal would misrepresent it (for example a solid block offered as an open shelf);
+    ``message`` then says why and ``spec`` is null.
+    """
+
+    outcome: Literal["proposal", "unsupported"]
+    message: NonEmptyText | None
+    spec: GeometrySpec | None
+    summary: NonEmptyText | None
+    size_changed: bool
+    not_represented: list[NonEmptyText]
+    checks: list[NonEmptyText]
+    provider: ProviderRun
+
+    @model_validator(mode="after")
+    def _consistent(self) -> ModelRevisionProposalResult:
+        if (self.outcome == "proposal") != (self.spec is not None):
+            raise ValueError("a proposal (and only a proposal) carries a specification")
+        if self.outcome == "unsupported" and self.message is None:
+            raise ValueError("an unsupported outcome explains why in 'message'")
+        return self
 
 
 # --- Image import (IMG-01) -------------------------------------------------------------------

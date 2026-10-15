@@ -59,7 +59,7 @@ describe("object drafts", () => {
 
   it("builder edits re-centre the parts so the overall size follows them", () => {
     const draft = draftFromTemplate("Box", "box", TEMPLATES[0]!.spec);
-    const added = newPart(draft, "cylinder");
+    const added = newPart(draft.spec.parts, draft.spec.envelope_m, "cylinder");
     const moved = { ...added, center_m: { ...added.center_m, x: 1 } }; // sticks out to the right
     const next = setParts(draft, [...draft.spec.parts, moved]);
     const [body, post] = next.spec.parts;

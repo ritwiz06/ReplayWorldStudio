@@ -19,6 +19,7 @@ from replay_world_contracts import (
     EditProposalRequest,
     EditProposalResult,
     GeneratedAssetRequest,
+    GeneratedAssetRevisionRequest,
     GeneratedModel,
     GeneratedModelRequest,
     GeneratedModelRestoreReport,
@@ -26,6 +27,8 @@ from replay_world_contracts import (
     ImageAnalysisRequest,
     ImageProposalResult,
     KnownParameter,
+    ModelRevisionProposalRequest,
+    ModelRevisionProposalResult,
     ObjectProposalRequest,
     ObjectProposalResult,
     Project,
@@ -51,8 +54,13 @@ from .assist.provider import (
     provider_from_settings,
     vision_provider_from_settings,
 )
+from .assist.revisions import propose_revision
 from .catalog_files import CatalogFileError, check_model_files, resolve_catalog_file
-from .generated_assets import create_generated_asset, restore_generated_models
+from .generated_assets import (
+    create_asset_revision,
+    create_generated_asset,
+    restore_generated_models,
+)
 from .objects import GeneratorError, build_model, fit_to_envelope, gltf_visual, store_model
 from .photos import (
     MAX_PHOTO_BYTES,
@@ -283,6 +291,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except (ProviderError, AssistError) as exc:
             _assist_failure(exc)
 
+    @app.post("/api/v1/assist/model-revisions")
+    def model_revisions(body: ModelRevisionProposalRequest) -> ModelRevisionProposalResult:
+        """Propose a bounded change to a generated model's specification. Nothing is built."""
+        try:
+            return propose_revision(_provider(), body)
+        except (ProviderError, AssistError) as exc:
+            _assist_failure(exc)
+
     @app.post("/api/v1/assist/image-proposals")
     def image_proposals(body: ImageAnalysisRequest) -> ImageProposalResult:
         """Propose the objects standing on the floor of a photo. Nothing is stored or logged."""
@@ -382,6 +398,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         """Turn a reviewed proposal into a catalog asset whose model file is stored and pinned."""
         try:
             return create_generated_asset(body, settings.catalog_dir)
+        except AssistError as exc:
+            _assist_failure(exc)
+        except GeneratorError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from None
+
+    @app.post("/api/v1/catalog/generated-assets/revisions")
+    def generated_asset_revision(body: GeneratedAssetRevisionRequest) -> CatalogAsset:
+        """Store a revision of a generated asset as a new asset; the previous one is unchanged."""
+        try:
+            return create_asset_revision(body, settings.catalog_dir)
         except AssistError as exc:
             _assist_failure(exc)
         except GeneratorError as exc:

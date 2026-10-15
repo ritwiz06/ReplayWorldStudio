@@ -156,7 +156,7 @@ export function PhotoImport({ client, assist, onCreated, onClose }: Props) {
   const [step, setStep] = useState<Step>({ kind: "choose", error: null });
   const [items, setItems] = useState<ReviewItem[]>([]);
   const [result, setResult] = useState<ImageProposalResult | null>(null);
-  const [scale, setScale] = useState<ScaleInput>({ corners: DEFAULT_CORNERS, feature: "", widthM: null, depthM: null });
+  const [scale, setScale] = useState<ScaleInput>({ corners: DEFAULT_CORNERS, feature: "", widthM: null, depthM: null, sizeBasis: null });
   const [selected, setSelected] = useState<string | null>(null);
   const [tab, setTab] = useState<"objects" | "scale" | "layout">("objects");
   const [creating, setCreating] = useState<{ busy: boolean; status: string; error: string | null }>({ busy: false, status: "", error: null });
@@ -260,7 +260,7 @@ export function PhotoImport({ client, assist, onCreated, onClose }: Props) {
     onCreated(project, stored.value.filename);
   }
 
-  const canCreate = cal !== null && accepted.length > 0 && unplaced.length === 0 && scale.feature.trim().length > 0;
+  const canCreate = cal !== null && accepted.length > 0 && unplaced.length === 0 && scale.feature.trim().length > 0 && scale.sizeBasis !== null;
 
   return (
     <dialog
@@ -415,6 +415,11 @@ export function PhotoImport({ client, assist, onCreated, onClose }: Props) {
 
             <div className="photo-footer">
               {!cal && <p className="muted small" data-testid="photo-needs-scale">Give the scale first: mark a floor rectangle and enter at least one of its sides (tab 2).</p>}
+              {cal && scale.sizeBasis === null && (
+                <p className="muted small" data-testid="photo-needs-basis">
+                  Say whether the rectangle&apos;s size is measured or assumed (tab 2).
+                </p>
+              )}
               {unplaced.length > 0 && cal && (
                 <p className="status-warn small" data-testid="photo-unplaced">
                   {unplaced.length} accepted object{unplaced.length > 1 ? "s need" : " needs"} a floor point on the floor: {unplaced.map((i) => i.label).join(", ")}.
@@ -851,7 +856,7 @@ function ScalePanel({ scale, calibration, suggestion, onScale }: { scale: ScaleI
     <section className="photo-scale" data-testid="photo-scale">
       <p className="small">
         Find a <strong>rectangle lying flat on the floor</strong> whose size you know - a rug, a mat, floor tiles, a pallet - and drag the four gold corners onto
-        its corners. Corners <strong>1 → 2</strong> run along the side you measured (the width).
+        its corners. Corners <strong>1 → 2</strong> run along the side whose length you know (the width).
       </p>
       {suggestion && <p className="muted small">The corners start on the model&apos;s guess of “{suggestion}”; place them on the real corners.</p>}
       <label className="photo-field">
@@ -861,13 +866,24 @@ function ScalePanel({ scale, calibration, suggestion, onScale }: { scale: ScaleI
       <div className="size-row">
         <span className="size-label">Width (1 → 2)</span>
         <SizeInput value={scale.widthM} label="Rectangle width in metres" testId="photo-scale-width" onCommit={(v) => onScale({ ...scale, widthM: v })} />
-        <span className="size-tag">measured by you</span>
+        <span className="size-tag">{givenTag(scale)}</span>
       </div>
       <div className="size-row">
         <span className="size-label">Depth (2 → 3)</span>
         <SizeInput value={scale.depthM} label="Rectangle depth in metres" testId="photo-scale-depth" onCommit={(v) => onScale({ ...scale, depthM: v })} />
-        <span className="size-tag">{scale.depthM === null ? (cal ? `not known: ${formatFixed(cal.depthM, 2)} m derived from perspective` : "optional") : "measured by you"}</span>
+        <span className="size-tag">{scale.depthM === null ? (cal ? `not known: ${formatFixed(cal.depthM, 2)} m derived from perspective` : "optional") : givenTag(scale)}</span>
       </div>
+      <fieldset className="photo-basis" data-testid="photo-size-basis">
+        <legend className="small">How do you know these sizes?</legend>
+        <label className="small">
+          <input type="radio" name="size-basis" checked={scale.sizeBasis === "measured"} data-testid="photo-basis-measured" onChange={() => onScale({ ...scale, sizeBasis: "measured" })} /> I measured them,
+          or know them exactly (a drawing, a standard tile)
+        </label>
+        <label className="small">
+          <input type="radio" name="size-basis" checked={scale.sizeBasis === "assumed"} data-testid="photo-basis-assumed" onChange={() => onScale({ ...scale, sizeBasis: "assumed" })} /> They are an
+          assumption (a typical size); the world will say so
+        </label>
+      </fieldset>
       {calibration && !calibration.ok && (
         <p className="status-error small" role="alert" data-testid="photo-scale-error">
           {calibration.message}
@@ -887,7 +903,7 @@ function ScalePanel({ scale, calibration, suggestion, onScale }: { scale: ScaleI
             </ul>
           )}
           <p className="muted small">
-            One measured length fixes the scale on the floor only. Depths you did not measure, hidden sides and heights stay estimates, and positions far
+            {scale.sizeBasis === "assumed" ? "An assumed length sets the scale, so every size and distance is only as right as that assumption. " : ""}One known length fixes the scale on the floor only. Depths you did not measure, hidden sides and heights stay estimates, and positions far
             from the rectangle or near the horizon are least certain.
           </p>
         </>
@@ -895,6 +911,8 @@ function ScalePanel({ scale, calibration, suggestion, onScale }: { scale: ScaleI
     </section>
   );
 }
+
+const givenTag = (scale: ScaleInput) => (scale.sizeBasis === "measured" ? "measured by you" : scale.sizeBasis === "assumed" ? "assumed by you" : "entered by you");
 
 /** A top-down check of where everything will go before the world is created. */
 function LayoutPanel({ items, placed, calibration, scale, selected, onSelect }: { items: ReviewItem[]; placed: Map<string, PlacedItem | { problem: string }>; calibration: Calibration | null; scale: ScaleInput; selected: string | null; onSelect: (id: string) => void }) {

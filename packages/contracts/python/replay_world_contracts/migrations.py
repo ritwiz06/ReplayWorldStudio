@@ -26,6 +26,12 @@ each change, and the result is then validated like any other document.
     * every source document gains ``image: null`` and ``photo_import: null``. Photo sources did
       not exist before 0.6.0, so every existing source keeps its source-to-world transform.
 
+0.6.0 -> 0.7.0
+    * every generated asset's ``generation`` gains ``revision: null``: revisions did not exist
+      before 0.7.0, so every existing generated asset is an original.
+    * every photo scale reference gains ``size_basis: "not_stated"``: 0.6.0 did not ask whether
+      the size was measured or assumed, so neither is claimed.
+
 Steps run in sequence, so a 0.1.0 document passes through 0.2.0 on its way to the current
 version and its notes describe every step.
 """
@@ -174,11 +180,60 @@ def _from_0_5_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     return upgraded, [note]
 
 
+def _from_0_6_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    catalog = []
+    revised = 0
+    for asset in old["catalog"]:
+        generation = asset.get("generation")
+        if generation is None:
+            catalog.append(copy.deepcopy(dict(asset)))
+            continue
+        if "revision" in generation:
+            raise MigrationError(
+                "malformed 0.6.0 document: asset revision records only exist from 0.7.0"
+            )
+        catalog.append(
+            {
+                **copy.deepcopy(dict(asset)),
+                "generation": {**copy.deepcopy(generation), "revision": None},
+            }
+        )
+        revised += 1
+    sources = []
+    scales = 0
+    for source in old["sources"]:
+        photo = source.get("photo_import")
+        if photo is None:
+            sources.append(copy.deepcopy(dict(source)))
+            continue
+        reference = photo["calibration"]["reference"]
+        if "size_basis" in reference:
+            raise MigrationError("malformed 0.6.0 document: scale size bases only exist from 0.7.0")
+        upgraded_source = copy.deepcopy(dict(source))
+        # 0.6.0 did not ask whether the scale was measured or assumed: say so, claim neither.
+        upgraded_source["photo_import"]["calibration"]["reference"]["size_basis"] = "not_stated"
+        sources.append(upgraded_source)
+        scales += 1
+    upgraded = {
+        **copy.deepcopy(dict(old)),
+        "schema_version": "0.7.0",
+        "catalog": catalog,
+        "sources": sources,
+    }
+    note = (
+        f"schema_version 0.6.0 -> 0.7.0 (adds 'revision: null' to {revised} generated "
+        f"asset{'' if revised == 1 else 's'} and 'size_basis: not_stated' to {scales} photo scale "
+        f"reference{'' if scales == 1 else 's'}; no values or evidence changed)"
+    )
+    return upgraded, [note]
+
+
 _STEPS: Final[dict[str, Step]] = {
     "0.1.0": _from_0_1_0,
     "0.2.0": _from_0_2_0,
     "0.3.0": _from_0_3_0,
     "0.4.0": _from_0_4_0,
     "0.5.0": _from_0_5_0,
+    "0.6.0": _from_0_6_0,
 }
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)

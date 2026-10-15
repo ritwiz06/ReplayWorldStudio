@@ -1,15 +1,16 @@
 # Image import (IMG-01): one photo to a reviewed, editable world
 
-IMG-01 turns **one permitted photo of a room or work area** into a world the user has reviewed and can edit. The world has a floor, a measured scale reference and separate, selectable objects, each with a provisional model. A vision model proposes what it sees. Everything that decides the world's size and layout is either computed by deterministic geometry or entered by the user. All of it is shown for review before anything is built.
+IMG-01 turns **one permitted photo of a room or work area** into a world the user has reviewed and can edit. The world has a floor, a scale reference of known (measured or assumed) size and separate, selectable objects, each with a provisional model. A vision model proposes what it sees. Everything that decides the world's size and layout is either computed by deterministic geometry or entered by the user. All of it is shown for review before anything is built.
 
 This page records:
 - the feasibility check;
 - the supported image type and its limits;
 - the scale and source-file decisions;
 - the measured results, with live and recorded results kept separate;
-- the known failures.
+- the known failures;
+- the size-basis audit and improving photo-made objects after creation (GEN-02, 2026-10-15).
 
-ADR-036 to ADR-038 in prompts/DECISIONS.md hold the decisions.
+ADR-036 to ADR-038 in prompts/DECISIONS.md hold the decisions, with the Update to ADR-037 (size basis) and ADR-039 to ADR-041 (improving generated models).
 
 ## Supported image type (bounded for IMG-01)
 
@@ -28,7 +29,7 @@ The following are **out of scope for IMG-01** and kept in IMG-02/03:
 - several photos of one place;
 - walls and room boundaries;
 - textured or photo-matched geometry;
-- automatic scale without a user measurement.
+- automatic scale without a size the user gives.
 
 ## User journey
 
@@ -43,10 +44,10 @@ The following are **out of scope for IMG-01** and kept in IMG-02/03:
    - The user can add a missed object by dragging a box, and change label, shape family, colour, facing and sizes.
    - Every size and the facing are tagged **from the photo, approximate**, **hidden: a guess**, or **entered by you**.
    - Notes explain each estimate. Examples: the object is cut off by the photo edge, or partly hidden; the label names a group, so its outline may include its neighbours; its front point is nearly on the horizon, so its distance is very uncertain.
-3. **Scale** (tab 2): the user drags four gold corners onto a floor rectangle, names it, and enters its width and optionally its depth. The panel then shows:
+3. **Scale** (tab 2): the user drags four gold corners onto a floor rectangle, names it, enters its width and optionally its depth, and answers **How do you know these sizes?**: "I measured them, or know them exactly (a drawing, a standard tile)" or "They are an assumption (a typical size); the world will say so". **Create** stays disabled until this is answered (since 2026-10-15; see [Scale size basis](#scale-size-basis-audit-2026-10-15-gen-02)). The panel then shows:
    - the reconstructed camera: height above the floor, view angle, and whether the lens came from the rectangle, from the two side lengths, or was assumed;
    - every warning (derived depth, corners that do not fit one camera, sides that disagree with the perspective);
-   - the standing explanation: "One measured length fixes the scale on the floor only. Depths you did not measure, hidden sides and heights stay estimates, and positions far from the rectangle or near the horizon are least certain."
+   - the standing explanation: "One known length fixes the scale on the floor only. Depths you did not measure, hidden sides and heights stay estimates, and positions far from the rectangle or near the horizon are least certain." For an assumed size it begins: "An assumed length sets the scale, so every size and distance is only as right as that assumption."
    - Each accepted object's footprint is drawn back onto the photo, so a misplaced object is visible before anything is built.
 4. **Layout** (tab 3): a plan view with the camera, the rectangle and every footprint. **Create the 3D world** stays disabled until a usable scale is set.
 5. **Create**:
@@ -58,6 +59,7 @@ The following are **out of scope for IMG-01** and kept in IMG-02/03:
    - Clicking an outline selects the object, and the selected object's outline is highlighted.
    - **View from the photo's camera** puts the 3D camera where the photo was taken, with the same lens, for a direct comparison.
    - Orbit, top and walk views, moving, resizing, adding from the catalog (the photo's objects are in it), undo/redo, save and reopen all work as for any project.
+   - **Improve model…** in the inspector corrects a photo-made object's shape, colours or size after creation, in words or by hand, as a new version (GEN-02; see [below](#improving-photo-made-objects-gen-02)).
 
 ## Feasibility check (qwen3-vl-32b-instruct through ASU Voyager)
 
@@ -105,7 +107,7 @@ The evaluation runs `uv run python scripts/evaluate_image_import.py [--record]` 
 
 | Journey | Analysis | Detected | Scale | Result |
 | --- | --- | --- | --- | --- |
-| classroom.jpg | 100.0 s | 23 objects, labels "desk", "chair", "shelf", "cabinet", "easel" (labels vary between runs) | The front table's four feet, assumed 1.52 m wide (a standard 60-inch classroom table: **an assumption**, not a measurement). Derived depth 0.79 m (standard 0.76 m); camera 1.67 m above the floor; 55° lens solved from the rectangle. | 25 objects (23 + floor + reference); one desk moved 0.5 m; saved; reopened "accepted by API", revision 1, 23/23 models verified. |
+| classroom.jpg | 100.0 s | 23 objects, labels "desk", "chair", "shelf", "cabinet", "easel" (labels vary between runs) | The front table's four feet, assumed 1.52 m wide (a standard 60-inch classroom table: **an assumption**, not a measurement; the 2026-10-14 build recorded it as "measured by you", which the [size-basis audit](#scale-size-basis-audit-2026-10-15-gen-02) corrected for new projects). Derived depth 0.79 m (standard 0.76 m); camera 1.67 m above the floor; 55° lens solved from the rectangle. | 25 objects (23 + floor + reference); one desk moved 0.5 m; saved; reopened "accepted by API", revision 1, 23/23 models verified. |
 | factory-walk.png | 32.6 s | 7 | The walkway between floor grid lines x = −3 and +3: 6 m × 1.8 m, both known. The lens (70°) was solved from the two sides. Camera (0, 1.60, 4.50) in the scene frame (origin at the rectangle's centre, demo z 1.5), i.e. (0, 1.6, 6) in demo coordinates: exactly the render's camera. | 7 objects; the left machine moved 0.5 m; saved; reopened "accepted by API". |
 
 **Factory render placement against ground truth** (live run, before the edit; demo coordinates):
@@ -142,7 +144,41 @@ Centres are within 0.25 m, visible widths within 12 % and heights within 11 %. T
 - **Accuracy.** Precision depends strongly on the corners:
   - a few pixels' error changes the solved lens noticeably;
   - points near the horizon are very uncertain and are flagged;
-  - a single measured length never makes hidden sides, heights or depths exact.
+  - a single known length never makes hidden sides, heights or depths exact, and an assumed length is only as right as the assumption.
+
+## Scale size basis (audit, 2026-10-15, GEN-02)
+
+**Finding.** In the classroom journey the table width (1.52 m) was an assumption, but the scale step tagged every entered size "measured by you", and the reference's evidence read "Measured by the user: …". The record therefore claimed a measurement nobody made.
+
+**Fix** (Update to ADR-037, contract 0.7.0):
+
+| The user says | Tag in the scale step | Evidence of the side they gave | `size_basis` |
+| --- | --- | --- | --- |
+| "I measured them, or know them exactly" | measured by you | `user_supplied`, `confirmed`, "Measured by the user: the <feature>'s <side>" | `measured` |
+| "They are an assumption (a typical size)" | assumed by you | `user_supplied`, **`unreviewed`**, "Assumed by the user: a typical <side> for the <feature>, not measured" | `assumed` |
+| (projects made before 0.7.0) | - | unchanged | `not_stated` |
+
+- Create stays disabled until the question is answered ("Say whether the rectangle's size is measured or assumed (tab 2).").
+- An assumed side can never be marked confirmed; the contract refuses it.
+- Upgrading a 0.6.0 project sets `not_stated`, which claims neither: its evidence text is unchanged and may still say "Measured by the user", so treat older demonstration projects (such as the classroom) as assumed unless you know otherwise.
+
+## Improving photo-made objects (GEN-02)
+
+Objects from a photo are generated assets (method `photo`), so **Improve model…** applies to them after creation. The dialog shows "Seen in a photo" as the origin. A change in words sends only the instruction and the model's part list (no photo, no scene) to the text model; a change by hand sends nothing to a language model. The revision is a new asset version; the original photo observation, the vision model and the stated and inferred facts stay in the record, and the observation keeps pointing at the same object, which now uses the revision. A size that did not change keeps its photo-inferred evidence. Details: [docs/assist.md](assist.md#improving-a-placed-generated-model-gen-02), ADR-039 to ADR-041.
+
+**Live demonstration (2026-10-15)** on the factory render's world (its analysis replayed from the recording, the revisions live):
+
+- "Stacked cardboard boxes on pallet", a single block after import: "make this a wooden pallet with cardboard boxes stacked on top of it instead of one solid block" → 42.3 s → a wooden pallet with 4 cardboard boxes. **Clearly more recognisable.**
+- "Center machine with yellow safety cage", a grey cabinet with a screen after import: the shorter guard instruction ("add a yellow safety guard above the white lower cabinet: four yellow corner posts with clear panels between them; keep the screen and the stack light") → 110.4 s → four yellow corner posts and four clear panels around the body, which was then recoloured white by hand ("then adjusted by you"). **Only a modest improvement:** the photo shows a white lower cabinet with a yellow guard above it, and the proposal wrapped a full-height body instead.
+- both applied (scene revision 2), saved, reopened "accepted by API", models 7/7 verified.
+
+The generator cannot show the guard's wire mesh, openings within a part, slanted or curved surfaces beyond its shapes, rotated or moving parts, or photo textures; such requests are listed as not represented and not imitated.
+
+| | |
+| --- | --- |
+| ![World before](gen-02/photo-1-world-before.jpg) The world from the factory render before any correction: grey machine boxes and a single block for the pallet | ![Pallet dialog](gen-02/photo-2-pallet-dialog.jpg) The pallet proposal: current and proposed versions, the change list |
+| ![Machine dialog](gen-02/photo-2-machine-dialog.jpg) The machine-guard proposal, then adjusted by hand (body recoloured white); size unchanged | ![World after](gen-02/photo-3-world-after.jpg) Both revisions applied |
+| ![Machine close-up](gen-02/photo-4-machine-close.jpg) The improved machine: posts and clear panels around a full-height body | ![Reopened](gen-02/photo-5-reopened.jpg) Saved and reopened (accepted by API, revision 2, models 7/7 verified); the edit log lists both improvements |
 
 ## Source photo storage (ADR-038)
 
@@ -186,7 +222,7 @@ Centres are within 0.25 m, visible widths within 12 % and heights within 11 %. T
 
 ## Known failures and crude geometry (stated plainly)
 
-- **Shapes are generic families**, not the objects in the photo:
+- **Shapes are generic families**, not the objects in the photo (since GEN-02 they can be improved after creation, within the generator's limits):
   - an oval or kidney table becomes a rectangular workbench;
   - a bookshelf becomes an open, blue industrial shelving rack;
   - a machine cell becomes a grey cabinet with a screen (no yellow safety cage);
@@ -198,6 +234,7 @@ Centres are within 0.25 m, visible widths within 12 % and heights within 11 %. T
 - **Group outlines.** The model still boxes tables together with their chairs ("table with chairs"), which makes the table too large until the user tightens the box (a note asks for it).
 - **Missed objects**: the two control cabinets behind the line in the render. The user can add missed objects.
 - **Far objects** (near the horizon) have uncertain distance and size (flagged). In the classroom the back shelves are 10–15 m from the camera in the reconstruction.
+- **Demonstration sizes are assumptions.** The classroom table width and the living-room rug width are assumed; no real photo of a measured site has been tested (IMG-03).
 - **The scale needs a fully visible floor rectangle.** In the living-room photo the rug's front corners are hidden or outside the frame. Its demonstration (e2e test 2) uses the model's rough rug rectangle with an assumed 2.0 m width, so its layout is only indicative.
 - **Labels and object counts vary between live runs** (temperature 0 is not deterministic on this service).
 - **Latency**: 25–100 s typical; 161 s when a retry was needed.
@@ -209,9 +246,12 @@ pnpm dev:api & pnpm dev:web                 # live analysis needs VOYAGER_API_KE
 uv run python scripts/evaluate_image_import.py --record   # live evaluation + recordings
 pnpm --filter @replay-world/web exec vitest run src/photo
 pnpm --filter @replay-world/web exec playwright test e2e/photo.spec.ts
+pnpm --filter @replay-world/web exec playwright test e2e/improve.spec.ts   # includes improving a photo-made object
 ```
 
 The screenshots in docs/img-01/ are from the live browser runs of 2026-10-14:
 
 - classroom: proposal, scale, layout, world, photo-camera view, walk, reopened;
 - factory render: proposal, scale, world, photo-camera view, reopened.
+
+The screenshots in docs/gen-02/ are from the live improvement run of 2026-10-15 (above).
