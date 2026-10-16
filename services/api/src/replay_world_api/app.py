@@ -5,8 +5,11 @@ from __future__ import annotations
 
 import base64
 import logging
+import threading
 from typing import Annotated, Any, Final, Literal, NoReturn
 
+import anyio
+import anyio.to_thread
 from fastapi import Body, FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -292,12 +295,43 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             _assist_failure(exc)
 
     @app.post("/api/v1/assist/model-revisions")
-    def model_revisions(body: ModelRevisionProposalRequest) -> ModelRevisionProposalResult:
-        """Propose a bounded change to a generated model's specification. Nothing is built."""
-        try:
-            return propose_revision(_provider(), body)
-        except (ProviderError, AssistError) as exc:
-            _assist_failure(exc)
+    async def model_revisions(
+        body: ModelRevisionProposalRequest, request: Request
+    ) -> ModelRevisionProposalResult:
+        """Propose a bounded change to a generated model's specification. Nothing is built.
+
+        The whole request, retry included, has one budget (the provider timeout). If the client
+        goes away (Cancel, a closed page), no further provider call is made and a late answer
+        is discarded; a call already in flight ends within the budget.
+        """
+        chosen = _provider()
+        cancelled = threading.Event()
+
+        async def watch() -> None:
+            while not cancelled.is_set():
+                if await request.is_disconnected():
+                    cancelled.set()
+                    return
+                await anyio.sleep(0.25)
+
+        def run() -> ModelRevisionProposalResult:
+            return propose_revision(
+                chosen, body, budget_s=settings.assist.timeout_s, cancelled=cancelled
+            )
+
+        failure: ProviderError | AssistError | None = None
+        result: ModelRevisionProposalResult | None = None
+        async with anyio.create_task_group() as group:
+            group.start_soon(watch)
+            try:
+                result = await anyio.to_thread.run_sync(run)
+            except (ProviderError, AssistError) as exc:
+                failure = exc
+            finally:
+                group.cancel_scope.cancel()
+        if failure is not None or result is None:
+            _assist_failure(failure or AssistError(502, "No revision was produced."))
+        return result
 
     @app.post("/api/v1/assist/image-proposals")
     def image_proposals(body: ImageAnalysisRequest) -> ImageProposalResult:

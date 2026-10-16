@@ -13,7 +13,7 @@ from typing import Final, get_args
 from replay_world_contracts.models import GeometryMaterial
 
 PROMPT_VERSION: Final = "gen-01.5"
-REVISION_PROMPT_VERSION: Final = "gen-04.3"
+REVISION_PROMPT_VERSION: Final = "gen-05.1"
 
 _MATERIALS = ", ".join(get_args(GeometryMaterial))
 
@@ -243,6 +243,20 @@ on a side sits just outside it. To colour part of a surface, change or split tha
 - Panels and shelves are thin (0.02-0.03 m); posts and rails slender (0.04-0.06 m).
 - Open structures (shelves, frames, cages, cubbies) are separate panels with real empty space \
 between them; never keep or add a solid block standing in for an opening.
+- Everything you add must be SEEN: it sits on, hangs from or is fixed to another part (touching \
+it, never floating in the air), never inside or sunk into another part, and on an outer surface \
+where a viewer from the front-right, above, can see it (not under a top or behind a panel unless \
+the user asked for that place). A button sits on the face of its box; a light stands on a post \
+or on the machine; a cushion rests on top of the seat.
+- Colours: use the colour the user names, with the matching material (red: paint_red or \
+estop_red; yellow: safety_yellow; white: paint_white; black: plastic_black; blue: paint_blue; \
+green: paint_green; orange: paint_orange; grey: paint_light_grey; silver: aluminium; wood: \
+wood). Every named colour is available. If the user names a texture the materials lack (red \
+fabric, leather), use the colour and list only the texture as not_representable. When no colour \
+is named, give an added part a colour that stands out from what it rests on. Glass and clear \
+panels use glass_clear or polycarbonate.
+- Slats or bars "with gaps" are several narrow parts with real space between them (use repeat), \
+never one board per side.
 - At most 24 entries in add, change and repeat together, and at most 40 parts in the whole \
 object once repeats are counted. If more would be needed, use fewer, larger items and say so in \
 summary.

@@ -54,6 +54,9 @@ def test_the_frozen_set_has_the_stated_groups_photo_targets_and_new_instructions
         (ROOT / "docs" / "assist-evaluation" / "gen-03" / "revisions.json").read_text()
     )
     development = json.loads((ROOT / "scripts" / "model_revision_cases.json").read_text())
+    # Development cases as they were when the set was frozen: the gen04-* regressions were
+    # added after the GEN-04 run, for GEN-05 development.
+    development = [c for c in development if not c["label"].startswith("gen04-")]
     earlier = {c["instruction"] for c in gen03["cases"]} | {c["instruction"] for c in development}
     assert not earlier & {c["instruction"] for c in DATA["cases"]}
     assert not set(gen03["targets"]) & set(DATA["targets"])

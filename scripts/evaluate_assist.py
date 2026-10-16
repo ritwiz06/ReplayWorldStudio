@@ -155,9 +155,15 @@ class Recorder:
         messages: list[dict[str, str]],
         schema: dict[str, Any],
         attempt: int,
+        timeout_s: float | None = None,
     ) -> Completion:
         completion = self.inner.complete(
-            task=task, key=key, messages=messages, schema=schema, attempt=attempt
+            task=task,
+            key=key,
+            messages=messages,
+            schema=schema,
+            attempt=attempt,
+            timeout_s=timeout_s,
         )
         self.answers.setdefault((task, key), []).append(completion.content)
         return completion

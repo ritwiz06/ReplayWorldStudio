@@ -62,11 +62,17 @@ class Recorder:
         messages: list[dict[str, Any]],
         schema: dict[str, Any],
         attempt: int,
+        timeout_s: float | None = None,
     ) -> Completion:
         started = time.monotonic()
         try:
             completion = self.inner.complete(
-                task=task, key=key, messages=messages, schema=schema, attempt=attempt
+                task=task,
+                key=key,
+                messages=messages,
+                schema=schema,
+                attempt=attempt,
+                timeout_s=timeout_s,
             )
         except Exception as exc:
             self.calls.append(

@@ -49,6 +49,8 @@ interface Proposal {
   summary: string | null;
   notRepresented: string[];
   checks: string[];
+  /** Added parts the API found a viewer cannot see as asked, not fixed by the model (GEN-05). */
+  problems: string[];
   /** The user changed the proposal by hand afterwards. */
   adjusted: boolean;
 }
@@ -194,6 +196,7 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
       summary: answer.summary,
       notRepresented: answer.not_represented,
       checks: answer.checks,
+      problems: answer.problems,
       adjusted: false,
     });
   }
@@ -209,7 +212,9 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
     setApplying({ busy: true, status: "Building the improved model…", error: null });
     const controller = new AbortController();
     pending.current = controller;
-    const listed = proposal?.adjusted ? [...changes, "Adjusted by the user after the proposal"] : changes;
+    // Problems the checks found stay on the record of the version, so it never reads as fully shown.
+    const problems = (proposal?.problems ?? []).map((p) => `Problem found in the proposal: ${p}`);
+    const listed = [...(proposal?.adjusted ? [...changes, "Adjusted by the user after the proposal"] : changes), ...problems];
     let built;
     try {
       built = await client.reviseGeneratedAsset(
@@ -322,6 +327,19 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
                     <strong>Partial:</strong> only the part the shape generator can draw is shown below. Not shown, and not imitated:
                   </p>
                   <UnshownList items={proposal.notRepresented} />
+                </div>
+              )}
+              {proposal.problems.length > 0 && (
+                <div className="status-warn small" role="alert" data-testid="improve-problems">
+                  <p>
+                    <strong>Not clearly shown:</strong> these parts are in the proposal, but a viewer may not see them as asked
+                    {proposal.adjusted ? " (found before your own changes, which are not checked again)" : ""}:
+                  </p>
+                  <ul>
+                    {proposal.problems.map((p) => (
+                      <li key={p}>{p}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
               {proposal.checks.length > 0 && (
@@ -452,7 +470,7 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
             <button type="button" className="button button-primary" disabled={!canApply} data-testid="improve-apply" onClick={() => void apply()}>
               {applying.busy
                 ? applying.status
-                : `${proposal?.notRepresented.length ? "Apply the drawable part" : "Apply"} to ${chosen.length === 1 ? "this object" : `${chosen.length} objects`}`}
+                : `${proposal?.problems.length ? "Apply despite these problems" : proposal?.notRepresented.length ? "Apply the drawable part" : "Apply"} to ${chosen.length === 1 ? "this object" : `${chosen.length} objects`}`}
             </button>
             <button type="button" className="button" disabled={applying.busy || (sameSpec(draft, base) && !proposal)} data-testid="improve-reset" onClick={reset}>
               Start over

@@ -493,5 +493,835 @@
       ]
     },
     "instruction": "put it on four caster wheels that actually roll and stack two cardboard boxes on it"
+  },
+  {
+    "label": "gen04-cushions",
+    "name": "Sofa",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 1.558,
+        "y": 0.692,
+        "z": 0.692
+      },
+      "parts": [
+        {
+          "id": "base",
+          "label": "seat base",
+          "shape": "rounded_box",
+          "material": "fabric_grey",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.21419,
+            "z": 0.028494
+          },
+          "size_m": {
+            "x": 1.558,
+            "y": 0.296572,
+            "z": 0.635012
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "back",
+          "label": "backrest",
+          "shape": "rounded_box",
+          "material": "fabric_grey",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.494286,
+            "z": -0.248306
+          },
+          "size_m": {
+            "x": 1.558,
+            "y": 0.395428,
+            "z": 0.195388
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "arm-l",
+          "label": "armrest",
+          "shape": "rounded_box",
+          "material": "fabric_grey",
+          "center_m": {
+            "x": -0.7052,
+            "y": 0.329523,
+            "z": 0.028494
+          },
+          "size_m": {
+            "x": 0.1476,
+            "y": 0.494286,
+            "z": 0.635012
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "arm-r",
+          "label": "armrest",
+          "shape": "rounded_box",
+          "material": "fabric_grey",
+          "center_m": {
+            "x": 0.7052,
+            "y": 0.329523,
+            "z": 0.028494
+          },
+          "size_m": {
+            "x": 0.1476,
+            "y": 0.494286,
+            "z": 0.635012
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-1",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": -0.7175,
+            "y": 0.032952,
+            "z": -0.309365
+          },
+          "size_m": {
+            "x": 0.041,
+            "y": 0.065904,
+            "z": 0.040706
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-2",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0.7175,
+            "y": 0.032952,
+            "z": -0.309365
+          },
+          "size_m": {
+            "x": 0.041,
+            "y": 0.065904,
+            "z": 0.040706
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-3",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": -0.7175,
+            "y": 0.032952,
+            "z": 0.301223
+          },
+          "size_m": {
+            "x": 0.041,
+            "y": 0.065904,
+            "z": 0.040706
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-4",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0.7175,
+            "y": 0.032952,
+            "z": 0.301223
+          },
+          "size_m": {
+            "x": 0.041,
+            "y": 0.065904,
+            "z": 0.040706
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        }
+      ]
+    },
+    "instruction": "add two square cushions on the seat and make the backrest recline when I press a button"
+  },
+  {
+    "label": "gen04-stop-button",
+    "name": "Conveyor",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 2.0,
+        "y": 0.87,
+        "z": 0.71
+      },
+      "parts": [
+        {
+          "id": "belt",
+          "label": "belt",
+          "shape": "box",
+          "material": "rubber_black",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.86,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 2.0,
+            "y": 0.02,
+            "z": 0.6
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "frame-l",
+          "label": "side frame",
+          "shape": "box",
+          "material": "aluminium",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.8,
+            "z": -0.33
+          },
+          "size_m": {
+            "x": 2.0,
+            "y": 0.12,
+            "z": 0.05
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "frame-r",
+          "label": "side frame",
+          "shape": "box",
+          "material": "aluminium",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.8,
+            "z": 0.33
+          },
+          "size_m": {
+            "x": 2.0,
+            "y": 0.12,
+            "z": 0.05
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "drum-a",
+          "label": "end drum",
+          "shape": "cylinder",
+          "material": "aluminium",
+          "center_m": {
+            "x": -0.95,
+            "y": 0.81,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 0.62
+          },
+          "axis": "z",
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "drum-b",
+          "label": "end drum",
+          "shape": "cylinder",
+          "material": "aluminium",
+          "center_m": {
+            "x": 0.95,
+            "y": 0.81,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 0.62
+          },
+          "axis": "z",
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-1",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": -0.9275,
+            "y": 0.37,
+            "z": -0.2775
+          },
+          "size_m": {
+            "x": 0.045,
+            "y": 0.74,
+            "z": 0.045
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-2",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0.9275,
+            "y": 0.37,
+            "z": -0.2775
+          },
+          "size_m": {
+            "x": 0.045,
+            "y": 0.74,
+            "z": 0.045
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-3",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": -0.9275,
+            "y": 0.37,
+            "z": 0.2775
+          },
+          "size_m": {
+            "x": 0.045,
+            "y": 0.74,
+            "z": 0.045
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-4",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0.9275,
+            "y": 0.37,
+            "z": 0.2775
+          },
+          "size_m": {
+            "x": 0.045,
+            "y": 0.74,
+            "z": 0.045
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        }
+      ]
+    },
+    "instruction": "add a red emergency stop button box at one end"
+  },
+  {
+    "label": "gen04-stack-light",
+    "name": "Guarded conveyor with control screen",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 2.2,
+        "y": 1.1,
+        "z": 0.735
+      },
+      "parts": [
+        {
+          "id": "leg-left",
+          "label": "left support leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.45,
+            "z": 0.3075
+          },
+          "size_m": {
+            "x": 0.05,
+            "y": 0.9,
+            "z": 0.05
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        },
+        {
+          "id": "leg-right",
+          "label": "right support leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.45,
+            "z": -0.1925
+          },
+          "size_m": {
+            "x": 0.05,
+            "y": 0.9,
+            "z": 0.05
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        },
+        {
+          "id": "belt",
+          "label": "conveyor belt",
+          "shape": "box",
+          "material": "rubber_black",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.88,
+            "z": 0.0575
+          },
+          "size_m": {
+            "x": 2.2,
+            "y": 0.02,
+            "z": 0.5
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        },
+        {
+          "id": "frame",
+          "label": "conveyor frame",
+          "shape": "box",
+          "material": "stainless_steel",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.9,
+            "z": 0.0575
+          },
+          "size_m": {
+            "x": 2.2,
+            "y": 0.04,
+            "z": 0.6
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        },
+        {
+          "id": "guard-left",
+          "label": "left guard",
+          "shape": "box",
+          "material": "polycarbonate",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.9,
+            "z": 0.3575
+          },
+          "size_m": {
+            "x": 2.2,
+            "y": 0.2,
+            "z": 0.02
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        },
+        {
+          "id": "guard-right",
+          "label": "right guard",
+          "shape": "box",
+          "material": "polycarbonate",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.9,
+            "z": -0.2425
+          },
+          "size_m": {
+            "x": 2.2,
+            "y": 0.2,
+            "z": 0.02
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "inferred"
+        },
+        {
+          "id": "screen",
+          "label": "control screen",
+          "shape": "rounded_box",
+          "material": "hmi_screen",
+          "center_m": {
+            "x": 0.8,
+            "y": 1.0,
+            "z": -0.2925
+          },
+          "size_m": {
+            "x": 0.02,
+            "y": 0.2,
+            "z": 0.15
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "stated"
+        }
+      ]
+    },
+    "instruction": "paint both guards safety yellow and add a stack light at one end"
+  },
+  {
+    "label": "gen04-slatted-crate",
+    "name": "Crate",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 0.6,
+        "y": 0.4,
+        "z": 0.4
+      },
+      "parts": [
+        {
+          "id": "body",
+          "label": "body",
+          "shape": "rounded_box",
+          "material": "paint_light_grey",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.2,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.6,
+            "y": 0.4,
+            "z": 0.4
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        }
+      ]
+    },
+    "instruction": "make it an open-top wooden crate made of slats with gaps between them"
+  },
+  {
+    "label": "gen04-cable-tray",
+    "name": "Oval table with chairs",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 1.364,
+        "y": 1.505,
+        "z": 0.531
+      },
+      "parts": [
+        {
+          "id": "top",
+          "label": "worktop",
+          "shape": "box",
+          "material": "wood",
+          "center_m": {
+            "x": 0.0,
+            "y": 1.471556,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 1.364,
+            "y": 0.066888,
+            "z": 0.531
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-1",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": -0.659267,
+            "y": 0.719056,
+            "z": -0.2478
+          },
+          "size_m": {
+            "x": 0.045466,
+            "y": 1.438112,
+            "z": 0.0354
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-2",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0.659267,
+            "y": 0.719056,
+            "z": -0.2478
+          },
+          "size_m": {
+            "x": 0.045466,
+            "y": 1.438112,
+            "z": 0.0354
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-3",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": -0.659267,
+            "y": 0.719056,
+            "z": 0.2478
+          },
+          "size_m": {
+            "x": 0.045466,
+            "y": 1.438112,
+            "z": 0.0354
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-4",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0.659267,
+            "y": 0.719056,
+            "z": 0.2478
+          },
+          "size_m": {
+            "x": 0.045466,
+            "y": 1.438112,
+            "z": 0.0354
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "shelf",
+          "label": "lower shelf",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.334444,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 1.273068,
+            "y": 0.033444,
+            "z": 0.4602
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        }
+      ]
+    },
+    "instruction": "make the table top white and add a cable tray under it"
+  },
+  {
+    "label": "gen04-glass-top",
+    "name": "Coffee table",
+    "spec": {
+      "format": "rws-geometry/1",
+      "envelope_m": {
+        "x": 1.01,
+        "y": 0.404,
+        "z": 0.505
+      },
+      "parts": [
+        {
+          "id": "top",
+          "label": "worktop",
+          "shape": "box",
+          "material": "wood",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.395022,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 1.01,
+            "y": 0.017956,
+            "z": 0.505
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-1",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": -0.488167,
+            "y": 0.193022,
+            "z": -0.235667
+          },
+          "size_m": {
+            "x": 0.033666,
+            "y": 0.386044,
+            "z": 0.033666
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-2",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0.488167,
+            "y": 0.193022,
+            "z": -0.235667
+          },
+          "size_m": {
+            "x": 0.033666,
+            "y": 0.386044,
+            "z": 0.033666
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-3",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": -0.488167,
+            "y": 0.193022,
+            "z": 0.235667
+          },
+          "size_m": {
+            "x": 0.033666,
+            "y": 0.386044,
+            "z": 0.033666
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "leg-4",
+          "label": "leg",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0.488167,
+            "y": 0.193022,
+            "z": 0.235667
+          },
+          "size_m": {
+            "x": 0.033666,
+            "y": 0.386044,
+            "z": 0.033666
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        },
+        {
+          "id": "shelf",
+          "label": "lower shelf",
+          "shape": "box",
+          "material": "steel_dark",
+          "center_m": {
+            "x": 0.0,
+            "y": 0.089777,
+            "z": 0.0
+          },
+          "size_m": {
+            "x": 0.942668,
+            "y": 0.008978,
+            "z": 0.437668
+          },
+          "axis": null,
+          "taper": null,
+          "narrow_end": null,
+          "basis": "entered"
+        }
+      ]
+    },
+    "instruction": "give it a glass top and make the top lift up on a gas spring for storage"
   }
 ]

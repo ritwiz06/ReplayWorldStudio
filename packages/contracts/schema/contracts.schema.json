@@ -1919,7 +1919,7 @@
     },
     "ModelRevisionProposalResult": {
       "additionalProperties": false,
-      "description": "A proposed specification change, checked and fitted; nothing is built or stored.\n\nThree outcomes (GEN-04):\n\n* ``proposal``: the drawable part of the request, as a new specification. ``partial`` is\n  true when the request also asked for things the generator cannot show; they are listed in\n  ``not_represented``, each grounded in the user's own words.\n* ``unsupported``: nothing drawable was asked for (or the proposal would misrepresent the\n  object, such as a solid block offered as an open shelf); ``message`` says why,\n  ``not_represented`` lists what could not be shown, and nothing changes.\n* ``already_satisfied``: the current model already shows what was asked; ``message`` says\n  how, and no identical new version is made.",
+      "description": "A proposed specification change, checked and fitted; nothing is built or stored.\n\nThree outcomes (GEN-04):\n\n* ``proposal``: the drawable part of the request, as a new specification. ``partial`` is\n  true when the request also asked for things the generator cannot show; they are listed in\n  ``not_represented``, each grounded in the user's own words.\n* ``unsupported``: nothing drawable was asked for (or the proposal would misrepresent the\n  object, such as a solid block offered as an open shelf); ``message`` says why,\n  ``not_represented`` lists what could not be shown, and nothing changes.\n* ``already_satisfied``: the current model already shows what was asked; ``message`` says\n  how, and no identical new version is made.\n\n``problems`` (GEN-05) lists what a proposal draws but the user may not be able to see, as\nfound by the API's checks and not fixed by the model's one corrected answer: an added part\nhidden inside another, sunk into a part of the same material, without support, not visible\nfrom the usual view, or slats drawn without gaps. The review shows them before Apply; a\nproposal with problems is never described as fully shown.",
       "properties": {
         "outcome": {
           "enum": [
@@ -1985,6 +1985,14 @@
           },
           "type": "array"
         },
+        "problems": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
         "provider": {
           "$ref": "#/$defs/ProviderRun"
         }
@@ -1998,6 +2006,7 @@
         "size_changed",
         "not_represented",
         "checks",
+        "problems",
         "provider"
       ],
       "title": "ModelRevisionProposalResult",

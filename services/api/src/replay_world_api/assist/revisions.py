@@ -24,6 +24,10 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import threading
+import time
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import Final
 
 from pydantic import ValidationError
@@ -45,11 +49,11 @@ from replay_world_contracts.models import (
 )
 
 from ..objects import fit_to_envelope
-from . import prompts
+from . import prompts, visibility
 from .answers import RawPart, RawRepeat, RawRevisionAnswer, provider_schema
 from .lengths import find_lengths
 from .proposals import MAX_ATTEMPTS, AssistError, _parts, _text, _Unusable, describe_problems
-from .provider import Provider
+from .provider import Provider, ProviderError
 
 REVISION_SCHEMA: Final = provider_schema(RawRevisionAnswer)
 MAX_NOT_REPRESENTED: Final = 20
@@ -205,10 +209,46 @@ def _parse(content: str) -> RawRevisionAnswer:
     return RawRevisionAnswer.model_validate_json(text)
 
 
+BUDGET_S: Final = 150.0
+"""One limit for the whole request: the first answer, its checks and the one corrected answer."""
+MIN_RETRY_S: Final = 20.0
+"""A corrected answer is only asked for when at least this much of the budget is left (and at
+least as long as the first answer took)."""
+MAX_PROBLEMS: Final = 20
+
+
+class Cancelled(AssistError):
+    """The user cancelled (or closed the page); nothing more is asked of the provider."""
+
+    def __init__(self) -> None:
+        super().__init__(499, "The request was cancelled; nothing was changed.")
+
+
+@dataclass
+class _Judged:
+    """What one answer would give the user, and what a corrected answer could fix."""
+
+    result: ModelRevisionProposalResult
+    feedback: list[str] = field(default_factory=list)
+
+
 def propose_revision(
-    provider: Provider, request: ModelRevisionProposalRequest
+    provider: Provider,
+    request: ModelRevisionProposalRequest,
+    *,
+    budget_s: float = BUDGET_S,
+    cancelled: threading.Event | None = None,
+    clock: Callable[[], float] = time.monotonic,
 ) -> ModelRevisionProposalResult:
-    """Ask the provider for a revised specification and return it checked and fitted."""
+    """Ask the provider for a revised specification and return it checked and fitted.
+
+    The whole request has one time budget. The model gets at most one more try, shared by
+    every problem the checks find (an unusable answer, a solid block where the user asked for
+    something open, added parts nobody could see), and only while the budget can cover it.
+    When the corrected answer cannot be had, the first answer is judged as it is: its problems
+    are shown, never hidden. Cancelling stops further provider calls; an answer that arrives
+    after it is discarded.
+    """
     messages = [
         {"role": "system", "content": prompts.REVISION_SYSTEM},
         {"role": "user", "content": prompts.REVISION_EXAMPLE_USER},
@@ -219,13 +259,58 @@ def propose_revision(
         },
     ]
     key = revision_key(request)
+    started = clock()
     latency = 0
     first_valid = False
     last_problem = ""
+    fallback: _Judged | None = None
+    first_took = 0.0
+
+    def stop_if_cancelled() -> None:
+        if cancelled is not None and cancelled.is_set():
+            raise Cancelled()
+
     for attempt in range(MAX_ATTEMPTS):
-        completion = provider.complete(
-            task="revision", key=key, messages=messages, schema=REVISION_SCHEMA, attempt=attempt
-        )
+        stop_if_cancelled()
+        remaining = budget_s - (clock() - started)
+        if attempt > 0:
+            needed = max(MIN_RETRY_S, first_took)
+            if remaining < needed:
+                note = (
+                    f"Not asked to correct this: {max(remaining, 0):.0f} s of the "
+                    f"{budget_s:.0f} s limit were left, less than the {needed:.0f} s a "
+                    "corrected answer would need."
+                )
+                if fallback is not None:
+                    return _with_check(fallback.result, note)
+                raise AssistError(
+                    504,
+                    f"{provider.service} ({provider.model}) gave an unusable answer and there "
+                    f"was no time left to ask again within {budget_s:.0f} s. Last problem: "
+                    f"{last_problem[:300]}",
+                )
+        asked = clock()
+        try:
+            completion = provider.complete(
+                task="revision",
+                key=key,
+                messages=messages,
+                schema=REVISION_SCHEMA,
+                attempt=attempt,
+                timeout_s=remaining,
+            )
+        except ProviderError as exc:
+            stop_if_cancelled()
+            if fallback is not None and exc.kind == "timeout":
+                return _with_check(
+                    fallback.result,
+                    f"The corrected answer did not arrive within the {budget_s:.0f} s limit; "
+                    "this is the first answer, with the problems the checks found.",
+                )
+            raise
+        stop_if_cancelled()  # a late answer after cancelling changes nothing
+        if attempt == 0:
+            first_took = clock() - asked
         latency += completion.latency_ms
         try:
             answer = _parse(completion.content)
@@ -239,20 +324,7 @@ def propose_revision(
                 first_attempt_valid=first_valid,
                 latency_ms=latency,
             )
-            return _result(answer, request, run, retry_open=attempt + 1 < MAX_ATTEMPTS)
-        except _NotOpen as solid:
-            # Once, tell the model which part keeps the object closed; the second answer is
-            # judged as it is (refused if it is still solid).
-            messages += [
-                {"role": "assistant", "content": completion.content},
-                {
-                    "role": "user",
-                    "content": f"That answer keeps the solid part “{solid.label}” (id "
-                    f"{solid.part_id}) filling {solid.share * 100:.0f} % of the object, so it is "
-                    "not open. Put its id in remove and build the open structure from separate "
-                    "panels. Reply again with corrected JSON only.",
-                },
-            ]
+            judged = _judge(answer, request, run)
         except (ValidationError, ValueError) as exc:
             last_problem = describe_problems(exc)
             messages += [
@@ -263,11 +335,30 @@ def propose_revision(
                     f"{last_problem}. Reply again with corrected JSON only.",
                 },
             ]
+            continue
+        if not judged.feedback or attempt + 1 >= MAX_ATTEMPTS:
+            return judged.result
+        # One corrected answer for every problem found, in a single message.
+        fallback = judged
+        listed = "\n".join(f"- {line}" for line in judged.feedback)
+        messages += [
+            {"role": "assistant", "content": completion.content},
+            {
+                "role": "user",
+                "content": "The app checked that answer and found problems a viewer would "
+                f"notice:\n{listed}\nFix all of them in one corrected answer and keep every "
+                "other part as it was. Reply again with corrected JSON only.",
+            },
+        ]
     raise AssistError(
         502,
         f"{provider.service} ({provider.model}) did not return a usable revision after "
         f"{MAX_ATTEMPTS} attempts. Last problem: {last_problem[:300]}",
     )
+
+
+def _with_check(result: ModelRevisionProposalResult, note: str) -> ModelRevisionProposalResult:
+    return result.model_copy(update={"checks": [*result.checks, note]})
 
 
 def _unsupported(
@@ -287,25 +378,17 @@ def _unsupported(
             "size_changed": False,
             "not_represented": not_represented,
             "checks": checks,
+            "problems": [],
             "provider": run,
         }
     )
 
 
-class _NotOpen(Exception):
-    """An "open" request answered with a solid part still filling the object."""
-
-    def __init__(self, part_id: str, label: str, share: float) -> None:
-        super().__init__(part_id)
-        self.part_id, self.label, self.share = part_id, label, share
-
-
-def _result(
+def _judge(
     answer: RawRevisionAnswer,
     request: ModelRevisionProposalRequest,
     run: ProviderRun,
-    retry_open: bool = False,
-) -> ModelRevisionProposalResult:
+) -> _Judged:
     instruction = request.instruction
     checks: list[str] = []
     not_represented = _not_represented(answer.not_representable, instruction, checks)
@@ -313,22 +396,24 @@ def _result(
         message = _text(
             answer.message, 500, "Nothing in this request can be shown by the generator."
         )
-        return _unsupported(message, run, not_represented, checks)
+        return _Judged(_unsupported(message, run, not_represented, checks))
     if answer.outcome == "already_satisfied":
         message = _text(answer.message, 500, "The current model already shows this.")
-        return _unsupported(message, run, not_represented, checks, "already_satisfied")
+        return _Judged(_unsupported(message, run, not_represented, checks, "already_satisfied"))
 
     parts, part_checks = _apply_changes(answer, request.spec.parts)
     checks += part_checks
     if len(parts) > GEOMETRY_MAX_PARTS:
         # Never cut parts silently: the user sees the limit and can simplify the request.
-        return _unsupported(
-            f"This change would need {len(parts)} parts; the generator draws at most "
-            f"{GEOMETRY_MAX_PARTS}. Nothing was changed: ask for fewer repeated items, or change "
-            "the parts by hand.",
-            run,
-            not_represented,
-            checks,
+        return _Judged(
+            _unsupported(
+                f"This change would need {len(parts)} parts; the generator draws at most "
+                f"{GEOMETRY_MAX_PARTS}. Nothing was changed: ask for fewer repeated items, or "
+                "change the parts by hand.",
+                run,
+                not_represented,
+                checks,
+            )
         )
     parts, overlap_checks = separate_overlaps(parts)
     checks += overlap_checks
@@ -356,31 +441,52 @@ def _result(
     )
 
     if _geometry(spec) == _geometry(request.spec):
-        return _unsupported("The proposal does not change the model.", run, not_represented, checks)
+        return _Judged(
+            _unsupported("The proposal does not change the model.", run, not_represented, checks)
+        )
     if _imitates_a_property(instruction, spec, request.spec):
-        return _unsupported(
-            "Only colours changed, but the request was for properties a colour cannot give. "
-            "Nothing was changed.",
-            run,
-            not_represented,
-            checks,
+        return _Judged(
+            _unsupported(
+                "Only colours changed, but the request was for properties a colour cannot give. "
+                "Nothing was changed.",
+                run,
+                not_represented,
+                checks,
+            )
         )
     if _OPEN_WORDS.search(instruction):
         e = spec.envelope_m
         solid = max(spec.parts, key=lambda p: p.size_m.x * p.size_m.y * p.size_m.z)
         share = solid.size_m.x * solid.size_m.y * solid.size_m.z / (e.x * e.y * e.z)
         if share >= SOLID_SHARE:
-            if retry_open:
-                raise _NotOpen(solid.id, solid.label, share)
-            return _unsupported(
-                f"The proposal still has a solid block filling {share * 100:.0f} % of the "
-                "object, so it would not be open. Nothing was changed; try the part controls "
-                "instead.",
-                run,
-                not_represented,
-                checks,
+            return _Judged(
+                _unsupported(
+                    f"The proposal still has a solid block filling {share * 100:.0f} % of the "
+                    "object, so it would not be open. Nothing was changed; try the part controls "
+                    "instead.",
+                    run,
+                    not_represented,
+                    checks,
+                ),
+                [
+                    f"The solid part “{solid.label}” (id {solid.id}) still fills "
+                    f"{share * 100:.0f} % of the object, so it is not open. Put its id in remove "
+                    "and build the open structure from separate panels."
+                ],
             )
-    return ModelRevisionProposalResult(
+
+    # Colours: what the user named is shown; an unnamed addition that blends in stands out.
+    colours = visibility.honour_colours(spec, request.spec, instruction)
+    spec, contrast_notes = visibility.contrast_additions(
+        colours.spec, request.spec, colours.named_parts
+    )
+    checks += list(dict.fromkeys(colours.notes + contrast_notes))
+    not_represented = _drop_shown_colours(not_represented, colours.honoured, checks)
+    not_represented = list(dict.fromkeys(not_represented + colours.texture_limits))[
+        :MAX_NOT_REPRESENTED
+    ]
+    problems = visibility.find_problems(spec, request.spec, instruction)
+    result = ModelRevisionProposalResult(
         outcome="proposal",
         message=None,
         spec=spec,
@@ -389,8 +495,23 @@ def _result(
         size_changed=size_changed,
         not_represented=not_represented,
         checks=checks,
+        problems=list(dict.fromkeys(p.text for p in problems))[:MAX_PROBLEMS],
         provider=run,
     )
+    feedback = [p.feedback for p in problems if p.retry]
+    return _Judged(result, list(dict.fromkeys(feedback))[:MAX_PROBLEMS])
+
+
+def _drop_shown_colours(items: list[str], shown: set[str], checks: list[str]) -> list[str]:
+    """A listed limitation that only says a colour is missing, when that colour is shown."""
+    kept: list[str] = []
+    for item in items:
+        words = set(re.findall(r"[a-z]+", item.lower()))
+        if words & shown and not words & visibility.TEXTURES:
+            checks.append(f"Left out “{item}” from what cannot be shown: the colour is shown.")
+            continue
+        kept.append(item)
+    return kept
 
 
 MAX_COPIES: Final = 2 * GEOMETRY_MAX_PARTS

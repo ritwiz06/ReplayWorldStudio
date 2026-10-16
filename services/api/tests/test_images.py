@@ -69,6 +69,7 @@ class Fake:
         messages: list[dict[str, Any]],
         schema: dict[str, Any],
         attempt: int,
+        timeout_s: float | None = None,
     ) -> Completion:
         assert task == "image"
         self.calls.append(list(messages))

@@ -57,6 +57,7 @@ class Fake:
         messages: list[dict[str, str]],
         schema: dict[str, Any],
         attempt: int,
+        timeout_s: float | None = None,
     ) -> Completion:
         self.calls.append(messages)
         return Completion(self.answers[min(attempt, len(self.answers) - 1)], latency_ms=10)

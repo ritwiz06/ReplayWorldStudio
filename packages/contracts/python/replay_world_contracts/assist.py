@@ -375,6 +375,12 @@ class ModelRevisionProposalResult(ContractModel):
       ``not_represented`` lists what could not be shown, and nothing changes.
     * ``already_satisfied``: the current model already shows what was asked; ``message`` says
       how, and no identical new version is made.
+
+    ``problems`` (GEN-05) lists what a proposal draws but the user may not be able to see, as
+    found by the API's checks and not fixed by the model's one corrected answer: an added part
+    hidden inside another, sunk into a part of the same material, without support, not visible
+    from the usual view, or slats drawn without gaps. The review shows them before Apply; a
+    proposal with problems is never described as fully shown.
     """
 
     outcome: Literal["proposal", "unsupported", "already_satisfied"]
@@ -385,6 +391,7 @@ class ModelRevisionProposalResult(ContractModel):
     size_changed: bool
     not_represented: list[NonEmptyText]
     checks: list[NonEmptyText]
+    problems: list[NonEmptyText]
     provider: ProviderRun
 
     @model_validator(mode="after")
@@ -397,6 +404,8 @@ class ModelRevisionProposalResult(ContractModel):
             raise ValueError(
                 "'partial' marks exactly the proposals that leave requested features unshown"
             )
+        if self.problems and self.outcome != "proposal":
+            raise ValueError("only a proposal can carry 'problems'")
         return self
 
 

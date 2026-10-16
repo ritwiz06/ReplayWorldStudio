@@ -4,7 +4,7 @@
 // one-step update of one or all instances, undo/redo, save, reopen and rebuild - runs offline.
 import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, type Route, test } from "@playwright/test";
 import { E2E_CATALOG_DIR } from "./paths";
 
 const CONVEYOR = "a guarded conveyor about 2.2 m long with a control screen";
@@ -293,13 +293,13 @@ test("a mixed request becomes a partial revision: the drawable part is applied, 
   const proposals = "**/api/v1/assist/model-revisions";
   const provider = { service: "ASU Voyager", base_url: "https://openai.rc.asu.edu/v1", model: "qwen3-235b-a22b-instruct-2507", mode: "recorded", attempts: 1, first_attempt_valid: true, latency_ms: 1 };
   const reply = (body: object) => page.route(proposals, (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }));
-  await reply({ outcome: "already_satisfied", message: "The boxes are already cardboard.", spec: null, summary: null, partial: false, size_changed: false, not_represented: [], checks: [], provider });
+  await reply({ outcome: "already_satisfied", message: "The boxes are already cardboard.", spec: null, summary: null, partial: false, size_changed: false, not_represented: [], checks: [], problems: [], provider });
   await dialog.getByTestId("improve-instruction").fill("make the boxes cardboard");
   await dialog.getByTestId("improve-propose").click();
   await expect(dialog.getByTestId("improve-ask-notice")).toContainText("Already shown: The boxes are already cardboard. Nothing was changed.");
   await expect(dialog.getByTestId("improve-no-changes")).toBeVisible();
   await page.unroute(proposals);
-  await reply({ outcome: "unsupported", message: "Nothing in this request can be drawn.", spec: null, summary: null, partial: false, size_changed: false, not_represented: ["“make it fireproof”: material properties are not modelled"], checks: [], provider });
+  await reply({ outcome: "unsupported", message: "Nothing in this request can be drawn.", spec: null, summary: null, partial: false, size_changed: false, not_represented: ["“make it fireproof”: material properties are not modelled"], checks: [], problems: [], provider });
   await dialog.getByTestId("improve-instruction").fill("make it fireproof");
   await dialog.getByTestId("improve-propose").click();
   await expect(dialog.getByTestId("improve-ask-notice")).toContainText("Nothing in this request can be drawn. Nothing was changed.");
@@ -317,7 +317,9 @@ test("a mixed request becomes a partial revision: the drawable part is applied, 
   await expect(dialog.getByTestId("improve-checks")).toContainText("Size kept");
   await expect(dialog.getByTestId("improve-preview-new")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
   await expect(dialog.getByTestId("improve-changes")).toContainText("cardboard");
-  await expect(dialog.getByTestId("improve-apply")).toHaveText("Apply the drawable part to this object");
+  // The recorded answer stacks the boxes above the pallet with a gap: shown as a problem.
+  await expect(dialog.getByTestId("improve-problems")).toContainText("“cardboard box” does not touch anything that holds it up; it floats.");
+  await expect(dialog.getByTestId("improve-apply")).toHaveText("Apply despite these problems to this object");
   await dialog.getByTestId("improve-apply").click();
   await expect(dialog).toBeHidden({ timeout: 30_000 });
 
@@ -328,6 +330,64 @@ test("a mixed request becomes a partial revision: the drawable part is applied, 
   for (const axis of ["width", "height", "depth"] as const) expect(v2.nominal_dimensions[axis]).toEqual(original.nominal_dimensions[axis]);
   expect(after.json.scene.objects.find((o) => o.id === pallet.id)).toMatchObject({ asset_id: v2.id, dimensions: pallet.dimensions });
   // One undo returns the pallet to its previous model.
+  await page.getByTestId("undo").click();
+  const undone = await save(page);
+  expect(undone.json.scene.objects.find((o) => o.id === pallet.id)!.asset_id).toBe(original.id);
+});
+
+test("problems the checks found are shown before Apply and kept on the version; a late answer after Cancel changes nothing", async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.goto("/");
+  await objects(page, 15);
+  await worldFromPhoto(page);
+  const before = await save(page);
+  const pallet = before.json.scene.objects.find((o) => o.name.startsWith("Stacked cardboard boxes"))!;
+  const original = before.json.catalog.find((a) => a.id === pallet.asset_id)!;
+
+  await objectList(page, /^Stacked cardboard boxes/).click();
+  await page.getByTestId("improve-model-open").click();
+  const dialog = page.getByTestId("improve-model");
+  await expect(dialog.getByTestId("improve-preview-old")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+  const proposals = "**/api/v1/assist/model-revisions";
+  const provider = { service: "ASU Voyager", base_url: "https://openai.rc.asu.edu/v1", model: "qwen3-235b-a22b-instruct-2507", mode: "recorded", attempts: 2, first_attempt_valid: true, latency_ms: 1 };
+  const spec = (original as unknown as { generation: { spec: { parts: Record<string, unknown>[] } } }).generation.spec;
+  const blue = { ...spec, parts: spec.parts.map((p, i) => (i === 0 ? { ...p, material: "paint_blue" } : p)) };
+  const answer = {
+    outcome: "proposal", message: null, spec: blue, summary: "Painted it blue and added a stack light.", partial: false, size_changed: false,
+    not_represented: [], checks: ["Size kept: the instruction did not ask for a different size."],
+    problems: ["“stack light” does not touch anything that holds it up; it floats."], provider,
+  };
+
+  // Cancelled while waiting; the answer that arrives afterwards is ignored.
+  let held: Route | null = null;
+  await page.route(proposals, (route) => {
+    held = route;
+  });
+  await dialog.getByTestId("improve-instruction").fill("paint it blue and add a stack light");
+  await dialog.getByTestId("improve-propose").click();
+  await expect.poll(() => held !== null).toBe(true);
+  await dialog.getByTestId("improve-cancel-proposal").click();
+  await expect(dialog.getByTestId("improve-ask-notice")).toContainText("Cancelled. Nothing was changed.");
+  await held!.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(answer) }).catch(() => undefined);
+  await page.waitForTimeout(500);
+  await expect(dialog.getByTestId("improve-proposal")).toBeHidden();
+  await expect(dialog.getByTestId("improve-no-changes")).toBeVisible();
+  await page.unroute(proposals);
+
+  // A proposal with a problem the model did not fix: shown before Apply, never as fully shown.
+  await page.route(proposals, (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(answer) }));
+  await dialog.getByTestId("improve-propose").click();
+  await expect(dialog.getByTestId("improve-problems")).toContainText("Not clearly shown");
+  await expect(dialog.getByTestId("improve-problems")).toContainText("“stack light” does not touch anything that holds it up; it floats.");
+  await expect(dialog.getByTestId("improve-apply")).toHaveText("Apply despite these problems to this object");
+  await expect(dialog.getByTestId("improve-preview-new")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+  await dialog.getByTestId("improve-apply").click();
+  await expect(dialog).toBeHidden({ timeout: 30_000 });
+  await page.unroute(proposals);
+
+  const after = await save(page);
+  const v2 = after.json.catalog.find((a) => a.generation?.revision?.revises === original.id)!;
+  expect(v2.generation!.revision!.changes).toContain("Problem found in the proposal: “stack light” does not touch anything that holds it up; it floats.");
   await page.getByTestId("undo").click();
   const undone = await save(page);
   expect(undone.json.scene.objects.find((o) => o.id === pallet.id)!.asset_id).toBe(original.id);

@@ -62,12 +62,14 @@ class Provider(Protocol):
         messages: list[dict[str, Any]],
         schema: dict[str, Any],
         attempt: int,
+        timeout_s: float | None = None,
     ) -> Completion:
         """Return the model's raw text for ``messages``.
 
         ``key`` identifies the request for recordings (the description, the edit request and
         selection, or the specification's hash and the revision instruction); ``attempt``
-        counts from 0 and is only used to replay retries.
+        counts from 0 and is only used to replay retries. ``timeout_s`` is what is left of the
+        caller's time budget; a live provider waits no longer than that (nor its own limit).
         """
         ...
 
@@ -100,6 +102,7 @@ class OpenAICompatibleProvider:
         messages: list[dict[str, Any]],
         schema: dict[str, Any],
         attempt: int,
+        timeout_s: float | None = None,
     ) -> Completion:
         body: dict[str, Any] = {
             "model": self.model,
@@ -123,8 +126,9 @@ class OpenAICompatibleProvider:
             method="POST",
         )
         started = time.monotonic()
+        limit = self._timeout_s if timeout_s is None else max(min(timeout_s, self._timeout_s), 1.0)
         try:
-            with urllib.request.urlopen(request, timeout=self._timeout_s) as response:
+            with urllib.request.urlopen(request, timeout=limit) as response:
                 payload: Any = json.load(response)
         except urllib.error.HTTPError as exc:
             hint = {
@@ -138,12 +142,12 @@ class OpenAICompatibleProvider:
             ) from None
         except TimeoutError:
             raise ProviderError(
-                "timeout", f"{self.service} did not answer within {self._timeout_s:g} s."
+                "timeout", f"{self.service} did not answer within {limit:.0f} s."
             ) from None
         except (urllib.error.URLError, OSError) as exc:
             if isinstance(getattr(exc, "reason", None), TimeoutError):
                 raise ProviderError(
-                    "timeout", f"{self.service} did not answer within {self._timeout_s:g} s."
+                    "timeout", f"{self.service} did not answer within {limit:.0f} s."
                 ) from None
             raise ProviderError(
                 "unavailable", f"Could not reach {self.service} at {self.base_url}."
@@ -200,6 +204,7 @@ class RecordedProvider:
         messages: list[dict[str, Any]],
         schema: dict[str, Any],
         attempt: int,
+        timeout_s: float | None = None,
     ) -> Completion:
         responses = self._recordings.get(recording_key(task, key))
         if not responses:

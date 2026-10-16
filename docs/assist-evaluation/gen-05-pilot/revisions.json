@@ -1,0 +1,364 @@
+{
+ "set": "gen-05 pilot (development examples, not held out)",
+ "targets": {
+  "builder-screen": {
+   "origin": "builder",
+   "name": "Screen",
+   "described_as": null,
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 1.1,
+     "y": 1.43,
+     "z": 0.4
+    },
+    "parts": [
+     {
+      "id": "base",
+      "label": "stand base",
+      "shape": "box",
+      "material": "plastic_black",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.025,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 0.6,
+       "y": 0.05,
+       "z": 0.4
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "pole",
+      "label": "stand",
+      "shape": "cylinder",
+      "material": "aluminium",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.55,
+       "z": -0.05
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 1.0,
+       "z": 0.06
+      },
+      "axis": "y",
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "frame",
+      "label": "screen frame",
+      "shape": "rounded_box",
+      "material": "plastic_black",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.1,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.1,
+       "y": 0.66,
+       "z": 0.07
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "face",
+      "label": "screen",
+      "shape": "box",
+      "material": "hmi_screen",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.1,
+       "z": 0.036
+      },
+      "size_m": {
+       "x": 1.02,
+       "y": 0.58,
+       "z": 0.004
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "builder-tank": {
+   "origin": "builder",
+   "name": "Tank",
+   "described_as": null,
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 1.24,
+     "y": 1.86,
+     "z": 1.24
+    },
+    "parts": [
+     {
+      "id": "shell",
+      "label": "tank shell",
+      "shape": "cylinder",
+      "material": "stainless_steel",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.1,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.2,
+       "y": 1.4,
+       "z": 1.2
+      },
+      "axis": "y",
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "cone",
+      "label": "conical bottom",
+      "shape": "frustum",
+      "material": "stainless_steel",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.25,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.2,
+       "y": 0.3,
+       "z": 1.2
+      },
+      "axis": null,
+      "taper": 0.2,
+      "narrow_end": "bottom",
+      "basis": "entered"
+     },
+     {
+      "id": "lid",
+      "label": "lid",
+      "shape": "cylinder",
+      "material": "stainless_steel",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.83,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.24,
+       "y": 0.06,
+       "z": 1.24
+      },
+      "axis": "y",
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-1",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.57,
+       "y": 0.45,
+       "z": -0.57
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 0.9,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-2",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.57,
+       "y": 0.45,
+       "z": -0.57
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 0.9,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-3",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.57,
+       "y": 0.45,
+       "z": 0.57
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 0.9,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-4",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.57,
+       "y": 0.45,
+       "z": 0.57
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 0.9,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "builder-plant": {
+   "origin": "builder",
+   "name": "Potted plant",
+   "described_as": null,
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 0.6,
+     "y": 1.1,
+     "z": 0.6
+    },
+    "parts": [
+     {
+      "id": "pot",
+      "label": "pot",
+      "shape": "frustum",
+      "material": "plastic_grey",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.2,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 0.4,
+       "y": 0.4,
+       "z": 0.4
+      },
+      "axis": null,
+      "taper": 0.75,
+      "narrow_end": "bottom",
+      "basis": "entered"
+     },
+     {
+      "id": "leaves",
+      "label": "foliage",
+      "shape": "sphere",
+      "material": "paint_green",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.75,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 0.6,
+       "y": 0.7,
+       "z": 0.6
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "p1",
+   "category": "visible-addition",
+   "target": "builder-screen",
+   "instruction": "add a small green status light on top of the frame",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:light|lamp",
+    "material:paint_green|signal_green"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": true,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "p2",
+   "category": "visible-addition",
+   "target": "builder-tank",
+   "instruction": "add a yellow guard rail around the lid",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:rail|guard",
+    "material:safety_yellow|signal_amber"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": false,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "p3",
+   "category": "partial",
+   "target": "builder-plant",
+   "instruction": "put the pot on a small wooden stand and make the leaves rustle in the wind",
+   "expect": "partial",
+   "size": "keep",
+   "visible_change": [
+    "part:stand"
+   ],
+   "open": false,
+   "unrepresentable": [
+    "rustle|wind"
+   ],
+   "keep_other_parts": false,
+   "visible_additions": true,
+   "notes": ""
+  }
+ ]
+}

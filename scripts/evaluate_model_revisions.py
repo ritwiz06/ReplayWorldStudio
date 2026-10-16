@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
@@ -54,9 +55,15 @@ class Recorder:
         messages: list[dict[str, Any]],
         schema: dict[str, Any],
         attempt: int,
+        timeout_s: float | None = None,
     ) -> Completion:
         completion = self.inner.complete(
-            task=task, key=key, messages=messages, schema=schema, attempt=attempt
+            task=task,
+            key=key,
+            messages=messages,
+            schema=schema,
+            attempt=attempt,
+            timeout_s=timeout_s,
         )
         self.answers.setdefault(key, []).append(completion.content)
         return completion
@@ -80,12 +87,15 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("cases", nargs="?", type=Path, default=DEFAULT_CASES)
     parser.add_argument("--record", action="store_true")
+    parser.add_argument("--only", nargs="+", help="run only these case labels (bounded live calls)")
     args = parser.parse_args(argv)
     settings = Settings.from_env().assist
     if not settings.api_key:
         print("VOYAGER_API_KEY is not set; live evaluation needs it (see README).", file=sys.stderr)
         return 2
     cases: list[dict[str, Any]] = json.loads(args.cases.read_text())
+    if args.only:
+        cases = [c for c in cases if c["label"] in args.only]
     recorder = Recorder(OpenAICompatibleProvider(settings))
     rows = []
     keys: dict[str, str] = {}
@@ -93,11 +103,21 @@ def main(argv: list[str]) -> int:
         print(f"revision {case['label']}…", file=sys.stderr)
         request = request_for(case)
         keys[case["label"]] = revision_key(request)
+        started, started_clock = time.monotonic(), time.time()
         try:
-            result = propose_revision(recorder, request)
+            result = propose_revision(recorder, request, budget_s=settings.timeout_s)
         except (ProviderError, AssistError) as exc:
-            rows.append({"label": case["label"], "outcome": "error", "error": str(exc)})
+            rows.append(
+                {
+                    "label": case["label"],
+                    "outcome": "error",
+                    "error": str(exc),
+                    "wall_s": round(time.monotonic() - started, 1),
+                    "clock_s": round(time.time() - started_clock, 1),
+                }
+            )
             continue
+        wall_s = round(time.monotonic() - started, 1)
         row: dict[str, Any] = {
             "label": case["label"],
             "instruction": case["instruction"],
@@ -106,6 +126,9 @@ def main(argv: list[str]) -> int:
             "attempts": result.provider.attempts,
             "first_attempt_valid": result.provider.first_attempt_valid,
             "latency_s": round(result.provider.latency_ms / 1000, 1),
+            "wall_s": wall_s,
+            "clock_s": round(time.time() - started_clock, 1),
+            "problems": result.problems,
             "answer_chars": [len(a) for a in recorder.answers.get(keys[case["label"]], [])],
             "partial": result.partial,
             "summary": result.summary,
@@ -117,6 +140,7 @@ def main(argv: list[str]) -> int:
             "largest_part_share_before": largest_share(request.spec),
         }
         if result.spec:
+            row["spec"] = result.spec.model_dump(mode="json")
             row["largest_part_share_after"] = largest_share(result.spec)
             row["parts"] = [
                 f"{p.label} ({p.shape}, {p.material}, "
@@ -125,7 +149,7 @@ def main(argv: list[str]) -> int:
             ]
         rows.append(row)
         print(f"  {row['latency_s']} s, {row['outcome']}", file=sys.stderr)
-    report = {
+    report: dict[str, Any] = {
         "date": datetime.now(UTC).isoformat(timespec="seconds"),
         "service": settings.service,
         "base_url": settings.base_url,
@@ -135,6 +159,13 @@ def main(argv: list[str]) -> int:
         "cases": rows,
     }
     out = ROOT / "docs" / "assist-evaluation" / f"{REVISION_PROMPT_VERSION}.json"
+    if args.only and out.is_file():
+        # A partial run updates its cases in the existing report and keeps the others.
+        earlier = json.loads(out.read_text())
+        ran = {r["label"] for r in rows}
+        rows = [r for r in earlier["cases"] if r["label"] not in ran] + rows
+        report["cases"] = rows
+        report["runs"] = [*earlier.get("runs", [earlier["date"]]), report["date"]]
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     print(f"Report: {out.relative_to(ROOT)}", file=sys.stderr)
     if args.record:

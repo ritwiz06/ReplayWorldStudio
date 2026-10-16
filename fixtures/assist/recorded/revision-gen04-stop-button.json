@@ -1,0 +1,13 @@
+{
+  "task": "revision",
+  "key": "488989f038bd1e02:add a red emergency stop button box at one end",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "Raw answers from the live language model for the revision instruction above, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\"add\": [{\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.95, \"y\": 1.01, \"z\": 0.2}, \"id\": \"estop-box\", \"label\": \"e-stop box\", \"material\": \"plastic_black\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.15, \"y\": 0.05, \"z\": 0.15}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.95, \"y\": 1.035, \"z\": 0.2}, \"id\": \"estop-button\", \"label\": \"e-stop button\", \"material\": \"estop_red\", \"narrow_end\": null, \"shape\": \"cylinder\", \"size_m\": {\"x\": 0.01, \"y\": 0.02, \"z\": 0.01}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 2.0, \"y\": 0.87, \"z\": 0.71}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Added a red emergency stop button with a black box on the front-left end of the conveyor.\"}",
+    "{\"add\": [{\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.95, \"y\": 0.81, \"z\": 0.2}, \"id\": \"estop-post\", \"label\": \"mounting post\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"cylinder\", \"size_m\": {\"x\": 0.04, \"y\": 0.2, \"z\": 0.04}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.95, \"y\": 0.91, \"z\": 0.2}, \"id\": \"estop-box\", \"label\": \"e-stop box\", \"material\": \"plastic_black\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.15, \"y\": 0.05, \"z\": 0.15}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.95, \"y\": 0.935, \"z\": 0.2}, \"id\": \"estop-button\", \"label\": \"e-stop button\", \"material\": \"estop_red\", \"narrow_end\": null, \"shape\": \"cylinder\", \"size_m\": {\"x\": 0.01, \"y\": 0.02, \"z\": 0.01}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 2.0, \"y\": 0.87, \"z\": 0.71}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Added a red emergency stop button with a black box mounted on a steel post attached to the conveyor frame at the front-left end.\"}"
+  ]
+}
