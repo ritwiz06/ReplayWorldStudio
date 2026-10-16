@@ -1,0 +1,344 @@
+{
+ "format": "rws-img03-annotation/1",
+ "image": {
+  "file": "line-b.jpg",
+  "sha256": "97695835b6b26ea9793e2807050acb2ad4bafe392ed91bd8d8ae239fcaff7a22",
+  "width_px": 1280,
+  "height_px": 960,
+  "stratum": "synthetic",
+  "scene_type": "industrial",
+  "split": "held_out",
+  "rights": {
+   "source": "Rendered by this project from docs/assist-evaluation/img-03/scenes.json",
+   "license": "Project-owned render",
+   "analysis_permitted": true,
+   "publishable": true
+  },
+  "local_only": false
+ },
+ "camera": {
+  "position_m": [
+   -1.4,
+   1.2,
+   8.6
+  ],
+  "target_m": [
+   0.6,
+   0.95,
+   -4
+  ],
+  "vertical_fov_deg": 55,
+  "source": "render camera (exact)"
+ },
+ "rectangle": {
+  "feature": "floor mat",
+  "corners": [
+   {
+    "u": 0.420626,
+    "v": 0.668036
+   },
+   {
+    "u": 0.700839,
+    "v": 0.637167
+   },
+   {
+    "u": 0.872171,
+    "v": 0.688373
+   },
+   {
+    "u": 0.522277,
+    "v": 0.746619
+   }
+  ],
+  "width_m": 3,
+  "depth_m": 2,
+  "tolerance_m": 0,
+  "method": "render_exact",
+  "measured_by": "exact: the render's own geometry"
+ },
+ "objects": [
+  {
+   "id": "cell-1",
+   "class": "machine",
+   "centre_m": [
+    -1.7969,
+    -5.6579
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 2.01,
+    "depth_m": 1.8925,
+    "height_m": 2.47
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.2156,
+    "top": 0.3677,
+    "right": 0.3734,
+    "bottom": 0.6021
+   },
+   "amodal_box": {
+    "left": 0.2156,
+    "top": 0.3677,
+    "right": 0.3734,
+    "bottom": 0.6021
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "conveyor-1",
+   "class": "conveyor",
+   "centre_m": [
+    0.8111,
+    -4.959
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 3,
+    "depth_m": 0.83,
+    "height_m": 0.95
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.3859,
+    "top": 0.5021,
+    "right": 0.5922,
+    "bottom": 0.5938
+   },
+   "amodal_box": {
+    "left": 0.3859,
+    "top": 0.5021,
+    "right": 0.5922,
+    "bottom": 0.5938
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "cell-2",
+   "class": "machine",
+   "centre_m": [
+    3.4191,
+    -4.2602
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 2.01,
+    "depth_m": 1.8925,
+    "height_m": 2.47
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 0.997,
+   "visible_box": {
+    "left": 0.5859,
+    "top": 0.376,
+    "right": 0.7445,
+    "bottom": 0.5927
+   },
+   "amodal_box": {
+    "left": 0.5859,
+    "top": 0.376,
+    "right": 0.7445,
+    "bottom": 0.5927
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "cabinet-1",
+   "class": "cabinet",
+   "centre_m": [
+    0.777,
+    -8.6952
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 0.8,
+    "depth_m": 0.541,
+    "height_m": 2.078
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.838,
+   "visible_box": {
+    "left": 0.3906,
+    "top": 0.4208,
+    "right": 0.4328,
+    "bottom": 0.5646
+   },
+   "amodal_box": {
+    "left": 0.3906,
+    "top": 0.4208,
+    "right": 0.4328,
+    "bottom": 0.5646
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "cabinet-2",
+   "class": "cabinet",
+   "centre_m": [
+    1.598,
+    -8.4752
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 0.8,
+    "depth_m": 0.541,
+    "height_m": 2.078
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.869,
+   "visible_box": {
+    "left": 0.4336,
+    "top": 0.4219,
+    "right": 0.4766,
+    "bottom": 0.5635
+   },
+   "amodal_box": {
+    "left": 0.4336,
+    "top": 0.4219,
+    "right": 0.4766,
+    "bottom": 0.5635
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "pallet-1",
+   "class": "pallet",
+   "centre_m": [
+    5.0335,
+    -2.1712
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 1.202,
+    "depth_m": 0.804,
+    "height_m": 1.022
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.7938,
+    "top": 0.4979,
+    "right": 0.9109,
+    "bottom": 0.6042
+   },
+   "amodal_box": {
+    "left": 0.7938,
+    "top": 0.4979,
+    "right": 0.9109,
+    "bottom": 0.6042
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "conveyor-2",
+   "class": "conveyor",
+   "centre_m": [
+    -2.3052,
+    -11.4881
+   ],
+   "yaw_deg": 75,
+   "size": {
+    "width_m": 3,
+    "depth_m": 0.83,
+    "height_m": 0.95
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "mostly_hidden",
+   "visible_fraction": 0.227,
+   "visible_box": {
+    "left": 0.1984,
+    "top": 0.4969,
+    "right": 0.2211,
+    "bottom": 0.5635
+   },
+   "amodal_box": {
+    "left": 0.1984,
+    "top": 0.4958,
+    "right": 0.2641,
+    "bottom": 0.5635
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": false,
+   "reason": "less than a quarter of it shows",
+   "notes": []
+  },
+  {
+   "id": "pallet-far",
+   "class": "pallet",
+   "centre_m": [
+    4.9101,
+    -12.1429
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 1.202,
+    "depth_m": 0.804,
+    "height_m": 1.022
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.616,
+   "visible_box": {
+    "left": 0.4992,
+    "top": 0.4896,
+    "right": 0.55,
+    "bottom": 0.5438
+   },
+   "amodal_box": {
+    "left": 0.4992,
+    "top": 0.4896,
+    "right": 0.55,
+    "bottom": 0.5438
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  }
+ ],
+ "notes": [
+  "Synthetic: exact geometry from the scene definition; not a measurement of a real site."
+ ]
+}

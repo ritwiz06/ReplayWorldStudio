@@ -1,0 +1,336 @@
+{
+ "format": "rws-img03-annotation/1",
+ "image": {
+  "file": "line-a.jpg",
+  "sha256": "cb766f7f11923df22452af336b8faf823d0ad4f134b811907efa64bc9b2fdbfc",
+  "width_px": 1280,
+  "height_px": 960,
+  "stratum": "synthetic",
+  "scene_type": "industrial",
+  "split": "held_out",
+  "rights": {
+   "source": "Rendered by this project from docs/assist-evaluation/img-03/scenes.json",
+   "license": "Project-owned render",
+   "analysis_permitted": true,
+   "publishable": true
+  },
+  "local_only": false
+ },
+ "camera": {
+  "position_m": [
+   2.6,
+   1.65,
+   7.4
+  ],
+  "target_m": [
+   -0.4,
+   1,
+   -2.6
+  ],
+  "vertical_fov_deg": 60,
+  "source": "render camera (exact)"
+ },
+ "rectangle": {
+  "feature": "floor mat",
+  "corners": [
+   {
+    "u": 0.267465,
+    "v": 0.687744
+   },
+   {
+    "u": 0.597687,
+    "v": 0.691421
+   },
+   {
+    "u": 0.638409,
+    "v": 0.818886
+   },
+   {
+    "u": 0.139579,
+    "v": 0.810462
+   }
+  ],
+  "width_m": 3,
+  "depth_m": 2,
+  "tolerance_m": 0,
+  "method": "render_exact",
+  "measured_by": "exact: the render's own geometry"
+ },
+ "objects": [
+  {
+   "id": "cell-1",
+   "class": "machine",
+   "centre_m": [
+    -1.7969,
+    -5.6579
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 2.01,
+    "depth_m": 1.8925,
+    "height_m": 2.47
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 0.988,
+   "visible_box": {
+    "left": 0.2781,
+    "top": 0.3833,
+    "right": 0.4336,
+    "bottom": 0.5938
+   },
+   "amodal_box": {
+    "left": 0.2781,
+    "top": 0.3833,
+    "right": 0.4336,
+    "bottom": 0.5938
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "conveyor-1",
+   "class": "conveyor",
+   "centre_m": [
+    0.8111,
+    -4.959
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 3,
+    "depth_m": 0.83,
+    "height_m": 0.95
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.4188,
+    "top": 0.5042,
+    "right": 0.6242,
+    "bottom": 0.6031
+   },
+   "amodal_box": {
+    "left": 0.4188,
+    "top": 0.5042,
+    "right": 0.6242,
+    "bottom": 0.6031
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "cell-2",
+   "class": "machine",
+   "centre_m": [
+    3.4191,
+    -4.2602
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 2.01,
+    "depth_m": 1.8925,
+    "height_m": 2.47
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.6305,
+    "top": 0.3729,
+    "right": 0.7984,
+    "bottom": 0.6219
+   },
+   "amodal_box": {
+    "left": 0.6305,
+    "top": 0.3729,
+    "right": 0.7984,
+    "bottom": 0.6219
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "cabinet-1",
+   "class": "cabinet",
+   "centre_m": [
+    0.777,
+    -8.6952
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 0.8,
+    "depth_m": 0.541,
+    "height_m": 2.078
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.76,
+   "visible_box": {
+    "left": 0.4969,
+    "top": 0.4188,
+    "right": 0.5375,
+    "bottom": 0.5542
+   },
+   "amodal_box": {
+    "left": 0.4969,
+    "top": 0.4188,
+    "right": 0.5406,
+    "bottom": 0.5542
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "cabinet-2",
+   "class": "cabinet",
+   "centre_m": [
+    1.598,
+    -8.4752
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 0.8,
+    "depth_m": 0.541,
+    "height_m": 2.078
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.812,
+   "visible_box": {
+    "left": 0.5367,
+    "top": 0.4177,
+    "right": 0.5805,
+    "bottom": 0.5563
+   },
+   "amodal_box": {
+    "left": 0.5367,
+    "top": 0.4177,
+    "right": 0.5805,
+    "bottom": 0.5563
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "pallet-1",
+   "class": "pallet",
+   "centre_m": [
+    5.0335,
+    -2.1712
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 1.202,
+    "depth_m": 0.804,
+    "height_m": 1.022
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.8469,
+    "top": 0.5198,
+    "right": 1,
+    "bottom": 0.6719
+   },
+   "amodal_box": {
+    "left": 0.8469,
+    "top": 0.5198,
+    "right": 1,
+    "bottom": 0.6719
+   },
+   "cut_off": [
+    "right"
+   ],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "conveyor-2",
+   "class": "conveyor",
+   "centre_m": [
+    -2.3052,
+    -11.4881
+   ],
+   "yaw_deg": 75,
+   "size": {
+    "width_m": 3,
+    "depth_m": 0.83,
+    "height_m": 0.95
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "mostly_hidden",
+   "visible_fraction": 0,
+   "visible_box": null,
+   "amodal_box": {
+    "left": 0.3539,
+    "top": 0.4802,
+    "right": 0.432,
+    "bottom": 0.5417
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": false,
+   "reason": "less than a quarter of it shows",
+   "notes": []
+  },
+  {
+   "id": "pallet-far",
+   "class": "pallet",
+   "centre_m": [
+    4.9101,
+    -12.1429
+   ],
+   "yaw_deg": -15,
+   "size": {
+    "width_m": 1.202,
+    "depth_m": 0.804,
+    "height_m": 1.022
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "mostly_hidden",
+   "visible_fraction": 0,
+   "visible_box": null,
+   "amodal_box": {
+    "left": 0.6531,
+    "top": 0.4781,
+    "right": 0.7031,
+    "bottom": 0.5344
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": false,
+   "reason": "less than a quarter of it shows",
+   "notes": []
+  }
+ ],
+ "notes": [
+  "Synthetic: exact geometry from the scene definition; not a measurement of a real site."
+ ]
+}

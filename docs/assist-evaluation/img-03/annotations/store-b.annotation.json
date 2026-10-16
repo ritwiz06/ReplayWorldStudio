@@ -1,0 +1,344 @@
+{
+ "format": "rws-img03-annotation/1",
+ "image": {
+  "file": "store-b.jpg",
+  "sha256": "200ecd4fce3a4c02160a7612815740775074ac0f2a9c60d87866dc054480f9eb",
+  "width_px": 1280,
+  "height_px": 960,
+  "stratum": "synthetic",
+  "scene_type": "storage",
+  "split": "held_out",
+  "rights": {
+   "source": "Rendered by this project from docs/assist-evaluation/img-03/scenes.json",
+   "license": "Project-owned render",
+   "analysis_permitted": true,
+   "publishable": true
+  },
+  "local_only": false
+ },
+ "camera": {
+  "position_m": [
+   3.6,
+   1.25,
+   8.6
+  ],
+  "target_m": [
+   -1,
+   0.9,
+   -5
+  ],
+  "vertical_fov_deg": 58,
+  "source": "render camera (exact)"
+ },
+ "rectangle": {
+  "feature": "floor mat",
+  "corners": [
+   {
+    "u": 0.266017,
+    "v": 0.606955
+   },
+   {
+    "u": 0.458252,
+    "v": 0.634306
+   },
+   {
+    "u": 0.31957,
+    "v": 0.683195
+   },
+   {
+    "u": 0.110506,
+    "v": 0.638505
+   }
+  ],
+  "width_m": 3,
+  "depth_m": 2,
+  "tolerance_m": 0,
+  "method": "render_exact",
+  "measured_by": "exact: the render's own geometry"
+ },
+ "objects": [
+  {
+   "id": "rack-1",
+   "class": "shelf",
+   "centre_m": [
+    -3.3578,
+    -5.2159
+   ],
+   "yaw_deg": 12,
+   "size": {
+    "width_m": 2.4,
+    "depth_m": 0.9,
+    "height_m": 2.2
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.889,
+   "visible_box": {
+    "left": 0.3078,
+    "top": 0.4094,
+    "right": 0.4398,
+    "bottom": 0.5677
+   },
+   "amodal_box": {
+    "left": 0.3078,
+    "top": 0.4094,
+    "right": 0.4398,
+    "bottom": 0.5677
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "rack-2",
+   "class": "shelf",
+   "centre_m": [
+    -0.9124,
+    -5.7356
+   ],
+   "yaw_deg": 12,
+   "size": {
+    "width_m": 2.4,
+    "depth_m": 0.9,
+    "height_m": 2.2
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.854,
+   "visible_box": {
+    "left": 0.425,
+    "top": 0.4042,
+    "right": 0.5641,
+    "bottom": 0.5688
+   },
+   "amodal_box": {
+    "left": 0.425,
+    "top": 0.4042,
+    "right": 0.5641,
+    "bottom": 0.574
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "rack-3",
+   "class": "shelf",
+   "centre_m": [
+    3.1027,
+    -9.4516
+   ],
+   "yaw_deg": 102,
+   "size": {
+    "width_m": 2.4,
+    "depth_m": 0.9,
+    "height_m": 2.2
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.7359,
+    "top": 0.4083,
+    "right": 0.7898,
+    "bottom": 0.5688
+   },
+   "amodal_box": {
+    "left": 0.7359,
+    "top": 0.4083,
+    "right": 0.7898,
+    "bottom": 0.5688
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "pallet-a",
+   "class": "pallet",
+   "centre_m": [
+    1.7801,
+    -3.6499
+   ],
+   "yaw_deg": 12,
+   "size": {
+    "width_m": 1.202,
+    "depth_m": 0.804,
+    "height_m": 1.022
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 0.993,
+   "visible_box": {
+    "left": 0.5336,
+    "top": 0.499,
+    "right": 0.6313,
+    "bottom": 0.6063
+   },
+   "amodal_box": {
+    "left": 0.5336,
+    "top": 0.499,
+    "right": 0.6313,
+    "bottom": 0.6063
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "pallet-b",
+   "class": "pallet",
+   "centre_m": [
+    3.0516,
+    -3.9201
+   ],
+   "yaw_deg": 12,
+   "size": {
+    "width_m": 1.202,
+    "depth_m": 0.804,
+    "height_m": 1.022
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.6305,
+    "top": 0.5,
+    "right": 0.7289,
+    "bottom": 0.6125
+   },
+   "amodal_box": {
+    "left": 0.6305,
+    "top": 0.5,
+    "right": 0.7289,
+    "bottom": 0.6125
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "box-1",
+   "class": "box",
+   "centre_m": [
+    -2.0224,
+    -1.8193
+   ],
+   "yaw_deg": 32,
+   "size": {
+    "width_m": 1,
+    "depth_m": 0.8,
+    "height_m": 0.8
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.2422,
+    "top": 0.5188,
+    "right": 0.3281,
+    "bottom": 0.599
+   },
+   "amodal_box": {
+    "left": 0.2422,
+    "top": 0.5188,
+    "right": 0.3281,
+    "bottom": 0.599
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "cabinet-s",
+   "class": "cabinet",
+   "centre_m": [
+    -6.5871,
+    -7.9032
+   ],
+   "yaw_deg": 102,
+   "size": {
+    "width_m": 1,
+    "depth_m": 0.5,
+    "height_m": 2
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.716,
+   "visible_box": {
+    "left": 0.3281,
+    "top": 0.4375,
+    "right": 0.3664,
+    "bottom": 0.5448
+   },
+   "amodal_box": {
+    "left": 0.3281,
+    "top": 0.4375,
+    "right": 0.3664,
+    "bottom": 0.5458
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "pallet-c",
+   "class": "pallet",
+   "centre_m": [
+    -2.7444,
+    -12.9115
+   ],
+   "yaw_deg": 12,
+   "size": {
+    "width_m": 1.202,
+    "depth_m": 0.804,
+    "height_m": 1.022
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "mostly_hidden",
+   "visible_fraction": 0.172,
+   "visible_box": {
+    "left": 0.5445,
+    "top": 0.4885,
+    "right": 0.5914,
+    "bottom": 0.5
+   },
+   "amodal_box": {
+    "left": 0.5445,
+    "top": 0.4885,
+    "right": 0.5914,
+    "bottom": 0.5375
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": false,
+   "reason": "less than a quarter of it shows",
+   "notes": []
+  }
+ ],
+ "notes": [
+  "Synthetic: exact geometry from the scene definition; not a measurement of a real site."
+ ]
+}

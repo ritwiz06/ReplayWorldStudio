@@ -1,0 +1,204 @@
+{
+ "format": "rws-img03-annotation/1",
+ "image": {
+  "file": "dev-line-a.jpg",
+  "sha256": "b8eebc1827cbbd06a31ed5825ba8ca782ec2dc17e86152ff511a6c487a98ac33",
+  "width_px": 1280,
+  "height_px": 960,
+  "stratum": "synthetic",
+  "scene_type": "industrial",
+  "split": "development",
+  "rights": {
+   "source": "Rendered by this project from docs/assist-evaluation/img-03/scenes.json",
+   "license": "Project-owned render",
+   "analysis_permitted": true,
+   "publishable": true
+  },
+  "local_only": false
+ },
+ "camera": {
+  "position_m": [
+   1.8,
+   1.6,
+   7.2
+  ],
+  "target_m": [
+   0.2,
+   1,
+   -2
+  ],
+  "vertical_fov_deg": 60,
+  "source": "render camera (exact)"
+ },
+ "rectangle": {
+  "feature": "floor mat",
+  "corners": [
+   {
+    "u": 0.263537,
+    "v": 0.675008
+   },
+   {
+    "u": 0.585419,
+    "v": 0.670814
+   },
+   {
+    "u": 0.638296,
+    "v": 0.779996
+   },
+   {
+    "u": 0.158392,
+    "v": 0.789292
+   }
+  ],
+  "width_m": 3,
+  "depth_m": 2,
+  "tolerance_m": 0,
+  "method": "render_exact",
+  "measured_by": "exact: the render's own geometry"
+ },
+ "objects": [
+  {
+   "id": "cell",
+   "class": "machine",
+   "centre_m": [
+    -0.9021,
+    -4.8945
+   ],
+   "yaw_deg": -12,
+   "size": {
+    "width_m": 2.01,
+    "depth_m": 1.8925,
+    "height_m": 2.47
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 0.995,
+   "visible_box": {
+    "left": 0.3008,
+    "top": 0.3729,
+    "right": 0.4602,
+    "bottom": 0.5969
+   },
+   "amodal_box": {
+    "left": 0.3008,
+    "top": 0.3729,
+    "right": 0.4602,
+    "bottom": 0.5969
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "conveyor",
+   "class": "conveyor",
+   "centre_m": [
+    1.6411,
+    -4.3539
+   ],
+   "yaw_deg": -12,
+   "size": {
+    "width_m": 3,
+    "depth_m": 0.83,
+    "height_m": 0.95
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.45,
+    "top": 0.501,
+    "right": 0.6648,
+    "bottom": 0.6
+   },
+   "amodal_box": {
+    "left": 0.45,
+    "top": 0.501,
+    "right": 0.6648,
+    "bottom": 0.6
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "cabinet",
+   "class": "cabinet",
+   "centre_m": [
+    4.4876,
+    -6.2025
+   ],
+   "yaw_deg": -12,
+   "size": {
+    "width_m": 0.8,
+    "depth_m": 0.541,
+    "height_m": 2.078
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.86,
+   "visible_box": {
+    "left": 0.6797,
+    "top": 0.4073,
+    "right": 0.7328,
+    "bottom": 0.5688
+   },
+   "amodal_box": {
+    "left": 0.6797,
+    "top": 0.4073,
+    "right": 0.7328,
+    "bottom": 0.5688
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "pallet",
+   "class": "pallet",
+   "centre_m": [
+    3.8516,
+    -2.2483
+   ],
+   "yaw_deg": -12,
+   "size": {
+    "width_m": 1.202,
+    "depth_m": 0.804,
+    "height_m": 1.022
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.7109,
+    "top": 0.5083,
+    "right": 0.8414,
+    "bottom": 0.6438
+   },
+   "amodal_box": {
+    "left": 0.7109,
+    "top": 0.5083,
+    "right": 0.8414,
+    "bottom": 0.6438
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  }
+ ],
+ "notes": [
+  "Synthetic: exact geometry from the scene definition; not a measurement of a real site."
+ ]
+}

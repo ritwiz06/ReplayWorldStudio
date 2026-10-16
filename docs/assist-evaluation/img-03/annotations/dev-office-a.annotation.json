@@ -1,0 +1,239 @@
+{
+ "format": "rws-img03-annotation/1",
+ "image": {
+  "file": "dev-office-a.jpg",
+  "sha256": "529171bcd321d382640e937c069ba4b7e0da9be6dcf8470e55d5fb7c7725693d",
+  "width_px": 1280,
+  "height_px": 960,
+  "stratum": "synthetic",
+  "scene_type": "office",
+  "split": "development",
+  "rights": {
+   "source": "Rendered by this project from docs/assist-evaluation/img-03/scenes.json",
+   "license": "Project-owned render",
+   "analysis_permitted": true,
+   "publishable": true
+  },
+  "local_only": false
+ },
+ "camera": {
+  "position_m": [
+   1.4,
+   1.6,
+   4.6
+  ],
+  "target_m": [
+   -0.4,
+   0.8,
+   -2
+  ],
+  "vertical_fov_deg": 62,
+  "source": "render camera (exact)"
+ },
+ "rectangle": {
+  "feature": "floor mat",
+  "corners": [
+   {
+    "u": 0.363036,
+    "v": 0.659071
+   },
+   {
+    "u": 0.651626,
+    "v": 0.720985
+   },
+   {
+    "u": 0.576609,
+    "v": 0.885889
+   },
+   {
+    "u": 0.198738,
+    "v": 0.756267
+   }
+  ],
+  "width_m": 2.4,
+  "depth_m": 1.6,
+  "tolerance_m": 0,
+  "method": "render_exact",
+  "measured_by": "exact: the render's own geometry"
+ },
+ "objects": [
+  {
+   "id": "desk",
+   "class": "table",
+   "centre_m": [
+    -1.222,
+    -2.3231
+   ],
+   "yaw_deg": 10,
+   "size": {
+    "width_m": 1.6,
+    "depth_m": 0.8,
+    "height_m": 0.75
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.762,
+   "visible_box": {
+    "left": 0.3625,
+    "top": 0.5031,
+    "right": 0.5336,
+    "bottom": 0.626
+   },
+   "amodal_box": {
+    "left": 0.3625,
+    "top": 0.5031,
+    "right": 0.5336,
+    "bottom": 0.626
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "chair",
+   "class": "chair",
+   "centre_m": [
+    -1.1091,
+    -1.683
+   ],
+   "yaw_deg": 190,
+   "size": {
+    "width_m": 0.5,
+    "depth_m": 0.52,
+    "height_m": 0.9
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.3914,
+    "top": 0.5052,
+    "right": 0.4609,
+    "bottom": 0.6375
+   },
+   "amodal_box": {
+    "left": 0.3914,
+    "top": 0.5052,
+    "right": 0.4609,
+    "bottom": 0.6375
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "cabinet",
+   "class": "cabinet",
+   "centre_m": [
+    -4.0196,
+    -4.3684
+   ],
+   "yaw_deg": 10,
+   "size": {
+    "width_m": 0.9,
+    "depth_m": 0.45,
+    "height_m": 1.9
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 0.956,
+   "visible_box": {
+    "left": 0.3227,
+    "top": 0.375,
+    "right": 0.3914,
+    "bottom": 0.5469
+   },
+   "amodal_box": {
+    "left": 0.3227,
+    "top": 0.375,
+    "right": 0.3922,
+    "bottom": 0.5469
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "shelf",
+   "class": "shelf",
+   "centre_m": [
+    0.887,
+    -5.3351
+   ],
+   "yaw_deg": 10,
+   "size": {
+    "width_m": 1.2,
+    "depth_m": 0.4,
+    "height_m": 1.8
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.6523,
+    "top": 0.3813,
+    "right": 0.7539,
+    "bottom": 0.5688
+   },
+   "amodal_box": {
+    "left": 0.6523,
+    "top": 0.3813,
+    "right": 0.7539,
+    "bottom": 0.5688
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "plant",
+   "class": "plant",
+   "centre_m": [
+    2.1785,
+    -2.6181
+   ],
+   "yaw_deg": 10,
+   "size": {
+    "width_m": 0.5,
+    "depth_m": 0.5,
+    "height_m": 1.2
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.782,
+    "top": 0.4656,
+    "right": 0.8477,
+    "bottom": 0.6552
+   },
+   "amodal_box": {
+    "left": 0.782,
+    "top": 0.4656,
+    "right": 0.8477,
+    "bottom": 0.6552
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  }
+ ],
+ "notes": [
+  "Synthetic: exact geometry from the scene definition; not a measurement of a real site."
+ ]
+}

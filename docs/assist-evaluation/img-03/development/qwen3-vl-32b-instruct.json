@@ -1,0 +1,396 @@
+{
+ "service": "ASU Voyager",
+ "base_url": "https://openai.rc.asu.edu/v1",
+ "model": "qwen3-vl-32b-instruct",
+ "prompt_version": "img-01.2",
+ "settings": {
+  "temperature": 0,
+  "schema_guided": true,
+  "timeout_s": 150.0,
+  "validation_retries": 1
+ },
+ "split": "development",
+ "awake": "caffeinate -i -w <pid> (macOS idle and system sleep prevented)",
+ "started_at": "2026-10-16T22:45:24+00:00",
+ "rows": [
+  {
+   "case": "dev-line-a",
+   "sha256": "b8eebc1827cbbd06a31ed5825ba8ca782ec2dc17e86152ff511a6c487a98ac33",
+   "started_at": "2026-10-16T22:45:24+00:00",
+   "result": {
+    "outcome": "proposal",
+    "proposal": {
+     "objects": [
+      {
+       "id": "obs-1",
+       "label": "yellow-framed machine with control panel",
+       "category": "machine",
+       "template": "machine",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.3,
+        "top": 0.38,
+        "right": 0.465,
+        "bottom": 0.598
+       },
+       "floor_contact": {
+        "u": 0.3825,
+        "v": 0.598
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 1.2,
+        "y": 1.5,
+        "z": 0.8
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-2",
+       "label": "metal conveyor belt",
+       "category": "conveyor",
+       "template": "conveyor",
+       "material": "steel_dark",
+       "box": {
+        "left": 0.455,
+        "top": 0.498,
+        "right": 0.665,
+        "bottom": 0.598
+       },
+       "floor_contact": {
+        "u": 0.56,
+        "v": 0.598
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 2.0,
+        "y": 0.5,
+        "z": 0.5
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-3",
+       "label": "pallet with stacked cardboard boxes",
+       "category": "pallet",
+       "template": "pallet",
+       "material": "wood",
+       "box": {
+        "left": 0.705,
+        "top": 0.505,
+        "right": 0.84,
+        "bottom": 0.64
+       },
+       "floor_contact": {
+        "u": 0.7725,
+        "v": 0.64
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 0.8
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-4",
+       "label": "white electrical cabinet",
+       "category": "cabinet",
+       "template": "cabinet",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.675,
+        "top": 0.405,
+        "right": 0.735,
+        "bottom": 0.565
+       },
+       "floor_contact": {
+        "u": 0.705,
+        "v": 0.565
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 0.6,
+        "y": 1.5,
+        "z": 0.6
+       },
+       "suggest_accept": true,
+       "notes": []
+      }
+     ],
+     "floor_rectangles": [
+      {
+       "label": "green floor mat",
+       "corners": [
+        {
+         "u": 0.158,
+         "v": 0.667
+        },
+        {
+         "u": 0.636,
+         "v": 0.667
+        },
+        {
+         "u": 0.636,
+         "v": 0.788
+        },
+        {
+         "u": 0.158,
+         "v": 0.788
+        }
+       ]
+      }
+     ],
+     "visible_text": []
+    },
+    "message": null,
+    "checks": [
+     "Floor rectangles from the model are rough suggestions: place the corners on the real feature and enter its size."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-vl-32b-instruct",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 32510
+    }
+   },
+   "error": null,
+   "wall_s": 32.52,
+   "clock_s": 32.52,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 32.51,
+     "answer": "{\n  \"floor_rectangles\": [\n    {\n      \"corners\": [\n             [158, 667],\n        [636, 667],\n        [636, 788],\n        [158, 788]\n      ]\n    ,\n      \"label\": \"green floor mat\"\n    }\n  ],\n  \"objects\": [\n    {\n      \"box\": [300, 380, 465, 598],\n      \"category\": \"machine\",\n      \"facing\": \"right\",\n      \"floor_contact\": [382, 598],\n      \"label\": \"yellow-framed machine with control panel\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [1.2, 1.5, 0.8]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [455, 498, 665, 598],\n      \"category\": \"conveyor\",\n      \"facing\": \"right\",\n      \"floor_contact\": [560, 598],\n      \"label\": \"metal conveyor belt\",\n      \"material\": \"steel_dark\",\n      \"size_m\": [2.0, 0.5, 0.5],\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [705, 505, 840, 640],\n      \"category\": \"pallet\",\n      \"facing\": \"right\",\n      \"floor_contact\": [772, 640],\n      \"label\": \"pallet with stacked cardboard boxes\",\n      \"material\": \"wood\",\n      \"size_m\": [1.0, 1.0, 0.8],\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [675, 405, 735, 565],\n      \"category\": \"cabinet\",\n      \"facing\": \"right\",\n      \"floor_contact\": [695, 565],\n      \"label\": \"white electrical cabinet\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [0.6, 1.5, 0.6],\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    }\n  ],\n  \"scene\": \"room_or_work_area\",\n  \"visible_text\": []\n}"
+    }
+   ]
+  },
+  {
+   "case": "dev-office-a",
+   "sha256": "529171bcd321d382640e937c069ba4b7e0da9be6dcf8470e55d5fb7c7725693d",
+   "started_at": "2026-10-16T22:45:56+00:00",
+   "result": {
+    "outcome": "proposal",
+    "proposal": {
+     "objects": [
+      {
+       "id": "obs-1",
+       "label": "table",
+       "category": "table",
+       "template": "table",
+       "material": "wood",
+       "box": {
+        "left": 0.359,
+        "top": 0.5,
+        "right": 0.535,
+        "bottom": 0.632
+       },
+       "floor_contact": {
+        "u": 0.447,
+        "v": 0.632
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 1.2,
+        "y": 0.75,
+        "z": 0.75
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-2",
+       "label": "chair",
+       "category": "chair",
+       "template": "chair",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.375,
+        "top": 0.504,
+        "right": 0.462,
+        "bottom": 0.638
+       },
+       "floor_contact": {
+        "u": 0.4185,
+        "v": 0.638
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "left",
+       "size_guess_m": {
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0.5
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-3",
+       "label": "shelf",
+       "category": "shelf",
+       "template": "shelf",
+       "material": "plastic_black",
+       "box": {
+        "left": 0.648,
+        "top": 0.378,
+        "right": 0.755,
+        "bottom": 0.568
+       },
+       "floor_contact": {
+        "u": 0.7015,
+        "v": 0.568
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 0.8,
+        "y": 1.5,
+        "z": 0.5
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-4",
+       "label": "plant in pot",
+       "category": "plant in pot",
+       "template": "plant",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.778,
+        "top": 0.464,
+        "right": 0.848,
+        "bottom": 0.654
+       },
+       "floor_contact": {
+        "u": 0.813,
+        "v": 0.654
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 0.4,
+        "y": 0.8,
+        "z": 0.4
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-5",
+       "label": "cabinet",
+       "category": "cabinet",
+       "template": "cabinet",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.32,
+        "top": 0.372,
+        "right": 0.392,
+        "bottom": 0.544
+       },
+       "floor_contact": {
+        "u": 0.356,
+        "v": 0.544
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 0.5,
+        "y": 1.5,
+        "z": 0.5
+       },
+       "suggest_accept": true,
+       "notes": []
+      }
+     ],
+     "floor_rectangles": [
+      {
+       "label": "rug",
+       "corners": [
+        {
+         "u": 0.199,
+         "v": 0.654
+        },
+        {
+         "u": 0.65,
+         "v": 0.654
+        },
+        {
+         "u": 0.65,
+         "v": 0.884
+        },
+        {
+         "u": 0.199,
+         "v": 0.884
+        }
+       ]
+      }
+     ],
+     "visible_text": []
+    },
+    "message": null,
+    "checks": [
+     "Floor rectangles from the model are rough suggestions: place the corners on the real feature and enter its size."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-vl-32b-instruct",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 39682
+    }
+   },
+   "error": null,
+   "wall_s": 39.68,
+   "clock_s": 39.68,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 39.68,
+     "answer": "{\n  \"floor_rectangles\": [\n    {\n      \"corners\": [\n        [199, 654],\n        [650, 654],\n        [650, 884],\n        [199, 884]\n      ]\n    ,\n      \"label\": \"rug\"\n    }\n  ],\n  \"objects\": [\n    {\n      \"box\": [359, 500, 535, 632],\n      \"category\": \"table\",\n      \"facing\": \"right\",\n      \"floor_contact\": [447, 625],\n      \"label\": \"table\",\n      \"material\": \"wood\",\n      \"size_m\": [\n        1.2,\n        0.75,\n        0.75\n      ]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [375, 504, 462, 638],\n      \"category\": \"chair\",\n      \"facing\": \"left\",\n      \"floor_contact\": [418, 632],\n      \"label\": \"chair\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [\n        0.5,\n        0.8,\n        0.5\n      ]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [648, 378, 755, 568],\n      \"category\": \"shelf\",\n      \"facing\": \"right\",\n      \"floor_contact\": [699, 565],\n      \"label\": \"shelf\",\n      \"material\": \"plastic_black\",\n      \"size_m\": [\n        0.8,\n        1.5,\n        0.5\n      ]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [778, 464, 848, 654],\n      \"category\": \"plant_in_pot\",\n      \"facing\": \"right\",\n      \"floor_contact\": [813, 650],\n      \"label\": \"plant_in_pot\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [\n        0.4,\n        0.8,\n        0.4\n      ]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [320, 372, 392, 544],\n      \"category\": \"cabinet\",\n      \"facing\": \"right\",\n      \"floor_contact\": [356, 540],\n      \"label\": \"cabinet\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [\n        0.5,\n        1.5,\n        0.5\n      ]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    }\n  ],\n  \"scene\": \"room_or_work_area\",\n  \"visible_text\": []\n}"
+    }
+   ]
+  }
+ ]
+}

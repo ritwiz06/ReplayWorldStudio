@@ -1,0 +1,13 @@
+{
+  "task": "image",
+  "key": "529171bcd321d382640e937c069ba4b7e0da9be6dcf8470e55d5fb7c7725693d",
+  "photo": "../../docs/assist-evaluation/img-03/photos/dev-office-a.jpg",
+  "service": "ASU Voyager",
+  "model": "qwen3-vl-32b-instruct",
+  "prompt_version": "img-01.2",
+  "recorded_at": "2026-10-16",
+  "note": "IMG-03 development probe answer for a project-owned synthetic render (development split, never held out), replayed by the offline test provider for the browser cross-check. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"floor_rectangles\": [\n    {\n      \"corners\": [\n        [199, 654],\n        [650, 654],\n        [650, 884],\n        [199, 884]\n      ]\n    ,\n      \"label\": \"rug\"\n    }\n  ],\n  \"objects\": [\n    {\n      \"box\": [359, 500, 535, 632],\n      \"category\": \"table\",\n      \"facing\": \"right\",\n      \"floor_contact\": [447, 625],\n      \"label\": \"table\",\n      \"material\": \"wood\",\n      \"size_m\": [\n        1.2,\n        0.75,\n        0.75\n      ]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [375, 504, 462, 638],\n      \"category\": \"chair\",\n      \"facing\": \"left\",\n      \"floor_contact\": [418, 632],\n      \"label\": \"chair\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [\n        0.5,\n        0.8,\n        0.5\n      ]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [648, 378, 755, 568],\n      \"category\": \"shelf\",\n      \"facing\": \"right\",\n      \"floor_contact\": [699, 565],\n      \"label\": \"shelf\",\n      \"material\": \"plastic_black\",\n      \"size_m\": [\n        0.8,\n        1.5,\n        0.5\n      ]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [778, 464, 848, 654],\n      \"category\": \"plant_in_pot\",\n      \"facing\": \"right\",\n      \"floor_contact\": [813, 650],\n      \"label\": \"plant_in_pot\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [\n        0.4,\n        0.8,\n        0.4\n      ]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [320, 372, 392, 544],\n      \"category\": \"cabinet\",\n      \"facing\": \"right\",\n      \"floor_contact\": [356, 540],\n      \"label\": \"cabinet\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [\n        0.5,\n        1.5,\n        0.5\n      ]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    }\n  ],\n  \"scene\": \"room_or_work_area\",\n  \"visible_text\": []\n}"
+  ]
+}

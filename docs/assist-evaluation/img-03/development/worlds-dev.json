@@ -1,0 +1,290 @@
+{
+ "qwen3-vl-32b-instruct": {
+  "dev-line-a": {
+   "initial": [
+    {
+     "id": "obs-1",
+     "label": "yellow-framed machine with control panel",
+     "x": -0.996,
+     "z": -4.691,
+     "yaw_deg": 0,
+     "width": 2.173,
+     "depth": 1.449,
+     "height": 2.259
+    },
+    {
+     "id": "obs-2",
+     "label": "metal conveyor belt",
+     "x": 1.484,
+     "z": -4.33,
+     "yaw_deg": 0,
+     "width": 2.901,
+     "depth": 0.725,
+     "height": 1.001
+    },
+    {
+     "id": "obs-3",
+     "label": "pallet with stacked cardboard boxes",
+     "x": 3.819,
+     "z": -2.669,
+     "yaw_deg": 90,
+     "width": 1.292,
+     "depth": 1.034,
+     "height": 1.018
+    },
+    {
+     "id": "obs-4",
+     "label": "white electrical cabinet",
+     "x": 4.371,
+     "z": -6.844,
+     "yaw_deg": 90,
+     "width": 0.799,
+     "depth": 0.799,
+     "height": 2.116
+    }
+   ],
+   "reviewed": [
+    {
+     "id": "obs-1",
+     "label": "yellow-framed machine with control panel",
+     "x": -0.996,
+     "z": -4.691,
+     "yaw_deg": 0,
+     "width": 2.173,
+     "depth": 1.449,
+     "height": 2.259
+    },
+    {
+     "id": "obs-2",
+     "label": "metal conveyor belt",
+     "x": 1.484,
+     "z": -4.33,
+     "yaw_deg": 0,
+     "width": 2.901,
+     "depth": 0.725,
+     "height": 1.001
+    },
+    {
+     "id": "obs-3",
+     "label": "pallet with stacked cardboard boxes",
+     "x": 3.819,
+     "z": -2.669,
+     "yaw_deg": 90,
+     "width": 1.292,
+     "depth": 1.034,
+     "height": 1.018
+    },
+    {
+     "id": "obs-4",
+     "label": "white electrical cabinet",
+     "x": 4.371,
+     "z": -6.844,
+     "yaw_deg": 90,
+     "width": 0.799,
+     "depth": 0.799,
+     "height": 2.116
+    }
+   ],
+   "manual": [
+    {
+     "id": "obs-1",
+     "label": "machine",
+     "x": -1.059,
+     "z": -5.063,
+     "yaw_deg": 0,
+     "width": 2.062,
+     "depth": 2.062,
+     "height": 2.337
+    },
+    {
+     "id": "obs-2",
+     "label": "conveyor",
+     "x": 1.439,
+     "z": -5.317,
+     "yaw_deg": 0,
+     "width": 2.933,
+     "depth": 2.933,
+     "height": 0.83
+    },
+    {
+     "id": "obs-3",
+     "label": "cabinet",
+     "x": 4.268,
+     "z": -6.431,
+     "yaw_deg": 0,
+     "width": 0.678,
+     "depth": 0.678,
+     "height": 2.071
+    },
+    {
+     "id": "obs-4",
+     "label": "pallet",
+     "x": 3.765,
+     "z": -2.403,
+     "yaw_deg": 0,
+     "width": 1.031,
+     "depth": 1.031,
+     "height": 1.016
+    }
+   ]
+  },
+  "dev-office-a": {
+   "initial": [
+    {
+     "id": "obs-1",
+     "label": "table",
+     "x": -0.085,
+     "z": -2.364,
+     "yaw_deg": 0,
+     "width": 1.622,
+     "depth": 1.014,
+     "height": 0.815
+    },
+    {
+     "id": "obs-2",
+     "label": "chair",
+     "x": -0.353,
+     "z": -2.072,
+     "yaw_deg": -90,
+     "width": 0.731,
+     "depth": 0.731,
+     "height": 0.835
+    },
+    {
+     "id": "obs-3",
+     "label": "shelf",
+     "x": 3.062,
+     "z": -4.491,
+     "yaw_deg": 0,
+     "width": 1.136,
+     "depth": 0.71,
+     "height": 1.833
+    },
+    {
+     "id": "obs-4",
+     "label": "plant in pot",
+     "x": 3.12,
+     "z": -1.522,
+     "yaw_deg": 90,
+     "width": 0.361,
+     "depth": 0.361,
+     "height": 1.194
+    },
+    {
+     "id": "obs-5",
+     "label": "cabinet",
+     "x": -1.828,
+     "z": -5.961,
+     "yaw_deg": 90,
+     "width": 0.878,
+     "depth": 0.878,
+     "height": 1.939
+    }
+   ],
+   "reviewed": [
+    {
+     "id": "obs-1",
+     "label": "table",
+     "x": -0.085,
+     "z": -2.364,
+     "yaw_deg": 0,
+     "width": 1.622,
+     "depth": 1.014,
+     "height": 0.815
+    },
+    {
+     "id": "obs-2",
+     "label": "chair",
+     "x": -0.353,
+     "z": -2.072,
+     "yaw_deg": -90,
+     "width": 0.731,
+     "depth": 0.731,
+     "height": 0.835
+    },
+    {
+     "id": "obs-3",
+     "label": "shelf",
+     "x": 3.062,
+     "z": -4.491,
+     "yaw_deg": 0,
+     "width": 1.136,
+     "depth": 0.71,
+     "height": 1.833
+    },
+    {
+     "id": "obs-4",
+     "label": "plant in pot",
+     "x": 3.12,
+     "z": -1.522,
+     "yaw_deg": 90,
+     "width": 0.361,
+     "depth": 0.361,
+     "height": 1.194
+    },
+    {
+     "id": "obs-5",
+     "label": "cabinet",
+     "x": -1.828,
+     "z": -5.961,
+     "yaw_deg": 90,
+     "width": 0.878,
+     "depth": 0.878,
+     "height": 1.939
+    }
+   ],
+   "manual": [
+    {
+     "id": "obs-1",
+     "label": "table",
+     "x": -0.089,
+     "z": -2.827,
+     "yaw_deg": 0,
+     "width": 1.623,
+     "depth": 1.623,
+     "height": 0.697
+    },
+    {
+     "id": "obs-2",
+     "label": "chair",
+     "x": -0.282,
+     "z": -2.01,
+     "yaw_deg": 0,
+     "width": 0.582,
+     "depth": 0.582,
+     "height": 0.843
+    },
+    {
+     "id": "obs-3",
+     "label": "cabinet",
+     "x": -1.765,
+     "z": -5.739,
+     "yaw_deg": 0,
+     "width": 0.819,
+     "depth": 0.819,
+     "height": 1.9
+    },
+    {
+     "id": "obs-4",
+     "label": "shelf",
+     "x": 3.107,
+     "z": -4.591,
+     "yaw_deg": 0,
+     "width": 0.989,
+     "depth": 0.989,
+     "height": 1.801
+    },
+    {
+     "id": "obs-5",
+     "label": "plant",
+     "x": 3.118,
+     "z": -1.483,
+     "yaw_deg": 0,
+     "width": 0.333,
+     "depth": 0.333,
+     "height": 1.187
+    }
+   ]
+  }
+ }
+}

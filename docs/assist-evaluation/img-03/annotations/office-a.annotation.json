@@ -1,0 +1,416 @@
+{
+ "format": "rws-img03-annotation/1",
+ "image": {
+  "file": "office-a.jpg",
+  "sha256": "b919956a01b6c1575ce6304e1a9b8260b96fb26c8c169fc6b1d57ec41c05cd70",
+  "width_px": 1280,
+  "height_px": 960,
+  "stratum": "synthetic",
+  "scene_type": "office",
+  "split": "held_out",
+  "rights": {
+   "source": "Rendered by this project from docs/assist-evaluation/img-03/scenes.json",
+   "license": "Project-owned render",
+   "analysis_permitted": true,
+   "publishable": true
+  },
+  "local_only": false
+ },
+ "camera": {
+  "position_m": [
+   1.6,
+   1.6,
+   4.8
+  ],
+  "target_m": [
+   -0.8,
+   0.8,
+   -2.2
+  ],
+  "vertical_fov_deg": 62,
+  "source": "render camera (exact)"
+ },
+ "rectangle": {
+  "feature": "floor mat",
+  "corners": [
+   {
+    "u": 0.290242,
+    "v": 0.727881
+   },
+   {
+    "u": 0.651811,
+    "v": 0.744123
+   },
+   {
+    "u": 0.715714,
+    "v": 0.962585
+   },
+   {
+    "u": 0.131155,
+    "v": 0.919526
+   }
+  ],
+  "width_m": 2.4,
+  "depth_m": 1.6,
+  "tolerance_m": 0,
+  "method": "render_exact",
+  "measured_by": "exact: the render's own geometry"
+ },
+ "objects": [
+  {
+   "id": "desk-1",
+   "class": "table",
+   "centre_m": [
+    -1.1422,
+    -3.6858
+   ],
+   "yaw_deg": -14,
+   "size": {
+    "width_m": 1.6,
+    "depth_m": 0.8,
+    "height_m": 0.75
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.743,
+   "visible_box": {
+    "left": 0.3188,
+    "top": 0.5031,
+    "right": 0.4805,
+    "bottom": 0.6177
+   },
+   "amodal_box": {
+    "left": 0.3188,
+    "top": 0.5031,
+    "right": 0.4805,
+    "bottom": 0.6177
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "desk-2",
+   "class": "table",
+   "centre_m": [
+    0.6043,
+    -3.2504
+   ],
+   "yaw_deg": -14,
+   "size": {
+    "width_m": 1.6,
+    "depth_m": 0.8,
+    "height_m": 0.75
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.802,
+   "visible_box": {
+    "left": 0.4711,
+    "top": 0.5115,
+    "right": 0.6414,
+    "bottom": 0.6385
+   },
+   "amodal_box": {
+    "left": 0.4711,
+    "top": 0.5115,
+    "right": 0.6414,
+    "bottom": 0.6385
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "chair-1",
+   "class": "chair",
+   "centre_m": [
+    -1.2995,
+    -3.0551
+   ],
+   "yaw_deg": 166,
+   "size": {
+    "width_m": 0.5,
+    "depth_m": 0.52,
+    "height_m": 0.9
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.3352,
+    "top": 0.5042,
+    "right": 0.4047,
+    "bottom": 0.6271
+   },
+   "amodal_box": {
+    "left": 0.3352,
+    "top": 0.5042,
+    "right": 0.4047,
+    "bottom": 0.6271
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "chair-2",
+   "class": "chair",
+   "centre_m": [
+    0.447,
+    -2.6197
+   ],
+   "yaw_deg": 166,
+   "size": {
+    "width_m": 0.5,
+    "depth_m": 0.52,
+    "height_m": 0.9
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.507,
+    "top": 0.5135,
+    "right": 0.5727,
+    "bottom": 0.65
+   },
+   "amodal_box": {
+    "left": 0.507,
+    "top": 0.5135,
+    "right": 0.5727,
+    "bottom": 0.65
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "chair-3",
+   "class": "chair",
+   "centre_m": [
+    3.2717,
+    -4.0282
+   ],
+   "yaw_deg": 26,
+   "size": {
+    "width_m": 0.5,
+    "depth_m": 0.52,
+    "height_m": 0.9
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.7625,
+    "top": 0.4906,
+    "right": 0.832,
+    "bottom": 0.6094
+   },
+   "amodal_box": {
+    "left": 0.7625,
+    "top": 0.4906,
+    "right": 0.832,
+    "bottom": 0.6094
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "cabinet-1",
+   "class": "cabinet",
+   "centre_m": [
+    -2.4541,
+    -7.1047
+   ],
+   "yaw_deg": -14,
+   "size": {
+    "width_m": 0.9,
+    "depth_m": 0.45,
+    "height_m": 1.9
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.769,
+   "visible_box": {
+    "left": 0.343,
+    "top": 0.3854,
+    "right": 0.4031,
+    "bottom": 0.5406
+   },
+   "amodal_box": {
+    "left": 0.343,
+    "top": 0.3854,
+    "right": 0.4047,
+    "bottom": 0.5406
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "cabinet-2",
+   "class": "cabinet",
+   "centre_m": [
+    -1.4838,
+    -6.8628
+   ],
+   "yaw_deg": -14,
+   "size": {
+    "width_m": 0.9,
+    "depth_m": 0.45,
+    "height_m": 1.2
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 0.808,
+   "visible_box": {
+    "left": 0.3977,
+    "top": 0.4417,
+    "right": 0.4586,
+    "bottom": 0.5448
+   },
+   "amodal_box": {
+    "left": 0.3977,
+    "top": 0.4417,
+    "right": 0.4586,
+    "bottom": 0.5448
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "shelf-1",
+   "class": "shelf",
+   "centre_m": [
+    3.0037,
+    -5.847
+   ],
+   "yaw_deg": -14,
+   "size": {
+    "width_m": 1.2,
+    "depth_m": 0.4,
+    "height_m": 1.8
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 0.904,
+   "visible_box": {
+    "left": 0.6813,
+    "top": 0.3896,
+    "right": 0.7797,
+    "bottom": 0.5677
+   },
+   "amodal_box": {
+    "left": 0.6813,
+    "top": 0.3896,
+    "right": 0.7797,
+    "bottom": 0.5677
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "plant-1",
+   "class": "plant",
+   "centre_m": [
+    4.0003,
+    -2.4036
+   ],
+   "yaw_deg": -14,
+   "size": {
+    "width_m": 0.5,
+    "depth_m": 0.5,
+    "height_m": 1.2
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "partly_visible",
+   "visible_fraction": 1,
+   "visible_box": {
+    "left": 0.9266,
+    "top": 0.474,
+    "right": 1,
+    "bottom": 0.6656
+   },
+   "amodal_box": {
+    "left": 0.9266,
+    "top": 0.474,
+    "right": 1,
+    "bottom": 0.6656
+   },
+   "cut_off": [
+    "right"
+   ],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  },
+  {
+   "id": "screen-1",
+   "class": "screen",
+   "centre_m": [
+    0.7479,
+    -6.3064
+   ],
+   "yaw_deg": -14,
+   "size": {
+    "width_m": 1.2,
+    "depth_m": 0.4,
+    "height_m": 1.5
+   },
+   "tolerance_m": 0,
+   "method": "render_exact",
+   "visibility": "visible",
+   "visible_fraction": 0.95,
+   "visible_box": {
+    "left": 0.5273,
+    "top": 0.4188,
+    "right": 0.607,
+    "bottom": 0.5552
+   },
+   "amodal_box": {
+    "left": 0.5273,
+    "top": 0.4188,
+    "right": 0.607,
+    "bottom": 0.5552
+   },
+   "cut_off": [],
+   "on_floor": true,
+   "counted": true,
+   "reason": null,
+   "notes": []
+  }
+ ],
+ "notes": [
+  "Synthetic: exact geometry from the scene definition; not a measurement of a real site."
+ ]
+}
