@@ -496,6 +496,7 @@ After M1 the user approved guided creation and described custom objects as the n
     - criteria (matching, three worlds, metres, strata, effort, thresholds), capture protocol, inventory;
     - development probes: `glm-4-5v` failed; `llama4-scout-17b` passed.
   - **Scorer and runner fixes** found on the first scores, before reporting (`99400d7`): a review index shift, manual-baseline scope, a runner crash.
+  - **Browser inspection and records** (`2adcb11`, `ae9d2b8`; CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38981574341 green, both jobs). `tests/test_img03_runner.py` covers the runner with a stub provider; it fails on the runner as it was during the run.
   - **Results** (`7777b75`, synthetic only), `qwen3-vl-32b-instruct`:
     - **detection:** precision 0.978 (45/46); recall 0.662 (45/68: 10 lost to a 150 s timeout, 11 inside another outline, 2 poor outlines);
     - **reviewed world, not near the horizon:** centre error median 0.17 m, p90 0.65 m; visible width 6 %; near-horizon median 0.69 m, flagged 10/10;

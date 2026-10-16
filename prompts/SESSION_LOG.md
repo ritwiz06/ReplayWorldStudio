@@ -670,7 +670,18 @@ Append entries in chronological order. If a live repository session log already 
 - **Commands and outcomes:**
   - `pnpm check` exit 0 (pytest 755, Vitest 175, contracts 10);
   - `e2e/photo-review.spec.ts` 3 passed and `e2e/img03-browser-path.spec.ts` 1 passed;
-  - freeze CI 38979438108 green.
+  - freeze CI 38979438108 green;
+  - records CI 38981574341 green;
+  - `pnpm test:e2e` 47 passed, with 17 inspection runs skipped.
+- **Commits:**
+  - `7807e9c` infrastructure;
+  - `f44536c` frozen inputs;
+  - `99400d7` scorer and runner fixes;
+  - `7777b75` results;
+  - `2adcb11` browser inspection;
+  - `ae9d2b8` records;
+  - then a runner test and CI evidence.
+- **Time:** 22:32:50 UTC to the final commit, about 1 h 5 min active, with 16.8 min of recorded provider wait inside it.
 - **Decisions:** ADR-048.
 - **Known limitations:**
   - no real photo;

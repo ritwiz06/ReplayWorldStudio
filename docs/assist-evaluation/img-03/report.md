@@ -60,9 +60,11 @@ The paired second model, `llama4-scout-17b`, found **3 of 34** counted objects o
   - **One timeout:** `lounge-a` at 150.1 s. Under the rules it counts as all 10 objects missed.
   - Latency: median 56.7 s, max 150.1 s.
 - **Paired model run.** `llama4-scout-17b` on `line-a`, `store-a`, `office-a` and `lounge-a`.
-  - Its `lounge-a` answer came back without a proposal. My runner's progress print then crashed
-    before saving the row, so its text was lost. It is scored as a failure, as observed. The
-    runner was fixed to save every row first (`99400d7`).
+  - Its `lounge-a` answer came back as an `unsupported` result with no proposal (the only
+    outcome without one). My runner's progress print then crashed before saving the row, so its
+    text was lost. It is scored as a failure, as observed.
+  - The runner was fixed to save every row first (`99400d7`). `tests/test_img03_runner.py`
+    fails on the old runner and passes on the new one.
   - `store-a` and `office-a` had not been reached. They were then run once each and are not
     replacements.
 - **Diagnostics, kept apart and never scored** (`results/diagnostic-*.json`). `lounge-a`
