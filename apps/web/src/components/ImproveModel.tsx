@@ -28,7 +28,11 @@ import {
   type DimensionKey,
   instancePlan,
   instancesOf,
+  movePart,
+  type PartAction,
   recolour,
+  removePart,
+  resizePart,
   revisedDimensions,
   revisedObjects,
   sameSpec,
@@ -40,7 +44,7 @@ import {
 import type { CommandRequest } from "../editing/commands";
 import { formatFixed, LENGTH_DECIMALS, parseDecimal } from "../editing/units";
 import type { AssistState } from "../hooks/useAssistStatus";
-import { type Highlight, ModelPreview, type RevisionView } from "../scene/ModelPreview";
+import { type Highlight, ModelPreview, type Pickable, type RevisionView } from "../scene/ModelPreview";
 import { PartsEditor } from "./PartsEditor";
 
 interface Props {
@@ -113,6 +117,9 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
   // The camera both previews use, and the parts pointed out in the proposed one (GEN-07).
   const [view, setView] = useState<RevisionView>("front-right");
   const [focus, setFocus] = useState<string[]>([]);
+  // One part at a time (GEN-09): the part being changed, and each change in words.
+  const [part, setPart] = useState<string | null>(null);
+  const [partLines, setPartLines] = useState<string[]>([]);
   const pending = useRef<AbortController | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   // A modal dialog, above the viewport and its panels.
@@ -162,10 +169,13 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
   const changes = fitted ? specChanges(base, fitted) : [];
   const unchanged = fitted !== null && sameSpec(base, fitted);
   const sizesChanged = fitted ? changedSizes(base, fitted) : [];
-  const toConfirm = sizesChanged.filter((k) => bases[k] === "proposed" && !confirmed.has(k));
+  const toConfirm = sizesChanged.filter((k) => (bases[k] === "proposed" || bases[k] === "part") && !confirmed.has(k));
   const objects = instancesOf(project, previous.id, object.id);
   const chosen = scope === "all" ? objects : objects.slice(0, 1);
   const plan = fitted ? instancePlan(chosen, previous, fitted.envelope_m, adopt) : [];
+  // A problem about parts the user has since removed is no longer kept by Apply.
+  const present = new Set(draft.parts.map((p) => p.id));
+  const openProblems = proposal?.problems.filter((p) => p.part_ids.some((id) => present.has(id))) ?? [];
   const canApply = fitted !== null && !unchanged && toConfirm.length === 0 && !applying.busy && !asking;
 
   /** A change made by hand: changed overall sizes become the user's; a proposal is marked adjusted. */
@@ -176,7 +186,26 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
     setDraft(next);
   }
 
+  /**
+   * A change to one part. The overall size follows the parts; if it changes, the new size is the
+   * user's, but it is not recorded until they confirm it (they did not type it).
+   */
+  function applyPart(action: PartAction | null) {
+    if (!action) return;
+    const next = action.draft;
+    const moved = DIMENSION_KEYS.filter((k) => Math.abs(next.envelope_m[AXIS[k]] - draft.envelope_m[AXIS[k]]) > 1e-6);
+    if (moved.length) {
+      setBases((b) => ({ ...b, ...Object.fromEntries(moved.map((k) => [k, "part"])) }));
+      setConfirmed((c) => new Set([...c].filter((k) => !moved.includes(k))));
+    }
+    if (proposal) setProposal({ ...proposal, adjusted: true });
+    setPartLines((lines) => [...lines, action.line]);
+    setDraft(next);
+  }
+
   function reset() {
+    setPart(null);
+    setPartLines([]);
     setDraft(base);
     setBases({});
     setConfirmed(new Set());
@@ -242,9 +271,13 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
     pending.current = controller;
     // Problems the checks found and the app's own visual estimates stay on the record of the
     // version, so it never reads as fully shown or as measured.
-    const problems = (proposal?.problems ?? []).map((p) => `Problem found in the proposal: ${p.text}`);
-    const estimates = (proposal?.adjustments ?? []).map((a) => `Visual choice by the app: ${a.text}`);
-    const listed = [...(proposal?.adjusted ? [...changes, "Adjusted by the user after the proposal"] : changes), ...estimates, ...problems];
+    const problems = [
+      ...openProblems.map((p) => `Problem found in the proposal: ${p.text}`),
+      ...(proposal?.problems ?? []).filter((p) => !openProblems.includes(p)).map((p) => `Problem found in the proposal, then its parts removed by you: ${p.text}`),
+    ];
+    const estimates = (proposal?.adjustments ?? []).map((a) => `${a.kind === "scaled" || a.kind === "recentred" ? "Fitting by the app" : "Visual choice by the app"}: ${a.text}`);
+    const byYou = partLines.map((l) => `By you: ${l}`);
+    const listed = [...(proposal?.adjusted ? [...changes, "Adjusted by the user after the proposal"] : changes), ...byYou, ...estimates, ...problems];
     let built;
     try {
       built = await client.reviseGeneratedAsset(
@@ -274,11 +307,14 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
 
   const colours = colourGroups(draft.parts);
   const shownSpec = fitted ?? draft;
+  const pickable: Pickable[] = draft.parts.map((p) => ({ id: p.id, center: [p.center_m.x, p.center_m.y, p.center_m.z], size: [p.size_m.x, p.size_m.y, p.size_m.z] }));
+  const chosenPart = draft.parts.find((p) => p.id === part) ?? null;
   const highlight: Highlight[] = shownSpec.parts
-    .filter((p) => focus.includes(p.id))
+    .filter((p) => focus.includes(p.id) || p.id === part)
     .map((p) => ({ center: [p.center_m.x, p.center_m.y, p.center_m.z], size: [p.size_m.x, p.size_m.y, p.size_m.z] }));
   const estimates = proposal?.adjustments.filter((a) => a.kind === "enlarged") ?? [];
-  const colourChoices = proposal?.adjustments.filter((a) => a.kind !== "enlarged") ?? [];
+  const colourChoices = proposal?.adjustments.filter((a) => a.kind === "coloured_as_asked" || a.kind === "contrast") ?? [];
+  const fitting = proposal?.adjustments.filter((a) => a.kind === "scaled" || a.kind === "recentred") ?? [];
 
   return (
     <dialog
@@ -315,6 +351,8 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
             testId="improve-preview-new"
             view={view}
             highlight={highlight}
+            pickable={pickable}
+            onPick={(id) => setPart(id)}
           />
           {newPreview.status === "failed" && (
             <p className="status-error small" role="alert" data-testid="improve-build-error">
@@ -389,20 +427,33 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
               )}
               {proposal.problems.length > 0 && (
                 <div className="status-warn small" role="alert" data-testid="improve-problems">
-                  <p>
-                    <strong>Not clearly shown:</strong> these parts are in the proposal, but a viewer may not see them as asked
-                    {proposal.adjusted ? " (found before your own changes, which are not checked again)" : ""}:
-                  </p>
-                  <ul>
-                    {proposal.problems.map((p) => (
-                      <li key={p.text}>
-                        {p.text}{" "}
-                        <button type="button" className="link-button" data-testid={`improve-show-${p.part_ids[0]}`} onClick={() => setFocus(p.part_ids)}>
-                          Show it
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                  {(
+                    [
+                      ["shown", "Not clearly shown:", "these parts are in the proposal, but a viewer may not see them as asked"],
+                      ["unasked", "Parts you did not ask about:", "the proposal left or changed them in a way that is easy to miss"],
+                    ] as const
+                  ).map(([group, title, says]) => {
+                    const listed = proposal.problems.filter((p) => (UNASKED.has(p.kind) ? "unasked" : "shown") === group);
+                    if (!listed.length) return null;
+                    return (
+                      <div key={group} data-testid={`improve-problems-${group}`}>
+                        <p>
+                          <strong>{title}</strong> {says}
+                          {proposal.adjusted ? " (found before your own changes, which are not checked again)" : ""}:
+                        </p>
+                        <ul>
+                          {listed.map((p) => (
+                            <li key={p.text} data-kind={p.kind}>
+                              {p.text}{" "}
+                              <button type="button" className="link-button" data-testid={`improve-show-${p.part_ids[0]}`} onClick={() => setFocus(p.part_ids)}>
+                                Show it
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               {estimates.length > 0 && (
@@ -432,6 +483,16 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
                   </ul>
                 </div>
               )}
+              {fitting.length > 0 && (
+                <div className="improve-checks small" data-testid="improve-fitting">
+                  <p>How the parts were fitted:</p>
+                  <ul>
+                    {fitting.map((a) => (
+                      <li key={a.text}>{a.text}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {proposal.checks.length > 0 && (
                 <div className="improve-checks small" data-testid="improve-checks">
                   <p>What the app checked or adjusted:</p>
@@ -444,6 +505,88 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
               )}
             </div>
           )}
+
+          <h3 className="section-title">Change one part</h3>
+          <div className="improve-part" data-testid="improve-part">
+            <label className="photo-field">
+              <span>Part</span>
+              <select value={part ?? ""} data-testid="improve-part-select" aria-label="Part to change" onChange={(e) => setPart(e.target.value || null)}>
+                <option value="">Click a part in the proposed model, or choose one…</option>
+                {draft.parts.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.label} ({words(p.material)})
+                  </option>
+                ))}
+              </select>
+            </label>
+            {chosenPart && (
+              <>
+                <p className="muted small">It is outlined in orange. The centre is measured from the middle of the object, at floor level.</p>
+                <table className="improve-part-table">
+                  <thead>
+                    <tr>
+                      <th />
+                      <th scope="col">Centre</th>
+                      <th scope="col">Size</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(["x", "y", "z"] as const).map((a) => {
+                      const size = a === "x" ? "width" : a === "y" ? "height" : "depth";
+                      return (
+                        <tr key={a}>
+                          <th scope="row">{a === "x" ? "Across (+ right)" : a === "y" ? "Up (centre height)" : "Front (+) / back"}</th>
+                          <td>
+                            {draft.parts.length < 2 ? (
+                              a === "x" && <span className="muted small">the object’s centre</span>
+                            ) : (
+                            <MetreBox
+                              value={chosenPart.center_m[a]}
+                              label={`${chosenPart.label} centre ${a === "x" ? "across" : a === "y" ? "height" : "front to back"} in metres`}
+                              testId={`improve-part-pos-${a}`}
+                              onCommit={(v) => applyPart(movePart(draft, chosenPart.id, { ...chosenPart.center_m, [a]: v }))}
+                            />
+                            )}
+                          </td>
+                          <td>
+                            <MetreBox
+                              value={chosenPart.size_m[a]}
+                              min={0.005}
+                              label={`${chosenPart.label} ${size} in metres`}
+                              testId={`improve-part-size-${a}`}
+                              onCommit={(v) => applyPart(resizePart(draft, chosenPart.id, { ...chosenPart.size_m, [a]: v }))}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="button"
+                    disabled={draft.parts.length < 2}
+                    data-testid="improve-part-remove"
+                    onClick={() => {
+                      applyPart(removePart(draft, chosenPart.id));
+                      setPart(null);
+                    }}
+                  >
+                    Remove “{chosenPart.label}”
+                  </button>
+                  {draft.parts.length < 2 && <span className="muted small">It is the only part: it cannot be removed, and moving it would move the whole object (do that in the scene).</span>}
+                </div>
+              </>
+            )}
+            {partLines.length > 0 && (
+              <ul className="create-checks" data-testid="improve-part-changes">
+                {partLines.map((l, i) => (
+                  <li key={i}>{l}</li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           <h3 className="section-title">Colours</h3>
           <ul className="improve-colours" data-testid="improve-colours">
@@ -469,25 +612,20 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
               <span className="size-label">{LABEL[key]}</span>
               <SizeBox value={(fitted ?? draft).envelope_m[AXIS[key]]} testId={`improve-size-${key}`} label={LABEL[key]} onCommit={(v) => edit(withSize(draft, key, v))} />
               <span className="size-tag">
-                {!sizesChanged.includes(key) ? `kept (${previous.nominal_dimensions[key].origin.replace("_", " ")})` : bases[key] === "proposed" ? "proposed" : "entered by you"}
+                {!sizesChanged.includes(key)
+                  ? `kept (${previous.nominal_dimensions[key].origin.replace("_", " ")})`
+                  : bases[key] === "proposed"
+                    ? "proposed"
+                    : bases[key] === "part"
+                      ? "changed by your part edit"
+                      : "entered by you"}
               </span>
-              {sizesChanged.includes(key) && bases[key] === "proposed" && (
-                <label className="small">
-                  <input
-                    type="checkbox"
-                    checked={confirmed.has(key)}
-                    data-testid={`improve-confirm-${key}`}
-                    onChange={(e) => setConfirmed((c) => (e.target.checked ? new Set([...c, key]) : new Set([...c].filter((k) => k !== key))))}
-                  />{" "}
-                  confirm {metres(base.envelope_m[AXIS[key]])} → {metres(fitted!.envelope_m[AXIS[key]])}
-                </label>
-              )}
             </div>
           ))}
 
           <details className="improve-parts" data-testid="improve-parts">
-            <summary>Parts ({draft.parts.length}): change, add or remove</summary>
-            <PartsEditor parts={draft.parts} envelope={draft.envelope_m} onParts={(parts) => edit(withParts(draft, parts))} />
+            <summary>Details: the full parts list ({draft.parts.length} parts), for advanced edits</summary>
+            <PartsEditor parts={draft.parts} envelope={draft.envelope_m} onParts={(parts) => applyPart({ draft: withParts(draft, parts), line: "Changed the parts list by hand" })} />
           </details>
         </section>
 
@@ -546,23 +684,42 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
               </li>
             ))}
           </ul>
-          {toConfirm.length > 0 && (
-            <p className="status-warn small" data-testid="improve-needs-confirm">
-              Confirm the proposed {toConfirm.map((k) => k).join(" and ")} first.
-            </p>
+          {sizesChanged.some((k) => bases[k] === "proposed" || bases[k] === "part") && (
+            <div className={`small improve-confirm ${toConfirm.length ? "status-warn" : "muted"}`} data-testid="improve-needs-confirm" data-open={toConfirm.length}>
+              <p>
+                {toConfirm.length ? "Before Apply, confirm the new overall size. " : ""}It is not recorded until you do; you did not type it.
+              </p>
+              {sizesChanged
+                .filter((k) => bases[k] === "proposed" || bases[k] === "part")
+                .map((key) => (
+                  <label key={key}>
+                    <input
+                      type="checkbox"
+                      checked={confirmed.has(key)}
+                      data-testid={`improve-confirm-${key}`}
+                      onChange={(e) => setConfirmed((c) => (e.target.checked ? new Set([...c, key]) : new Set([...c].filter((k) => k !== key))))}
+                    />{" "}
+                    {LABEL[key]} {metres(base.envelope_m[AXIS[key]])} → {metres(fitted!.envelope_m[AXIS[key]])}{" "}
+                    {bases[key] === "part" ? "(because of your part change)" : "(proposed by the model)"}
+                  </label>
+                ))}
+            </div>
           )}
           {applying.error && (
             <p className="status-error small" role="alert" data-testid="improve-error">
               {applying.error}
             </p>
           )}
-          {proposal && proposal.problems.length > 0 && !applying.busy && (
+          {proposal && openProblems.length > 0 && !applying.busy && (
             <div className="status-warn small improve-apply-problems" data-testid="improve-apply-problems">
               <p>
-                <strong>Applying keeps {proposal.problems.length === 1 ? "this problem" : `these ${proposal.problems.length} problems`}:</strong>
+                <strong>
+                  {proposal.adjusted ? "Applying may keep" : "Applying keeps"} {openProblems.length === 1 ? "this problem" : `these ${openProblems.length} problems`}
+                  {proposal.adjusted ? " (found before your own changes)" : ""}:
+                </strong>
               </p>
               <ul>
-                {proposal.problems.map((p) => (
+                {openProblems.map((p) => (
                   <li key={p.text}>{p.text}</li>
                 ))}
               </ul>
@@ -573,7 +730,7 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
             <button type="button" className="button button-primary" disabled={!canApply} data-testid="improve-apply" onClick={() => void apply()}>
               {applying.busy
                 ? applying.status
-                : `${proposal?.problems.length ? "Apply despite these problems" : proposal?.notRepresented.length ? "Apply the drawable part" : "Apply"} to ${chosen.length === 1 ? "this object" : `${chosen.length} objects`}`}
+                : `${openProblems.length ? "Apply despite these problems" : proposal?.notRepresented.length ? "Apply the drawable part" : "Apply"} to ${chosen.length === 1 ? "this object" : `${chosen.length} objects`}`}
             </button>
             <button type="button" className="button" disabled={applying.busy || (sameSpec(draft, base) && !proposal)} data-testid="improve-reset" onClick={reset}>
               Start over
@@ -585,6 +742,9 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
     </dialog>
   );
 }
+
+/** Problems about parts the request did not mention (GEN-09), shown apart from visibility. */
+const UNASKED: ReadonlySet<string> = new Set(["floating_kept", "unrelated_change"]);
 
 /** What the request asked for that the model does not show, in the user's words. */
 function UnshownList({ items }: { items: readonly string[] }) {
@@ -612,6 +772,44 @@ function AskWaiting({ startedAt, who, onCancel }: { startedAt: number; who: stri
         Cancel
       </button>
     </div>
+  );
+}
+
+/** A length in metres that may be negative (a position) or must stay above ``min`` (a size). */
+function MetreBox({ value, label, testId, min, onCommit }: { value: number; label: string; testId: string; min?: number; onCommit: (value: number) => void }) {
+  const shown = formatFixed(value, LENGTH_DECIMALS);
+  const [text, setText] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const commit = () => {
+    if (text === null) return;
+    setText(null);
+    if (text.trim() === shown) return setError(null);
+    const parsed = parseDecimal(text.replace("−", "-"), LENGTH_DECIMALS, "m");
+    if (!parsed.ok) return setError(parsed.message);
+    if (min !== undefined && parsed.value < min) return setError(`Use at least ${min} m.`);
+    if (Math.abs(parsed.value) > 50) return setError("Use a value within 50 m.");
+    setError(null);
+    onCommit(parsed.value);
+  };
+  return (
+    <span className="size-input">
+      <input
+        type="text"
+        inputMode="decimal"
+        aria-label={label}
+        data-testid={testId}
+        value={text ?? shown}
+        onFocus={(e) => {
+          setText(shown);
+          e.currentTarget.select();
+        }}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === "Enter" && commit()}
+      />
+      <span className="unit">m</span>
+      {error && <span className="field-error">{error}</span>}
+    </span>
   );
 }
 

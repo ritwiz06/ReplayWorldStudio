@@ -1,4 +1,5 @@
-import { BoxGeometry, Group, Mesh, MeshStandardMaterial } from "three";
+import { BoxGeometry, Group, Mesh, MeshStandardMaterial, type Vector2, type WebGLRenderer } from "three";
+import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { describe, expect, it } from "vitest";
 import { outlineTransparent, TRANSPARENT_EDGE } from "./modelLoader";
 import { viewCamera } from "./views";
@@ -21,11 +22,28 @@ describe("transparent parts (GEN-06)", () => {
     const steel = new Mesh(new BoxGeometry(1, 0.1, 1), new MeshStandardMaterial());
     scene.add(glass, steel);
     outlineTransparent(scene);
-    const edges = glass.children.find((c) => c.name === "transparent-edges");
-    expect(edges).toBeDefined();
-    expect(((edges as Mesh).material as MeshStandardMaterial).color.getHexString()).toBe(TRANSPARENT_EDGE.slice(1));
+    const edges = glass.children.filter((c) => c.name === "transparent-edges");
+    // A dark outline under a light core: readable on light and dark grounds.
+    expect(edges.map((e) => ((e as Mesh).material as MeshStandardMaterial).color.getHexString())).toEqual([
+      TRANSPARENT_EDGE.outline.slice(1),
+      TRANSPARENT_EDGE.core.slice(1),
+    ]);
     expect((glass.material as MeshStandardMaterial).depthWrite).toBe(false);
     expect(steel.children).toHaveLength(0);
     expect((steel.material as MeshStandardMaterial).depthWrite).toBe(true);
+  });
+
+  it("keep their screen width in every placed copy, not only in the original (GEN-09)", () => {
+    // The scene and the preview draw clones; a clone drops an object's own render hook, which
+    // left the lines without the canvas size, so the placed glass had no visible edges.
+    const scene = new Group();
+    scene.add(new Mesh(new BoxGeometry(1, 1, 0.02), new MeshStandardMaterial({ transparent: true, opacity: 0.25 })));
+    outlineTransparent(scene);
+    const placed = scene.clone(true);
+    const edge = placed.children[0]!.children.find((c) => c.name === "transparent-edges") as Mesh;
+    const material = edge.material as LineMaterial;
+    const renderer = { getDrawingBufferSize: (v: Vector2) => v.set(1280, 720) } as unknown as WebGLRenderer;
+    material.onBeforeRender(renderer, null as never, null as never, null as never, edge, null as never);
+    expect(material.resolution.toArray()).toEqual([1280, 720]);
   });
 });

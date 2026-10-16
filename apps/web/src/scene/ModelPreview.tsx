@@ -71,6 +71,33 @@ export interface Highlight {
   size: Vec3Tuple;
 }
 
+/** A part that can be picked by clicking it in the preview (GEN-09). */
+export interface Pickable extends Highlight {
+  id: string;
+}
+
+/** Invisible boxes, one per part: the file merges parts by colour, so clicks are matched here. */
+function Pickables({ parts, onPick }: { parts: readonly Pickable[]; onPick: (id: string) => void }) {
+  return (
+    <>
+      {parts.map((p) => (
+        <mesh
+          key={p.id}
+          position={p.center}
+          onClick={(e) => {
+            if (e.delta > 4) return; // a drag that turned the view, not a click
+            e.stopPropagation(); // the nearest part only
+            onPick(p.id);
+          }}
+        >
+          <boxGeometry args={p.size} />
+          <meshBasicMaterial visible={false} />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
 function Highlights({ boxes }: { boxes: readonly Highlight[] }) {
   const lines = useMemo(
     () =>
@@ -110,12 +137,16 @@ export function ModelPreview({
   testId = "model-preview",
   view = "front-right",
   highlight = [],
+  pickable = [],
+  onPick,
 }: {
   model: GeneratedModel | null;
   busy: boolean;
   testId?: string;
   view?: RevisionView;
   highlight?: readonly Highlight[];
+  pickable?: readonly Pickable[];
+  onPick?: (id: string) => void;
 }) {
   const [shown, setShown] = useState<Verified | null>(null);
   const [failure, setFailure] = useState<{ key: string; message: string } | null>(null);
@@ -162,6 +193,7 @@ export function ModelPreview({
           <Grid position={[0, 0.001, 0]} cellSize={0.1} sectionSize={1} cellColor="#4a5058" sectionColor="#5e666f" fadeDistance={reach * 6} infiniteGrid />
           <primitive object={object} />
           <Highlights boxes={highlight} />
+          {onPick && <Pickables parts={pickable} onPick={onPick} />}
           <OrbitControls makeDefault enableDamping={false} />
           <Frame extents={shown.extents} view={view} />
         </Canvas>

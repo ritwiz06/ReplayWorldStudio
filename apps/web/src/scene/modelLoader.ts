@@ -2,7 +2,10 @@
 // recorded in the catalog, parse as binary glTF, and measure the bounds the catalog records.
 // Any failure is reported with an actionable message; nothing else is drawn in its place.
 import type { GltfVisual, SceneObject } from "@replay-world/contracts";
-import { Box3, EdgesGeometry, Group, LineBasicMaterial, LineSegments, type Material, type Mesh, type Object3D } from "three";
+import { Box3, EdgesGeometry, Group, type Material, type Mesh, type Object3D, Vector2 } from "three";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
+import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { renderScale } from "./fit";
 import { placementOf } from "./placement";
@@ -108,11 +111,19 @@ export function separateCoincidentFaces(scene: Object3D): void {
 }
 
 /**
- * Edge colour for glass and clear plastic (GEN-06): a mid-tone blue that reads against light and
- * dark surroundings. The API's visibility check assumes the same colour
- * (services/api/src/replay_world_api/assist/visibility.py, GLASS_EDGE).
+ * Edges for glass and clear plastic (GEN-09): a light core over a wider dark outline, a few pixels
+ * wide whatever the zoom, so the outline reads on a light floor and on the dark preview alike
+ * (GEN-06's 1-pixel mid-tone line was too faint on light surfaces). The API's visibility check
+ * assumes the same colours (services/api/src/replay_world_api/assist/visibility.py).
  */
-export const TRANSPARENT_EDGE = "#3a8fd6";
+export const TRANSPARENT_EDGE = { outline: "#0e2f47", core: "#8fd0ff", outlinePx: 3.5, corePx: 1.6 } as const;
+
+/**
+ * Faces meeting at more than this angle get an edge line. Low enough for the bevel steps of a
+ * rounded box (GEN-09: at 30 degrees the GEN-08 glass door, a rounded box, got no edges at all),
+ * and above the 11.25-degree facets of a 32-sided cylinder, so round glass is not striped.
+ */
+const EDGE_ANGLE_DEG = 12;
 
 /**
  * Make transparent surfaces recognisable without making them opaque: their sharp edges are drawn
@@ -131,10 +142,24 @@ export function outlineTransparent(scene: Object3D): void {
     const materials: Material[] = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
     for (const m of materials) m.depthWrite = false;
     mesh.renderOrder = 1;
-    const edges = new LineSegments(new EdgesGeometry(mesh.geometry, 30), new LineBasicMaterial({ color: TRANSPARENT_EDGE }));
-    edges.name = "transparent-edges";
-    edges.renderOrder = 2;
-    mesh.add(edges);
+    const segments = new LineSegmentsGeometry().fromEdgesGeometry(new EdgesGeometry(mesh.geometry, EDGE_ANGLE_DEG));
+    for (const [colour, width, order] of [
+      [TRANSPARENT_EDGE.outline, TRANSPARENT_EDGE.outlinePx, 2],
+      [TRANSPARENT_EDGE.core, TRANSPARENT_EDGE.corePx, 3],
+    ] as const) {
+      const material = new LineMaterial({ color: colour, linewidth: width, worldUnits: false });
+      // Screen-space width needs the drawing size, which differs per canvas. The hook is on the
+      // material, which every placed copy shares (a cloned object does not keep its own hook).
+      const size = new Vector2();
+      material.onBeforeRender = (renderer) => {
+        renderer.getDrawingBufferSize(size);
+        material.resolution.copy(size);
+      };
+      const edges = new LineSegments2(segments, material);
+      edges.name = "transparent-edges";
+      edges.renderOrder = order;
+      mesh.add(edges);
+    }
   }
 }
 

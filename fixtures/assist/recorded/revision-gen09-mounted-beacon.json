@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "9f96250ca11be5d4:add an orange beacon on a short post on top of the machine",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "GEN-09 regression (synthetic (equipment mounted on the machine, not standing on the floor)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\"outcome\": \"revision\", \"message\": null, \"summary\": \"Added an orange beacon on a short post on top.\", \"envelope_m\": {\"x\": 2.095, \"y\": 2.212, \"z\": 0.838}, \"remove\": [], \"change\": [], \"add\": [{\"id\": \"post\", \"label\": \"beacon post\", \"shape\": \"cylinder\", \"material\": \"steel_dark\", \"center_m\": {\"x\": 0.8, \"y\": 1.9955, \"z\": 0}, \"size_m\": {\"x\": 0.04, \"y\": 0.12, \"z\": 0.04}, \"axis\": \"y\", \"taper\": null, \"narrow_end\": null, \"basis\": \"inferred\"}, {\"id\": \"beacon\", \"label\": \"orange beacon\", \"shape\": \"cylinder\", \"material\": \"signal_amber\", \"center_m\": {\"x\": 0.8, \"y\": 2.1005, \"z\": 0}, \"size_m\": {\"x\": 0.09, \"y\": 0.09, \"z\": 0.09}, \"axis\": \"y\", \"taper\": null, \"narrow_end\": null, \"basis\": \"inferred\"}], \"repeat\": [], \"not_representable\": []}"
+  ]
+}

@@ -728,3 +728,32 @@ For a new decision, append: ID, date, status, context, options considered, decis
 - **Outcome (GEN-08, 2026-10-16).** On the fresh frozen set (`51d052d`), every pre-registered revision gate passes on the default model (visual mean in the dialog 1.24 against 1.2), so M2 closes.
   - The fixed GEN-05 camera, a different viewing method, scored 1.08 for context.
   - Two results look done but are not, with no warning: a glass door over a solid body, and kept parts left floating. A transparent part's edge passing the check does not guarantee a person notices it on a light surface. These are GEN-09.
+
+### ADR-046 - Misleading revisions: kept parts judged too, warned not repaired, one part at a time
+
+- Date: 2026-10-16. Status: adopted (GEN-09).
+- Context:
+  - GEN-08 passed narrowly. Two results looked done but were not, and carried no warning: a glass door over a body that was still solid (t2), and kept parts left floating inside an open frame (p3).
+  - The checks judged only added parts.
+  - The viewer's glass edges were 1 px and weak on light surfaces. For rounded glass they were missing altogether, because the 30° edge threshold missed the bevels. The composited check assumed every outline was drawn.
+  - Beginners could change colours and overall sizes, but fixing one part needed the parts list.
+- Options considered:
+  - repair automatically (delete the solid body; drop floating parts);
+  - warn plainly, and give a one-part control to fix it (chosen);
+  - a further AI call to judge the proposal (more waiting, and not deterministic).
+- Decision:
+  - **Kept parts are judged too.**
+    - Glass in front of a kept solid body is warned about when the request implies seeing in. The body is never removed: it may be structural.
+    - Kept parts that lose their support are warned about.
+    - Unmentioned parts are compared by stable id, and each change is said in words. Fitting changes are collected into one sentence; a re-centring is said once, and a requested resize explained once as proportional.
+    - All of these are deterministic. They feed the existing single shared retry, so there are no new provider calls.
+  - **Edges readable everywhere.** A dark outline under a light core, in screen pixels, at a 12° crease angle, so rounded glass is outlined and 32-sided cylinders are not striped. Still display only: no generator version change, and the recorded hashes are unchanged.
+  - **One part at a time in the dialog.**
+    - Remove, move or resize one part in metres, with exact change lines and a live preview.
+    - When the overall size follows a part change, it is confirmed beside Apply before it is recorded as entered. Unchanged axes keep their evidence.
+    - Earlier warnings stay, marked as found before your own changes; they are not re-checked.
+  - **Independent review is not simulated.** A blinded packet is prepared; until a real independent person scores it, the criterion stays open and the GEN-08 visual pass rests on the assistant's review.
+- Consequences:
+  - More warnings appear before Apply: the GEN-08 o3 answer now shows floating legs and the unasked changes the proposal made.
+  - Warnings can be stale after hand edits; re-checking the edited draft would need a check-only endpoint (not built).
+  - The GEN-08 frozen results are not rescored; its t2 and p3 answers are development regressions only.

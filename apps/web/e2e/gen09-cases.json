@@ -1,0 +1,40 @@
+[
+ {
+  "label": "gen08-t2",
+  "name": "Cabinet",
+  "instruction": "replace the door with a clear glass door",
+  "origin": "GEN-08 frozen answer t2 (development regression)",
+  "expect": {
+   "backed_glass": true
+  }
+ },
+ {
+  "label": "gen08-p3",
+  "name": "Left machine with yellow safety cage",
+  "instruction": "remove the solid body and show an open frame of posts and rails",
+  "origin": "GEN-08 frozen answer p3 (development regression)",
+  "expect": {
+   "floating_kept": true
+  }
+ },
+ {
+  "label": "backed-cover",
+  "name": "Cabinet",
+  "instruction": "add a clear glass cover over the front to protect the door",
+  "origin": "synthetic (glass in front of a solid part on purpose)",
+  "expect": {
+   "backed_glass": false
+  }
+ },
+ {
+  "label": "mounted-beacon",
+  "name": "Left machine with yellow safety cage",
+  "instruction": "add an orange beacon on a short post on top of the machine",
+  "origin": "synthetic (equipment mounted on the machine, not standing on the floor)",
+  "expect": {
+   "floating_kept": false,
+   "floating": false,
+   "unrelated_change": false
+  }
+ }
+]

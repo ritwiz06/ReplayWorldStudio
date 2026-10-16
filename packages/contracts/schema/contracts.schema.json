@@ -3066,7 +3066,10 @@
           "enum": [
             "enlarged",
             "coloured_as_asked",
-            "contrast"
+            "contrast",
+            "scaled",
+            "recentred",
+            "part_action"
           ],
           "type": "string"
         },
@@ -3104,7 +3107,10 @@
             "tiny",
             "unseen",
             "blends",
-            "solid_slats"
+            "solid_slats",
+            "backed_glass",
+            "floating_kept",
+            "unrelated_change"
           ],
           "type": "string"
         },

@@ -66,7 +66,9 @@ window.drawFixed = async (url) => {
   camera.lookAt(0, size.y / 2, 0);
   fixedR.render(scene, camera);
 };
-// The Improve dialog's preview (ModelPreview.tsx) with the viewer's treatment (modelLoader.ts).
+// The Improve dialog's preview (ModelPreview.tsx) with the viewer's treatment (modelLoader.ts) as
+// it was frozen for GEN-08 (1-px mid-blue edges at 30 degrees). GEN-09 changed the viewer's
+// edges; this copy is kept so the GEN-08 sheets re-render exactly.
 const EDGE = "#3a8fd6";
 function prepare(root) {
   const meshes = [];

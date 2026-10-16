@@ -371,7 +371,18 @@ from behind (rear-left, above) and a low view from the front (under tops and she
 class RevisionProblem(ContractModel):
     """An added part a viewer may not see as asked, found by the API's checks (GEN-05/06)."""
 
-    kind: Literal["hidden", "buried", "floating", "tiny", "unseen", "blends", "solid_slats"]
+    kind: Literal[
+        "hidden",
+        "buried",
+        "floating",
+        "tiny",
+        "unseen",
+        "blends",
+        "solid_slats",
+        "backed_glass",
+        "floating_kept",
+        "unrelated_change",
+    ]
     part_ids: list[PartId] = Field(min_length=1)
     text: NonEmptyText
 
@@ -379,7 +390,7 @@ class RevisionProblem(ContractModel):
 class RevisionAdjustment(ContractModel):
     """A visual choice the API made without asking, shown as such: never a measurement."""
 
-    kind: Literal["enlarged", "coloured_as_asked", "contrast"]
+    kind: Literal["enlarged", "coloured_as_asked", "contrast", "scaled", "recentred", "part_action"]
     part_ids: list[PartId] = Field(min_length=1)
     text: NonEmptyText
 

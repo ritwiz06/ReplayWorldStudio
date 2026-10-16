@@ -85,8 +85,10 @@ MAX_ENLARGED_M: Final = 0.12
 MAX_ENLARGE_FACTOR: Final = 3.0
 TOUCH_MAX_M: Final = 0.03
 EDGE_SHARE: Final = 0.30
-GLASS_EDGE: Final = "#3a8fd6"
-"""The colour the review draws transparent parts' edges in (apps/web/src/scene/modelLoader.ts)."""
+GLASS_EDGES: Final = ("#0e2f47", "#8fd0ff")
+"""The two tones the review draws transparent parts' edges in, a dark outline under a light core
+a few pixels wide (apps/web/src/scene/modelLoader.ts, TRANSPARENT_EDGE): one of them stands out
+on any ground."""
 PREVIEW_BACKGROUND: Final = "#1f2329"
 """The review dialog's preview background (apps/web/src/scene/ModelPreview.tsx)."""
 VIEWS: Final = ("front-right", "rear-left", "low-front")
@@ -202,7 +204,9 @@ class Problem:
 
     part_id: str
     label: str
-    kind: str  # hidden, buried, floating, tiny, unseen, blends, solid_slats
+    # hidden, buried, floating, tiny, unseen, blends, solid_slats; GEN-09: backed_glass,
+    # floating_kept, unrelated_change
+    kind: str
     text: str  # for the user
     feedback: str  # for the model's one corrected answer
     retry: bool = True  # False when asking again cannot help (the user chose the place)
@@ -217,7 +221,7 @@ class Problem:
 class Adjustment:
     """A visual choice the app made without asking (never a measurement)."""
 
-    kind: str  # enlarged, coloured_as_asked, contrast
+    kind: str  # enlarged, coloured_as_asked, contrast, scaled, recentred
     part_ids: tuple[str, ...]
     text: str
 
@@ -434,7 +438,7 @@ def outline_share(
     material = MATERIALS[spec.parts[index].material]
     alpha = material.opacity if material.opacity is not None else 1.0
     glass = _rgb(material.color_srgb)
-    edge = _rgb(GLASS_EDGE)
+    edges_rgb = [_rgb(c) for c in GLASS_EDGES]
     outline = outlined = fill = filled = 0
     for pix, z in mine.items():
         px, py = pix % VIEW_W, pix // VIEW_W
@@ -449,7 +453,7 @@ def outline_share(
         )
         if border:
             outline += 1
-            if not occluded and math.dist(edge, behind) > 60:
+            if not occluded and max(math.dist(c, behind) for c in edges_rgb) > 60:
                 outlined += 1
         else:
             fill += 1
@@ -851,7 +855,7 @@ def find_problems(spec: GeometrySpec, current: GeometrySpec, instruction: str) -
         return views[name]
 
     hangs = bool(_HANGS.search(instruction))
-    grounded = _grounded(list(parts), base, before)
+    grounded = _grounded(list(parts), base, intrinsically_unsupported(current))
     judged: set[str] = set()
     pieces = _assembly_pieces(spec, current, instruction)
     colours = {pid for item in named_colours(instruction) for pid in _named_ids(item, parts)}
@@ -1036,7 +1040,9 @@ def _sized(label: str, instruction: str) -> bool:
 def _asked_for(label: str, instruction: str) -> bool:
     """The part's label shares a word with the instruction (so the user asked for it)."""
     asked = {_stem(w) for w in _WORD.findall(instruction.lower()) if len(w) >= 3}
-    return any(_stem(w) in asked for w in _WORD.findall(label.lower()) if len(w) >= 3)
+    words = [_stem(w) for w in _WORD.findall(label.lower()) if len(w) >= 3]
+    # "worktop" answers "the table top", as colour phrases do (_matches).
+    return any(w in asked or any(w.endswith(a) for a in asked) for w in words)
 
 
 def _structural(part: GeometryPart, envelope: Extent3) -> bool:
@@ -1049,6 +1055,16 @@ def _structural(part: GeometryPart, envelope: Extent3) -> bool:
     panel = shares[1] >= STRUCTURAL_SHARE
     member = shares[2] >= STRUCTURAL_SHARE and shares[1] <= SLENDER_SHARE
     return panel or member
+
+
+def intrinsically_unsupported(current: GeometrySpec) -> set[str]:
+    """Parts of the model the user started from that no chain of contact links to the floor (a
+    template whose legs stand clear of its round body). They count as held up, as they always
+    were; every other part must still be held up after a revision."""
+    e = current.envelope_m
+    base = 0.01 + 0.006 * max(e.x, e.y, e.z)
+    reached = _grounded(list(current.parts), base, set())
+    return {p.id for i, p in enumerate(current.parts) if i not in reached}
 
 
 def _grounded(parts: list[GeometryPart], base: float, kept: set[str]) -> set[int]:
@@ -1102,3 +1118,361 @@ def _slat_problems(spec: GeometrySpec, current: GeometrySpec, instruction: str) 
                 )
             )
     return out
+
+
+# --- Kept parts and unrelated changes (GEN-09) -----------------------------------------------
+
+_SEE_THROUGH: Final = re.compile(
+    r"\b(?:glass|clear|transparent|see[- ]?through|display|window|vitrine|perspex|acrylic)\b",
+    re.IGNORECASE,
+)
+_BACKED_ON_PURPOSE: Final = re.compile(
+    r"\b(?:cover\w*|protect\w*|splash\w*|backed|backing|over\s+the|on\s+top\s+of|shield\w*)\b",
+    re.IGNORECASE,
+)
+TIMES: Final = "\N{MULTIPLICATION SIGN}"
+
+NOTICEABLE_M: Final = 0.02
+"""A change to a part the user did not mention is reported from this size (2 cm) up."""
+
+
+@dataclass(frozen=True)
+class Review:
+    """What a revision does to the parts the user did not ask about."""
+
+    problems: list[Problem]
+    adjustments: list[Adjustment]
+
+
+def review_kept_parts(
+    spec: GeometrySpec,
+    current: GeometrySpec,
+    instruction: str,
+    *,
+    model_changed: set[str],
+    size_asked: bool,
+) -> Review:
+    """Three things a viewer would not notice before Apply, compared part by part (stable ids):
+
+    * a transparent panel in front of a solid body that stays: when the request is to see
+      through it, the body shows through the glass (the body is never removed here: it may be
+      structural, or the backing may be intended);
+    * a kept part that rested on something before and now floats (what held it was removed or
+      moved), unless the instruction says it hangs or is mounted;
+    * a part the instruction does not mention whose position, size, shape or colour changed,
+      said in plain words with its cause (the proposal, or fitting the parts back inside the
+      object's size). When the user asked for a new overall size, the proportional change is
+      explained once instead.
+    """
+    problems = _backed_glass(spec, current, instruction) + _kept_floating(
+        spec, current, instruction
+    )
+    unrelated, adjustments = _unrelated_changes(
+        spec, current, instruction, model_changed, size_asked
+    )
+    return Review(_merge(problems + unrelated), adjustments)
+
+
+def _backed_glass(spec: GeometrySpec, current: GeometrySpec, instruction: str) -> list[Problem]:
+    if not _SEE_THROUGH.search(instruction) or _BACKED_ON_PURPOSE.search(instruction):
+        return []
+    old = {p.id: p for p in current.parts}
+    e = spec.envelope_m
+    centre = {"x": 0.0, "y": e.y / 2, "z": 0.0}
+    out: list[Problem] = []
+    for panel in spec.parts:
+        before = old.get(panel.id)
+        if panel.material not in TRANSPARENT or (
+            before is not None and before.material in TRANSPARENT
+        ):
+            continue  # only glass the revision added or made
+        thin = min("xyz", key=lambda a: getattr(panel.size_m, a))
+        across = [a for a in "xyz" if a != thin]
+        face = getattr(e, across[0]) * getattr(e, across[1])
+        if getattr(panel.size_m, across[0]) * getattr(panel.size_m, across[1]) < 0.15 * face:
+            continue  # a strip or a small window, not a door or panel to look through
+        for body in spec.parts:
+            was = old.get(body.id)
+            if body.id == panel.id or body.material in TRANSPARENT or was is None:
+                continue
+            if body.material == "hmi_screen" or body.material != was.material:
+                continue  # glass over a screen is a cover; a recoloured body was changed
+            if any(
+                abs(getattr(body.size_m, a) - getattr(was.size_m, a)) > 0.1 * getattr(was.size_m, a)
+                for a in "xyz"
+            ):
+                continue  # the body was reshaped, not kept
+            if getattr(body.size_m, thin) < 0.25 * getattr(e, thin):
+                continue  # a thin back or side panel behind glass is a backing, not a solid body
+            covered = 1.0
+            for a in across:
+                lo = max(
+                    getattr(panel.center_m, a) - getattr(panel.size_m, a) / 2,
+                    getattr(body.center_m, a) - getattr(body.size_m, a) / 2,
+                )
+                hi = min(
+                    getattr(panel.center_m, a) + getattr(panel.size_m, a) / 2,
+                    getattr(body.center_m, a) + getattr(body.size_m, a) / 2,
+                )
+                covered *= max(0.0, hi - lo) / getattr(panel.size_m, a)
+            if covered < 0.7:
+                continue
+            p_lo = getattr(panel.center_m, thin) - getattr(panel.size_m, thin) / 2
+            p_hi = getattr(panel.center_m, thin) + getattr(panel.size_m, thin) / 2
+            b_lo = getattr(body.center_m, thin) - getattr(body.size_m, thin) / 2
+            b_hi = getattr(body.center_m, thin) + getattr(body.size_m, thin) / 2
+            gap = max(b_lo - p_hi, p_lo - b_hi, 0.0)
+            inward = abs(getattr(body.center_m, thin) - centre[thin]) < abs(
+                getattr(panel.center_m, thin) - centre[thin]
+            )
+            if gap > 0.03 or not inward:
+                continue
+            out.append(
+                Problem(
+                    panel.id,
+                    panel.label,
+                    "backed_glass",
+                    f"“{panel.label}” is clear, but the solid “{body.label}” right behind it was "
+                    "kept, so you will see that solid body through it, not an open inside. It "
+                    "was not removed (it may be structural); remove or rebuild it as panels if "
+                    "you want to see in.",
+                    f"Part {panel.id} (“{panel.label}”) is transparent, but part {body.id} "
+                    f"(“{body.label}”) is solid and fills the space right behind it, so nothing "
+                    "can be seen through the glass. If the request means seeing inside, replace "
+                    f"{body.id} with separate panels (put its id in remove) and leave the space "
+                    "behind the glass empty.",
+                    part_ids=(panel.id, body.id),
+                )
+            )
+            break
+    return out
+
+
+def _kept_floating(spec: GeometrySpec, current: GeometrySpec, instruction: str) -> list[Problem]:
+    if _HANGS.search(instruction):
+        return []
+    kept = {p.id for p in current.parts} & {p.id for p in spec.parts}
+    held_before = {p.id for p in current.parts} - intrinsically_unsupported(current)
+    e = spec.envelope_m
+    base = 0.01 + 0.006 * max(e.x, e.y, e.z)
+    reached = _grounded(list(spec.parts), base, intrinsically_unsupported(current) & kept)
+    loose = [
+        p
+        for i, p in enumerate(spec.parts)
+        if p.id in kept and p.id in held_before and i not in reached
+    ]
+    if not loose:
+        return []
+    names = _quoted(p.label for p in loose)
+    ids = ", ".join(p.id for p in loose)
+    many = len(loose) > 1
+    return [
+        Problem(
+            loose[0].id,
+            loose[0].label,
+            "floating_kept",
+            f"{names} {'were' if many else 'was'} kept from the current model, but now "
+            f"{'touch' if many else 'touches'} nothing that holds {'them' if many else 'it'} up "
+            f"(what {'they' if many else 'it'} rested on was removed or moved); "
+            f"{'they float' if many else 'it floats'}.",
+            f"Kept part{'s' if many else ''} {ids} touch no part that rests on the floor after "
+            "your changes. Attach them to the new structure, move them, or put their ids in "
+            "remove if they should go.",
+            part_ids=tuple(p.id for p in loose),
+        )
+    ]
+
+
+def _quoted(labels: Iterable[str]) -> str:
+    """Labels in order, repeats counted: “a”, “b” and 2 times “c” (with a multiplication sign)."""
+    counts: dict[str, int] = {}
+    for label in labels:
+        counts[label] = counts.get(label, 0) + 1
+    items = [f"{n} {TIMES} “{label}”" if n > 1 else f"“{label}”" for label, n in counts.items()]
+    return items[0] if len(items) == 1 else f"{', '.join(items[:-1])} and {items[-1]}"
+
+
+def _unrelated_changes(
+    spec: GeometrySpec,
+    current: GeometrySpec,
+    instruction: str,
+    model_changed: set[str],
+    size_asked: bool,
+) -> tuple[list[Problem], list[Adjustment]]:
+    old = {p.id: p for p in current.parts}
+    scale = {a: getattr(spec.envelope_m, a) / getattr(current.envelope_m, a) for a in "xyz"}
+    out: list[Problem] = []
+    adjustments: list[Adjustment] = []
+    if size_asked and any(abs(v - 1) > 1e-3 for v in scale.values()):
+        names = {"x": "width", "y": "height", "z": "depth"}
+        said = ", ".join(
+            f"{TIMES}{scale[a]:.2f} in {names[a]} ({getattr(current.envelope_m, a):.2f} → "
+            f"{getattr(spec.envelope_m, a):.2f} m)"
+            for a in "xyz"
+            if abs(scale[a] - 1) > 1e-3
+        )
+        adjustments.append(
+            Adjustment(
+                "scaled",
+                tuple(p.id for p in spec.parts if p.id in old),
+                f"You asked for a new size, so the whole model was scaled {said}; every kept "
+                "part keeps its place and proportion.",
+            )
+        )
+    else:
+        scale = {a: 1.0 for a in "xyz"}
+    shift = _common_shift(spec, old, scale)
+    if shift is not None:
+        where = describe_change(shift, {a: 0.0 for a in "xyz"}, "", "", "", "").removeprefix(
+            "moved "
+        )
+        adjustments.append(
+            Adjustment(
+                "recentred",
+                tuple(p.id for p in spec.parts if p.id in old),
+                "The other parts keep their shape and their places relative to each other, but "
+                "the model is re-centred on what it now contains, so in the scene they move "
+                f"{where}.",
+            )
+        )
+    fitted: list[tuple[GeometryPart, str]] = []
+    changed: dict[str, list[GeometryPart]] = {}
+    for part in spec.parts:
+        was = old.get(part.id)
+        if was is None or _asked_for(part.label, instruction) or _asked_for(was.label, instruction):
+            continue
+        # Fitting maps the parts' union onto the envelope (x and z about the centre, y up from
+        # the floor), so a part that only followed the whole object scales with it.
+        expected = {
+            a: getattr(was.center_m, a) * scale[a] + (shift or {}).get(a, 0.0) for a in "xyz"
+        }
+        moved = {a: getattr(part.center_m, a) - expected[a] for a in "xyz"}
+        resized = {a: getattr(part.size_m, a) - getattr(was.size_m, a) * scale[a] for a in "xyz"}
+        words = describe_change(moved, resized, was.material, part.material, was.shape, part.shape)
+        if not words:
+            continue
+        if part.id not in model_changed:
+            fitted.append((part, words))
+            continue
+        changed.setdefault(words, []).append(part)
+    for words, parts in changed.items():
+        many = len(parts) > 1
+        out.append(
+            Problem(
+                parts[0].id,
+                parts[0].label,
+                "unrelated_change",
+                f"{_quoted(p.label for p in parts)} {'were' if many else 'was'} not part of your "
+                f"request, but the proposal changed {'them: each' if many else 'it: it'} {words}.",
+                f"Part{'s' if many else ''} {', '.join(p.id for p in parts)} "
+                f"{'are' if many else 'is'} not part of the request, but "
+                f"{'each' if many else 'it'} {words}. Leave {'them' if many else 'it'} exactly as "
+                "before (do not list them in change).",
+                part_ids=tuple(p.id for p in parts),
+            )
+        )
+    if fitted:
+        grouped: dict[tuple[str, str], int] = {}
+        for p, w in fitted:
+            grouped[(p.label, w)] = grouped.get((p.label, w), 0) + 1
+        lines = [
+            f"{n} {TIMES} “{label}” {w}" if n > 1 else f"“{label}” {w}"
+            for (label, w), n in grouped.items()
+        ]
+        listed = "; ".join(lines[:3])
+        more = f"; and {len(lines) - 3} more" if len(lines) > 3 else ""
+        out.append(
+            Problem(
+                fitted[0][0].id,
+                "fitting",
+                "unrelated_change",
+                "Fitting the parts back inside the object's recorded size also changed parts you "
+                f"did not mention: {listed}{more}.",
+                "Parts the request does not mention had to be moved or resized because an added "
+                "part reached outside the object's current size. Keep every added part inside "
+                "the current size.",
+                part_ids=tuple(dict.fromkeys(p.id for p, _ in fitted)),
+            )
+        )
+    return out, adjustments
+
+
+def _common_shift(
+    spec: GeometrySpec, old: dict[str, GeometryPart], scale: dict[str, float]
+) -> dict[str, float] | None:
+    """The one move most kept parts share: the model re-centred after a part came or went.
+
+    Removing a part at one end (or adding one beyond it) moves the centre of what remains, so
+    every kept part shifts by the same amount in the object's frame. That is one change, said
+    once, not a change to each part.
+    """
+    counts: dict[tuple[int, ...], list[dict[str, float]]] = {}
+    for part in spec.parts:
+        was = old.get(part.id)
+        if was is None or was.material != part.material or was.shape != part.shape:
+            continue
+        if any(
+            abs(getattr(part.size_m, a) - getattr(was.size_m, a) * scale[a]) >= NOTICEABLE_M / 2
+            for a in "xyz"
+        ):
+            continue
+        delta = {a: getattr(part.center_m, a) - getattr(was.center_m, a) * scale[a] for a in "xyz"}
+        counts.setdefault(tuple(round(v * 100) for v in delta.values()), []).append(delta)
+    if not counts:
+        return None
+    key, shared = max(counts.items(), key=lambda kv: len(kv[1]))
+    kept = sum(len(v) for v in counts.values())
+    if len(shared) < 2 or len(shared) * 2 < kept or max(abs(k) for k in key) * 0.01 < NOTICEABLE_M:
+        return None
+    return {a: sum(d[a] for d in shared) / len(shared) for a in "xyz"}
+
+
+def describe_change(
+    moved: dict[str, float],
+    resized: dict[str, float],
+    material_before: str,
+    material_after: str,
+    shape_before: str,
+    shape_after: str,
+) -> str:
+    """A change to one part in plain words: "moved 3 cm down; became 2 cm narrower"."""
+
+    def amount(v: float) -> str:
+        return f"{abs(v) * 100:.0f} cm" if abs(v) < 1 else f"{abs(v):.2f} m"
+
+    direction = {
+        "x": ("to the right", "to the left"),
+        "y": ("up", "down"),
+        "z": ("forward", "back"),
+    }
+    size_words = {
+        "x": ("wider", "narrower"),
+        "y": ("taller", "shorter"),
+        "z": ("deeper", "shallower"),
+    }
+    bits = []
+    moves = [
+        f"{amount(v)} {direction[a][0 if v > 0 else 1]}"
+        for a, v in moved.items()
+        if abs(v) >= NOTICEABLE_M
+    ]
+    if moves:
+        bits.append("moved " + " and ".join(moves))
+    sizes = [
+        f"{amount(v)} {size_words[a][0 if v > 0 else 1]}"
+        for a, v in resized.items()
+        if abs(v) >= NOTICEABLE_M
+    ]
+    if sizes:
+        bits.append("became " + " and ".join(sizes))
+    if material_before != material_after:
+        bits.append(
+            f"changed colour from {material_before.replace('_', ' ')} to "
+            f"{material_after.replace('_', ' ')}"
+        )
+    if shape_before != shape_after:
+        bits.append(
+            f"changed shape from {shape_before.replace('_', ' ')} to "
+            f"{shape_after.replace('_', ' ')}"
+        )
+    return "; ".join(bits)

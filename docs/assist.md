@@ -248,7 +248,7 @@ Every successful answer was schema-valid on the first attempt.
 
 **Recorded (offline) results.** `fixtures/assist/recorded/revision-*.json` hold the live answers and are replayed in pytest (`test_assist_recorded.py`) and in `e2e/improve.spec.ts`, labelled not live AI; their latencies are not measurements.
 
-**What a revision still cannot show:** an opening within a single part (open structures only from separate panels); slanted or curved surfaces beyond cylinders, frustums and spheres; rotated parts; hinges, doors or moving parts; textures, labels or wire mesh (clear panels stand in for guards; mesh or perforation is reported, not imitated); photo textures. Panel proportions depend on the model. Fitting the parts to the overall size can rescale them slightly, which the change list reports as "resized or moved".
+**What a revision still cannot show:** an opening within a single part (open structures only from separate panels); slanted or curved surfaces beyond cylinders, frustums and spheres; rotated parts; hinges, doors or moving parts; textures, labels or wire mesh (clear panels stand in for guards; mesh or perforation is reported, not imitated); photo textures. Panel proportions depend on the model. Fitting the parts to the overall size can rescale them slightly; since GEN-09 the change list says exactly how ("moved 3 cm back; became 2 cm narrower"), and a model that is only re-centred is said once.
 
 ## Held-out evaluation (GEN-03)
 
@@ -478,3 +478,90 @@ Still misleading and unwarned:
 - kept parts left floating.
 
 Thin glass edges are weak on light surfaces. These are GEN-09.
+
+## Misleading results warned, and one part at a time (GEN-09)
+
+[ADR-046](../prompts/DECISIONS.md)
+
+**New warnings before Apply.** These are deterministic checks: no extra AI call, apart from the
+one shared retry that any problem can use.
+
+- **Glass over a solid body.** A clear door or panel in front of a solid part of the same object
+  that was kept, when your request is about seeing in:
+  > “glass door” is clear, but the solid “cabinet body” right behind it was kept, so you will see
+  > that solid body through it, not an open inside. It was not removed (it may be structural);
+  > remove or rebuild it as panels if you want to see in.
+
+  The body is never deleted for you. Glass you ask for on purpose ("a glass cover over the
+  front", "protect the screen") and glass over a screen are not warned about.
+- **Kept parts left floating.** A part that stood on something the revision removed or moved,
+  checked for kept parts as well as added ones. Parts that are held by another part (a beacon on
+  a post on the machine) are fine, and so are parts you say hang ("the light hangs from the
+  ceiling").
+- **Parts you did not ask about.** Each kept part is compared by its id with the current
+  version. If the proposal changed one you did not mention, the dialog says how, in plain words:
+  "“plinth” was not part of your request, but the proposal changed it: it became 6 cm narrower
+  and 6 cm shallower; changed colour from paint anthracite to steel dark."
+  - Changes from fitting the parts back inside the recorded size are collected into one
+    sentence.
+  - A model that is only re-centred (because a part at one end came or went) is said once:
+    "the other parts keep their places relative to each other … in the scene they move 20 cm to
+    the right".
+  - A size you asked for is explained once as a proportional change ("scaled ×1.16 in height,
+    1.90 → 2.20 m").
+  - Changes under 2 cm are not reported.
+
+The warnings are grouped as **Not clearly shown** and **Parts you did not ask about**, each with
+**Show it**.
+
+**Glass you can see.** Glass and clear plastic now have a dark outline under a light core, 3.5
+and 1.6 pixels wide at any zoom. That reads on the light floor of the scene and on the dark
+preview alike. Rounded glass (the GEN-08 glass door was a rounded box) gets its edges too; at
+GEN-06's settings it got none in the placed scene. This is still display only: model files and
+their recorded sha256 do not change. The visibility check assumes these edge colours.
+
+**Change one part.** Below **Ask for a change**:
+
+1. Click a part in the proposed model, or choose it from the list. It is outlined in orange.
+2. Type its centre or its size in metres.
+   - The centre is measured from the middle of the object at floor level.
+   - A part standing on the floor keeps standing on it as it grows or shrinks.
+3. Or **Remove** it. The only part cannot be removed. Moving the only part would only move the
+   whole object, which is done in the scene.
+
+Each change is listed exactly as made: "Made “cabinet body” 36 cm shallower", "Moved “control
+screen” 5 cm to the right", "Removed “stack light”". The live preview follows each change.
+
+- **The overall size.** If a part change makes the object larger or smaller, the new overall
+  size waits beside Apply ("Height 2.212 m → 2.174 m (because of your part change)") until you
+  confirm it. It is recorded as entered by you, only once confirmed. Sizes that did not change
+  keep their evidence exactly.
+- **Earlier warnings.** Warnings found in the proposal stay listed, marked "found before your own
+  changes, which are not checked again". A warning about a part you removed is dropped from
+  **Applying keeps…**; the change list records it as "then its parts removed by you".
+- **One version, one undo.** Apply still makes one new immutable version and one undoable scene
+  command. The change list keeps every "By you: …" line, through save, reopen and rebuild.
+- **The full parts list** is still under **Details: the full parts list (N parts), for advanced
+  edits**.
+
+**Checked on:**
+
+- **The GEN-08 failures, replayed offline** (`fixtures/gen09/gen08-regressions.json`,
+  `scripts/build_gen09_regressions.py`). The GEN-08 results themselves are unchanged.
+  - The glass door (t2) is warned about. A hand fix (the body made a 2 cm back panel) and Apply
+    work.
+  - The floating frame (p3) warns about its panel and light. Removing the light and Apply work.
+- **Two controls stay quiet:** glass added on purpose as a cover, and a beacon on a post on top
+  of a machine.
+- **Part actions** were tested on a described conveyor and a photo-made pallet: pick, resize,
+  move or remove, confirm, apply, undo, redo, save, reopen and rebuild a missing model.
+
+Screenshots: [docs/gen-09/inspect](gen-09/inspect/), at 1440 × 900 and 1280 × 800.
+
+**Independent review: pending.** A blinded packet of the 25 GEN-08 dialog sheets, with
+instructions and a short rubric, is ready for a person not involved in the project
+([gen-09-review-packet](assist-evaluation/gen-09-review-packet/README.md)). Nobody has reviewed
+it yet. Until someone does, the GEN-08 visual pass rests on the assistant's own review.
+
+**Not yet:** warnings are not re-checked after your own part changes (that would need the checks
+to run on the edited draft); a glass cylinder's side outline is not drawn (its rims are).

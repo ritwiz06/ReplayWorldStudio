@@ -1,0 +1,32 @@
+{
+ "source": "docs/assist-evaluation/gen-08/renders/dialog (GEN-08 dialog method)",
+ "seed": 9090,
+ "model": "qwen3-235b-a22b-instruct-2507",
+ "sheets": {
+  "Sheet 01": "t1",
+  "Sheet 02": "s3",
+  "Sheet 03": "d2",
+  "Sheet 04": "s2",
+  "Sheet 05": "p3",
+  "Sheet 06": "s1",
+  "Sheet 07": "q1",
+  "Sheet 08": "t3",
+  "Sheet 09": "o2",
+  "Sheet 10": "c3",
+  "Sheet 11": "q2",
+  "Sheet 12": "t4",
+  "Sheet 13": "o1",
+  "Sheet 14": "s4",
+  "Sheet 15": "p2",
+  "Sheet 16": "o4",
+  "Sheet 17": "c4",
+  "Sheet 18": "c2",
+  "Sheet 19": "q3",
+  "Sheet 20": "t2",
+  "Sheet 21": "d3",
+  "Sheet 22": "d1",
+  "Sheet 23": "p1",
+  "Sheet 24": "c1",
+  "Sheet 25": "o3"
+ }
+}

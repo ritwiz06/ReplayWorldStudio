@@ -1633,7 +1633,17 @@ export interface ModelRevisionProposalResult {
  * An added part a viewer may not see as asked, found by the API's checks (GEN-05/06).
  */
 export interface RevisionProblem {
-  kind: "hidden" | "buried" | "floating" | "tiny" | "unseen" | "blends" | "solid_slats";
+  kind:
+    | "hidden"
+    | "buried"
+    | "floating"
+    | "tiny"
+    | "unseen"
+    | "blends"
+    | "solid_slats"
+    | "backed_glass"
+    | "floating_kept"
+    | "unrelated_change";
   /**
    * @minItems 1
    */
@@ -1644,7 +1654,7 @@ export interface RevisionProblem {
  * A visual choice the API made without asking, shown as such: never a measurement.
  */
 export interface RevisionAdjustment {
-  kind: "enlarged" | "coloured_as_asked" | "contrast";
+  kind: "enlarged" | "coloured_as_asked" | "contrast" | "scaled" | "recentred" | "part_action";
   /**
    * @minItems 1
    */

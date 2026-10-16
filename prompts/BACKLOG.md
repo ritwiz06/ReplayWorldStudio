@@ -405,7 +405,7 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P1
 - Dependencies: GEN-08
-- Baseline status: planned (added 2026-10-16 after GEN-08; quality work after M2)
+- Baseline status: planned (added 2026-10-16 after GEN-08; quality work after M2) → in progress (engineering done; independent review pending)
 - Done when:
   - A transparent part in front of a solid part of the same object is warned about.
   - Kept parts left floating by a revision, and unrelated parts changed by fitting or overlap separation, are warned about.
@@ -413,7 +413,18 @@ After M1 the user approved guided creation and described custom objects as the n
   - Simple one-part actions (remove, move, resize) are available without the parts list.
   - The visual review is repeated by an independent reviewer, or as a small user study, on a fresh set.
 - Note (2026-10-16): from the GEN-08 report. t2 (glass door over a solid body) and p3 (floating kept panel) looked done but were not, and carried no warning; 9 of 15 weak sheets were unwarned.
-- Evidence: not recorded
+- Status (2026-10-16): **engineering done; open on the last criterion: independent review pending.** No reviewer has been contacted; a blinded packet is ready. The criterion closes only when a real independent review is scored and recorded.
+- Evidence (docs/assist.md "Misleading results warned, and one part at a time"; ADR-046):
+  - **Glass over a solid body** (`backed_glass`): a transparent part added or made, at least 15 % of the object's face, in front of a kept solid part of the same material and size that covers ≥ 70 % of it within 3 cm, when the request asks to see through. Warned, never deleted. Exempt: glass asked for as a cover or protection, glass over a screen, a body rebuilt as panels.
+  - **Kept parts left floating** (`floating_kept`): kept parts that were held up before and reach no floor-standing part after; parts held through other parts and parts the request says hang are exempt. Grouped into one sentence.
+  - **Unrelated changes** (`unrelated_change`): kept parts compared by id; the proposal's own unmentioned changes said per change in plain words; fitting changes collected into one sentence; a shared re-centring said once (adjustment `recentred`); a requested resize explained once (adjustment `scaled`); under 2 cm not reported.
+  - **Edges:** dark `#0e2f47` outline under a light `#8fd0ff` core (3.5 / 1.6 px, screen space); edges at 12° so rounded glass gets edges. Display only; GLB bytes and recorded hashes unchanged (the legacy pre-GEN-06 fixture still rebuilds to its hash). The API's outline check uses the same colours.
+  - **One part at a time:** click or choose a part, set its centre or size in metres, or remove it. Exact change lines, a live preview, a confirmation beside Apply when the overall size changes (recorded as entered only when confirmed), one immutable version and one undoable command. The full parts list stays under Details.
+  - **Regressions:** the GEN-08 t2 and p3 answers replayed offline through the whole path (`tests/test_misleading.py`, 15 tests; `e2e/gen09-regressions.spec.ts`, 12 browser tests at 1440 × 900 and 1280 × 800). They are warned, fixed by hand and applied. The controls stay quiet: glass as a cover; a beacon mounted on a post.
+  - **Part actions:** browser tests on a described conveyor and a photo-made pallet (`e2e/review.spec.ts`): pick → resize → move or remove → confirm → apply → undo → redo → save → reopen → rebuild a missing model.
+  - **Screenshots:** docs/gen-09/inspect/ (the dialog, Show it, the fixed dialog, and the placed glass on the light floor; part-action confirmation).
+  - **Independent review packet:** docs/assist-evaluation/gen-09-review-packet/. It holds the 25 GEN-08 dialog sheets reshuffled with old numbers cropped, instructions, a rubric and an answers template. The key is kept apart; `scripts/score_gen09_review.py` scores a returned file. **Pending.**
+  - **Checks:** `pnpm check` exit 0 (pytest 721 + tooling tests; Vitest 158; contracts 10).
 
 ## M3 - Image to editable world
 

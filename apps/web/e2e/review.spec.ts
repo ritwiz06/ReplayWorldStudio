@@ -112,3 +112,101 @@ test("a described model: improve, two angles, apply, undo, save, reopen, rebuild
   await placeConveyor(page);
   await journey(page, /^Guarded conveyor with control screen/, "add a cable tray under the belt");
 });
+
+/** One part at a time (GEN-09): pick, resize, move, remove, confirm a size change, apply, round-trip. */
+async function partJourney(page: Page, object: RegExp, shot: string) {
+  const before = await save(page);
+  const target = before.json.scene.objects.find((o) => object.test(o.name))!;
+  if (!(await page.getByTestId("improve-model-open").isVisible())) await objectList(page, object).first().click();
+  await page.getByTestId("improve-model-open").click();
+  const dialog = page.getByTestId("improve-model");
+  const preview = dialog.getByTestId("improve-preview-new");
+  await expect(preview).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+
+  // Click a part in the proposed model: it is selected and outlined.
+  const select = dialog.getByTestId("improve-part-select");
+  const box = (await preview.boundingBox())!;
+  for (const [u, v] of [[0.5, 0.5], [0.5, 0.42], [0.45, 0.4], [0.55, 0.45], [0.5, 0.35], [0.6, 0.4]]) {
+    await page.mouse.click(box.x + u * box.width, box.y + v * box.height);
+    if ((await select.inputValue()) !== "") break;
+  }
+  await expect(select).not.toHaveValue("");
+  await expect(preview).not.toHaveAttribute("data-highlights", "0");
+
+  // Or choose one from the list, then make it narrower and move it: each exact change is listed.
+  const count = await select.locator("option").count();
+  await select.selectOption({ index: count - 1 });
+  const width = dialog.getByTestId("improve-part-size-x");
+  await width.fill((Number(await width.inputValue()) * 0.8).toFixed(3));
+  await width.press("Enter");
+  await expect(dialog.getByTestId("improve-part-changes")).toContainText("narrower");
+  const single = count - 1 === 1;
+  let lines = 1;
+  if (!single) {
+    const across = dialog.getByTestId("improve-part-pos-x");
+    await across.fill((Number(await across.inputValue()) + 0.05).toFixed(3));
+    await across.press("Enter");
+    await expect(dialog.getByTestId("improve-part-changes")).toContainText("to the right");
+    lines += 1;
+  }
+  await expect(preview).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+
+  // Remove it, unless it is the only part (then the dialog says why it cannot be moved or removed).
+  const remove = dialog.getByTestId("improve-part-remove");
+  if (!single) {
+    await remove.click();
+    await expect(dialog.getByTestId("improve-part-changes")).toContainText("Removed");
+    await expect(preview).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+    lines += 1;
+  } else {
+    await expect(remove).toBeDisabled();
+    await expect(dialog.getByTestId("improve-part-pos-x")).toHaveCount(0);
+    await expect(dialog.getByTestId("improve-part")).toContainText("only part");
+  }
+
+  // A part change that alters the overall size waits for the user to confirm it.
+  const confirm = dialog.getByTestId("improve-needs-confirm");
+  if ((await confirm.getAttribute("data-open").catch(() => "0")) !== "0" && (await confirm.isVisible())) {
+    await expect(dialog.getByTestId("improve-apply")).toBeDisabled();
+    await expect(confirm).toContainText("because of your part change");
+    await page.screenshot({ path: `test-results/${shot}-confirm.png` });
+    for (const box of await confirm.getByRole("checkbox").all()) await box.check();
+  }
+  await expect(dialog.getByTestId("improve-apply")).toBeEnabled();
+  await dialog.getByTestId("improve-apply").click();
+  await expect(dialog).toBeHidden({ timeout: 30_000 });
+
+  const after = await save(page);
+  const revised = after.json.catalog.find((a) => a.generation?.revision?.revises === target.asset_id)!;
+  expect(revised.generation!.revision!.changes.filter((c) => c.startsWith("By you:")).length).toBe(lines);
+  expect(after.json.scene.objects.find((o) => o.id === target.id)!.asset_id).toBe(revised.id);
+  await page.getByTestId("undo").click();
+  expect((await save(page)).json.scene.objects.find((o) => o.id === target.id)!.asset_id).toBe(target.asset_id);
+  await page.getByTestId("redo").click();
+  const redone = await save(page);
+  rmSync(join(E2E_CATALOG_DIR, revised.visual.uri));
+  await reopen(page, redone);
+  const rejected = page.getByTestId("file-rejected");
+  await expect(rejected).toBeVisible();
+  await rejected.getByTestId("restore-models").click();
+  await expect(rejected).toBeHidden();
+  await expect(page.getByTestId("scene-source")).toHaveText(`${redone.name} (accepted by API)`);
+  const reopened = await save(page);
+  expect(reopened.json.catalog.find((a) => a.id === revised.id)!.generation!.revision!.changes).toEqual(revised.generation!.revision!.changes);
+}
+
+test("change one part of a described model: pick, resize, move or remove, apply, undo, save, reopen, rebuild", async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.goto("/");
+  await objects(page, 15);
+  await placeConveyor(page);
+  await partJourney(page, /^Guarded conveyor with control screen/, "gen09-part-described");
+});
+
+test("change one part of a photo-made model: pick, resize, move or remove, apply, undo, save, reopen, rebuild", async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.goto("/");
+  await objects(page, 15);
+  await worldFromPhoto(page);
+  await partJourney(page, /^Stacked cardboard boxes/, "gen09-part-photo");
+});

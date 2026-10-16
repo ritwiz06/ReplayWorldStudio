@@ -421,7 +421,8 @@ def _judge(
     checks += overlap_checks
 
     envelope = request.spec.envelope_m
-    if find_lengths(instruction) or _SIZE_WORDS.search(instruction):
+    size_asked = bool(find_lengths(instruction) or _SIZE_WORDS.search(instruction))
+    if size_asked:
         raw = answer.envelope_m
         target = Extent3(x=_clamp(raw.x), y=_clamp(raw.y), z=_clamp(raw.z))
     else:
@@ -510,6 +511,17 @@ def _judge(
         :MAX_NOT_REPRESENTED
     ]
     problems = visibility.find_problems(spec, request.spec, instruction)
+    kept = visibility.review_kept_parts(
+        spec,
+        request.spec,
+        instruction,
+        model_changed={p.id for p in answer.change},
+        size_asked=size_asked,
+    )
+    problems += kept.problems
+    adjustments += [
+        {"kind": a.kind, "part_ids": list(a.part_ids), "text": a.text} for a in kept.adjustments
+    ]
     result = ModelRevisionProposalResult.model_validate(
         {
             "outcome": "proposal",

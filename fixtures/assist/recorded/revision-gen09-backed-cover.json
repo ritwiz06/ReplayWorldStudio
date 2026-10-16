@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "588c2ad98d4cf9fe:add a clear glass cover over the front to protect the door",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "GEN-09 regression (synthetic (glass in front of a solid part on purpose)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\"outcome\": \"revision\", \"message\": null, \"summary\": \"Added a clear glass cover over the front.\", \"envelope_m\": {\"x\": 0.6, \"y\": 1.9, \"z\": 0.415}, \"remove\": [], \"change\": [], \"add\": [{\"id\": \"cover\", \"label\": \"glass cover\", \"shape\": \"box\", \"material\": \"glass_clear\", \"center_m\": {\"x\": 0, \"y\": 1.0, \"z\": 0.2025}, \"size_m\": {\"x\": 0.58, \"y\": 1.74, \"z\": 0.01}, \"axis\": \"y\", \"taper\": null, \"narrow_end\": null, \"basis\": \"inferred\"}], \"repeat\": [], \"not_representable\": []}"
+  ]
+}

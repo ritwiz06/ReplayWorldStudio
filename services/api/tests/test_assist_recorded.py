@@ -278,11 +278,12 @@ REVISION_CASES = {
 }
 # The inspect-* and review-* recordings (GEN-06/07, scripts/build_inspection_recordings.py) are
 # keyed against builder and legacy objects, not these cases; e2e/review.spec.ts and
-# e2e/inspect-revisions.spec.ts replay them through the app.
+# e2e/inspect-revisions.spec.ts replay them through the app. The gen09-* recordings are keyed
+# against fixtures/gen09/gen08-regressions.json; tests/test_misleading.py replays them.
 REVISED = sorted(
     path.stem.removeprefix("revision-")
     for path in RECORDINGS.glob("revision-*.json")
-    if not path.stem.startswith(("revision-inspect-", "revision-review-"))
+    if not path.stem.startswith(("revision-inspect-", "revision-review-", "revision-gen09-"))
 )
 
 

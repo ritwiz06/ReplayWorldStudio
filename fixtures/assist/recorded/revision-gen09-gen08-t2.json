@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "588c2ad98d4cf9fe:replace the door with a clear glass door",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "GEN-09 regression (GEN-08 frozen answer t2 (development regression)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.0,\n        \"z\": 0.1825\n      },\n      \"id\": \"door-glass\",\n      \"label\": \"glass door\",\n      \"material\": \"glass_clear\",\n      \"narrow_end\": null,\n      \"shape\": \"rounded_box\",\n      \"size_m\": {\n        \"x\": 0.56,\n        \"y\": 1.72,\n        \"z\": 0.02\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.6,\n    \"y\": 1.9,\n    \"z\": 0.415\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [\n    \"door\"\n  ],\n  \"repeat\": [],\n  \"summary\": \"Replaced the original door with a clear glass door of the same size and position.\"\n}"
+  ]
+}

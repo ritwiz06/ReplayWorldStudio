@@ -549,6 +549,40 @@ Append entries in chronological order. If a live repository session log already 
 - **Milestone status after this session:** **M2 complete.** M3 in progress (IMG-01 done; IMG-02, IMG-03 open).
 - **Next concrete task:** GEN-09 (misleading-but-unwarned revisions), then IMG-02.
 
+### 2026-10-16 - GEN-09 misleading-but-unwarned revisions (Stage A of GEN-09 → IMG-02)
+
+- **Active milestone / issue:** quality after M2; GEN-09.
+- **Starting commit:** `f8fe247` (GEN-08 records). Start 17:05:42 UTC.
+- **Goal:** warn before Apply about glass over a kept solid body, kept parts left floating, and unrelated parts changed; readable glass edges; one-part actions; regressions from GEN-08 t2 and p3; a blinded packet for an independent review. No live evaluation (none was run).
+- **Work completed.**
+  - API checks: `backed_glass`, `floating_kept` and `unrelated_change`, plus the adjustments `scaled` and `recentred` (contract kinds added; schema 0.7.0 unchanged otherwise). They are judged on kept parts as well as added ones and grouped into plain sentences.
+  - Viewer: a two-tone, screen-space glass outline at a 12° crease angle. The rounded GEN-08 glass door had no edges at all in the placed scene, found while inspecting the screenshots.
+  - Dialog:
+    - "Change one part": pick or choose, centre and size in metres, remove;
+    - exact change lines, and a confirmation for a changed overall size beside Apply;
+    - warnings grouped as "Not clearly shown" and "Parts you did not ask about";
+    - stale warnings marked as stale; problems about removed parts dropped from "Applying keeps…".
+  - Change list: exact per-part amounts instead of "resized or moved"; a re-centring said once; millimetres under 1 cm.
+  - Regression fixture and recordings (`scripts/build_gen09_regressions.py`); browser regressions at two sizes; part-action journeys on a described and a photo-made model.
+  - Independent review packet and scorer (`scripts/build_gen09_review_packet.py`, `scripts/score_gen09_review.py`, `tests/test_gen09_review.py`).
+- **Issues found and fixed during the session:**
+  - The change list called every part "resized or moved" after a removal. The cause was re-centring; it is now detected and said once.
+  - Moving a single-part model's only part did nothing visible; it is no longer offered.
+  - The size confirmation said "proposed" for a part edit, and sat far from Apply; both fixed.
+  - `sips` silently skips a crop that reaches the bottom edge; the packet builder now verifies each crop.
+- **Commands run and outcomes:**
+  - `pnpm check` exit 0 (pytest 721, Vitest 158, contracts 10);
+  - `pytest tests/test_misleading.py` 15 passed;
+  - `playwright test e2e/gen09-regressions.spec.ts` 12 passed;
+  - `e2e/review.spec.ts` 5 passed;
+  - `e2e/improve.spec.ts` 4 passed;
+  - the full `pnpm test:e2e` 43 passed, with 15 inspection runs skipped; the smoke set 9 passed (one new `@smoke` test).
+- **Visual evidence:** docs/gen-09/inspect/{1440x900,1280x800,part-actions}/.
+- **Decisions:** ADR-046.
+- **Known limitations:** warnings are not re-checked after hand edits; a glass cylinder's side outline is not drawn; **independent review pending** (nobody contacted; no participants).
+- **Milestone status after this session:** M2 complete; GEN-09 in progress (engineering done, last criterion open); M3 in progress (IMG-01 done; IMG-02 next; IMG-03 open).
+- **Next concrete task:** IMG-02 (Stage B), in a separate commit.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

@@ -1305,6 +1305,26 @@ kbd {
 .improve-apply-problems {
   margin: 8px 0 4px;
 }
+.improve-part {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.improve-part-table {
+  border-collapse: collapse;
+  width: max-content;
+  max-width: 100%;
+}
+.improve-part-table th,
+.improve-part-table td {
+  padding: 2px 10px 2px 0;
+  text-align: left;
+  font-weight: normal;
+}
+.improve-part-table thead th {
+  color: var(--muted);
+  font-size: 12px;
+}
 .improve-checks {
   margin-top: 8px;
   color: var(--muted);
@@ -1932,4 +1952,12 @@ label.button.disabled {
   .improve-body {
     grid-template-columns: 1fr;
   }
+}
+.improve-confirm {
+  display: grid;
+  gap: 2px;
+  margin: 8px 0 4px;
+}
+.improve-confirm p {
+  margin: 0;
 }
