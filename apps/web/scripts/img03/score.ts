@@ -10,12 +10,14 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import type { ImageProposalResult } from "@replay-world/contracts";
+import { footprint } from "../../src/photo/layoutChecks";
 import {
   type Annotation,
   calibrate,
   distribution,
   geometryOf,
   type GeometryRow,
+  gtFootprint,
   initialWorld,
   klmSeconds,
   labelAgrees,
@@ -128,6 +130,15 @@ for (const file of values.results!) {
       fov_basis: cal.fovBasis,
       corner_residual_px: r3(cal.cornerResidualPx),
     };
+    // The manual baseline needs no model: it is built for every listed photo, answered or not.
+    if (manualCases.has(row.case)) {
+      const manual = manualWorld(cal, a.objects);
+      const rows = geometryOf(manual, a.objects, frame);
+      pooled.manual.push(...rows);
+      effort.manual.push(Object.values(manual.actions).reduce((s, v) => s + v, 0));
+      effort.manualKlm.push(klmSeconds(manual.actions));
+      for (const g of rows) outliers.push({ case: row.case, world: "manual", gt: g.gt, centre_m: r3(g.centreErrorM)!, depression_deg: r3(g.depressionDeg)!, visibility: g.visibility });
+    }
     if (row.error || !row.result?.proposal) {
       // A provider error or no proposal: every counted object is missed (criteria.md).
       totals.errors++;
@@ -161,16 +172,34 @@ for (const file of values.results!) {
     Object.assign(byType[type], { tp: byType[type].tp + m.tp, fp: byType[type].fp + m.fp, fn: byType[type].fn + m.fn, tpAll: byType[type].tpAll + mAll.tp, fpAll: byType[type].fpAll + mAll.fp, fnAll: byType[type].fnAll + mAll.fn });
     const worlds: Record<string, World> = { initial: initialWorld(cal, proposal, a.objects), reviewed: reviewedWorld(cal, proposal, a.objects) };
     if (manualCases.has(row.case)) worlds.manual = manualWorld(cal, a.objects);
+    const counted_in_pool = new Set(["initial", "reviewed"]); // manual was pooled above
     const geometry: Record<string, GeometryRow[]> = {};
     placements[run.model] ??= {};
-    placements[run.model]![row.case] = Object.fromEntries(
-      Object.entries(worlds).map(([name, world]) => [
-        name,
-        world.placed.map((p) => ({ id: p.item.id, label: p.item.label, x: p.x, z: p.z, yaw_deg: r3((p.yawRad * 180) / Math.PI), width: p.width, depth: p.depth, height: p.height })),
-      ]),
-    );
+    placements[run.model]![row.case] = {
+      ...Object.fromEntries(
+        Object.entries(worlds).map(([name, world]) => [
+          name,
+          world.placed.map((p) => ({
+            id: p.item.id,
+            label: p.item.label,
+            gt: world.gtOf.get(p.item.id) ?? null,
+            x: p.x,
+            z: p.z,
+            yaw_deg: r3((p.yawRad * 180) / Math.PI),
+            width: p.width,
+            depth: p.depth,
+            height: p.height,
+            // The footprint in the rectangle's frame, for the review sheets' plan.
+            rect: footprint(p).map(([x, z]) => frame.toRect(x, z).map((v) => r3(v))),
+          })),
+        ]),
+      ),
+      truth: a.objects.map((o) => ({ id: o.id, class: o.class, counted: o.counted, rect: gtFootprint(o)?.map(([x, z]) => [r3(x), r3(z)]) ?? null })),
+      camera: [{ x: r3(frame.camera.x), z: r3(frame.camera.z) }],
+    };
     for (const [name, world] of Object.entries(worlds)) {
       geometry[name] = geometryOf(world, a.objects, frame);
+      if (!counted_in_pool.has(name)) continue;
       pooled[name as keyof typeof pooled].push(...geometry[name]!);
       for (const g of geometry[name]!) outliers.push({ case: row.case, world: name, gt: g.gt, centre_m: r3(g.centreErrorM)!, depression_deg: r3(g.depressionDeg)!, visibility: g.visibility });
     }
@@ -179,10 +208,7 @@ for (const file of values.results!) {
     pooled.reviewed_corner_offsets.push(...geometryOf(reviewedWorld(nudged, proposal, a.objects), a.objects, rectFrame(nudged, a.rectangle.corners)));
     effort.reviewed.push(Object.values(worlds.reviewed!.actions).reduce((s, v) => s + v, 0));
     effort.reviewedKlm.push(klmSeconds(worlds.reviewed!.actions));
-    if (worlds.manual) {
-      effort.manual.push(Object.values(worlds.manual.actions).reduce((s, v) => s + v, 0));
-      effort.manualKlm.push(klmSeconds(worlds.manual.actions));
-    }
+
     cases.push({
       case: row.case,
       scene_type: type,
@@ -194,7 +220,7 @@ for (const file of values.results!) {
       accepted: accepted.length,
       detection: { tp: m.tp, fp: m.fp, fn: m.fn, groups: m.groups, duplicates: m.duplicates },
       detection_all_proposals: { tp: mAll.tp, fp: mAll.fp, fn: mAll.fn },
-      proposals_scored: mAll.proposals.map((r, i) => ({ label: proposal.objects[i]!.label, template: proposal.objects[i]!.template, accepted: proposal.objects[i]!.suggest_accept, ...r, iou: r3(r.iou) })),
+      proposals_scored: mAll.proposals.map((r, i) => ({ label: proposal.objects[i]!.label, template: proposal.objects[i]!.template, accepted: proposal.objects[i]!.suggest_accept, box: proposal.objects[i]!.box, ...r, iou: r3(r.iou) })),
       missed: [...mAll.found].filter(([, p]) => p === null).map(([g]) => g),
       calibration,
       actions: { reviewed: worlds.reviewed!.actions, manual: worlds.manual?.actions ?? null },
@@ -205,7 +231,7 @@ for (const file of values.results!) {
   (output.models as Record<string, unknown>)[run.model] = {
     prompt_version: run.prompt_version,
     images: run.rows.length,
-    provider: { errors: totals.errors, run_faults: totals.runFaults, calls: totals.calls, retries: totals.retries, wall_s: dist(run.rows.map((r) => r.wall_s)) },
+    provider: { errors: totals.errors, run_faults: totals.runFaults, calls: totals.calls, retries: totals.retries, wall_s: dist(run.rows.map((r) => r.wall_s).filter((v): v is number => typeof v === "number")) },
     detection_initial: pr(totals.tp, totals.fp, totals.fn),
     detection_all_proposals: pr(totals.tpAll, totals.fpAll, totals.fnAll),
     groups: totals.groups,

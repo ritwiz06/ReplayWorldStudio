@@ -141,6 +141,27 @@ describe("IMG-03 scoring, on known answers", () => {
     expect(geometryOf(reviewed, objects, rectFrame(cal, a.rectangle.corners))).toHaveLength(3);
   });
 
+  it("keeps every later proposal on its own object after a split earlier in the list", () => {
+    // Regression: a split inserts pieces, which once shifted later proposals onto the wrong objects.
+    const objects = [
+      gt("table", "table", [0, -1.5], [1.4, 0.75, 0.8]),
+      gt("chair-l", "chair", [-0.4, -0.85], [0.5, 0.9, 0.5]),
+      gt("chair-r", "chair", [0.4, -0.85], [0.5, 0.9, 0.5]),
+      gt("shelf", "shelf", [2.2, -3], [1.2, 1.8, 0.4]),
+      gt("plant", "plant", [-2.2, -2.5], [0.5, 1.2, 0.5]),
+    ];
+    const group = objects.slice(0, 3).map((o) => o.visible_box!).reduce(union);
+    const p = proposal([
+      proposed("obs-1", "table with chairs", "table", group, [1.4, 0.75, 0.8]),
+      proposed("obs-2", "shelf", "shelf", objects[3]!.visible_box!, [1.2, 1.8, 0.4]),
+      proposed("obs-3", "plant", "plant", objects[4]!.visible_box!, [0.5, 1.2, 0.5]),
+    ]);
+    const reviewed = reviewedWorld(calibrate(annotation(objects)), p, objects);
+    expect(reviewed.gtOf.get("obs-2")).toBe("shelf");
+    expect(reviewed.gtOf.get("obs-3")).toBe("plant");
+    expect(reviewed.placed.map((x) => reviewed.gtOf.get(x.item.id)).sort()).toEqual(["chair-l", "chair-r", "plant", "shelf", "table"]);
+  });
+
   it("scores a partly hidden object on what shows: its visible width comes out short", () => {
     const whole = gt("cabinet", "cabinet", [0.2, -3], [1.2, 1.8, 0.5]);
     const b = whole.visible_box!;

@@ -194,16 +194,7 @@ def main(argv: list[str]) -> int:
         print(f"{name}…", file=sys.stderr)
         row = run_case(provider, name, a)
         rows.append(row)
-        objects = (
-            len((row["result"] or {}).get("proposal", {}).get("objects", []))
-            if row["result"]
-            else 0
-        )
-        print(
-            f"  {row['wall_s']} s, {len(row['calls'])} call(s), {objects} objects, "
-            f"error: {row['error']}",
-            file=sys.stderr,
-        )
+        # Written before anything else is done with the row, so no later error can lose it.
         out.parent.mkdir(parents=True, exist_ok=True)
         report = {
             "service": settings.service,
@@ -222,6 +213,14 @@ def main(argv: list[str]) -> int:
             "rows": rows,
         }
         out.write_text(json.dumps(report, indent=1, ensure_ascii=False) + "\n")
+        result = row["result"] or {}
+        proposal = result.get("proposal") or {}
+        print(
+            f"  {row['wall_s']} s, {len(row['calls'])} call(s), "
+            f"{len(proposal.get('objects', []))} objects, outcome {result.get('outcome')}, "
+            f"error: {row['error']}",
+            file=sys.stderr,
+        )
     print(f"Wrote {out.relative_to(ROOT)}", file=sys.stderr)
     return 0
 

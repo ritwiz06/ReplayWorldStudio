@@ -341,9 +341,12 @@ export function reviewedWorld(cal: Calibration, proposal: ImageProposal, objects
     gtOf.set(id, gt.id);
   };
   const found = new Set<string>();
+  // The proposals' own ids, fixed now: a split inserts pieces into the list, so a position in
+  // `items` no longer names the same proposal afterwards.
+  const ids = items.map((i) => i.id);
   for (const [i, r] of match.proposals.entries()) {
-    const id = items[i]!.id;
-    const accepted = items[i]!.decision === "accepted";
+    const id = ids[i]!;
+    const accepted = items.find((it) => it.id === id)!.decision === "accepted";
     const others = r.covers.filter((g) => g !== r.gt && match.found.get(g) === null);
     if (r.status === "tp" && others.length === 0) {
       if (!accepted) {
