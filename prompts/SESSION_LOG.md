@@ -613,6 +613,8 @@ Append entries in chronological order. If a live repository session log already 
   - `CI=1 pnpm test:e2e:smoke` 10 passed;
   - no provider calls (recorded answers only).
 - **Measured on the factory render:** the added cabinet, placed from its drawn base, landed at z −3.46 m (truth −8.53 m); at its typed position its width is 1.23 m (truth 0.80 m; the outline covered parts of both cabinets).
+- **Commit and CI:** `b1d8b48`; https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38951067041 green (both jobs).
+- **Time:** 18:04:17–18:55:52 UTC (51.6 min active; no provider calls). Session total for GEN-09 and IMG-02: 1 h 50 min active, plus CI waits.
 - **Decisions:** ADR-047.
 - **Known limitations:**
   - split pieces start as equal strips;
