@@ -1,0 +1,47 @@
+{
+ "reviewer": "Claude (the assistant running this evaluation), not a study participant",
+ "method": "Pilot of the GEN-05 path: numbered sheets scored from the pictures before the key or any score was opened.",
+ "sheets": {
+  "Sheet 01": {
+   "score": 2,
+   "corrections": 0,
+   "note": "Yellow rail clearly around the lid (square rail on a round lid)."
+  },
+  "Sheet 02": {
+   "score": 2,
+   "corrections": 0,
+   "note": "A wooden stand under the pot is clearly visible."
+  },
+  "Sheet 03": {
+   "score": 0,
+   "corrections": 1,
+   "note": "No status light can be seen on the frame at this view; at most a speck."
+  }
+ },
+ "model": "qwen3-235b-a22b-instruct-2507",
+ "key": {
+  "Sheet 01": "p2",
+  "Sheet 02": "p3",
+  "Sheet 03": "p1"
+ },
+ "cases": {
+  "p2": {
+   "sheet": "Sheet 01",
+   "score": 2,
+   "corrections": 0,
+   "note": "Yellow rail clearly around the lid (square rail on a round lid)."
+  },
+  "p3": {
+   "sheet": "Sheet 02",
+   "score": 2,
+   "corrections": 0,
+   "note": "A wooden stand under the pot is clearly visible."
+  },
+  "p1": {
+   "sheet": "Sheet 03",
+   "score": 0,
+   "corrections": 1,
+   "note": "No status light can be seen on the frame at this view; at most a speck."
+  }
+ }
+}

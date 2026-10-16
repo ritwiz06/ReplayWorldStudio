@@ -1,0 +1,1936 @@
+{
+ "set": "gen-05 frozen model revisions",
+ "frozen": "2026-10-16",
+ "targets": {
+  "classroom-rect-table": {
+   "origin": "photo",
+   "name": "Rectangular table with chairs",
+   "described_as": "rectangular table with chairs seen in classroom.jpg",
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 2.253,
+     "y": 1.166,
+     "z": 0.876
+    },
+    "parts": [
+     {
+      "id": "top",
+      "label": "worktop",
+      "shape": "box",
+      "material": "wood",
+      "center_m": {
+       "x": 0,
+       "y": 1.140089,
+       "z": 0
+      },
+      "size_m": {
+       "x": 2.253,
+       "y": 0.051822,
+       "z": 0.876
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-1",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -1.08895,
+       "y": 0.557089,
+       "z": -0.4088
+      },
+      "size_m": {
+       "x": 0.0751,
+       "y": 1.114178,
+       "z": 0.0584
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-2",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 1.08895,
+       "y": 0.557089,
+       "z": -0.4088
+      },
+      "size_m": {
+       "x": 0.0751,
+       "y": 1.114178,
+       "z": 0.0584
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-3",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -1.08895,
+       "y": 0.557089,
+       "z": 0.4088
+      },
+      "size_m": {
+       "x": 0.0751,
+       "y": 1.114178,
+       "z": 0.0584
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-4",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 1.08895,
+       "y": 0.557089,
+       "z": 0.4088
+      },
+      "size_m": {
+       "x": 0.0751,
+       "y": 1.114178,
+       "z": 0.0584
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "shelf",
+      "label": "lower shelf",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0,
+       "y": 0.259111,
+       "z": 0
+      },
+      "size_m": {
+       "x": 2.1028,
+       "y": 0.02591,
+       "z": 0.7592
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "classroom-blue-chair": {
+   "origin": "photo",
+   "name": "Plastic chair",
+   "described_as": "plastic chair seen in classroom.jpg",
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 0.725,
+     "y": 0.989,
+     "z": 0.725
+    },
+    "parts": [
+     {
+      "id": "seat",
+      "label": "seat",
+      "shape": "rounded_box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": 0,
+       "y": 0.468473,
+       "z": 0.0145
+      },
+      "size_m": {
+       "x": 0.725,
+       "y": 0.072874,
+       "z": 0.696
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "back",
+      "label": "backrest",
+      "shape": "rounded_box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": 0,
+       "y": 0.749558,
+       "z": -0.319
+      },
+      "size_m": {
+       "x": 0.725,
+       "y": 0.478884,
+       "z": 0.087
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-1",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.308125,
+       "y": 0.218621,
+       "z": -0.293625
+      },
+      "size_m": {
+       "x": 0.05075,
+       "y": 0.437242,
+       "z": 0.05075
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-2",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.308125,
+       "y": 0.218621,
+       "z": -0.293625
+      },
+      "size_m": {
+       "x": 0.05075,
+       "y": 0.437242,
+       "z": 0.05075
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-3",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.308125,
+       "y": 0.218621,
+       "z": 0.322625
+      },
+      "size_m": {
+       "x": 0.05075,
+       "y": 0.437242,
+       "z": 0.05075
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-4",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.308125,
+       "y": 0.218621,
+       "z": 0.322625
+      },
+      "size_m": {
+       "x": 0.05075,
+       "y": 0.437242,
+       "z": 0.05075
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "classroom-white-chair": {
+   "origin": "photo",
+   "name": "White wooden chair",
+   "described_as": "white wooden chair seen in classroom.jpg",
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 0.428,
+     "y": 1.188,
+     "z": 0.428
+    },
+    "parts": [
+     {
+      "id": "seat",
+      "label": "seat",
+      "shape": "rounded_box",
+      "material": "wood",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.562737,
+       "z": 0.00856
+      },
+      "size_m": {
+       "x": 0.428,
+       "y": 0.087538,
+       "z": 0.41088
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "back",
+      "label": "backrest",
+      "shape": "rounded_box",
+      "material": "wood",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.900379,
+       "z": -0.18832
+      },
+      "size_m": {
+       "x": 0.428,
+       "y": 0.575242,
+       "z": 0.05136
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-1",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.1819,
+       "y": 0.262611,
+       "z": -0.17334
+      },
+      "size_m": {
+       "x": 0.02996,
+       "y": 0.525222,
+       "z": 0.02996
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-2",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.1819,
+       "y": 0.262611,
+       "z": -0.17334
+      },
+      "size_m": {
+       "x": 0.02996,
+       "y": 0.525222,
+       "z": 0.02996
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-3",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.1819,
+       "y": 0.262611,
+       "z": 0.19046
+      },
+      "size_m": {
+       "x": 0.02996,
+       "y": 0.525222,
+       "z": 0.02996
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-4",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.1819,
+       "y": 0.262611,
+       "z": 0.19046
+      },
+      "size_m": {
+       "x": 0.02996,
+       "y": 0.525222,
+       "z": 0.02996
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "classroom-low-bookshelf": {
+   "origin": "photo",
+   "name": "Low bookshelf",
+   "described_as": "low bookshelf seen in classroom.jpg",
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 0.955,
+     "y": 1.234,
+     "z": 0.477
+    },
+    "parts": [
+     {
+      "id": "leg-1",
+      "label": "leg",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": -0.461583,
+       "y": 0.617,
+       "z": -0.21465
+      },
+      "size_m": {
+       "x": 0.031834,
+       "y": 1.234,
+       "z": 0.0477
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-2",
+      "label": "leg",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": 0.461583,
+       "y": 0.617,
+       "z": -0.21465
+      },
+      "size_m": {
+       "x": 0.031834,
+       "y": 1.234,
+       "z": 0.0477
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-3",
+      "label": "leg",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": -0.461583,
+       "y": 0.617,
+       "z": 0.21465
+      },
+      "size_m": {
+       "x": 0.031834,
+       "y": 1.234,
+       "z": 0.0477
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-4",
+      "label": "leg",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": 0.461583,
+       "y": 0.617,
+       "z": 0.21465
+      },
+      "size_m": {
+       "x": 0.031834,
+       "y": 1.234,
+       "z": 0.0477
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "beam-1",
+      "label": "shelf",
+      "shape": "box",
+      "material": "wood",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.09255,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 0.955,
+       "y": 0.04936,
+       "z": 0.477
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "beam-2",
+      "label": "shelf",
+      "shape": "box",
+      "material": "wood",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.46275,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 0.955,
+       "y": 0.04936,
+       "z": 0.477
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "beam-3",
+      "label": "shelf",
+      "shape": "box",
+      "material": "wood",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.83295,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 0.955,
+       "y": 0.04936,
+       "z": 0.477
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "beam-4",
+      "label": "shelf",
+      "shape": "box",
+      "material": "wood",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.20315,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 0.955,
+       "y": 0.04936,
+       "z": 0.477
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "living-tv": {
+   "origin": "photo",
+   "name": "Tv",
+   "described_as": "tv seen in living-room.webp",
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 0.955,
+     "y": 1.357,
+     "z": 0.597
+    },
+    "parts": [
+     {
+      "id": "base",
+      "label": "stand base",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.023724,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 0.520908,
+       "y": 0.047448,
+       "z": 0.597
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "pole",
+      "label": "stand",
+      "shape": "cylinder",
+      "material": "aluminium",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.521923,
+       "z": -0.074625
+      },
+      "size_m": {
+       "x": 0.052092,
+       "y": 0.94895,
+       "z": 0.08955
+      },
+      "axis": "y",
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "frame",
+      "label": "screen frame",
+      "shape": "rounded_box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.043846,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 0.955,
+       "y": 0.626308,
+       "z": 0.104476
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "face",
+      "label": "screen",
+      "shape": "box",
+      "material": "hmi_screen",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.043846,
+       "z": 0.053731
+      },
+      "size_m": {
+       "x": 0.885544,
+       "y": 0.550392,
+       "z": 0.00597
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "living-media-player": {
+   "origin": "photo",
+   "name": "Media player",
+   "described_as": "media player seen in living-room.webp",
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 0.5,
+     "y": 1.671,
+     "z": 0.5
+    },
+    "parts": [
+     {
+      "id": "body",
+      "label": "body",
+      "shape": "rounded_box",
+      "material": "plastic_grey",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.8355,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 0.5,
+       "y": 1.671,
+       "z": 0.5
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "builder-rack": {
+   "origin": "builder",
+   "name": "Shelving rack",
+   "described_as": null,
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 1.8,
+     "y": 2.0,
+     "z": 0.6
+    },
+    "parts": [
+     {
+      "id": "leg-1",
+      "label": "leg",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": -0.87,
+       "y": 1.0,
+       "z": -0.27
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 2.0,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-2",
+      "label": "leg",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": 0.87,
+       "y": 1.0,
+       "z": -0.27
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 2.0,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-3",
+      "label": "leg",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": -0.87,
+       "y": 1.0,
+       "z": 0.27
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 2.0,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-4",
+      "label": "leg",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": 0.87,
+       "y": 1.0,
+       "z": 0.27
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 2.0,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "beam-1",
+      "label": "shelf",
+      "shape": "box",
+      "material": "paint_orange",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.15,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.8,
+       "y": 0.08,
+       "z": 0.6
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "beam-2",
+      "label": "shelf",
+      "shape": "box",
+      "material": "paint_orange",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.75,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.8,
+       "y": 0.08,
+       "z": 0.6
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "beam-3",
+      "label": "shelf",
+      "shape": "box",
+      "material": "paint_orange",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.35,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.8,
+       "y": 0.08,
+       "z": 0.6
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "beam-4",
+      "label": "shelf",
+      "shape": "box",
+      "material": "paint_orange",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.95,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.8,
+       "y": 0.08,
+       "z": 0.6
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "builder-chair": {
+   "origin": "builder",
+   "name": "Chair",
+   "described_as": null,
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 0.5,
+     "y": 0.95,
+     "z": 0.5
+    },
+    "parts": [
+     {
+      "id": "seat",
+      "label": "seat",
+      "shape": "rounded_box",
+      "material": "fabric_grey",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.45,
+       "z": 0.01
+      },
+      "size_m": {
+       "x": 0.5,
+       "y": 0.07,
+       "z": 0.48
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "back",
+      "label": "backrest",
+      "shape": "rounded_box",
+      "material": "fabric_grey",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.72,
+       "z": -0.22
+      },
+      "size_m": {
+       "x": 0.5,
+       "y": 0.46,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-1",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.2125,
+       "y": 0.21,
+       "z": -0.2025
+      },
+      "size_m": {
+       "x": 0.035,
+       "y": 0.42,
+       "z": 0.035
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-2",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.2125,
+       "y": 0.21,
+       "z": -0.2025
+      },
+      "size_m": {
+       "x": 0.035,
+       "y": 0.42,
+       "z": 0.035
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-3",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.2125,
+       "y": 0.21,
+       "z": 0.2225
+      },
+      "size_m": {
+       "x": 0.035,
+       "y": 0.42,
+       "z": 0.035
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-4",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.2125,
+       "y": 0.21,
+       "z": 0.2225
+      },
+      "size_m": {
+       "x": 0.035,
+       "y": 0.42,
+       "z": 0.035
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "builder-sofa": {
+   "origin": "builder",
+   "name": "Sofa",
+   "described_as": null,
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 1.9,
+     "y": 0.84,
+     "z": 0.85
+    },
+    "parts": [
+     {
+      "id": "base",
+      "label": "seat base",
+      "shape": "rounded_box",
+      "material": "fabric_grey",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.26,
+       "z": 0.035
+      },
+      "size_m": {
+       "x": 1.9,
+       "y": 0.36,
+       "z": 0.78
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "back",
+      "label": "backrest",
+      "shape": "rounded_box",
+      "material": "fabric_grey",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.6,
+       "z": -0.305
+      },
+      "size_m": {
+       "x": 1.9,
+       "y": 0.48,
+       "z": 0.24
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "arm-l",
+      "label": "armrest",
+      "shape": "rounded_box",
+      "material": "fabric_grey",
+      "center_m": {
+       "x": -0.86,
+       "y": 0.4,
+       "z": 0.035
+      },
+      "size_m": {
+       "x": 0.18,
+       "y": 0.6,
+       "z": 0.78
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "arm-r",
+      "label": "armrest",
+      "shape": "rounded_box",
+      "material": "fabric_grey",
+      "center_m": {
+       "x": 0.86,
+       "y": 0.4,
+       "z": 0.035
+      },
+      "size_m": {
+       "x": 0.18,
+       "y": 0.6,
+       "z": 0.78
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-1",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.875,
+       "y": 0.04,
+       "z": -0.38
+      },
+      "size_m": {
+       "x": 0.05,
+       "y": 0.08,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-2",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.875,
+       "y": 0.04,
+       "z": -0.38
+      },
+      "size_m": {
+       "x": 0.05,
+       "y": 0.08,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-3",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.875,
+       "y": 0.04,
+       "z": 0.37
+      },
+      "size_m": {
+       "x": 0.05,
+       "y": 0.08,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-4",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.875,
+       "y": 0.04,
+       "z": 0.37
+      },
+      "size_m": {
+       "x": 0.05,
+       "y": 0.08,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "builder-chest": {
+   "origin": "builder",
+   "name": "Storage chest",
+   "described_as": null,
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 1.0,
+     "y": 0.8,
+     "z": 0.8
+    },
+    "parts": [
+     {
+      "id": "body",
+      "label": "body",
+      "shape": "rounded_box",
+      "material": "paint_light_grey",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.4,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.0,
+       "y": 0.8,
+       "z": 0.8
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "builder-bin": {
+   "origin": "builder",
+   "name": "Storage bin",
+   "described_as": null,
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 0.5,
+     "y": 0.3,
+     "z": 0.35
+    },
+    "parts": [
+     {
+      "id": "body",
+      "label": "body",
+      "shape": "rounded_box",
+      "material": "paint_light_grey",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.15,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 0.5,
+       "y": 0.3,
+       "z": 0.35
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "described-workbench": {
+   "origin": "described",
+   "name": "Workbench with monitor and drawer",
+   "described_as": "a workbench 1.8 m wide with a monitor and a drawer unit",
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 1.8,
+     "y": 1.2,
+     "z": 0.7
+    },
+    "parts": [
+     {
+      "id": "leg-fll",
+      "label": "front left leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.686842,
+       "y": 0.43,
+       "z": 0.32
+      },
+      "size_m": {
+       "x": 0.047368,
+       "y": 0.86,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "inferred"
+     },
+     {
+      "id": "leg-frr",
+      "label": "front right leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.592106,
+       "y": 0.43,
+       "z": 0.32
+      },
+      "size_m": {
+       "x": 0.047368,
+       "y": 0.86,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "inferred"
+     },
+     {
+      "id": "leg-bll",
+      "label": "back left leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.686842,
+       "y": 0.43,
+       "z": -0.32
+      },
+      "size_m": {
+       "x": 0.047368,
+       "y": 0.86,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "inferred"
+     },
+     {
+      "id": "leg-brr",
+      "label": "back right leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.592106,
+       "y": 0.43,
+       "z": -0.32
+      },
+      "size_m": {
+       "x": 0.047368,
+       "y": 0.86,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "inferred"
+     },
+     {
+      "id": "top",
+      "label": "worktop",
+      "shape": "box",
+      "material": "wood",
+      "center_m": {
+       "x": -0.047368,
+       "y": 0.88,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.705264,
+       "y": 0.04,
+       "z": 0.7
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "inferred"
+     },
+     {
+      "id": "drawer-unit",
+      "label": "drawer unit",
+      "shape": "rounded_box",
+      "material": "paint_light_grey",
+      "center_m": {
+       "x": -0.568421,
+       "y": 0.78,
+       "z": 0.05
+      },
+      "size_m": {
+       "x": 0.473686,
+       "y": 0.14,
+       "z": 0.6
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "stated"
+     },
+     {
+      "id": "monitor",
+      "label": "monitor",
+      "shape": "box",
+      "material": "hmi_screen",
+      "center_m": {
+       "x": 0.615789,
+       "y": 1.05,
+       "z": 0.3
+      },
+      "size_m": {
+       "x": 0.568422,
+       "y": 0.3,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "stated"
+     }
+    ]
+   }
+  },
+  "described-water-tank": {
+   "origin": "described",
+   "name": "Cylindrical tank with conical bottom",
+   "described_as": "a cylindrical water tank 1.5 m tall with a cone-shaped bottom on four legs",
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 1.0,
+     "y": 1.5,
+     "z": 1.0
+    },
+    "parts": [
+     {
+      "id": "cylinder",
+      "label": "cylindrical body",
+      "shape": "cylinder",
+      "material": "stainless_steel",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.75,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.0,
+       "y": 1.5,
+       "z": 1.0
+      },
+      "axis": "y",
+      "taper": null,
+      "narrow_end": null,
+      "basis": "inferred"
+     },
+     {
+      "id": "cone",
+      "label": "conical bottom",
+      "shape": "frustum",
+      "material": "stainless_steel",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.15,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.0,
+       "y": 0.3,
+       "z": 1.0
+      },
+      "axis": null,
+      "taper": 0.5,
+      "narrow_end": "bottom",
+      "basis": "inferred"
+     },
+     {
+      "id": "leg1",
+      "label": "leg front right",
+      "shape": "cylinder",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.45,
+       "y": 0.45,
+       "z": 0.45
+      },
+      "size_m": {
+       "x": 0.05,
+       "y": 0.9,
+       "z": 0.05
+      },
+      "axis": "y",
+      "taper": null,
+      "narrow_end": null,
+      "basis": "inferred"
+     },
+     {
+      "id": "leg2",
+      "label": "leg front left",
+      "shape": "cylinder",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.45,
+       "y": 0.45,
+       "z": 0.45
+      },
+      "size_m": {
+       "x": 0.05,
+       "y": 0.9,
+       "z": 0.05
+      },
+      "axis": "y",
+      "taper": null,
+      "narrow_end": null,
+      "basis": "inferred"
+     },
+     {
+      "id": "leg3",
+      "label": "leg back right",
+      "shape": "cylinder",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.45,
+       "y": 0.45,
+       "z": -0.45
+      },
+      "size_m": {
+       "x": 0.05,
+       "y": 0.9,
+       "z": 0.05
+      },
+      "axis": "y",
+      "taper": null,
+      "narrow_end": null,
+      "basis": "inferred"
+     },
+     {
+      "id": "leg4",
+      "label": "leg back left",
+      "shape": "cylinder",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.45,
+       "y": 0.45,
+       "z": -0.45
+      },
+      "size_m": {
+       "x": 0.05,
+       "y": 0.9,
+       "z": 0.05
+      },
+      "axis": "y",
+      "taper": null,
+      "narrow_end": null,
+      "basis": "inferred"
+     }
+    ]
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "v01",
+   "category": "visible-addition",
+   "target": "classroom-rect-table",
+   "instruction": "add a small red emergency stop button on the front edge of the table top",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:stop|button",
+    "material:estop_red|paint_red|signal_red"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": true,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "v02",
+   "category": "visible-addition",
+   "target": "classroom-blue-chair",
+   "instruction": "add a cushion on the seat",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:cushion|pad"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": true,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "v03",
+   "category": "visible-addition",
+   "target": "builder-rack",
+   "instruction": "add a green status lamp on top of one front post",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:lamp|light|beacon",
+    "material:paint_green|signal_green"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": true,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "v04",
+   "category": "visible-addition",
+   "target": "described-workbench",
+   "instruction": "add a desk lamp on the worktop at the back left corner",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:lamp|light"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": true,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "v05",
+   "category": "visible-addition",
+   "target": "living-tv",
+   "instruction": "add a small grey webcam on top of the screen frame",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:camera|webcam|cam",
+    "material:paint_light_grey|plastic_grey|paint_anthracite|fabric_grey|concrete"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": true,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "v06",
+   "category": "visible-addition",
+   "target": "builder-sofa",
+   "instruction": "add two throw pillows against the backrest",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:pillow|cushion"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": true,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "o01",
+   "category": "open-structure",
+   "target": "living-media-player",
+   "instruction": "turn it into an open cube shelf with three open compartments stacked one above another",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:shelf|compartment|panel|divider"
+   ],
+   "open": true,
+   "unrepresentable": [],
+   "keep_other_parts": false,
+   "visible_additions": false,
+   "notes": ""
+  },
+  {
+   "id": "o02",
+   "category": "open-structure",
+   "target": "builder-chest",
+   "instruction": "make it an open shelf unit with two shelves, a back panel and no front",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:shelf",
+    "part:back"
+   ],
+   "open": true,
+   "unrepresentable": [],
+   "keep_other_parts": false,
+   "visible_additions": false,
+   "notes": ""
+  },
+  {
+   "id": "o03",
+   "category": "open-structure",
+   "target": "described-workbench",
+   "instruction": "make the drawer unit open shelves with no drawers",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:shelf"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": false,
+   "visible_additions": false,
+   "notes": ""
+  },
+  {
+   "id": "o04",
+   "category": "open-structure",
+   "target": "builder-bin",
+   "instruction": "make it an open-top wire basket of thin vertical bars with gaps between them",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:bar|wire|rod|post|slat"
+   ],
+   "open": true,
+   "unrepresentable": [],
+   "keep_other_parts": false,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "o05",
+   "category": "open-structure",
+   "target": "builder-chair",
+   "instruction": "make the backrest three horizontal slats with gaps between them",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:slat"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": false,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "t01",
+   "category": "transparent",
+   "target": "classroom-rect-table",
+   "instruction": "give it a clear glass top on the same frame",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "material:glass_clear|polycarbonate"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": false,
+   "visible_additions": false,
+   "notes": ""
+  },
+  {
+   "id": "t02",
+   "category": "transparent",
+   "target": "builder-rack",
+   "instruction": "add clear plastic side panels on both ends",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "material:polycarbonate|glass_clear",
+    "part:panel|side"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": false,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "t03",
+   "category": "transparent",
+   "target": "classroom-low-bookshelf",
+   "instruction": "add a glass back panel behind the shelves",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "material:glass_clear|polycarbonate",
+    "part:back|panel"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": false,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "e01",
+   "category": "explicit-colour",
+   "target": "classroom-blue-chair",
+   "instruction": "paint the legs yellow and make the seat orange",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "material:safety_yellow|signal_amber",
+    "material:paint_orange"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": false,
+   "visible_additions": false,
+   "notes": ""
+  },
+  {
+   "id": "e02",
+   "category": "explicit-colour",
+   "target": "described-water-tank",
+   "instruction": "paint the legs safety yellow and the tank shell white",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "material:safety_yellow",
+    "material:paint_white|signal_white"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": false,
+   "visible_additions": false,
+   "notes": ""
+  },
+  {
+   "id": "e03",
+   "category": "explicit-colour",
+   "target": "builder-sofa",
+   "instruction": "make the legs black and the armrests dark blue fabric",
+   "expect": "partial",
+   "size": "keep",
+   "visible_change": [
+    "material:plastic_black|rubber_black|label_black",
+    "material:paint_blue|motor_blue"
+   ],
+   "open": false,
+   "unrepresentable": [
+    "fabric"
+   ],
+   "keep_other_parts": false,
+   "visible_additions": false,
+   "notes": "blue is available, the fabric texture in blue is not: colour shown, texture listed"
+  },
+  {
+   "id": "p01",
+   "category": "partial",
+   "target": "classroom-white-chair",
+   "instruction": "add a green seat pad and make the chair fold flat",
+   "expect": "partial",
+   "size": "keep",
+   "visible_change": [
+    "part:pad|cushion",
+    "material:paint_green|signal_green"
+   ],
+   "open": false,
+   "unrepresentable": [
+    "fold"
+   ],
+   "keep_other_parts": false,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "p02",
+   "category": "partial",
+   "target": "builder-rack",
+   "instruction": "add a red label holder on each beam and print the bay numbers on them",
+   "expect": "partial",
+   "size": "keep",
+   "visible_change": [
+    "part:label|holder",
+    "material:estop_red|paint_red|signal_red"
+   ],
+   "open": false,
+   "unrepresentable": [
+    "print|number"
+   ],
+   "keep_other_parts": false,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "p03",
+   "category": "partial",
+   "target": "living-tv",
+   "instruction": "add a white wall bracket behind the screen and make the screen touch-sensitive",
+   "expect": "partial",
+   "size": "keep",
+   "visible_change": [
+    "part:bracket|mount",
+    "material:paint_white|signal_white"
+   ],
+   "open": false,
+   "unrepresentable": [
+    "touch"
+   ],
+   "keep_other_parts": false,
+   "visible_additions": false,
+   "notes": ""
+  },
+  {
+   "id": "p04",
+   "category": "partial",
+   "target": "described-water-tank",
+   "instruction": "add a red drain valve at the bottom of the cone and make the tank insulated",
+   "expect": "partial",
+   "size": "keep",
+   "visible_change": [
+    "part:valve|drain",
+    "material:estop_red|paint_red|signal_red"
+   ],
+   "open": false,
+   "unrepresentable": [
+    "insulat"
+   ],
+   "keep_other_parts": false,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "s01",
+   "category": "already-satisfied",
+   "target": "classroom-rect-table",
+   "instruction": "give it a wooden top",
+   "expect": "already_satisfied",
+   "size": "keep",
+   "visible_change": [],
+   "open": false,
+   "unrepresentable": [],
+   "keep_other_parts": false,
+   "visible_additions": false,
+   "notes": ""
+  }
+ ]
+}

@@ -99,9 +99,9 @@ def kinds(spec: GeometrySpec, current: GeometrySpec, instruction: str) -> dict[s
 
 
 def test_a_part_wholly_inside_another_is_hidden() -> None:
-    button = part("button", (0.3, 0.735, 0.1), (0.04, 0.02, 0.04), "estop_red", "cylinder")
+    button = part("button", (0.3, 0.735, 0.1), (0.06, 0.02, 0.06), "estop_red", "cylinder")
     assert kinds(plus(table(), button), table(), "add a red stop button") == {"button": "hidden"}
-    on_top = part("button", (0.3, 0.76, 0.1), (0.04, 0.02, 0.04), "estop_red", "cylinder")
+    on_top = part("button", (0.3, 0.76, 0.1), (0.06, 0.02, 0.06), "estop_red", "cylinder")
     assert kinds(plus(table(), on_top), table(), "add a red stop button") == {}
 
 
@@ -137,6 +137,15 @@ def test_framed_and_spanning_parts_are_supported_by_what_holds_them() -> None:
     glass = part("glass-panel", (0, 0.4, -0.25), (1.05, 0.5, 0.01), "glass_clear")
     rail = part("rail", (0, 0.2, 0.25), (1.05, 0.03, 0.03), "aluminium", "cylinder", axis="x")
     assert kinds(plus(table(), glass, rail), table(), "add a glass panel and a rail") == {}
+
+
+def test_a_tiny_requested_addition_with_no_size_given_is_too_small_to_see() -> None:
+    light = part("status-light", (0.5, 0.76, 0.2), (0.02, 0.02, 0.02), "signal_green", "cylinder")
+    assert kinds(plus(table(), light), table(), "add a green status light") == {
+        "status-light": "tiny"
+    }
+    # A size the user gave is kept as asked.
+    assert kinds(plus(table(), light), table(), "add a 2 cm green status light") == {}
 
 
 def test_a_part_covered_from_the_usual_view_is_unseen() -> None:
@@ -288,8 +297,8 @@ def table_answer(*added: dict[str, Any], **fields: Any) -> str:
     return json.dumps(answer)
 
 
-HIDDEN = part("button", (0.3, 0.735, 0.1), (0.04, 0.02, 0.04), "estop_red", "cylinder")
-SHOWN = part("button", (0.3, 0.76, 0.1), (0.04, 0.02, 0.04), "estop_red", "cylinder")
+HIDDEN = part("button", (0.3, 0.735, 0.1), (0.06, 0.02, 0.06), "estop_red", "cylinder")
+SHOWN = part("button", (0.3, 0.76, 0.1), (0.06, 0.02, 0.06), "estop_red", "cylinder")
 UNDER = part("tray", (0, 0.69, -0.1), (0.6, 0.05, 0.2), "plastic_grey")
 ASK = "add a red stop button and a tray"
 

@@ -1,0 +1,642 @@
+{
+ "model": "qwen3-235b-a22b-instruct-2507",
+ "kind": "frozen",
+ "service": "ASU Voyager",
+ "base_url": "https://openai.rc.asu.edu/v1",
+ "prompt_version": "gen-05.1",
+ "budget_s": 150.0,
+ "retry_policy": "at most one shared retry (invalid answer, not open, or added parts not visible), only while the whole-request budget can cover it",
+ "mode": "live, schema-guided, through the API endpoint, sequential (one request at a time)",
+ "keep_awake": "caffeinate -i -w <pid> (macOS idle and system sleep prevented)",
+ "runs": [
+  {
+   "started": "2026-10-16T04:25:15+00:00",
+   "commit": "586eb71",
+   "keep_awake": "caffeinate -i -w <pid> (macOS idle and system sleep prevented)"
+  }
+ ],
+ "rows": {
+  "p1": {
+   "http_status": 200,
+   "wall_s": 22.48,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 22.42,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.43,\n        \"z\": 0.0\n      },\n      \"id\": \"status-light\",\n      \"label\": \"status light\",\n      \"material\": \"signal_green\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.02,\n        \"y\": 0.02,\n        \"z\": 0.02\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 1.1,\n    \"y\": 1.43,\n    \"z\": 0.4\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a small green status light on top of the frame at the center of the top edge.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.1,
+      "y": 1.43,
+      "z": 0.4
+     },
+     "parts": [
+      {
+       "id": "base",
+       "label": "stand base",
+       "shape": "box",
+       "material": "plastic_black",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.024826,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.6,
+        "y": 0.049652,
+        "z": 0.4
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "pole",
+       "label": "stand",
+       "shape": "cylinder",
+       "material": "aluminium",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.54618,
+        "z": -0.05
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 0.993056,
+        "z": 0.06
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "frame",
+       "label": "screen frame",
+       "shape": "rounded_box",
+       "material": "plastic_black",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.092361,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.1,
+        "y": 0.655418,
+        "z": 0.07
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "face",
+       "label": "screen",
+       "shape": "box",
+       "material": "hmi_screen",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.092362,
+        "z": 0.036
+       },
+       "size_m": {
+        "x": 1.02,
+        "y": 0.575972,
+        "z": 0.004
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "status-light",
+       "label": "status light",
+       "shape": "cylinder",
+       "material": "signal_green",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.420069,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.02,
+        "y": 0.019862,
+        "z": 0.02
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a small green status light on top of the frame at the center of the top edge.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 22417
+    }
+   },
+   "error": null,
+   "clock_s": 22.48,
+   "started_at": "2026-10-16T04:25:15+00:00",
+   "at": "2026-10-16T04:25:37+00:00",
+   "model_sha256": "54c4bb5258e601c6eda27f95eca06c2364091c28609677dab634f466a9b87f41",
+   "triangles": 580
+  },
+  "p2": {
+   "http_status": 200,
+   "wall_s": 149.26,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 46.56,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.86,\n        \"z\": -0.62\n      },\n      \"id\": \"rail-front\",\n      \"label\": \"front rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 1.24,\n        \"y\": 0.05,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.86,\n        \"z\": 0.62\n      },\n      \"id\": \"rail-back\",\n      \"label\": \"back rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 1.24,\n        \"y\": 0.05,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": -0.62,\n        \"y\": 1.86,\n        \"z\": 0.0\n      },\n      \"id\": \"rail-left\",\n      \"label\": \"left rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.05,\n        \"z\": 1.14\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.62,\n        \"y\": 1.86,\n        \"z\": 0.0\n      },\n      \"id\": \"rail-right\",\n      \"label\": \"right rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.05,\n        \"z\": 1.14\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 1.24,\n    \"y\": 1.86,\n    \"z\": 1.24\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a yellow guard rail around the lid using four safety_yellow box parts forming a rectangular frame just above the lid.\"\n}"
+    },
+    {
+     "attempt": 1,
+     "seconds": 102.48,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.86,\n        \"z\": -0.62\n      },\n      \"id\": \"rail-front\",\n      \"label\": \"front rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 1.24,\n        \"y\": 0.05,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.86,\n        \"z\": 0.62\n      },\n      \"id\": \"rail-back\",\n      \"label\": \"back rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 1.24,\n        \"y\": 0.05,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": -0.62,\n        \"y\": 1.86,\n        \"z\": 0.0\n      },\n      \"id\": \"rail-left\",\n      \"label\": \"left rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.05,\n        \"z\": 1.14\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.62,\n        \"y\": 1.86,\n        \"z\": 0.0\n      },\n      \"id\": \"rail-right\",\n      \"label\": \"right rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.05,\n        \"z\": 1.14\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.57,\n        \"y\": 1.86,\n        \"z\": -0.57\n      },\n      \"id\": \"post-tl\",\n      \"label\": \"top front-left post\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 0.05,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.57,\n        \"y\": 1.86,\n        \"z\": -0.57\n      },\n      \"id\": \"post-tr\",\n      \"label\": \"top front-right post\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 0.05,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.57,\n        \"y\": 1.86,\n        \"z\": 0.57\n      },\n      \"id\": \"post-bl\",\n      \"label\": \"top back-left post\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 0.05,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.57,\n        \"y\": 1.86,\n        \"z\": 0.57\n      },\n      \"id\": \"post-br\",\n      \"label\": \"top back-right post\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 0.05,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.57,\n        \"y\": 0.45,\n        \"z\": -0.57\n      },\n      \"id\": \"leg-1\",\n      \"label\": \"leg\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 0.9,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.57,\n        \"y\": 0.45,\n        \"z\": -0.57\n      },\n      \"id\": \"leg-2\",\n      \"label\": \"leg\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 0.9,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.57,\n        \"y\": 0.45,\n        \"z\": 0.57\n      },\n      \"id\": \"leg-3\",\n      \"label\": \"leg\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 0.9,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.57,\n        \"y\": 0.45,\n        \"z\": 0.57\n      },\n      \"id\": \"leg-4\",\n      \"label\": \"leg\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 0.9,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    }\n  ],\n  \"envelope_m\": {\n    \"x\": 1.24,\n    \"y\": 1.86,\n    \"z\": 1.24\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a yellow guard rail around the lid and attached it via four new steel_dark posts at the top corners, aligned with the existing legs, ensuring all rail parts are connected to the structure.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.24,
+      "y": 1.86,
+      "z": 1.24
+     },
+     "parts": [
+      {
+       "id": "shell",
+       "label": "tank shell",
+       "shape": "cylinder",
+       "material": "stainless_steel",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.085411,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.153488,
+        "y": 1.381434,
+        "z": 1.153488
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "cone",
+       "label": "conical bottom",
+       "shape": "frustum",
+       "material": "stainless_steel",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.246684,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.153488,
+        "y": 0.29602,
+        "z": 1.153488
+       },
+       "axis": null,
+       "taper": 0.2,
+       "narrow_end": "bottom",
+       "basis": "entered"
+      },
+      {
+       "id": "lid",
+       "label": "lid",
+       "shape": "cylinder",
+       "material": "stainless_steel",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.80573,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.191936,
+        "y": 0.059204,
+        "z": 1.191936
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.547907,
+        "y": 0.444032,
+        "z": -0.547907
+       },
+       "size_m": {
+        "x": 0.057674,
+        "y": 0.888064,
+        "z": 0.057674
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.547907,
+        "y": 0.444032,
+        "z": -0.547907
+       },
+       "size_m": {
+        "x": 0.057674,
+        "y": 0.888064,
+        "z": 0.057674
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.547907,
+        "y": 0.444032,
+        "z": 0.547907
+       },
+       "size_m": {
+        "x": 0.057674,
+        "y": 0.888064,
+        "z": 0.057674
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.547907,
+        "y": 0.444032,
+        "z": 0.547907
+       },
+       "size_m": {
+        "x": 0.057674,
+        "y": 0.888064,
+        "z": 0.057674
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "rail-front",
+       "label": "front rail",
+       "shape": "box",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.835332,
+        "z": -0.595969
+       },
+       "size_m": {
+        "x": 1.191936,
+        "y": 0.049336,
+        "z": 0.048062
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "rail-back",
+       "label": "back rail",
+       "shape": "box",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.835332,
+        "z": 0.595969
+       },
+       "size_m": {
+        "x": 1.191936,
+        "y": 0.049336,
+        "z": 0.048062
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "rail-left",
+       "label": "left rail",
+       "shape": "box",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": -0.595969,
+        "y": 1.835332,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.048062,
+        "y": 0.049336,
+        "z": 1.095812
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "rail-right",
+       "label": "right rail",
+       "shape": "box",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": 0.595969,
+        "y": 1.835332,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.048062,
+        "y": 0.049336,
+        "z": 1.095812
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "post-tl",
+       "label": "top front-left post",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.547907,
+        "y": 1.835332,
+        "z": -0.547907
+       },
+       "size_m": {
+        "x": 0.057674,
+        "y": 0.049336,
+        "z": 0.057674
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "post-tr",
+       "label": "top front-right post",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.547907,
+        "y": 1.835332,
+        "z": -0.547907
+       },
+       "size_m": {
+        "x": 0.057674,
+        "y": 0.049336,
+        "z": 0.057674
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "post-bl",
+       "label": "top back-left post",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.547907,
+        "y": 1.835332,
+        "z": 0.547907
+       },
+       "size_m": {
+        "x": 0.057674,
+        "y": 0.049336,
+        "z": 0.057674
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "post-br",
+       "label": "top back-right post",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.547907,
+        "y": 1.835332,
+        "z": 0.547907
+       },
+       "size_m": {
+        "x": 0.057674,
+        "y": 0.049336,
+        "z": 0.057674
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      }
+     ]
+    },
+    "summary": "Added a yellow guard rail around the lid and attached it via four new steel_dark posts at the top corners, aligned with the existing legs, ensuring all rail parts are connected to the structure.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size.",
+     "Parts were scaled ×0.961 in width (X) to fit the 1.240 m envelope.",
+     "Parts were scaled ×0.961 in depth (Z) to fit the 1.240 m envelope."
+    ],
+    "problems": [
+     "“front rail” does not touch anything that holds it up; it floats.",
+     "“back rail” does not touch anything that holds it up; it floats.",
+     "“left rail” does not touch anything that holds it up; it floats.",
+     "“right rail” does not touch anything that holds it up; it floats.",
+     "“top front-left post” does not touch anything that holds it up; it floats.",
+     "“top front-right post” does not touch anything that holds it up; it floats.",
+     "“top back-left post” does not touch anything that holds it up; it floats.",
+     "“top back-right post” does not touch anything that holds it up; it floats."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 2,
+     "first_attempt_valid": true,
+     "latency_ms": 149040
+    }
+   },
+   "error": null,
+   "clock_s": 149.26,
+   "started_at": "2026-10-16T04:25:37+00:00",
+   "at": "2026-10-16T04:28:07+00:00",
+   "model_sha256": "a4f3ae0055da6df18cc17b6564a7477d65b3ad12f2c96a3a0278aa547e1c1b77",
+   "triangles": 528
+  },
+  "p3": {
+   "http_status": 200,
+   "wall_s": 22.83,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 22.77,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.1,\n        \"z\": 0.0\n      },\n      \"id\": \"stand\",\n      \"label\": \"wooden stand\",\n      \"material\": \"wood\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.5,\n        \"y\": 0.2,\n        \"z\": 0.5\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.4,\n        \"z\": 0.0\n      },\n      \"id\": \"pot\",\n      \"label\": \"pot\",\n      \"material\": \"plastic_grey\",\n      \"narrow_end\": \"bottom\",\n      \"shape\": \"frustum\",\n      \"size_m\": {\n        \"x\": 0.4,\n        \"y\": 0.4,\n        \"z\": 0.4\n      },\n      \"taper\": 0.75\n    }\n  ],\n  \"envelope_m\": {\n    \"x\": 0.6,\n    \"y\": 1.1,\n    \"z\": 0.6\n  },\n  \"message\": null,\n  \"not_representable\": [\n    \"make the leaves rustle in the wind\"\n  ],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a wooden stand and raised the pot; cannot show moving leaves.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 0.6,
+      "y": 1.1,
+      "z": 0.6
+     },
+     "parts": [
+      {
+       "id": "pot",
+       "label": "pot",
+       "shape": "frustum",
+       "material": "plastic_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.4,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 0.4
+       },
+       "axis": null,
+       "taper": 0.75,
+       "narrow_end": "bottom",
+       "basis": "entered"
+      },
+      {
+       "id": "leaves",
+       "label": "foliage",
+       "shape": "sphere",
+       "material": "paint_green",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.75,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.6,
+        "y": 0.7,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "stand",
+       "label": "wooden stand",
+       "shape": "box",
+       "material": "wood",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.1,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.5,
+        "y": 0.2,
+        "z": 0.5
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      }
+     ]
+    },
+    "summary": "Added a wooden stand and raised the pot; cannot show moving leaves.",
+    "partial": true,
+    "size_changed": false,
+    "not_represented": [
+     "make the leaves rustle in the wind"
+    ],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 22773
+    }
+   },
+   "error": null,
+   "clock_s": 22.83,
+   "started_at": "2026-10-16T04:28:07+00:00",
+   "at": "2026-10-16T04:28:30+00:00",
+   "model_sha256": "73cb911e09d8b19bef423c78c8e989523a2476f9c7def38e6fe2b0c299b0f479",
+   "triangles": 1100
+  }
+ }
+}

@@ -12,13 +12,16 @@ Geometry (every approved shape, exact membership tests on a sample grid):
 * **hidden**: at least 95 % of the part lies inside other opaque parts;
 * **buried**: at least 40 % of it lies inside a part of the same material (it cannot be told
   apart there);
-* **floating**: no chain of touching parts links it to the floor (parts within 0.5 cm plus
+* **floating**: no chain of touching parts links it to the floor or to a part kept from the
+  current model (parts within 0.5 cm plus
   0.3 % of the object's largest side of each other count as touching),
   unless the instruction says it hangs or is mounted (a wall or ceiling outside the object);
 * **solid slats**: the instruction asks for slats or gaps, but a side is one board.
 
 Render (the generator's own meshes, a z-buffer from the review dialog's default camera):
 
+* **tiny**: a part the user asked for, with no size given, under 4 % of the object's largest
+  side and covering under 12 pixels from that view;
 * **unseen**: under 15 % of the part shows from that view (it is behind or under something).
   Copies with the same label are judged together. The object's structure (panels spanning at
   least 60 % of it on two axes; posts or rails spanning 60 % on one axis and at most 12 % on
@@ -63,6 +66,9 @@ SLENDER_SHARE: Final = 0.12
 VIEW_W: Final = 200
 VIEW_H: Final = 150
 FOV_DEG: Final = 35.0
+TOUCH_SAMPLES: Final = 12
+TINY_SHARE: Final = 0.04
+TINY_PIXELS: Final = 12
 SAMPLES: Final = 6
 """Sample points per axis inside a part (6 x 6 x 6) for the volume tests."""
 
@@ -160,6 +166,7 @@ _PLACED_OUT_OF_VIEW: Final = re.compile(
     r"\b(?:under|underneath|beneath|behind|inside|within|at\s+the\s+back|on\s+the\s+back)\b",
     re.IGNORECASE,
 )
+_LENGTH: Final = re.compile(r"\d+(?:[.,]\d+)?\s*(?:mm|cm|m|metres?|meters?|inch\w*|in)\b", re.I)
 _SLATS: Final = re.compile(r"\b(?:slats?|slatted|gaps?\s+between)\b", re.IGNORECASE)
 _WORD: Final = re.compile(r"[a-z]+")
 
@@ -234,7 +241,7 @@ def _touches(a: GeometryPart, b: GeometryPart, gap: float) -> bool:
         hi.append(high)
     if a.shape in ("box", "rounded_box") and b.shape in ("box", "rounded_box"):
         return True
-    n = SAMPLES
+    n = TOUCH_SAMPLES  # finer than the volume grid: round parts often touch along one tangent
     grid = [[lo[i] + (hi[i] - lo[i]) * (j + 0.5) / n for j in range(n)] for i in range(3)]
     return any(
         _inside(a, (x, y, z), gap) and _inside(b, (x, y, z), gap)
@@ -543,9 +550,10 @@ def find_problems(spec: GeometrySpec, current: GeometrySpec, instruction: str) -
     problems: list[Problem] = []
     view = render(spec)
     hangs = bool(_HANGS.search(instruction))
-    grounded = _grounded(parts, gap)
+    grounded = _grounded(parts, gap, before)
     unseen_reported: set[str] = set()
     behind: View | None = None
+    sized = bool(_LENGTH.search(instruction))
     for i in added:
         part = parts[i]
         points = _samples(part)
@@ -591,6 +599,28 @@ def find_problems(spec: GeometrySpec, current: GeometrySpec, instruction: str) -
             )
         if part.label in unseen_reported or not _asked_for(part.label, instruction):
             continue  # a helper part the user did not name (a mounting post) is not judged
+        size = max(part.size_m.x, part.size_m.y, part.size_m.z)
+        if (
+            size < TINY_SHARE * max(e.x, e.y, e.z)
+            and sum(len(view.covered[j]) for j in added if parts[j].label == part.label)
+            < TINY_PIXELS
+            and not sized
+        ):
+            unseen_reported.add(part.label)
+            least = TINY_SHARE * max(e.x, e.y, e.z)
+            problems.append(
+                Problem(
+                    part.id,
+                    part.label,
+                    "tiny",
+                    f"“{part.label}” is only {size * 100:.0f} cm across, too small to see from "
+                    "the usual view.",
+                    f"Part {part.id} (“{part.label}”) is only {size * 100:.0f} cm across, too "
+                    f"small to see. No size was given: make it at least {least * 100:.0f} cm "
+                    "across.",
+                )
+            )
+            continue
         # Copies with the same label are judged together: one rear wheel of four out of view
         # is fine; all four under the pallet is not. The structure (a back panel, a rear post)
         # only counts as unseen when the rear-left view does not show it either.
@@ -648,9 +678,12 @@ def _structural(part: GeometryPart, envelope: Extent3) -> bool:
     return panel or member
 
 
-def _grounded(parts: list[GeometryPart], gap: float) -> set[int]:
-    """Indices of parts linked to the floor through touching parts."""
-    floor = {i for i, p in enumerate(parts) if p.center_m.y - p.size_m.y / 2 <= gap}
+def _grounded(parts: list[GeometryPart], gap: float, kept: set[str]) -> set[int]:
+    """Indices of parts linked to the floor, or to a part kept from the current model, through
+    touching parts. The model the user started from counts as supported: only additions are
+    judged (a template whose legs stand clear of its round body does not make every addition
+    to it "floating")."""
+    floor = {i for i, p in enumerate(parts) if p.center_m.y - p.size_m.y / 2 <= gap or p.id in kept}
     reached, frontier = set(floor), list(floor)
     while frontier:
         i = frontier.pop()

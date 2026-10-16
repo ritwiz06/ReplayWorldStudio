@@ -1,0 +1,452 @@
+{
+ "model": "qwen3-235b-a22b-instruct-2507",
+ "kind": "diagnostic-after-fixes",
+ "service": "ASU Voyager",
+ "base_url": "https://openai.rc.asu.edu/v1",
+ "prompt_version": "gen-05.1",
+ "budget_s": 150.0,
+ "retry_policy": "at most one shared retry (invalid answer, not open, or added parts not visible), only while the whole-request budget can cover it",
+ "mode": "live, schema-guided, through the API endpoint, sequential (one request at a time)",
+ "keep_awake": "caffeinate -i -w <pid> (macOS idle and system sleep prevented)",
+ "runs": [
+  {
+   "started": "2026-10-16T04:30:22+00:00",
+   "commit": "586eb71",
+   "keep_awake": "caffeinate -i -w <pid> (macOS idle and system sleep prevented)"
+  }
+ ],
+ "rows": {
+  "p1": {
+   "http_status": 200,
+   "wall_s": 35.51,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 17.76,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.43,\n        \"z\": 0.0\n      },\n      \"id\": \"status-light\",\n      \"label\": \"status light\",\n      \"material\": \"signal_green\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.02,\n        \"y\": 0.02,\n        \"z\": 0.02\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 1.1,\n    \"y\": 1.43,\n    \"z\": 0.4\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a small green status light on top of the frame.\"\n}"
+    },
+    {
+     "attempt": 1,
+     "seconds": 17.63,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.43,\n        \"z\": 0.0\n      },\n      \"id\": \"status-light\",\n      \"label\": \"status light\",\n      \"material\": \"signal_green\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 0.02,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 1.1,\n    \"y\": 1.43,\n    \"z\": 0.4\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a small green status light on top of the frame, sized to be visible at 6 cm across.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.1,
+      "y": 1.43,
+      "z": 0.4
+     },
+     "parts": [
+      {
+       "id": "base",
+       "label": "stand base",
+       "shape": "box",
+       "material": "plastic_black",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.024826,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.6,
+        "y": 0.049652,
+        "z": 0.4
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "pole",
+       "label": "stand",
+       "shape": "cylinder",
+       "material": "aluminium",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.54618,
+        "z": -0.05
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 0.993056,
+        "z": 0.06
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "frame",
+       "label": "screen frame",
+       "shape": "rounded_box",
+       "material": "plastic_black",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.092361,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.1,
+        "y": 0.655418,
+        "z": 0.07
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "face",
+       "label": "screen",
+       "shape": "box",
+       "material": "hmi_screen",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.092362,
+        "z": 0.036
+       },
+       "size_m": {
+        "x": 1.02,
+        "y": 0.575972,
+        "z": 0.004
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "status-light",
+       "label": "status light",
+       "shape": "cylinder",
+       "material": "signal_green",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.420069,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 0.019862,
+        "z": 0.06
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a small green status light on top of the frame, sized to be visible at 6 cm across.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 2,
+     "first_attempt_valid": true,
+     "latency_ms": 35398
+    }
+   },
+   "error": null,
+   "clock_s": 35.51,
+   "started_at": "2026-10-16T04:30:22+00:00",
+   "at": "2026-10-16T04:30:58+00:00",
+   "model_sha256": "b431980365b71d65ae14e788f82e7f7b7b9cecfadd421121e524fe303f1c9fb6",
+   "triangles": 580
+  },
+  "p2": {
+   "http_status": 200,
+   "wall_s": 75.36,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 38.39,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.86,\n        \"z\": -0.62\n      },\n      \"id\": \"rail-front\",\n      \"label\": \"front guard rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.05,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.86,\n        \"z\": 0.62\n      },\n      \"id\": \"rail-back\",\n      \"label\": \"back guard rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.05,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": -0.62,\n        \"y\": 1.86,\n        \"z\": 0.0\n      },\n      \"id\": \"rail-left\",\n      \"label\": \"left guard rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.05,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.62,\n        \"y\": 1.86,\n        \"z\": 0.0\n      },\n      \"id\": \"rail-right\",\n      \"label\": \"right guard rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.05,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 1.24,\n    \"y\": 1.86,\n    \"z\": 1.24\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added four yellow cylindrical guard rails around the lid at the top edges, front, back, left and right.\"\n}"
+    },
+    {
+     "attempt": 1,
+     "seconds": 36.82,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.86,\n        \"z\": -0.62\n      },\n      \"id\": \"rail-front\",\n      \"label\": \"front guard rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.07,\n        \"y\": 0.05,\n        \"z\": 0.07\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.86,\n        \"z\": 0.62\n      },\n      \"id\": \"rail-back\",\n      \"label\": \"back guard rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.07,\n        \"y\": 0.05,\n        \"z\": 0.07\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": -0.62,\n        \"y\": 1.86,\n        \"z\": 0.0\n      },\n      \"id\": \"rail-left\",\n      \"label\": \"left guard rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.07,\n        \"y\": 0.05,\n        \"z\": 0.07\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.62,\n        \"y\": 1.86,\n        \"z\": 0.0\n      },\n      \"id\": \"rail-right\",\n      \"label\": \"right guard rail\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.07,\n        \"y\": 0.05,\n        \"z\": 0.07\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 1.24,\n    \"y\": 1.86,\n    \"z\": 1.24\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added four yellow cylindrical guard rails around the lid, each 7 cm in diameter, at front, back, left and right positions.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.24,
+      "y": 1.86,
+      "z": 1.24
+     },
+     "parts": [
+      {
+       "id": "shell",
+       "label": "tank shell",
+       "shape": "cylinder",
+       "material": "stainless_steel",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.085411,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.135876,
+        "y": 1.381434,
+        "z": 1.135876
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "cone",
+       "label": "conical bottom",
+       "shape": "frustum",
+       "material": "stainless_steel",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.246684,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.135876,
+        "y": 0.29602,
+        "z": 1.135876
+       },
+       "axis": null,
+       "taper": 0.2,
+       "narrow_end": "bottom",
+       "basis": "entered"
+      },
+      {
+       "id": "lid",
+       "label": "lid",
+       "shape": "cylinder",
+       "material": "stainless_steel",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.80573,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.17374,
+        "y": 0.059204,
+        "z": 1.17374
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.539542,
+        "y": 0.444032,
+        "z": -0.539542
+       },
+       "size_m": {
+        "x": 0.056792,
+        "y": 0.888064,
+        "z": 0.056792
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.539542,
+        "y": 0.444032,
+        "z": -0.539542
+       },
+       "size_m": {
+        "x": 0.056792,
+        "y": 0.888064,
+        "z": 0.056792
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.539542,
+        "y": 0.444032,
+        "z": 0.539542
+       },
+       "size_m": {
+        "x": 0.056792,
+        "y": 0.888064,
+        "z": 0.056792
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.539542,
+        "y": 0.444032,
+        "z": 0.539542
+       },
+       "size_m": {
+        "x": 0.056792,
+        "y": 0.888064,
+        "z": 0.056792
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "rail-front",
+       "label": "front guard rail",
+       "shape": "cylinder",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.835332,
+        "z": -0.58687
+       },
+       "size_m": {
+        "x": 0.06626,
+        "y": 0.049336,
+        "z": 0.06626
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "rail-back",
+       "label": "back guard rail",
+       "shape": "cylinder",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.835332,
+        "z": 0.58687
+       },
+       "size_m": {
+        "x": 0.06626,
+        "y": 0.049336,
+        "z": 0.06626
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "rail-left",
+       "label": "left guard rail",
+       "shape": "cylinder",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": -0.58687,
+        "y": 1.835332,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.06626,
+        "y": 0.049336,
+        "z": 0.06626
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "rail-right",
+       "label": "right guard rail",
+       "shape": "cylinder",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": 0.58687,
+        "y": 1.835332,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.06626,
+        "y": 0.049336,
+        "z": 0.06626
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added four yellow cylindrical guard rails around the lid, each 7 cm in diameter, at front, back, left and right positions.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size.",
+     "Parts were scaled ×0.947 in width (X) to fit the 1.240 m envelope.",
+     "Parts were scaled ×0.947 in depth (Z) to fit the 1.240 m envelope."
+    ],
+    "problems": [
+     "“front guard rail” is only 7 cm across, too small to see from the usual view.",
+     "“back guard rail” is only 7 cm across, too small to see from the usual view.",
+     "“left guard rail” is only 7 cm across, too small to see from the usual view."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 2,
+     "first_attempt_valid": true,
+     "latency_ms": 75205
+    }
+   },
+   "error": null,
+   "clock_s": 75.36,
+   "started_at": "2026-10-16T04:30:58+00:00",
+   "at": "2026-10-16T04:32:13+00:00",
+   "model_sha256": "74bf8edc0190773c0bbfc268bf69e14ea8e47e439f393281161bded0faa7529e",
+   "triangles": 944
+  }
+ }
+}
