@@ -267,7 +267,7 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P0
 - Dependencies: GEN-04
-- Status: **closed with its last criterion not met** (2026-10-16). Every other criterion is met, but the frozen visual review mean is 1.10, against the 1.2 gate. That failure is carried to GEN-06, and M2 is **not** complete. Commits: feature `586eb71` (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38850522476 green); pilot, check fixes and frozen set `7e7c473` (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38851270841 green); results commit recorded in SESSION_LOG.md.
+- Status: **closed with its last criterion not met** (2026-10-16). Every other criterion is met, but the frozen visual review mean is 1.10, against the 1.2 gate. That failure is carried to GEN-06, and M2 is **not** complete. Commits: feature `586eb71` (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38850522476 green); pilot, check fixes and frozen set `7e7c473` (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38851270841 green); results `30d6138` (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38853334042 green).
 - Done when:
   - Added parts are checked for being hidden, buried, floating, too small or out of view, and for colour. One shared retry, within one 150 s budget for the whole request; what remains is shown before Apply.
   - Cancellation stops further provider work, and a late answer cannot change the project.

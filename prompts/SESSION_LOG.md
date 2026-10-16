@@ -485,7 +485,7 @@ Append entries in chronological order. If a live repository session log already 
     - prompt `gen-05.1`;
     - tests, recorded regression replays, and a browser test.
   - **Pilot, check fixes and frozen set `7e7c473`:** the pilot found the missing tiny-addition check and the tangent and starting-model support faults. The 22-case frozen set and criteria were committed before any frozen call.
-  - **Results commit:** the run, a numbered-sheet visual review scored before the key and the scores, the scores, report.md, renders, and the record updates.
+  - **Results commit `30d6138`** (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38853334042 green): the run, a numbered-sheet visual review scored before the key and the scores, the scores, report.md, renders, and the record updates.
 - **Commands and outcomes.**
   - `pnpm check` exit 0 (pytest 653 at the feature commit); `e2e/improve.spec.ts` 4 passed.
   - Development, in bounded live runs: `scripts/evaluate_model_revisions.py` (15 cases, then 3 recorded) and the pilot (3 cases, plus a 2-case diagnostic).
