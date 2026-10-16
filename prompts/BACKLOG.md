@@ -374,7 +374,7 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P0
 - Dependencies: GEN-06, GEN-07
-- Status: **done** (2026-10-16; frozen set `51d052d`; results commit recorded in SESSION_LOG.md). **M2 closes**: every pre-registered gate passes, narrowly on the visual review.
+- Status: **done** (2026-10-16; frozen set `51d052d`, CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38864115875 green; results `802e924`, CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38871322207 green). **M2 closes**: every pre-registered gate passes, narrowly on the visual review.
 - Done when:
   - **Pilot.** The whole live → score → render → blind-review path is first run on a few new development cases, and tooling faults are fixed before anything is frozen.
   - **Frozen set.** A new set of at least 24 revisions, with its scoring rules, is committed before any live call. It covers transparent parts, small named additions, explicit colour phrases, occluded placements, open structures, partial requests, photo-made objects and stated dimensions.

@@ -525,7 +525,7 @@ Append entries in chronological order. If a live repository session log already 
     - the legacy fixture made from a pre-GEN-06 worktree;
     - inspection harness and review journeys.
   - **Freeze `51d052d`:** pilot (3 cases; 2 renderer faults fixed), tooling, and the 26-case frozen set with criteria, before any live call.
-  - **Results commit:** the run, the two blind reviews (dialog method, gated; fixed GEN-05 camera, context), scores, report, renders and records.
+  - **Results commit `802e924`** (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38871322207 green); freeze `51d052d` (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38864115875 green): the run, the two blind reviews (dialog method, gated; fixed GEN-05 camera, context), scores, report, renders and records.
 - **Commands and outcomes.**
   - `pnpm check` exit 0 (pytest 706; Vitest 152); the full Playwright suite 29 passed (the 15 inspection runs skip without `INSPECT_OUT`).
   - **Live calls:**
