@@ -221,13 +221,60 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P0
 - Dependencies: GEN-02, GEN-03
-- Baseline status: planned (added 2026-10-15 after GEN-03 as the M2 corrective task; M2 closes when it passes)
+- Status: **closed with its last criterion not met** (2026-10-15; the first three criteria are met; the frozen set fails 2 of 8 gates, carried to GEN-05; feature `61a653b`, CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38821169936 green; frozen set `1f8d31b`; results commit recorded in SESSION_LOG.md). Failing gates: timeouts 2/20 and visual mean 1.15. M2 is **not** complete.
 - Done when:
   - When an instruction mixes representable and unrepresentable requests, the revision does the representable part and lists the rest in `not_represented`; "unsupported" is kept for instructions with nothing representable in them.
   - When the answer is "unsupported" because of unrepresentable features, those features are copied into `not_represented`.
   - Revision answers have a bounded part budget so they finish well inside the 150 s timeout.
   - Developed on the four GEN-02 development cases plus new development cases, never on the GEN-03 held-out set. Then a fresh, frozen set of at least 15 revision instructions (5 mixed-representability, 5 open structures, 5 colour or part changes) is run once on the default model and passes the same GEN-03 revision gates.
 - Note (2026-10-15): from the GEN-03 report. The default failed revision outcomes (17/22, 77 %) and unrepresentable listing in the field (1/3); r16–r18 were refused as "unsupported" instead of doing the representable part, and r04 timed out at 150 s. Hidden parts in object proposals (8/25, a diagnostic) are the next visual fix after this issue, not a gate.
+- Evidence (full report: docs/assist-evaluation/gen-04/report.md; ADR-043):
+  - **Behaviour.**
+    - Three outcomes: a partial proposal that draws the drawable part, `unsupported` with nothing drawable, and `already_satisfied` with no new version.
+    - `not_represented` is filled for partial and unsupported outcomes. It is grounded in the user's words: model entries that share no word with the instruction are dropped, and the instruction's own clauses for movement, properties, curves, holes and printing are added.
+    - The dialog lists what is not shown before **Apply the drawable part to this object**. The app's own check notes are listed apart.
+    - A colour is never offered for a material property.
+    - Refusals and no-ops change neither scene nor catalog. Sizes, evidence, photo links, immutable versions, one-step undo and the all-or-nothing `revise_asset` checks are unchanged.
+  - **Bounded answers.**
+    - Prompt `gen-04.3` asks for changes only (remove, change, add, repeat). Unmentioned parts are kept exactly.
+    - More than 40 parts is an explicit limitation; nothing is cut silently.
+    - The openness guard gives one feedback retry.
+    - The API response changed (`already_satisfied`, `partial`); the project schema stays 0.7.0.
+  - **Development** (GEN-02 cases plus new development cases; never GEN-03 held-out answers): docs/assist-evaluation/gen-04.1–3.json.
+    - On the four GEN-02 cases (single runs): answers 10,317 → 7,083 characters (−31 %); waits 248.4 → 179.0 s (−28 %); throughput unchanged at about 32–35 characters per second.
+    - The twelve-cubby development case still takes 143 s and draws fewer bins than asked.
+  - **Frozen set** (committed in `1f8d31b` before the run): 20 new cases (5 mixed, 3 unsupported, 5 open, 5 colour or part, 2 already satisfied; 10 on photo-made objects).
+  - **Run:** one sequential live pass on the default model only, with no repeats and no diagnostic retries.
+  - **Gates:**
+    - outcomes 18/20 ✓;
+    - change present 12/13 ✓;
+    - size 13/13 ✓;
+    - open 3/3 ✓;
+    - unrepresentable listed 8/8 ✓;
+    - waiting median 39.4 s ✓ (p95 150.2 s);
+    - **timeouts 2/20 ✗** (o04: the openness retry after a solid 31 s first answer; o05: no first answer within 150 s). Both ran while the computer running the script was asleep (about 42 and 45 min of real time). A separate diagnostic retry answered in 85.6 s and 55.8 s; the frozen result is unchanged;
+    - **visual mean 1.15 ✗** (13 proposals; grey cushions sunk into a grey seat, a red button hidden inside its box, a floating grey stack light, crate sides without gaps).
+  - **Diagnostics:** leaks 0; first attempt valid 18/20; unrelated parts kept exactly 4/7 (fitting rescales); wrong but grounded listings in o03 ("open-top") and c01 ("red cushion").
+  - **Tests:**
+    - `services/api/tests/test_revisions.py` (39): mixed, wholly unsupported, already satisfied, unrelated parts kept, unknown ids, the part limit, repeat, the openness retry, and colour not offered as a property;
+    - recorded replays in `test_assist_recorded.py`;
+    - `tests/test_gen04_evaluation.py` (8);
+    - `e2e/improve.spec.ts` (3 tests): the partial review, Apply, save and undo, and refusals and no-ops that change nothing.
+  - **Checks (local, 2026-10-15):** `pnpm check` exit 0; pytest 628; `pnpm test:e2e` 25 passed.
+  - **Screenshots:** docs/gen-04/improve-partial.jpg (recorded development answer) and improve-unsupported.jpg (fixed test answer).
+
+### GEN-05 - Visible and time-bounded revisions
+
+- Priority: P0
+- Dependencies: GEN-04
+- Baseline status: planned (added 2026-10-15 after GEN-04 as the M2 corrective task; M2 closes when it passes)
+- Done when:
+  - The evaluation host is kept awake, and real elapsed time is recorded beside monotonic time (the GEN-04 runner already records `clock_s`).
+  - The whole revision request, retries included, finishes within one 150 s budget. The openness retry runs only if it fits; otherwise the request is refused with the explicit "not open" message.
+  - Added parts that lie wholly inside another part, sink more than half into a part of the same material, or float are caught by a deterministic check. Each gets one feedback retry within the budget, or is reported in the dialog.
+  - A part the user names without a colour gets a material distinct from what it rests on. A requested colour is never called unavailable when an approved material matches it.
+  - A fresh frozen set (never the GEN-03 or GEN-04 sets) passes the same revision gates, including ≤ 5 % timeouts and a visual mean ≥ 1.2.
+- Note (2026-10-15): from the GEN-04 report. Timeouts 2/20 (both while the computer running the script was asleep; a diagnostic retry answered in time); visual mean 1.15 (m01 cushions invisible, c03 button hidden, c05 floating stack light, o03 no slat gaps).
 - Evidence: not recorded
 
 ## M3 - Image to editable world

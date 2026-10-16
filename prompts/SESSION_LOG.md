@@ -426,6 +426,48 @@ Append entries in chronological order. If a live repository session log already 
 - Milestone status after this session: M2 in progress (GEN-01, GEN-02 and GEN-03 done; GEN-04 open; M2 closes when GEN-04 passes). M3 in progress (IMG-01 done; IMG-02, IMG-03 open).
 - Next concrete task: GEN-04 (honest partial revisions): do the representable part of a mixed instruction and list the rest, copy unrepresentable features into `not_represented` when a revision is refused, and bound the part budget; develop on the GEN-02 development cases plus new ones, then run a fresh frozen set of at least 15 revision instructions once on the default against the same revision gates.
 
+### 2026-10-15 - GEN-04 honest partial revisions
+
+- **Active milestone / issue:** M2; GEN-04.
+- **Starting commit:** `ea6d3cf` (GEN-03 records).
+- **Goal and completion criteria.**
+  - Mixed revision requests draw the drawable part and list the rest before Apply.
+  - Wholly unsupported and already-satisfied requests change nothing.
+  - Response length is bounded without silent truncation.
+  - A new frozen set of 20 revision cases is run once on the default, against the GEN-03 revision gates. M2 closes only if every gate passes.
+- **Work completed.**
+  - Development (`61a653b`, CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38821169936 green):
+    - three outcomes (partial proposal, unsupported, already satisfied);
+    - a changes-only answer format with `repeat` (prompt `gen-04.3`);
+    - limitations grounded in the user's words;
+    - an imitation guard for material properties;
+    - one openness feedback retry;
+    - an explicit 40-part limit;
+    - dialog changes, regression tests, and re-recorded development fixtures.
+  - Freeze (`1f8d31b`): docs/assist-evaluation/gen-04/{revisions.json, criteria.md, README.md}, the runner, scorer, renderer and unblinding scripts, and their tests. Committed before any live call.
+  - Results commit: the run, a numbered-sheet visual review scored before the key and the scores were opened, the scores, report.md, renders, and the record updates. The dialog's own check notes are now listed apart from "not shown". The runner now records real elapsed time.
+- **Commands run and outcomes.**
+  - `pnpm check` exit 0; pytest 628; `pnpm test:e2e` 25 passed.
+  - `uv run python scripts/evaluate_gen04.py`: 20 requests, 23:15–00:54 UTC, 17.4 min of measured request time.
+  - `scripts/score_gen04.py`: outcomes 18/20, change 12/13, size 13/13, open 3/3, listed 8/8, median 39.4 s ✓; **timeouts 2/20 ✗**, **visual mean 1.15 ✗**.
+  - Diagnostic retry, kept separate: `caffeinate -i uv run python scripts/evaluate_gen04.py --diagnostic sleep-check --cases o04 o05` → 85.6 s and 55.8 s, both proposals.
+- **Visual evidence:** docs/assist-evaluation/gen-04/renders/*.jpg; docs/gen-04/improve-partial.jpg (recorded development answer) and improve-unsupported.jpg (fixed test answer).
+- **Decisions:** ADR-043. The conflicting GEN-03 status wording in the frozen criteria.md is noted there; the file is not edited.
+- **Known limitations.**
+  - Added parts can be invisible: sunk into a same-material part, inside another part, or floating.
+  - Grounded but wrong listings occur.
+  - The twelve-cubby request takes about 140 s and draws fewer bins than asked.
+  - The two frozen timeouts coincided with the computer sleeping.
+- **Reproduction:** see docs/assist-evaluation/gen-04/README.md (repo root; `VOYAGER_API_KEY` in `.env`; run under `caffeinate` on macOS).
+- **Effort:** the run took 17.4 min of measured request time. About 81 min passed while the computer slept, which was not noticed until scoring. Development continued while the run was in progress: docs, screenshots and the dialog fix.
+- **Milestone status after this session:** M2 in progress (GEN-01..03 done; GEN-04 closed with its last criterion not met; GEN-05 open; M2 closes when GEN-05 passes). M3 in progress.
+- **Next concrete task:** GEN-05 (visible and time-bounded revisions):
+  - checks that added parts are visible, with one feedback retry;
+  - distinct materials for named parts;
+  - the whole request bounded to 150 s, retries included;
+  - the host kept awake during evaluations;
+  - a fresh frozen set.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

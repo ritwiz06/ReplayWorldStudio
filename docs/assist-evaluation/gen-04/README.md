@@ -9,7 +9,7 @@ were committed before the live run. The GEN-03 held-out set and its scores are n
 | `revisions.json` | 18 target models and 20 cases (5 mixed, 3 unsupported, 5 open, 5 colour/part, 2 already satisfied; 10 on photo-made objects). Each case has an expected outcome, size rule, visible-change checks, and open and unrepresentable keywords. |
 | `criteria.md` | Scoring rules, denominators and gates, fixed before running. |
 | `results/<model>.json` | The frozen live result: every answer, timing, retries and errors. |
-| `results/diagnostic-*.json` | Diagnostic retries, if any. These are kept apart and never scored as the result. |
+| `results/diagnostic-*.json` | Diagnostic retries, kept apart and never scored as the result. `diagnostic-sleep-check.json` re-ran o04 and o05 after the frozen run (see report.md). |
 | `scores.json` | Automatic scores and the gate table. |
 | `review.json` | The visual review, scored sheet by sheet and then unblinded. |
 | `report.md` | Results, failures, waiting time and the M2 decision. |
@@ -37,6 +37,7 @@ written. Provider calls stay out of CI.
 # 1. The frozen live run: one sequential pass, default model only. It resumes if interrupted and
 #    keeps every recorded result, errors and timeouts included.
 uv run python scripts/evaluate_gen04.py
+#    On macOS, run it as `caffeinate -i uv run python …` so the computer cannot sleep mid-request.
 
 # 2. The visual review, scored before the automatic scores are read.
 uv run python scripts/evaluate_gen04.py --build-targets

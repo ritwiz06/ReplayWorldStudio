@@ -1,6 +1,6 @@
-# Language assistance and generated objects (GEN-01, GEN-02, GEN-03)
+# Language assistance and generated objects (GEN-01 to GEN-04)
 
-What the description assistant, language edits and model revisions do, how the key and data are handled, what was verified against the live provider, and what generated models can and cannot represent. Decisions: ADR-031 to ADR-035 and ADR-039 to ADR-042 in [prompts/DECISIONS.md](../prompts/DECISIONS.md). Contract details: [docs/contracts.md](contracts.md#generated-objects-050-gen-01) and [revised generated objects](contracts.md#revised-generated-objects-070-gen-02). Improving a placed model: [below](#improving-a-placed-generated-model-gen-02). Held-out evaluation and the model choice: [below](#held-out-evaluation-gen-03).
+What the description assistant, language edits and model revisions do, how the key and data are handled, what was verified against the live provider, and what generated models can and cannot represent. Decisions: ADR-031 to ADR-035 and ADR-039 to ADR-043 in [prompts/DECISIONS.md](../prompts/DECISIONS.md). Contract details: [docs/contracts.md](contracts.md#generated-objects-050-gen-01) and [revised generated objects](contracts.md#revised-generated-objects-070-gen-02). Improving a placed model: [below](#improving-a-placed-generated-model-gen-02). Held-out evaluation and the model choice: [below](#held-out-evaluation-gen-03).
 
 ## The path from words to a placed object
 
@@ -45,7 +45,7 @@ An edit request follows the same shape. The API returns a typed **intent** (move
 | Mass, strength, chemical composition and operating behaviour are **always unknown**; mentioned masses or rates are listed as *not modelled*. | contract `AssetGeneration` | A picture establishes none of them. |
 | Edits: the target must be in the scene; "the selected …" must fit the selection; words that fit several objects get a question; the distance (with unit), angle and direction must appear in the request. | `assist/edits.py` | Ask instead of guessing. |
 | Every edit is resolved and dry-run by the existing command engine (revision, limits, contract) before it is shown; a refusal leaves the project unchanged. | `apps/web/src/assist/editIntent.ts` | One validation path for every edit (ADR-023). |
-| Revisions: the size is kept unless the instruction mentions a size or length; an "open" request whose proposal keeps one part filling ≥ 50 % of the object is refused; an identical proposal is refused; unrepresentable features are listed, never imitated; a part buried at the end of a larger one is separated. | `assist/revisions.py` | A proposal must not misrepresent the object (ADR-041). |
+| Revisions: the size is kept unless the instruction mentions a size or length; an "open" request whose proposal keeps one part filling ≥ 50 % of the object is retried once, then refused; an identical proposal is refused; a colour is never offered for a material property; a mixed request becomes a partial proposal and a request with nothing drawable is refused, both listing what is not shown in the user's words (never invented, never imitated); an already-satisfied request changes nothing; more than 40 parts is an explicit limitation; a part buried at the end of a larger one is separated. | `assist/revisions.py` | A proposal must not misrepresent the object (ADR-041, ADR-043). |
 | A revision is a new asset; a dimension that did not change keeps its value and evidence exactly; a proposed size must be confirmed. | `generated_assets.py` | A colour or part change is not a measurement (ADR-039, ADR-040). |
 
 ## What generated models can and cannot represent
@@ -183,24 +183,48 @@ flowchart LR
   I["Instruction"] --> API["Local API"]
   S["Current part list"] --> API
   API -->|"instruction + part list only"| V["ASU Voyager\n(qwen3-235b-a22b-instruct-2507)"]
-  V -->|"complete revised parts (schema-guided)"| API
-  API -->|"schema check, retry once; repair and fit;\nsize kept unless asked; overlaps separated;\nopenness guard; not-represented listed"| P["Proposal (nothing built)"]
+  V -->|"changes only: remove, change, add, repeat\n(schema-guided)"| API
+  API -->|"schema check, retry once; part limit;\nrepair and fit; size kept unless asked;\noverlaps separated; openness guard;\nlimitations grounded in the instruction"| P["Proposal, partial proposal,\nunsupported or already satisfied\n(nothing built)"]
   P --> B["Dialog: compare, adjust by hand,\nconfirm sizes, choose objects"]
   B -->|"Apply"| G["API: new asset\ngenerated/<sha256>.glb"]
   G -->|"revise_asset (one undo step)"| W["Project"]
 ```
 
-**Prompt `gen-02.2`** (`assist/prompts.py`, `REVISION_SYSTEM`) asks for the complete revised parts list (unchanged parts keep their IDs and values), keeps the overall size unless the instruction asks for another, forbids overlapping or face-sharing parts (split a part to colour part of a surface), asks for thin panels (about 0.02–0.03 m) and slender posts, models open structures as separate panels with real empty space (never a solid block standing in for an opening), and lists features the generator cannot depict in `not_representable` without imitating them. Text in the instruction that is not about changing this object is ignored.
+**Prompt `gen-04.3`** (`assist/prompts.py`, `REVISION_SYSTEM`; GEN-04, ADR-043) asks for **changes only**: parts to `remove`, `change` (same id, every field restated), `add`, and `repeat` (one part copied in a row or grid by counts and step, for bins, slats, shelves or posts). Parts it does not mention are kept exactly, so unrelated parts cannot drift and the answer stays short. It chooses one of three outcomes:
+
+- `revision`, doing every drawable part of the request and listing the rest in `not_representable`;
+- `unsupported`, when nothing in the request is drawable;
+- `already_satisfied`, when the current model already shows the request.
+
+The prompt also does the following:
+
+- It keeps the overall size unless asked, and asks for thin panels and slender posts.
+- It models open structures as separate panels with real empty space, replacing a solid body by putting its id in `remove`.
+- It never changes a colour to suggest a property such as fireproof or soundproof, and never draws a cosmetic shape as if it were a working hinge, wheel or mechanism.
+- It writes each limitation in the user's own words.
+- It asks for at most 24 entries and at most 40 parts in all.
+
+Text in the instruction that is not about changing this object is ignored. (GEN-02 used prompt `gen-02.2`, which asked for the complete revised parts list.)
 
 **Deterministic checks** (`assist/revisions.py`), applied after schema validation:
 
 | Check | Effect |
 | --- | --- |
-| The instruction has no length and no size word ("bigger", "taller", "width", …) | The overall size is forced back to the current one ("Size kept: the instruction did not ask for a different size.") |
+| A change or removal names a part that does not exist | Invalid answer, one retry with the problem listed. |
+| The changes would need more than 40 parts (after expanding `repeat`) | `unsupported` with "This change would need N parts; the generator draws at most 40. Nothing was changed…". Parts are never cut silently. |
+| The instruction has no length and no size word ("bigger", "taller", "width", …) | The overall size is kept ("Size kept: the instruction did not ask for a different size."); parts reaching outside it are fitted back in, and the fit says so. |
 | Overlap separation | A box part that covers the whole end of a larger box part shortens the larger one, so they meet instead of overlapping (a red top inside a blue body). Other parts inside another that share its faces are reported, not moved. |
-| An "open" request (open, hollow, without doors, cage, shelves, …) whose proposal still has one part filling ≥ 50 % of the overall box | Refused as `unsupported`; nothing changes, and the user is pointed to the part controls. |
+| An "open" request (open, hollow, without doors, cage, shelves, …) whose proposal still has one part filling ≥ 50 % of the overall box | The model is told which part fills how much and asked once more to remove it. If the second answer is still solid, it is refused as `unsupported` and nothing changes. |
 | The proposal builds the same geometry as the current model | Refused ("The proposal does not change the model."). |
-| The instruction asks for curved, slanted or rotated surfaces, holes or perforations, textures or printing, or moving or hinged parts, and the model did not list them | Added to the not-represented list. The dialog says "The shape generator cannot show: … These are not imitated in the model." |
+| A request only for material properties (fireproof, soundproof, waterproof, …) answered by a colour or material change alone | Refused: a colour would merely suggest the property. |
+| The model lists a limitation that shares no word with the instruction | Dropped, with a check note: the list cannot contain requests the user never made. |
+| The instruction asks for movement or operation (hinged, sliding, motorised, "that opens", "actually rolls", …), material properties, curved, slanted or rotated surfaces, holes or perforations, or textures or printing, and the model did not list it | Added to the not-represented list, quoting the user's clause and the reason. |
+
+**The dialog** shows the three outcomes before anything can be applied:
+
+- A **partial proposal** says "Partial: only the part the shape generator can draw is shown below. Not shown, and not imitated:", followed by the list in the user's words. Apply reads **Apply the drawable part to this object**. The app's own notes (size kept, fitting) are listed apart under "What the app checked or adjusted".
+- **Unsupported** gives the reason, "Nothing was changed.", and the same list. Apply stays disabled.
+- **Already satisfied** says "Already shown: … Nothing was changed." and creates no new version.
 
 When the revision is applied, the API also refuses a model identical to the current one and checks how each overall dimension was settled (kept, entered or proposed and confirmed).
 
@@ -251,3 +275,50 @@ The other revision gates (requested change present, size kept or changed as aske
 **Decision.** `qwen3-235b-a22b-instruct-2507` stays the default (Update to ADR-032). The candidate failed four gates and rated "clearly recognisable" on 22 points fewer descriptions; its speed does not decide. The baseline fails two revision gates, so **M2 stays open**. Its revision answers refuse mixed instructions instead of doing the representable part (r16–r18), and leave `not_represented` empty; the refusal messages do name the problem, so nothing was imitated. **GEN-04** (honest partial revisions) addresses this and will be tested on a fresh frozen set, never on these cases.
 
 **Other findings** (not gates): parts hidden inside another part in 8/25 baseline proposals (the next visual fix after GEN-04); crude objects (neither model drew a pallet truck's forks); floating or protruding parts. Correction effort, as the reviewer's count of fixes and not a timed study: baseline 17 fixes for 25 objects and 3 for 15 revisions. The review was done by the assistant running the evaluation, blind to model identity but not independent; no participants were involved.
+
+## Honest partial revisions (GEN-04)
+
+[report](assist-evaluation/gen-04/report.md)
+
+**Result.** A fresh set of 20 revision cases was frozen in `1f8d31b` before the run, then run
+once on `qwen3-235b-a22b-instruct-2507`.
+
+| Measure | Result | Gate |
+| --- | --- | --- |
+| Outcomes as expected | 18/20 ✓ (all 5 mixed requests partial; 3/3 unsupported; 2/2 already satisfied) | ≥ 85 % |
+| Requested change present | 12/13 ✓ | ≥ 75 % |
+| Size as asked | 13/13 ✓ | ≥ 90 % |
+| Open | 3/3 ✓ | ≥ 90 % |
+| Unrepresentable features listed | 8/8 ✓ | ≥ 80 % |
+| Waiting median | 39.4 s ✓ (p95 150.2 s) | ≤ 60 s |
+| Timeouts | **2/20 ✗** | ≤ 5 % |
+| Visual review mean | **1.15 ✗** | ≥ 1.2 |
+
+**Why it fails.**
+
+- **Timeouts.** Both open-structure cases that timed out were affected:
+  - o04's openness feedback retry did not answer within 150 s, after a solid first answer that
+    took 31 s;
+  - o05's first attempt did not answer at all.
+
+  Both happened while the computer running the script was asleep (real time about 42 and
+  45 min, against 181 and 150 s measured). A separate diagnostic retry answered in 85.6 s and
+  55.8 s. The frozen result is unchanged.
+- **Visual review.** Added parts were hard to see:
+  - grey cushions half sunk into a grey seat;
+  - a red e-stop button inside its box;
+  - a floating grey stack light;
+  - crate sides without gaps.
+
+  The model also wrongly said red fabric was not available.
+
+**Consequence.** M2 stays open; the next issue is GEN-05 (visible and time-bounded revisions).
+
+**Response length.** On the four GEN-02 development cases (single runs), the changes-only answers
+were 31 % shorter and the total wait 28 % shorter. Throughput stayed at about 32–35 characters
+per second, so wait time follows answer length. A twelve-cubby request still takes about 140 s.
+
+**Screenshots.**
+
+- [Partial review](gen-04/improve-partial.jpg): a recorded development answer.
+- [Refusal](gen-04/improve-unsupported.jpg): a fixed test answer.

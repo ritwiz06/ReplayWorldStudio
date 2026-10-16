@@ -1,0 +1,167 @@
+{
+ "reviewer": "Claude (the assistant running this evaluation), not a study participant",
+ "method": "Numbered sheets from apps/web/scripts/assist/render-gen04.ts in a shuffled order, each showing only the instruction and before/after renders; scored from the images before sheet-key.json, the automatic scores or any answer text were opened. 2 = the drawable change is clearly visible and right; 1 = partly; 0 = missing or wrong. corrections = sizes or parts the reviewer would still fix before applying. Renders are auto-framed, so pure size changes cannot be judged visually (checked automatically instead).",
+ "sheets": {
+  "Sheet 01": {
+   "score": 2,
+   "corrections": 0,
+   "note": "Open tower with separate shelves and sides; four shelves visible, no doors."
+  },
+  "Sheet 02": {
+   "score": 1,
+   "corrections": 1,
+   "note": "The top is clear glass but almost invisible in the render; one leg also looks clear. The glass top reads only faintly."
+  },
+  "Sheet 03": {
+   "score": 1,
+   "corrections": 1,
+   "note": "A row of small rungs and thin rails at one side of the tank; recognisable as a ladder only on close look, rails close to a leg."
+  },
+  "Sheet 04": {
+   "score": 2,
+   "corrections": 0,
+   "note": "Clear panels across the front of the shelf: glass doors are visible."
+  },
+  "Sheet 05": {
+   "score": 1,
+   "corrections": 1,
+   "note": "Both guards clearly safety yellow; the 'stack light' is a small grey box floating above one end, not readable as a stack light."
+  },
+  "Sheet 06": {
+   "score": 1,
+   "corrections": 0,
+   "note": "A pale pegboard panel along the back is visible; the 20 cm height change cannot be judged in an auto-framed render."
+  },
+  "Sheet 07": {
+   "score": 1,
+   "corrections": 1,
+   "note": "A seat cushion was added but it is grey, not red; the legs were already dark and look unchanged."
+  },
+  "Sheet 08": {
+   "score": 1,
+   "corrections": 1,
+   "note": "Top is white; no cable tray is visible under it."
+  },
+  "Sheet 09": {
+   "score": 2,
+   "corrections": 0,
+   "note": "Panels gone: an open steel frame of corner posts with top and bottom rails, as asked."
+  },
+  "Sheet 10": {
+   "score": 1,
+   "corrections": 1,
+   "note": "Open-top wooden crate, but the sides read as solid boards; no gaps between slats are visible."
+  },
+  "Sheet 11": {
+   "score": 1,
+   "corrections": 1,
+   "note": "A small box at one end, but it renders dark, not red; not clearly an emergency stop."
+  },
+  "Sheet 12": {
+   "score": 0,
+   "corrections": 1,
+   "note": "No visible square cushions; only a thin strip on the seat. The requested drawable change is missing."
+  },
+  "Sheet 13": {
+   "score": 1,
+   "corrections": 1,
+   "note": "A thin black bar at the bottom edge of the screen; it overlaps the screen face instead of sitting below it."
+  }
+ },
+ "model": "qwen3-235b-a22b-instruct-2507",
+ "key": {
+  "Sheet 01": "o01",
+  "Sheet 02": "m02",
+  "Sheet 03": "m04",
+  "Sheet 04": "m05",
+  "Sheet 05": "c05",
+  "Sheet 06": "c04",
+  "Sheet 07": "c01",
+  "Sheet 08": "c02",
+  "Sheet 09": "o02",
+  "Sheet 10": "o03",
+  "Sheet 11": "c03",
+  "Sheet 12": "m01",
+  "Sheet 13": "m03"
+ },
+ "cases": {
+  "o01": {
+   "sheet": "Sheet 01",
+   "score": 2,
+   "corrections": 0,
+   "note": "Open tower with separate shelves and sides; four shelves visible, no doors."
+  },
+  "m02": {
+   "sheet": "Sheet 02",
+   "score": 1,
+   "corrections": 1,
+   "note": "The top is clear glass but almost invisible in the render; one leg also looks clear. The glass top reads only faintly."
+  },
+  "m04": {
+   "sheet": "Sheet 03",
+   "score": 1,
+   "corrections": 1,
+   "note": "A row of small rungs and thin rails at one side of the tank; recognisable as a ladder only on close look, rails close to a leg."
+  },
+  "m05": {
+   "sheet": "Sheet 04",
+   "score": 2,
+   "corrections": 0,
+   "note": "Clear panels across the front of the shelf: glass doors are visible."
+  },
+  "c05": {
+   "sheet": "Sheet 05",
+   "score": 1,
+   "corrections": 1,
+   "note": "Both guards clearly safety yellow; the 'stack light' is a small grey box floating above one end, not readable as a stack light."
+  },
+  "c04": {
+   "sheet": "Sheet 06",
+   "score": 1,
+   "corrections": 0,
+   "note": "A pale pegboard panel along the back is visible; the 20 cm height change cannot be judged in an auto-framed render."
+  },
+  "c01": {
+   "sheet": "Sheet 07",
+   "score": 1,
+   "corrections": 1,
+   "note": "A seat cushion was added but it is grey, not red; the legs were already dark and look unchanged."
+  },
+  "c02": {
+   "sheet": "Sheet 08",
+   "score": 1,
+   "corrections": 1,
+   "note": "Top is white; no cable tray is visible under it."
+  },
+  "o02": {
+   "sheet": "Sheet 09",
+   "score": 2,
+   "corrections": 0,
+   "note": "Panels gone: an open steel frame of corner posts with top and bottom rails, as asked."
+  },
+  "o03": {
+   "sheet": "Sheet 10",
+   "score": 1,
+   "corrections": 1,
+   "note": "Open-top wooden crate, but the sides read as solid boards; no gaps between slats are visible."
+  },
+  "c03": {
+   "sheet": "Sheet 11",
+   "score": 1,
+   "corrections": 1,
+   "note": "A small box at one end, but it renders dark, not red; not clearly an emergency stop."
+  },
+  "m01": {
+   "sheet": "Sheet 12",
+   "score": 0,
+   "corrections": 1,
+   "note": "No visible square cushions; only a thin strip on the seat. The requested drawable change is missing."
+  },
+  "m03": {
+   "sheet": "Sheet 13",
+   "score": 1,
+   "corrections": 1,
+   "note": "A thin black bar at the bottom edge of the screen; it overlaps the screen face instead of sitting below it."
+  }
+ }
+}

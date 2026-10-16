@@ -1276,6 +1276,17 @@ kbd {
   color: var(--warn);
   font-size: 12px;
 }
+.improve-checks {
+  margin-top: 8px;
+  color: var(--muted);
+}
+.improve-checks p {
+  margin: 0;
+}
+.improve-checks ul {
+  margin: 0;
+  padding-left: 18px;
+}
 .create-details {
   padding-top: 6px;
   border-top: 1px solid var(--border);

@@ -312,6 +312,9 @@ test("a mixed request becomes a partial revision: the drawable part is applied, 
   await dialog.getByTestId("improve-propose").click();
   await expect(dialog.getByTestId("improve-partial")).toBeVisible();
   await expect(dialog.getByTestId("improve-unshown")).toContainText("roll");
+  // The app's own notes (size kept, fitting) are listed apart, never as something not shown.
+  await expect(dialog.getByTestId("improve-unshown")).not.toContainText("Size kept");
+  await expect(dialog.getByTestId("improve-checks")).toContainText("Size kept");
   await expect(dialog.getByTestId("improve-preview-new")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
   await expect(dialog.getByTestId("improve-changes")).toContainText("cardboard");
   await expect(dialog.getByTestId("improve-apply")).toHaveText("Apply the drawable part to this object");

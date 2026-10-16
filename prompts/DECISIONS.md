@@ -589,3 +589,45 @@ For a new decision, append: ID, date, status, context, options considered, decis
 - Consequences: an evaluation takes longer (GEN-03's sequential live run took 66.5 min), and every corrective claim needs new cases. Two tooling faults appeared only on first use after the run (the edit scorer's module loading; both render options drawn on one canvas); they were fixed before scoring and did not affect blinding, and a pilot on development cases is meant to catch such faults earlier. The reviewer was the assistant running the evaluation, not an independent person, and correction effort is a reviewer's count, not a timed study; reports say so.
 - Evidence: docs/assist-evaluation/gen-03/criteria.md (frozen in `435095a`), README.md (run commands and the pilot and concurrency rules), report.md, review.json; `tests/test_gen03_evaluation.py`.
 - Revisit when: an independent reviewer or a user study becomes available, a gate proves unmeasurable, or concurrency is needed and its effect on latency has been measured.
+
+### ADR-043 - Honest partial revisions: three outcomes, grounded limitations, a bounded answer
+
+- Date: 2026-10-15. Status: adopted (GEN-04).
+- Context:
+  - GEN-03 showed that the default model refused mixed revision instructions as "unsupported" instead of doing the drawable part (r16–r18). It also left `not_represented` empty (1/3 listed). A cubby revision that re-listed every part timed out at 150 s (r04).
+  - GEN-03's answers streamed at about 24–50 characters per second. A full re-listing of a 30–40-part object (about 10,000 characters) therefore cannot finish within the timeout.
+  - A colour change was also offered for a material property in development ("make it fireproof" became steel).
+- Options considered:
+  - keep the full parts list and raise the timeout (longer waits, same truncation risk);
+  - cut parts silently at a limit (hides requested changes);
+  - an answer made of changes only, plus deterministic outcome, listing and limit checks (chosen).
+- Decision:
+  - **Three outcomes.**
+    - `proposal`, which is `partial` when anything requested is listed as not shown;
+    - `unsupported`, when nothing is drawable, or when the proposal would misrepresent the object (a colour standing in for a property, a solid block for an open structure, no change at all);
+    - `already_satisfied`, when the model already shows the request.
+
+    Only a proposal can be applied. A refusal or a no-op leaves the scene and the catalog untouched, and no identical asset version is created.
+  - **Changes, not a full list (prompt `gen-04.3`).** The answer names parts to `remove`, `change` (by id; every field restated), `add`, and `repeat` (one part copied in a row or grid by counts and step). Unmentioned parts are kept byte-identical.
+    - An unknown id is an invalid answer and gets one retry.
+    - The prompt asks for at most 24 entries; this is not enforced. The API enforces the generator's 40-part limit after expansion: a larger result is an explicit "would need N parts" limitation and nothing changes. Parts are never cut silently.
+  - **Grounded limitations.** `not_represented` is filled for partial and unsupported outcomes.
+    - A model entry is kept only when it shares a word with the user's instruction; the rest are dropped with a check note.
+    - The instruction's own clauses for movement or operation, material properties, curved or slanted surfaces, holes or perforations, and textures or printing are added in the user's words when the model missed them.
+    - The dialog lists them in plain language before Apply ("Apply the drawable part to this object").
+  - **Openness.** When an "open" proposal keeps a part filling ≥ 50 % of the object, the model is told which part and given one more try. The second answer is judged as it is.
+  - **Size.** The recorded size is kept unless the instruction asks for one, and parts are fitted back inside it. Evidence, photo links, immutable versions, one-step undo and the all-or-nothing `revise_asset` checks are unchanged.
+  - **Contract.** `ModelRevisionProposalResult` gained `outcome: "already_satisfied"` and `partial`, and the API response changed. Project files did not change (a revision still records `not_represented`), so the project schema stays 0.7.0 with no migration.
+- **GEN-03 criteria wording (noted, not edited).** The frozen docs/assist-evaluation/gen-03/criteria.md contains two status statements that conflict:
+  - "If neither passes, the baseline stays, GEN-03 and M2 stay open";
+  - "GEN-03 closes when this evaluation is complete for both models with failures categorised and the default justified".
+
+  GEN-03 was closed under the second statement; the first statement's M2 consequence was kept. The file stays frozen, and later criteria state closure rules once (docs/assist-evaluation/gen-04/criteria.md).
+- Rationale: on the four GEN-02 development cases (single runs, before and after), changes-only answers were 31 % shorter and waits 28 % shorter. Throughput did not change (about 32–35 characters per second), so length is the lever. Grounding keeps the list honest: the user's own clauses are always listed, and the model cannot add requests that were never made.
+- Consequences:
+  - On the fresh frozen set (docs/assist-evaluation/gen-04/report.md), outcomes rose to 18/20 and listing to 8/8, and every mixed request became a partial proposal.
+  - Two gates still fail: timeouts 2/20, both while the computer running the script was asleep; a diagnostic retry answered in 85.6 and 55.8 s and the visual review mean 1.15 (added parts hidden, sunk into a same-material part, floating, or uncoloured). M2 stays open; GEN-05 bounds the total wait and checks that added parts are visible.
+  - A grounded but wrong listing can still pass ("open-top" listed although drawn; "red cushion" said to be unavailable).
+- Evidence: docs/assist-evaluation/gen-04/{criteria.md (frozen in `1f8d31b`), results/, scores.json, review.json, report.md}; development runs docs/assist-evaluation/gen-04.1–3.json; `services/api/tests/test_revisions.py`, `tests/test_gen04_evaluation.py`, `apps/web/e2e/improve.spec.ts`.
+- Revisit when: GEN-05 bounds the wait and checks visibility; the generator gains openings, rotated parts or textures; or a faster model is offered.
+

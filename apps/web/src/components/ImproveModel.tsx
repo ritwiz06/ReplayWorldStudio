@@ -325,11 +325,14 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
                 </div>
               )}
               {proposal.checks.length > 0 && (
-                <ul className="create-checks">
-                  {proposal.checks.map((c) => (
-                    <li key={c}>{c}</li>
-                  ))}
-                </ul>
+                <div className="improve-checks small" data-testid="improve-checks">
+                  <p>What the app checked or adjusted:</p>
+                  <ul>
+                    {proposal.checks.map((c) => (
+                      <li key={c}>{c}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
           )}

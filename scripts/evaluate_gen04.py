@@ -20,6 +20,7 @@ import argparse
 import importlib.util
 import json
 import sys
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from types import ModuleType
@@ -98,7 +99,11 @@ def run(
         if case in rows:
             continue  # measured in an earlier run: an error or a timeout is a result too
         print(f"revision {case}…", file=sys.stderr, flush=True)
+        started = time.time()
         row = candidate.call(ENDPOINT, body)
+        # Real elapsed time beside the monotonic wall_s: on macOS the monotonic clock stops while
+        # the computer sleeps, so a large difference marks a request the host paused.
+        row["clock_s"] = round(time.time() - started, 2)
         row["at"] = datetime.now(UTC).isoformat(timespec="seconds")
         gen03.save_model(row, "revisions", models_dir, candidate.model, case)
         rows[case] = row

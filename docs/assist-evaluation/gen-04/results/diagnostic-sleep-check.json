@@ -1,0 +1,435 @@
+{
+ "model": "qwen3-235b-a22b-instruct-2507",
+ "kind": "diagnostic-sleep-check",
+ "service": "ASU Voyager",
+ "base_url": "https://openai.rc.asu.edu/v1",
+ "prompt_version": "gen-04.3",
+ "timeout_s": 150.0,
+ "retry_policy": "one retry after an invalid answer; at most one openness feedback retry",
+ "mode": "live, schema-guided, through the API endpoint, sequential (one request at a time)",
+ "runs": [
+  {
+   "started": "2026-10-16T03:10:13+00:00",
+   "commit": "1f8d31b"
+  }
+ ],
+ "rows": {
+  "o04": {
+   "http_status": 200,
+   "wall_s": 85.57,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 26.1,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.6,\n        \"z\": 0.19\n      },\n      \"id\": \"shelf-hat\",\n      \"label\": \"hat shelf\",\n      \"material\": \"paint_light_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.56,\n        \"y\": 0.02,\n        \"z\": 0.36\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.3,\n        \"z\": 0.19\n      },\n      \"id\": \"rail-hanging\",\n      \"label\": \"hanging rail\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.04,\n        \"y\": 0.04,\n        \"z\": 0.56\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.6,\n    \"y\": 1.9,\n    \"z\": 0.415\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [\n    \"door\",\n    \"handle\"\n  ],\n  \"repeat\": [],\n  \"summary\": \"Removed door and handle, added a hat shelf near the top and a hanging rail below it to convert the cabinet into an open coat locker.\"\n}"
+    },
+    {
+     "attempt": 1,
+     "seconds": 59.46,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.28,\n        \"y\": 1.0,\n        \"z\": -0.0175\n      },\n      \"id\": \"side-left\",\n      \"label\": \"left side panel\",\n      \"material\": \"paint_light_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.02,\n        \"y\": 1.8,\n        \"z\": 0.38\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.28,\n        \"y\": 1.0,\n        \"z\": -0.0175\n      },\n      \"id\": \"side-right\",\n      \"label\": \"right side panel\",\n      \"material\": \"paint_light_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.02,\n        \"y\": 1.8,\n        \"z\": 0.38\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.8,\n        \"z\": -0.0175\n      },\n      \"id\": \"top\",\n      \"label\": \"top panel\",\n      \"material\": \"paint_light_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.56,\n        \"y\": 0.02,\n        \"z\": 0.38\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.1,\n        \"z\": -0.0175\n      },\n      \"id\": \"bottom\",\n      \"label\": \"bottom panel\",\n      \"material\": \"paint_light_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.56,\n        \"y\": 0.02,\n        \"z\": 0.38\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.6,\n        \"z\": 0.19\n      },\n      \"id\": \"shelf-hat\",\n      \"label\": \"hat shelf\",\n      \"material\": \"paint_light_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.56,\n        \"y\": 0.02,\n        \"z\": 0.36\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"z\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.3,\n        \"z\": 0.19\n      },\n      \"id\": \"rail-hanging\",\n      \"label\": \"hanging rail\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.56,\n        \"y\": 0.04,\n        \"z\": 0.04\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.6,\n    \"y\": 1.9,\n    \"z\": 0.415\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [\n    \"body\",\n    \"door\",\n    \"handle\"\n  ],\n  \"repeat\": [],\n  \"summary\": \"Removed solid body, door and handle; built open coat locker from separate panels with a hat shelf near the top and a hanging rail below.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 0.6,
+      "y": 1.9,
+      "z": 0.415
+     },
+     "parts": [
+      {
+       "id": "plinth",
+       "label": "plinth",
+       "shape": "box",
+       "material": "paint_anthracite",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.05,
+        "z": -0.063777
+       },
+       "size_m": {
+        "x": 0.6,
+        "y": 0.1,
+        "z": 0.287446
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "side-left",
+       "label": "left side panel",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": -0.28,
+        "y": 1.0,
+        "z": -0.070963
+       },
+       "size_m": {
+        "x": 0.02,
+        "y": 1.8,
+        "z": 0.273074
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "side-right",
+       "label": "right side panel",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": 0.28,
+        "y": 1.0,
+        "z": -0.070963
+       },
+       "size_m": {
+        "x": 0.02,
+        "y": 1.8,
+        "z": 0.273074
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "top",
+       "label": "top panel",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.8,
+        "z": -0.070963
+       },
+       "size_m": {
+        "x": 0.56,
+        "y": 0.02,
+        "z": 0.273074
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "bottom",
+       "label": "bottom panel",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.1,
+        "z": -0.070963
+       },
+       "size_m": {
+        "x": 0.56,
+        "y": 0.02,
+        "z": 0.273074
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "shelf-hat",
+       "label": "hat shelf",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.6,
+        "z": 0.078149
+       },
+       "size_m": {
+        "x": 0.56,
+        "y": 0.02,
+        "z": 0.258702
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "rail-hanging",
+       "label": "hanging rail",
+       "shape": "cylinder",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.3,
+        "z": 0.07815
+       },
+       "size_m": {
+        "x": 0.56,
+        "y": 0.04,
+        "z": 0.028744
+       },
+       "axis": "z",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Removed solid body, door and handle; built open coat locker from separate panels with a hat shelf near the top and a hanging rail below.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size.",
+     "Parts were scaled ×0.719 in depth (Z) to fit the 0.415 m envelope."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 2,
+     "first_attempt_valid": true,
+     "latency_ms": 85555
+    }
+   },
+   "error": null,
+   "at": "2026-10-16T03:11:38+00:00",
+   "model_sha256": "32d7981a23222fd13ca08890c0598ae0fe7ca1d9886d6fb67d3b0b4bcfb1daa7",
+   "triangles": 200
+  },
+  "o05": {
+   "http_status": 200,
+   "wall_s": 55.76,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 55.75,
+     "answer": "{\"add\": [{\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.5, \"y\": 0.3, \"z\": -0.3}, \"id\": \"post-bl\", \"label\": \"bottom left back post\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.04, \"y\": 0.6, \"z\": 0.04}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.5, \"y\": 0.3, \"z\": 0.3}, \"id\": \"post-br\", \"label\": \"bottom right back post\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.04, \"y\": 0.6, \"z\": 0.04}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.5, \"y\": 0.3, \"z\": -0.3}, \"id\": \"post-fl\", \"label\": \"front left back post\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.04, \"y\": 0.6, \"z\": 0.04}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.5, \"y\": 0.3, \"z\": 0.3}, \"id\": \"post-fr\", \"label\": \"front right back post\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.04, \"y\": 0.6, \"z\": 0.04}, \"taper\": null}, {\"axis\": \"z\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.5, \"y\": 0.15, \"z\": 0.0}, \"id\": \"rail-back-h\", \"label\": \"back horizontal rail\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.04, \"y\": 0.04, \"z\": 0.6}, \"taper\": null}, {\"axis\": \"z\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.5, \"y\": 0.15, \"z\": 0.0}, \"id\": \"rail-front-h\", \"label\": \"front horizontal rail\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.04, \"y\": 0.04, \"z\": 0.6}, \"taper\": null}, {\"axis\": \"x\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 0.15, \"z\": -0.3}, \"id\": \"rail-back-v\", \"label\": \"back vertical rail\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 1.0, \"y\": 0.04, \"z\": 0.04}, \"taper\": null}, {\"axis\": \"x\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 0.15, \"z\": 0.3}, \"id\": \"rail-front-v\", \"label\": \"front vertical rail\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 1.0, \"y\": 0.04, \"z\": 0.04}, \"taper\": null}], \"change\": [{\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 0.072, \"z\": 0.0}, \"id\": \"pallet\", \"label\": \"pallet\", \"material\": \"pallet_wood\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 1.2, \"y\": 0.144, \"z\": 0.8}, \"taper\": null}], \"envelope_m\": {\"x\": 1.2, \"y\": 1.004, \"z\": 0.8}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [\"load\"], \"repeat\": [], \"summary\": \"Replaced the cardboard load with an open wire cage made of four corner posts and horizontal and vertical rails, all steel_dark, standing on the pallet.\"}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.2,
+      "y": 1.004,
+      "z": 0.8
+     },
+     "parts": [
+      {
+       "id": "pallet",
+       "label": "pallet",
+       "shape": "box",
+       "material": "pallet_wood",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.12048,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.2,
+        "y": 0.24096,
+        "z": 0.8
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "post-bl",
+       "label": "bottom left back post",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.5,
+        "y": 0.502,
+        "z": -0.3
+       },
+       "size_m": {
+        "x": 0.04,
+        "y": 1.004,
+        "z": 0.04
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "post-br",
+       "label": "bottom right back post",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.5,
+        "y": 0.502,
+        "z": 0.3
+       },
+       "size_m": {
+        "x": 0.04,
+        "y": 1.004,
+        "z": 0.04
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "post-fl",
+       "label": "front left back post",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.5,
+        "y": 0.502,
+        "z": -0.3
+       },
+       "size_m": {
+        "x": 0.04,
+        "y": 1.004,
+        "z": 0.04
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "post-fr",
+       "label": "front right back post",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.5,
+        "y": 0.502,
+        "z": 0.3
+       },
+       "size_m": {
+        "x": 0.04,
+        "y": 1.004,
+        "z": 0.04
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "rail-back-h",
+       "label": "back horizontal rail",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.5,
+        "y": 0.251,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.04,
+        "y": 0.066932,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "rail-front-h",
+       "label": "front horizontal rail",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.5,
+        "y": 0.251,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.04,
+        "y": 0.066932,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "rail-back-v",
+       "label": "back vertical rail",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.251,
+        "z": -0.3
+       },
+       "size_m": {
+        "x": 1.0,
+        "y": 0.066932,
+        "z": 0.04
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "rail-front-v",
+       "label": "front vertical rail",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.251,
+        "z": 0.3
+       },
+       "size_m": {
+        "x": 1.0,
+        "y": 0.066932,
+        "z": 0.04
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      }
+     ]
+    },
+    "summary": "Replaced the cardboard load with an open wire cage made of four corner posts and horizontal and vertical rails, all steel_dark, standing on the pallet.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size.",
+     "Parts were scaled ×1.67 in height (Y) to fit the 1.004 m envelope."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 55753
+    }
+   },
+   "error": null,
+   "at": "2026-10-16T03:12:34+00:00",
+   "model_sha256": "ceb43705ac1a4953410de822e27aa9a14909538739ce9336a118dc0ad1c5c9e8",
+   "triangles": 108
+  }
+ }
+}
