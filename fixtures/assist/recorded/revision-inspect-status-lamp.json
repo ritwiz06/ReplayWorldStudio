@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "e3c465c56e989508:add a green status lamp on top of one front post",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "Inspection case (GEN-05 frozen answer v03 (development regression)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\"add\": [{\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": 0.87, \"y\": 1.99, \"z\": 0.27}, \"id\": \"lamp\", \"label\": \"status lamp\", \"material\": \"signal_green\", \"narrow_end\": null, \"shape\": \"cylinder\", \"size_m\": {\"x\": 0.04, \"y\": 0.06, \"z\": 0.04}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 1.8, \"y\": 2.0, \"z\": 0.6}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Added a green status lamp on top of the front-right post, positioned correctly on the outer surface.\"}"
+  ]
+}

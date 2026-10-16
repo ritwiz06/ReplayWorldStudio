@@ -276,7 +276,14 @@ REVISION_CASES = {
     case["label"]: case
     for case in json.loads((ROOT / "scripts" / "model_revision_cases.json").read_text())
 }
-REVISED = sorted(path.stem.removeprefix("revision-") for path in RECORDINGS.glob("revision-*.json"))
+# The inspect-* and review-* recordings (GEN-06/07, scripts/build_inspection_recordings.py) are
+# keyed against builder and legacy objects, not these cases; e2e/review.spec.ts and
+# e2e/inspect-revisions.spec.ts replay them through the app.
+REVISED = sorted(
+    path.stem.removeprefix("revision-")
+    for path in RECORDINGS.glob("revision-*.json")
+    if not path.stem.startswith(("revision-inspect-", "revision-review-"))
+)
 
 
 def revision_request(label: str) -> ModelRevisionProposalRequest:

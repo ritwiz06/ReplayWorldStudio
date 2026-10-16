@@ -2,7 +2,7 @@
 // recorded in the catalog, parse as binary glTF, and measure the bounds the catalog records.
 // Any failure is reported with an actionable message; nothing else is drawn in its place.
 import type { GltfVisual, SceneObject } from "@replay-world/contracts";
-import { Box3, Group, type Mesh, type Object3D } from "three";
+import { Box3, EdgesGeometry, Group, LineBasicMaterial, LineSegments, type Material, type Mesh, type Object3D } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { renderScale } from "./fit";
 import { placementOf } from "./placement";
@@ -77,7 +77,65 @@ export async function parseCatalogModel(bytes: ArrayBuffer, visual: GltfVisual):
     mesh.castShadow = materials.every((m) => !m.transparent); // glazing should not cast solid shadows
     mesh.receiveShadow = true;
   });
+  outlineTransparent(scene);
+  separateCoincidentFaces(scene);
   return { ok: true, scene };
+}
+
+/**
+ * Faces that two parts share (an armrest flush with the seat it overlaps) would flicker between
+ * their colours. Each later material in the file is drawn a little in front, so the later part,
+ * usually the detail on the body, wins every such face. Display only; the API's visibility
+ * render breaks the same ties the same way.
+ */
+export function separateCoincidentFaces(scene: Object3D): void {
+  let index = 0;
+  scene.traverse((node) => {
+    const mesh = node as Mesh;
+    if (!mesh.isMesh || mesh.name === "transparent-edges") return;
+    const materials: Material[] = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const m of materials) {
+      if (m.transparent) continue;
+      m.polygonOffset = true;
+      // Slope-scaled as well as constant: flush faces are often seen at a grazing angle.
+      // Capped, so a later part cannot be pulled in front of a surface it is really behind.
+      const step = Math.min(index, 8);
+      m.polygonOffsetFactor = -1 * step;
+      m.polygonOffsetUnits = -4 * step;
+    }
+    index += 1;
+  });
+}
+
+/**
+ * Edge colour for glass and clear plastic (GEN-06): a mid-tone blue that reads against light and
+ * dark surroundings. The API's visibility check assumes the same colour
+ * (services/api/src/replay_world_api/assist/visibility.py, GLASS_EDGE).
+ */
+export const TRANSPARENT_EDGE = "#3a8fd6";
+
+/**
+ * Make transparent surfaces recognisable without making them opaque: their sharp edges are drawn
+ * as lines, and they no longer write depth, so what is behind them stays visible through them.
+ * Display only: the verified file and its sha256 are unchanged (this runs after verification).
+ */
+export function outlineTransparent(scene: Object3D): void {
+  const meshes: Mesh[] = [];
+  scene.traverse((node) => {
+    const mesh = node as Mesh;
+    if (!mesh.isMesh) return;
+    const materials: Material[] = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    if (materials.some((m) => m.transparent)) meshes.push(mesh);
+  });
+  for (const mesh of meshes) {
+    const materials: Material[] = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const m of materials) m.depthWrite = false;
+    mesh.renderOrder = 1;
+    const edges = new LineSegments(new EdgesGeometry(mesh.geometry, 30), new LineBasicMaterial({ color: TRANSPARENT_EDGE }));
+    edges.name = "transparent-edges";
+    edges.renderOrder = 2;
+    mesh.add(edges);
+  }
 }
 
 /** Download a model from the API's catalog library and verify it. */

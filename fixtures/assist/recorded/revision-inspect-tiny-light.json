@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "d7c28edb5b1cc4ee:add a small green status light on top of the frame",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "Inspection case (GEN-05 pilot first answer p1 (development example)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.43,\n        \"z\": 0.0\n      },\n      \"id\": \"status-light\",\n      \"label\": \"status light\",\n      \"material\": \"signal_green\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.02,\n        \"y\": 0.02,\n        \"z\": 0.02\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 1.1,\n    \"y\": 1.43,\n    \"z\": 0.4\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a small green status light on top of the frame at the center of the top edge.\"\n}"
+  ]
+}

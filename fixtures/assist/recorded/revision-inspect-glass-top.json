@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "ed74c6a0d61d72e9:give it a clear glass top on the same frame",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "Inspection case (synthetic (GEN-05 t01 had a photo-made table)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\"outcome\": \"revision\", \"message\": null, \"summary\": \"Made the top clear glass.\", \"envelope_m\": {\"x\": 1.5, \"y\": 0.9, \"z\": 0.75}, \"remove\": [], \"change\": [{\"id\": \"top\", \"label\": \"worktop\", \"shape\": \"box\", \"material\": \"glass_clear\", \"center_m\": {\"x\": 0.0, \"y\": 0.88, \"z\": 0.0}, \"size_m\": {\"x\": 1.5, \"y\": 0.04, \"z\": 0.75}, \"axis\": \"y\", \"taper\": null, \"narrow_end\": null, \"basis\": \"inferred\"}], \"add\": [], \"repeat\": [], \"not_representable\": []}"
+  ]
+}

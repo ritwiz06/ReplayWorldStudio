@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "e3c465c56e989508:add a red label holder on each beam and print the bay numbers on them",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "Inspection case (GEN-05 frozen answer p02 (development regression)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\"add\": [{\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 0.15, \"z\": 0.31}, \"id\": \"label-1\", \"label\": \"label holder\", \"material\": \"paint_red\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.1, \"y\": 0.05, \"z\": 0.02}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 0.75, \"z\": 0.31}, \"id\": \"label-2\", \"label\": \"label holder\", \"material\": \"paint_red\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.1, \"y\": 0.05, \"z\": 0.02}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 1.35, \"z\": 0.31}, \"id\": \"label-3\", \"label\": \"label holder\", \"material\": \"paint_red\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.1, \"y\": 0.05, \"z\": 0.02}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 1.95, \"z\": 0.31}, \"id\": \"label-4\", \"label\": \"label holder\", \"material\": \"paint_red\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.1, \"y\": 0.05, \"z\": 0.02}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 1.8, \"y\": 2.0, \"z\": 0.6}, \"message\": null, \"not_representable\": [\"print the bay numbers on them\"], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Added a red label holder on each of the four beams; printing bay numbers cannot be shown.\"}"
+  ]
+}

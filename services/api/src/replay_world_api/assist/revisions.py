@@ -379,6 +379,8 @@ def _unsupported(
             "not_represented": not_represented,
             "checks": checks,
             "problems": [],
+            "adjustments": [],
+            "view": "front-right",
             "provider": run,
         }
     )
@@ -475,39 +477,71 @@ def _judge(
                 ],
             )
 
-    # Colours: what the user named is shown; an unnamed addition that blends in stands out.
+    # Colours: what the user named is shown; an unnamed addition that blends in stands out; a
+    # small requested part with no size given is brought up to a visible size (an estimate).
     colours = visibility.honour_colours(spec, request.spec, instruction)
     spec, contrast_notes = visibility.contrast_additions(
         colours.spec, request.spec, colours.named_parts
     )
-    checks += list(dict.fromkeys(colours.notes + contrast_notes))
-    not_represented = _drop_shown_colours(not_represented, colours.honoured, checks)
+    spec, enlarged = visibility.enlarge_small(spec, request.spec, instruction)
+    before_ids = {p.id for p in request.spec.parts}
+    adjustments = [
+        *(
+            {"kind": a.kind, "part_ids": list(a.part_ids), "text": a.text}
+            for a in colours.adjustments
+        ),
+        *(
+            {
+                "kind": "contrast",
+                "part_ids": [
+                    p.id for p in spec.parts if p.id not in before_ids and f"“{p.label}”" in note
+                ][:1]
+                or [spec.parts[-1].id],
+                "text": note,
+            }
+            for note in dict.fromkeys(contrast_notes)
+        ),
+        *({"kind": a.kind, "part_ids": list(a.part_ids), "text": a.text} for a in enlarged),
+    ]
+    not_represented = _drop_shown_colours(
+        not_represented, colours.honoured, checks, covered=bool(colours.texture_limits)
+    )
     not_represented = list(dict.fromkeys(not_represented + colours.texture_limits))[
         :MAX_NOT_REPRESENTED
     ]
     problems = visibility.find_problems(spec, request.spec, instruction)
-    result = ModelRevisionProposalResult(
-        outcome="proposal",
-        message=None,
-        spec=spec,
-        summary=_text(answer.summary, 300, f"Changed as asked: “{instruction}”"),
-        partial=bool(not_represented),
-        size_changed=size_changed,
-        not_represented=not_represented,
-        checks=checks,
-        problems=list(dict.fromkeys(p.text for p in problems))[:MAX_PROBLEMS],
-        provider=run,
+    result = ModelRevisionProposalResult.model_validate(
+        {
+            "outcome": "proposal",
+            "message": None,
+            "spec": spec,
+            "summary": _text(answer.summary, 300, f"Changed as asked: “{instruction}”"),
+            "partial": bool(not_represented),
+            "size_changed": size_changed,
+            "not_represented": not_represented,
+            "checks": checks,
+            "problems": [
+                {"kind": p.kind, "part_ids": list(p.parts), "text": p.text}
+                for p in problems[:MAX_PROBLEMS]
+            ],
+            "adjustments": adjustments[:MAX_PROBLEMS],
+            "view": visibility.best_view(spec, request.spec, instruction),
+            "provider": run,
+        }
     )
     feedback = [p.feedback for p in problems if p.retry]
     return _Judged(result, list(dict.fromkeys(feedback))[:MAX_PROBLEMS])
 
 
-def _drop_shown_colours(items: list[str], shown: set[str], checks: list[str]) -> list[str]:
-    """A listed limitation that only says a colour is missing, when that colour is shown."""
+def _drop_shown_colours(
+    items: list[str], shown: set[str], checks: list[str], covered: bool = False
+) -> list[str]:
+    """A listed limitation that only says a colour is missing, when that colour is shown (or a
+    colour-and-texture entry, when the texture is already listed on its own)."""
     kept: list[str] = []
     for item in items:
         words = set(re.findall(r"[a-z]+", item.lower()))
-        if words & shown and not words & visibility.TEXTURES:
+        if words & shown and (covered or not words & visibility.TEXTURES):
             checks.append(f"Left out “{item}” from what cannot be shown: the colour is shown.")
             continue
         kept.append(item)

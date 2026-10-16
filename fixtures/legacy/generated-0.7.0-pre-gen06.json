@@ -1,0 +1,831 @@
+{
+  "schema_version": "0.7.0",
+  "id": "proj-legacy-generated",
+  "name": "Legacy generated asset (saved before GEN-06)",
+  "units": {
+    "length": "m",
+    "time": "s",
+    "mass": "kg",
+    "angle": "rad"
+  },
+  "world_frame": {
+    "handedness": "right",
+    "up_axis": "+Y",
+    "floor_plane": "XZ"
+  },
+  "fixture": {
+    "kind": "foundation",
+    "note": "Synthetic basic geometry that proves units, coordinates, evidence and schema handling. It is not the realistic factory scene, its values are not engineering data, and its catalog assets are synthetic placeholders with no asserted license."
+  },
+  "sources": [
+    {
+      "id": "src-synthetic-plan",
+      "kind": "synthetic",
+      "filename": null,
+      "sha256": null,
+      "source_to_world": {
+        "convention": "plan_xy_to_world_x_neg_z",
+        "source_unit": "mm",
+        "metres_per_source_unit": 0.001,
+        "rotation_about_world_y_rad": 0.0,
+        "translation_m": {
+          "x": -10.0,
+          "y": 0.0,
+          "z": 6.0
+        }
+      },
+      "import_warnings": [],
+      "image": null,
+      "photo_import": null
+    }
+  ],
+  "catalog": [
+    {
+      "id": "asset-generic-belt-conveyor",
+      "name": "Generic belt conveyor, 3 m (provisional)",
+      "kind": "equipment",
+      "visual": {
+        "type": "placeholder_box"
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 3.0,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 0.9,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 0.8,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "synthetic",
+        "author": "Replay World Studio foundation fixture",
+        "reference": null
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "No project license has been chosen yet (see README)"
+      },
+      "generation": null
+    },
+    {
+      "id": "asset-generic-processing-station",
+      "name": "Generic processing station (provisional)",
+      "kind": "equipment",
+      "visual": {
+        "type": "placeholder_box"
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 1.6,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 1.8,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 1.2,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "synthetic",
+        "author": "Replay World Studio foundation fixture",
+        "reference": null
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "No project license has been chosen yet (see README)"
+      },
+      "generation": null
+    },
+    {
+      "id": "asset-generic-packing-station",
+      "name": "Generic packing station (provisional)",
+      "kind": "equipment",
+      "visual": {
+        "type": "placeholder_box"
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 1.2,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 1.4,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 1.0,
+          "origin": "default",
+          "source_ref": "Synthetic placeholder size, not from a datasheet",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "synthetic",
+        "author": "Replay World Studio foundation fixture",
+        "reference": null
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "No project license has been chosen yet (see README)"
+      },
+      "generation": null
+    },
+    {
+      "id": "asset-gen-display-rack-383afa79",
+      "name": "Display rack",
+      "kind": "equipment",
+      "visual": {
+        "type": "gltf",
+        "uri": "generated/383afa794f0d91d59dad748286fa45e1a7724685f7cd7999c9f1b8c413398ee5.glb",
+        "sha256": "383afa794f0d91d59dad748286fa45e1a7724685f7cd7999c9f1b8c413398ee5",
+        "metres_per_model_unit": 1.0,
+        "up_axis": "+Y",
+        "front_axis": "+Z",
+        "origin": "bottom_centre",
+        "model_bounds_m": {
+          "min": {
+            "x": -0.9,
+            "y": 0.0,
+            "z": -0.3
+          },
+          "max": {
+            "x": 0.9,
+            "y": 2.0,
+            "z": 0.3
+          }
+        },
+        "fit": "scale_to_dimensions",
+        "max_fit_distortion": 0.05
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 1.8,
+          "origin": "user_supplied",
+          "source_ref": "Entered by the user while reviewing the generated object",
+          "review_status": "confirmed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 2.0,
+          "origin": "user_supplied",
+          "source_ref": "Entered by the user while reviewing the generated object",
+          "review_status": "confirmed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 0.6,
+          "origin": "user_supplied",
+          "source_ref": "Entered by the user while reviewing the generated object",
+          "review_status": "confirmed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "generated",
+        "author": "Replay World Studio object generator (rws-object-generator/1)",
+        "reference": "Built by the user in the object builder"
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "Original provisional model built by this project's own generator from the recorded geometry specification; no third-party content. The project owner has not chosen a license."
+      },
+      "generation": {
+        "method": "builder",
+        "description": null,
+        "language_model": null,
+        "generator": "rws-object-generator/1",
+        "spec": {
+          "format": "rws-geometry/1",
+          "envelope_m": {
+            "x": 1.8,
+            "y": 2.0,
+            "z": 0.6
+          },
+          "parts": [
+            {
+              "id": "leg-1",
+              "label": "leg",
+              "shape": "box",
+              "material": "paint_blue",
+              "center_m": {
+                "x": -0.87,
+                "y": 1.0,
+                "z": -0.27
+              },
+              "size_m": {
+                "x": 0.06,
+                "y": 2.0,
+                "z": 0.06
+              },
+              "axis": null,
+              "taper": null,
+              "narrow_end": null,
+              "basis": "entered"
+            },
+            {
+              "id": "leg-2",
+              "label": "leg",
+              "shape": "box",
+              "material": "paint_blue",
+              "center_m": {
+                "x": 0.87,
+                "y": 1.0,
+                "z": -0.27
+              },
+              "size_m": {
+                "x": 0.06,
+                "y": 2.0,
+                "z": 0.06
+              },
+              "axis": null,
+              "taper": null,
+              "narrow_end": null,
+              "basis": "entered"
+            },
+            {
+              "id": "leg-3",
+              "label": "leg",
+              "shape": "box",
+              "material": "paint_blue",
+              "center_m": {
+                "x": -0.87,
+                "y": 1.0,
+                "z": 0.27
+              },
+              "size_m": {
+                "x": 0.06,
+                "y": 2.0,
+                "z": 0.06
+              },
+              "axis": null,
+              "taper": null,
+              "narrow_end": null,
+              "basis": "entered"
+            },
+            {
+              "id": "leg-4",
+              "label": "leg",
+              "shape": "box",
+              "material": "paint_blue",
+              "center_m": {
+                "x": 0.87,
+                "y": 1.0,
+                "z": 0.27
+              },
+              "size_m": {
+                "x": 0.06,
+                "y": 2.0,
+                "z": 0.06
+              },
+              "axis": null,
+              "taper": null,
+              "narrow_end": null,
+              "basis": "entered"
+            },
+            {
+              "id": "beam-1",
+              "label": "shelf",
+              "shape": "box",
+              "material": "paint_orange",
+              "center_m": {
+                "x": 0.0,
+                "y": 0.15,
+                "z": 0.0
+              },
+              "size_m": {
+                "x": 1.8,
+                "y": 0.08,
+                "z": 0.6
+              },
+              "axis": null,
+              "taper": null,
+              "narrow_end": null,
+              "basis": "entered"
+            },
+            {
+              "id": "beam-2",
+              "label": "shelf",
+              "shape": "box",
+              "material": "paint_orange",
+              "center_m": {
+                "x": 0.0,
+                "y": 0.75,
+                "z": 0.0
+              },
+              "size_m": {
+                "x": 1.8,
+                "y": 0.08,
+                "z": 0.6
+              },
+              "axis": null,
+              "taper": null,
+              "narrow_end": null,
+              "basis": "entered"
+            },
+            {
+              "id": "beam-3",
+              "label": "shelf",
+              "shape": "box",
+              "material": "paint_orange",
+              "center_m": {
+                "x": 0.0,
+                "y": 1.35,
+                "z": 0.0
+              },
+              "size_m": {
+                "x": 1.8,
+                "y": 0.08,
+                "z": 0.6
+              },
+              "axis": null,
+              "taper": null,
+              "narrow_end": null,
+              "basis": "entered"
+            },
+            {
+              "id": "beam-4",
+              "label": "shelf",
+              "shape": "box",
+              "material": "paint_orange",
+              "center_m": {
+                "x": 0.0,
+                "y": 1.95,
+                "z": 0.0
+              },
+              "size_m": {
+                "x": 1.8,
+                "y": 0.08,
+                "z": 0.6
+              },
+              "axis": null,
+              "taper": null,
+              "narrow_end": null,
+              "basis": "entered"
+            },
+            {
+              "id": "side-panel",
+              "label": "clear side panel",
+              "shape": "box",
+              "material": "polycarbonate",
+              "center_m": {
+                "x": -0.89,
+                "y": 1.0,
+                "z": 0.0
+              },
+              "size_m": {
+                "x": 0.02,
+                "y": 1.8,
+                "z": 0.54
+              },
+              "axis": null,
+              "taper": null,
+              "narrow_end": null,
+              "basis": "entered"
+            }
+          ]
+        },
+        "stated_facts": [],
+        "inferred_facts": [
+          "Drawn with the rack shape family",
+          "A clear side panel added in the builder"
+        ],
+        "not_modelled": [],
+        "unknown_properties": [
+          {
+            "property": "mass",
+            "reason": "Not established. A generated model is a picture at the stated size; use a measured or supplier value."
+          },
+          {
+            "property": "strength",
+            "reason": "Not established. Load capacity and structural strength are not modelled."
+          },
+          {
+            "property": "chemical_composition",
+            "reason": "Not established. Colours and finishes are appearance only, not the material or its chemistry."
+          },
+          {
+            "property": "operating_behaviour",
+            "reason": "Not established. Speeds, cycle times and motion are not modelled."
+          }
+        ],
+        "revision": null
+      }
+    }
+  ],
+  "scene": {
+    "id": "scene-foundation",
+    "name": "Packaging area (foundation fixture)",
+    "revision": 0,
+    "objects": [
+      {
+        "id": "obj-floor",
+        "name": "Floor slab",
+        "kind": "structure",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 0.0,
+            "y": -0.2,
+            "z": 0.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 20.0,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#floor-outline: 20000 mm along plan X",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.2,
+            "origin": "default",
+            "source_ref": "Slab thickness is not on the plan; placeholder value",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 12.0,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#floor-outline: 12000 mm along plan Y",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-column-c1",
+        "name": "Column C1",
+        "kind": "structure",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 4.0,
+            "y": 0.0,
+            "z": -3.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.4,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#C1 centre (14000,9000) mm, 400 mm square",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 6.0,
+            "origin": "default",
+            "source_ref": "Column height is not on the plan; placeholder value",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.4,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#C1 centre (14000,9000) mm, 400 mm square",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-infeed-conveyor",
+        "name": "Infeed conveyor (placeholder)",
+        "kind": "equipment",
+        "asset_id": "asset-generic-belt-conveyor",
+        "transform": {
+          "position_m": {
+            "x": -6.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 3.0,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-belt-conveyor (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.9,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-belt-conveyor (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.8,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-belt-conveyor (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": [
+          {
+            "state": "known",
+            "id": "belt-speed",
+            "label": "Belt speed",
+            "unit": "m/s",
+            "value": 0.25,
+            "origin": "user_supplied",
+            "source_ref": "Foundation fixture value entered by developer",
+            "review_status": "unreviewed",
+            "uncertainty": null
+          },
+          {
+            "state": "unknown",
+            "id": "mass",
+            "label": "Mass",
+            "unit": "kg",
+            "reason": "Not established by layout geometry; needs supplier or measured data"
+          }
+        ]
+      },
+      {
+        "id": "obj-process-station",
+        "name": "Processing station (placeholder)",
+        "kind": "equipment",
+        "asset_id": "asset-generic-processing-station",
+        "transform": {
+          "position_m": {
+            "x": -2.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.6,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-processing-station (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.8,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-processing-station (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1.2,
+            "origin": "default",
+            "source_ref": "Catalog nominal of asset-generic-processing-station (placeholder)",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": [
+          {
+            "state": "known",
+            "id": "cycle-time",
+            "label": "Cycle time",
+            "unit": "s",
+            "value": 45.0,
+            "origin": "user_supplied",
+            "source_ref": "Foundation fixture value entered by developer",
+            "review_status": "unreviewed",
+            "uncertainty": {
+              "lower": 40.0,
+              "upper": 50.0
+            }
+          },
+          {
+            "state": "unknown",
+            "id": "mass",
+            "label": "Mass",
+            "unit": "kg",
+            "reason": "Not established by layout geometry; needs supplier or measured data"
+          }
+        ]
+      },
+      {
+        "id": "obj-packing-station",
+        "name": "Packing station (placeholder)",
+        "kind": "equipment",
+        "asset_id": "asset-generic-packing-station",
+        "transform": {
+          "position_m": {
+            "x": 2.5,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 1.5707963267948966,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.2,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#PK1 outline, 1200 mm side",
+            "review_status": "unreviewed",
+            "uncertainty_m": {
+              "lower": 1.19,
+              "upper": 1.21
+            }
+          },
+          "height": {
+            "value_m": 1.4,
+            "origin": "inferred",
+            "source_ref": "Inferred from the catalog nominal height of asset-generic-packing-station",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1.0,
+            "origin": "measured",
+            "source_ref": "src-synthetic-plan#PK1 outline, 1000 mm side",
+            "review_status": "unreviewed",
+            "uncertainty_m": {
+              "lower": 0.99,
+              "upper": 1.01
+            }
+          }
+        },
+        "parameters": [
+          {
+            "state": "unknown",
+            "id": "cycle-time",
+            "label": "Cycle time",
+            "unit": "s",
+            "reason": "Not established; a drawing cannot provide cycle times"
+          },
+          {
+            "state": "known",
+            "id": "service-clearance-front",
+            "label": "Front service clearance",
+            "unit": "m",
+            "value": 0.8,
+            "origin": "user_supplied",
+            "source_ref": "Foundation fixture requirement entered by developer",
+            "review_status": "unreviewed",
+            "uncertainty": null
+          }
+        ]
+      },
+      {
+        "id": "obj-reference-cube",
+        "name": "1 m reference cube",
+        "kind": "reference",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 7.0,
+            "y": 0.0,
+            "z": 4.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.0,
+            "origin": "user_supplied",
+            "source_ref": "Scale reference defined by the foundation fixture",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.0,
+            "origin": "user_supplied",
+            "source_ref": "Scale reference defined by the foundation fixture",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1.0,
+            "origin": "user_supplied",
+            "source_ref": "Scale reference defined by the foundation fixture",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-display-rack",
+        "name": "Display rack",
+        "kind": "equipment",
+        "asset_id": "asset-gen-display-rack-383afa79",
+        "transform": {
+          "position_m": {
+            "x": 3.0,
+            "y": 0.0,
+            "z": 3.0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.8,
+            "origin": "user_supplied",
+            "source_ref": "Entered by the user while reviewing the generated object",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 2.0,
+            "origin": "user_supplied",
+            "source_ref": "Entered by the user while reviewing the generated object",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.6,
+            "origin": "user_supplied",
+            "source_ref": "Entered by the user while reviewing the generated object",
+            "review_status": "confirmed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      }
+    ],
+    "edit_log": []
+  }
+}

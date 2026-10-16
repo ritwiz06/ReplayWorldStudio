@@ -321,7 +321,7 @@ def restore_generated_models(project: Project, catalog_dir: Path) -> GeneratedMo
             status: Literal["present", "restored", "mismatch"] = "present"
             message = "The model file is present and matches its recorded sha256."
         else:
-            model = build_model(asset.generation.spec)
+            model = build_model(asset.generation.spec, generator=asset.generation.generator)
             if model.sha256 == visual.sha256:
                 if path.is_file():
                     path.unlink()  # damaged: named by a hash its bytes do not have

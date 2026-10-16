@@ -293,13 +293,13 @@ test("a mixed request becomes a partial revision: the drawable part is applied, 
   const proposals = "**/api/v1/assist/model-revisions";
   const provider = { service: "ASU Voyager", base_url: "https://openai.rc.asu.edu/v1", model: "qwen3-235b-a22b-instruct-2507", mode: "recorded", attempts: 1, first_attempt_valid: true, latency_ms: 1 };
   const reply = (body: object) => page.route(proposals, (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }));
-  await reply({ outcome: "already_satisfied", message: "The boxes are already cardboard.", spec: null, summary: null, partial: false, size_changed: false, not_represented: [], checks: [], problems: [], provider });
+  await reply({ outcome: "already_satisfied", message: "The boxes are already cardboard.", spec: null, summary: null, partial: false, size_changed: false, not_represented: [], checks: [], problems: [], adjustments: [], view: "front-right", provider });
   await dialog.getByTestId("improve-instruction").fill("make the boxes cardboard");
   await dialog.getByTestId("improve-propose").click();
   await expect(dialog.getByTestId("improve-ask-notice")).toContainText("Already shown: The boxes are already cardboard. Nothing was changed.");
   await expect(dialog.getByTestId("improve-no-changes")).toBeVisible();
   await page.unroute(proposals);
-  await reply({ outcome: "unsupported", message: "Nothing in this request can be drawn.", spec: null, summary: null, partial: false, size_changed: false, not_represented: ["“make it fireproof”: material properties are not modelled"], checks: [], problems: [], provider });
+  await reply({ outcome: "unsupported", message: "Nothing in this request can be drawn.", spec: null, summary: null, partial: false, size_changed: false, not_represented: ["“make it fireproof”: material properties are not modelled"], checks: [], problems: [], adjustments: [], view: "front-right", provider });
   await dialog.getByTestId("improve-instruction").fill("make it fireproof");
   await dialog.getByTestId("improve-propose").click();
   await expect(dialog.getByTestId("improve-ask-notice")).toContainText("Nothing in this request can be drawn. Nothing was changed.");
@@ -355,7 +355,8 @@ test("problems the checks found are shown before Apply and kept on the version; 
   const answer = {
     outcome: "proposal", message: null, spec: blue, summary: "Painted it blue and added a stack light.", partial: false, size_changed: false,
     not_represented: [], checks: ["Size kept: the instruction did not ask for a different size."],
-    problems: ["“stack light” does not touch anything that holds it up; it floats."], provider,
+    problems: [{ kind: "floating", part_ids: [String(spec.parts[0]!.id)], text: "“stack light” does not touch anything that holds it up; it floats." }],
+    adjustments: [], view: "front-right", provider,
   };
 
   // Cancelled while waiting; the answer that arrives afterwards is ignored.

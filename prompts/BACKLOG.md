@@ -328,6 +328,36 @@ After M1 the user approved guided creation and described custom objects as the n
 - Note (2026-10-16): from the GEN-05 report. Every automatic gate passes; the visual mean is 1.10 (t02 and t03 invisible transparent panels, e03 colour missed, p03 and p04 out of view, several small items).
 - Evidence: not recorded
 
+### GEN-07 - Beginner-friendly revision review
+
+- Priority: P0
+- Dependencies: GEN-06
+- Baseline status: planned (added 2026-10-16; part of the M2 corrective work)
+- Done when:
+  - **Views.** The Improve dialog keeps a clear before/after comparison and the "Not clearly shown" honesty. A second camera angle (behind, below) is one click away when requested parts are hidden from the main view. The first view is chosen deterministically to show the requested change, and there is an obvious way back to the standard view.
+  - **Highlights.** A part a warning refers to is highlighted in the preview only, never in the generated GLB or the project's data.
+  - **Plain explanations.** The dialog says what was drawn, what was enlarged as an estimate, what cannot be depicted and what remains hard to see. Measured or entered sizes stay distinct from visual choices.
+  - **Informed Apply.** "Apply despite these problems" shows the unresolved issue beside the action. Refusal, cancellation and already-satisfied outcomes create no version and no scene edit.
+  - **Browser tests** cover an older saved model, a photo-made model and a described model: improve, inspect two angles, apply, undo, save, reopen, and rebuild a missing file.
+  - **Inspection.** Screenshots at the desktop reference sizes and at 1280 px are inspected (keyboard access, modal layering, labels, clear and glass rendering, warning placement), and the issues found are fixed.
+- Acceptance evidence: browser tests; inspected screenshots in docs/gen-07/; scripted task steps (not a user study).
+- Evidence: not recorded
+
+### GEN-08 - Revision evaluation and the M2 decision
+
+- Priority: P0
+- Dependencies: GEN-06, GEN-07
+- Baseline status: planned (added 2026-10-16)
+- Done when:
+  - **Pilot.** The whole live → score → render → blind-review path is first run on a few new development cases, and tooling faults are fixed before anything is frozen.
+  - **Frozen set.** A new set of at least 24 revisions, with its scoring rules, is committed before any live call. It covers transparent parts, small named additions, explicit colour phrases, occluded placements, open structures, partial requests, photo-made objects and stated dimensions.
+  - **Rules fixed in advance.** How a provider error and an honestly warned problem affect each metric. The visual review uses what the user sees on opening the updated dialog; a separate score from the fixed GEN-05 camera is reported for context and labelled as a different method.
+  - **One run.** The set is run once, sequentially, on the default model, with the host awake and wall time, request time, retries, provider calls and run faults recorded.
+  - **Blind review and report.** Scored and reviewed blind before the key is opened. Reported against the established revision gates, safety and provenance checks.
+  - **The M2 decision**, documented: M2 closes only if every applicable gate passes.
+- Acceptance evidence: docs/assist-evaluation/gen-08/ (criteria committed before the run, results, review, scores, report).
+- Evidence: not recorded
+
 ## M3 - Image to editable world
 
 ### IMG-01 - One image to a reviewed, editable world

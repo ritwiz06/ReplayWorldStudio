@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "7c6777321a3568fa:add a white sign on the back of the rack",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "Review journey case (synthetic (review journey)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\"outcome\": \"revision\", \"message\": null, \"summary\": \"Added a white sign on the back.\", \"envelope_m\": {\"x\": 1.8, \"y\": 2.0, \"z\": 0.6}, \"remove\": [], \"change\": [], \"add\": [{\"id\": \"sign\", \"label\": \"sign\", \"shape\": \"box\", \"material\": \"paint_white\", \"center_m\": {\"x\": 0, \"y\": 1.54, \"z\": -0.295}, \"size_m\": {\"x\": 0.6, \"y\": 0.3, \"z\": 0.01}, \"axis\": \"y\", \"taper\": null, \"narrow_end\": null, \"basis\": \"inferred\"}], \"repeat\": [], \"not_representable\": []}"
+  ]
+}

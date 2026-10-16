@@ -1,0 +1,114 @@
+// GEN-07: the revision review for a first-time viewer, end to end, for a model saved before
+// GEN-06, a photo-made model and a described model. Each journey asks for a change, inspects it
+// from two camera angles (one click each, and back to the standard view), applies it, undoes and
+// redoes it, saves, reopens, and rebuilds a missing model file to its recorded sha256. The API
+// replays recorded answers (labelled "recorded", never live AI).
+import { rmSync } from "node:fs";
+import { join } from "node:path";
+import { expect, type Page, test } from "@playwright/test";
+import { objectList, objects, placeConveyor, reopen, save, worldFromPhoto } from "./helpers";
+import { E2E_CATALOG_DIR } from "./paths";
+
+const LEGACY = new URL("../../../fixtures/legacy/generated-0.7.0-pre-gen06.json", import.meta.url).pathname;
+const MIXED = "put it on four caster wheels that actually roll and stack two cardboard boxes on it";
+
+/** Ask, inspect from two angles, apply, undo, redo, save, reopen, rebuild a missing file. */
+async function journey(page: Page, object: RegExp, instruction: string) {
+  const before = await save(page);
+  const target = before.json.scene.objects.find((o) => object.test(o.name))!;
+  // Select it (a just-placed object is already selected; clicking it again would deselect it).
+  if (!(await page.getByTestId("improve-model-open").isVisible())) await objectList(page, object).first().click();
+  await page.getByTestId("improve-model-open").click();
+  const dialog = page.getByTestId("improve-model");
+  await expect(dialog.getByTestId("improve-preview-old")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+  // Keyboard access: the instruction field and the button are reachable without the mouse.
+  await dialog.getByTestId("improve-instruction").focus();
+  await page.keyboard.type(instruction);
+  await page.keyboard.press("Tab");
+  await expect(dialog.getByTestId("improve-propose")).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(dialog.getByTestId("improve-proposal")).toContainText("Proposed by", { timeout: 30_000 });
+  const preview = dialog.getByTestId("improve-preview-new");
+  await expect(preview).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+
+  // Two angles, one click each; both previews follow; there is a way back.
+  const opened = (await preview.getAttribute("data-view"))!;
+  const other = opened === "front-right" ? "rear-left" : "front-right";
+  await dialog.getByTestId(`improve-view-${other}`).click();
+  await expect(preview).toHaveAttribute("data-view", other);
+  await expect(dialog.getByTestId("improve-preview-old")).toHaveAttribute("data-view", other);
+  await expect(dialog.getByTestId(`improve-view-${other}`)).toHaveAttribute("aria-pressed", "true");
+  if (other !== "front-right") {
+    await dialog.getByTestId("improve-view-back").click();
+    await expect(preview).toHaveAttribute("data-view", "front-right");
+  }
+  await dialog.getByTestId("improve-view-low-front").click();
+  await expect(preview).toHaveAttribute("data-view", "low-front");
+
+  // An informed Apply: any unresolved problem is repeated beside the button.
+  const problems = await dialog.getByTestId("improve-problems").count();
+  if (problems) {
+    await expect(dialog.getByTestId("improve-apply-problems")).toBeVisible();
+    await expect(dialog.getByTestId("improve-apply")).toContainText("Apply despite these problems");
+    await expect(preview).not.toHaveAttribute("data-highlights", "0"); // the part is outlined
+  }
+  await dialog.getByTestId("improve-apply").click();
+  await expect(dialog).toBeHidden({ timeout: 30_000 });
+  const after = await save(page);
+  const revised = after.json.catalog.find((a) => a.generation?.revision?.revises === target.asset_id)!;
+  expect(revised).toBeTruthy();
+  expect(after.json.scene.objects.find((o) => o.id === target.id)!.asset_id).toBe(revised.id);
+  if (problems) expect(revised.generation!.revision!.changes.some((c) => c.startsWith("Problem found in the proposal:"))).toBe(true);
+  // The preview's highlight and edge lines are never stored: the new version's file is only the model.
+  expect(JSON.stringify(revised)).not.toContain("transparent-edges");
+
+  // One undo returns the object; redo brings the revision back.
+  await page.getByTestId("undo").click();
+  expect((await save(page)).json.scene.objects.find((o) => o.id === target.id)!.asset_id).toBe(target.asset_id);
+  await page.getByTestId("redo").click();
+  const redone = await save(page);
+  expect(redone.json.scene.objects.find((o) => o.id === target.id)!.asset_id).toBe(revised.id);
+
+  // Reopen, then without the new file: refused, rebuilt to the recorded sha256, accepted.
+  await reopen(page, redone);
+  await expect(page.getByTestId("scene-source")).toHaveText(`${redone.name} (accepted by API)`);
+  rmSync(join(E2E_CATALOG_DIR, revised.visual.uri));
+  await reopen(page, redone);
+  const rejected = page.getByTestId("file-rejected");
+  await expect(rejected).toBeVisible();
+  await rejected.getByTestId("restore-models").click();
+  await expect(rejected).toBeHidden();
+  await expect(page.getByTestId("scene-source")).toHaveText(`${redone.name} (accepted by API)`);
+}
+
+test("a model saved before GEN-06 validates, rebuilds to its recorded hash and is improved, applied, undone and reopened", async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.goto("/");
+  await objects(page, 15);
+  // Its model file is not in this machine's catalog: refused, then rebuilt by today's generator
+  // to exactly the sha256 recorded when it was made.
+  await page.getByTestId("scene-file-input").setInputFiles(LEGACY);
+  const rejected = page.getByTestId("file-rejected");
+  await expect(rejected).toBeVisible();
+  await rejected.getByTestId("restore-models").click();
+  await expect(rejected).toBeHidden();
+  await expect(page.getByTestId("scene-source")).toHaveText("generated-0.7.0-pre-gen06.json (accepted by API)");
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^(\d+)\/\1 ready, 0 failed$/);
+  await journey(page, /^Display rack/, "add a white sign on the back of the rack");
+});
+
+test("a photo-made model: improve, two angles, apply, undo, save, reopen, rebuild", async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.goto("/");
+  await objects(page, 15);
+  await worldFromPhoto(page);
+  await journey(page, /^Stacked cardboard boxes/, MIXED);
+});
+
+test("a described model: improve, two angles, apply, undo, save, reopen, rebuild", async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.goto("/");
+  await objects(page, 15);
+  await placeConveyor(page);
+  await journey(page, /^Guarded conveyor with control screen/, "add a cable tray under the belt");
+});

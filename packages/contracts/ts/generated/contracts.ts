@@ -1606,9 +1606,14 @@ export interface ModelRevisionProposalRequest {
  *
  * ``problems`` (GEN-05) lists what a proposal draws but the user may not be able to see, as
  * found by the API's checks and not fixed by the model's one corrected answer: an added part
- * hidden inside another, sunk into a part of the same material, without support, not visible
- * from the usual view, or slats drawn without gaps. The review shows them before Apply; a
- * proposal with problems is never described as fully shown.
+ * hidden inside another, sunk into a part of the same material, without support, too small,
+ * not visible from the usual view (for glass, not standing out from what is behind it), or
+ * slats drawn without gaps. The review shows them before Apply; a proposal with problems is
+ * never described as fully shown.
+ *
+ * ``adjustments`` (GEN-06) lists the visual choices the API made without asking: a small
+ * part enlarged to a visible size (an estimate), a colour shown as asked, a contrasting finish.
+ * ``view`` (GEN-07) is the review camera that shows the requested additions best.
  */
 export interface ModelRevisionProposalResult {
   outcome: "proposal" | "unsupported" | "already_satisfied";
@@ -1619,6 +1624,30 @@ export interface ModelRevisionProposalResult {
   size_changed: boolean;
   not_represented: string[];
   checks: string[];
-  problems: string[];
+  problems: RevisionProblem[];
+  adjustments: RevisionAdjustment[];
+  view: "front-right" | "rear-left" | "low-front";
   provider: ProviderRun;
+}
+/**
+ * An added part a viewer may not see as asked, found by the API's checks (GEN-05/06).
+ */
+export interface RevisionProblem {
+  kind: "hidden" | "buried" | "floating" | "tiny" | "unseen" | "blends" | "solid_slats";
+  /**
+   * @minItems 1
+   */
+  part_ids: [string, ...string[]];
+  text: string;
+}
+/**
+ * A visual choice the API made without asking, shown as such: never a measurement.
+ */
+export interface RevisionAdjustment {
+  kind: "enlarged" | "coloured_as_asked" | "contrast";
+  /**
+   * @minItems 1
+   */
+  part_ids: [string, ...string[]];
+  text: string;
 }

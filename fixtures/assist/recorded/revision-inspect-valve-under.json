@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "b0cb81284b50fe25:add a red drain valve at the bottom of the cone",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "Inspection case (synthetic (GEN-05 p04 had a described tank)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\"outcome\": \"revision\", \"message\": null, \"summary\": \"Added a red drain valve under the cone.\", \"envelope_m\": {\"x\": 1.24, \"y\": 1.86, \"z\": 1.24}, \"remove\": [], \"change\": [], \"add\": [{\"id\": \"valve\", \"label\": \"drain valve\", \"shape\": \"cylinder\", \"material\": \"estop_red\", \"center_m\": {\"x\": 0, \"y\": 0.06, \"z\": 0}, \"size_m\": {\"x\": 0.12, \"y\": 0.08, \"z\": 0.12}, \"axis\": \"y\", \"taper\": null, \"narrow_end\": null, \"basis\": \"inferred\"}], \"repeat\": [], \"not_representable\": []}"
+  ]
+}

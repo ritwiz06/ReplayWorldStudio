@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "2739a73d3dca648b:add a cable tray under the belt",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "Review journey case (synthetic (review journey)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\"outcome\": \"revision\", \"message\": null, \"summary\": \"Added a cable tray under the belt.\", \"envelope_m\": {\"x\": 2.2, \"y\": 1.1, \"z\": 0.735}, \"remove\": [], \"change\": [], \"add\": [{\"id\": \"tray\", \"label\": \"cable tray\", \"shape\": \"box\", \"material\": \"plastic_grey\", \"center_m\": {\"x\": 0, \"y\": 0.72, \"z\": 0}, \"size_m\": {\"x\": 1.2, \"y\": 0.04, \"z\": 0.3}, \"axis\": \"y\", \"taper\": null, \"narrow_end\": null, \"basis\": \"inferred\"}], \"repeat\": [], \"not_representable\": []}"
+  ]
+}

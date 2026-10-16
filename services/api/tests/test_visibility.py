@@ -314,10 +314,12 @@ def test_every_problem_shares_one_corrected_answer_and_what_remains_is_shown() -
     feedback = fake.messages[1][-1]["content"]
     assert "button" in feedback and "tray" in feedback  # both problems, one message
     assert result.outcome == "proposal"
-    assert result.problems == [
-        next(p.text for p in visibility.find_problems(result.spec, table(), ASK))  # type: ignore[arg-type]
+    assert result.spec is not None
+    assert [p.text for p in result.problems] == [
+        p.text for p in visibility.find_problems(result.spec, table(), ASK)
     ]
-    assert "tray" in result.problems[0] and "button" not in " ".join(result.problems)
+    texts = " ".join(p.text for p in result.problems)
+    assert "tray" in texts and "button" not in texts
     # The budget is one: the second call may only use what the first left.
     assert fake.timeouts == [150.0, 120.0]
 
@@ -327,7 +329,7 @@ def test_no_retry_when_the_budget_cannot_cover_one_and_the_problems_are_shown() 
     result = propose_revision(fake, request("add a red stop button"), clock=fake.clock)
     assert len(fake.messages) == 1
     assert result.outcome == "proposal" and result.problems
-    assert "hidden inside" in result.problems[0]
+    assert "hidden inside" in result.problems[0].text
     assert any(
         c.startswith("Not asked to correct this: 10 s of the 150 s limit") for c in result.checks
     )
@@ -337,7 +339,7 @@ def test_a_corrected_answer_that_runs_out_of_time_leaves_the_first_one_with_its_
     late = ProviderError("timeout", "Fake provider did not answer within 100 s.")
     fake = Clocked([table_answer(HIDDEN), late], [30, 120])
     result = propose_revision(fake, request("add a red stop button"), clock=fake.clock)
-    assert result.outcome == "proposal" and "hidden inside" in result.problems[0]
+    assert result.outcome == "proposal" and "hidden inside" in result.problems[0].text
     assert any("did not arrive within the 150 s limit" in c for c in result.checks)
     # A first answer that never arrives is a timeout for the user (504), not a guess.
     with pytest.raises(ProviderError):
@@ -349,7 +351,7 @@ def test_an_unusable_first_answer_uses_the_one_retry() -> None:
     fake = Clocked(["{not json", table_answer(HIDDEN)], [20, 20])
     result = propose_revision(fake, request("add a red stop button"), clock=fake.clock)
     # The retry was spent on the unusable answer, so the hidden button is shown as a problem.
-    assert len(fake.messages) == 2 and "hidden inside" in result.problems[0]
+    assert len(fake.messages) == 2 and "hidden inside" in result.problems[0].text
 
 
 def test_cancelling_stops_further_calls_and_discards_a_late_answer() -> None:
@@ -396,7 +398,7 @@ def replay(label: str) -> ModelRevisionProposalResult:
 def test_recorded_the_hidden_stop_button_is_fixed_by_the_one_corrected_answer() -> None:
     result = replay("gen04-stop-button")
     assert result.provider.attempts == 2 and result.outcome == "proposal"
-    assert not any("hidden inside" in p for p in result.problems)
+    assert not any("hidden inside" in p.text for p in result.problems)
     button = [p for p in result.spec.parts if "button" in p.label]  # type: ignore[union-attr]
     assert button and all(p.material == "estop_red" for p in button)
 
@@ -404,7 +406,9 @@ def test_recorded_the_hidden_stop_button_is_fixed_by_the_one_corrected_answer() 
 def test_recorded_a_stack_light_still_floating_after_the_retry_is_shown_as_a_problem() -> None:
     result = replay("gen04-stack-light")
     assert result.provider.attempts == 2
-    assert "“stack light” does not touch anything that holds it up; it floats." in result.problems
+    assert "“stack light” does not touch anything that holds it up; it floats." in [
+        p.text for p in result.problems
+    ]
 
 
 def test_recorded_a_tray_placed_under_the_top_as_asked_is_reported_not_retried_again() -> None:
@@ -414,7 +418,7 @@ def test_recorded_a_tray_placed_under_the_top_as_asked_is_reported_not_retried_a
     result = replay("gen04-cable-tray")
     assert result.provider.attempts == 2
     assert len(result.problems) == 1
-    assert result.problems[0].startswith("“cable tray” where you asked for it cannot be seen")
+    assert result.problems[0].text.startswith("“cable tray” where you asked for it cannot be seen")
     assert result.spec is not None
     case = CASES["gen04-cable-tray"]
     current = GeometrySpec.model_validate(case["spec"])

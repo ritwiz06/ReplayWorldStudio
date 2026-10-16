@@ -8,12 +8,14 @@ import type { GeneratedModel } from "@replay-world/contracts";
 import { Grid, OrbitControls } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useState } from "react";
-import { type Group, PMREMGenerator } from "three";
+import { BoxGeometry, EdgesGeometry, type Group, LineBasicMaterial, LineSegments, PMREMGenerator } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { formatFixed } from "../editing/units";
 import { modelExtents, type Vec3Tuple } from "./fit";
 import { parseCatalogModel } from "./modelLoader";
+import { type RevisionView, viewCamera } from "./views";
 
+export type { RevisionView } from "./views";
 interface Verified {
   key: string;
   template: Group;
@@ -46,23 +48,75 @@ function Environment() {
   return null;
 }
 
-/** Frame the whole model from the front-right, above; again whenever its size changes. */
-function Frame({ extents: [w, h, d] }: { extents: Vec3Tuple }) {
+/** Frame the whole model from the chosen view; again whenever its size or the view changes. */
+function Frame({ extents, view }: { extents: Vec3Tuple; view: RevisionView }) {
   const camera = useThree((s) => s.camera);
   const controls = useThree((s) => s.controls) as unknown as { target: { set: (x: number, y: number, z: number) => void }; update: () => void } | null;
   const invalidate = useThree((s) => s.invalidate);
+  const [w, h, d] = extents;
   useEffect(() => {
-    const reach = Math.max(w, h, d);
-    camera.position.set(reach * 1.6, h * 0.9 + reach * 0.7, reach * 2.1);
-    camera.lookAt(0, h / 2, 0);
-    controls?.target.set(0, h / 2, 0);
+    const { eye, target } = viewCamera(view, [w, h, d]);
+    camera.position.set(...eye);
+    camera.lookAt(...target);
+    controls?.target.set(...target);
     controls?.update();
     invalidate();
-  }, [camera, controls, invalidate, w, h, d]);
+  }, [camera, controls, invalidate, w, h, d, view]);
   return null;
 }
 
-export function ModelPreview({ model, busy, testId = "model-preview" }: { model: GeneratedModel | null; busy: boolean; testId?: string }) {
+/** A box to point out in the preview (a part a warning refers to); drawn on top, never stored. */
+export interface Highlight {
+  center: Vec3Tuple;
+  size: Vec3Tuple;
+}
+
+function Highlights({ boxes }: { boxes: readonly Highlight[] }) {
+  const lines = useMemo(
+    () =>
+      boxes.map((b) => {
+        const pad = Math.max(...b.size) * 0.08 + 0.01;
+        const line = new LineSegments(
+          new EdgesGeometry(new BoxGeometry(b.size[0] + pad, b.size[1] + pad, b.size[2] + pad)),
+          new LineBasicMaterial({ color: "#ffb020", depthTest: false, transparent: true, opacity: 0.95 }),
+        );
+        line.position.set(...b.center);
+        line.renderOrder = 10;
+        return line;
+      }),
+    [boxes],
+  );
+  useEffect(
+    () => () => {
+      for (const l of lines) {
+        l.geometry.dispose();
+        (l.material as LineBasicMaterial).dispose();
+      }
+    },
+    [lines],
+  );
+  return (
+    <>
+      {lines.map((l, i) => (
+        <primitive key={i} object={l} />
+      ))}
+    </>
+  );
+}
+
+export function ModelPreview({
+  model,
+  busy,
+  testId = "model-preview",
+  view = "front-right",
+  highlight = [],
+}: {
+  model: GeneratedModel | null;
+  busy: boolean;
+  testId?: string;
+  view?: RevisionView;
+  highlight?: readonly Highlight[];
+}) {
   const [shown, setShown] = useState<Verified | null>(null);
   const [failure, setFailure] = useState<{ key: string; message: string } | null>(null);
   const key = model?.visual.sha256 ?? "";
@@ -95,6 +149,8 @@ export function ModelPreview({ model, busy, testId = "model-preview" }: { model:
       data-state={state}
       data-sha256={current ? key : ""}
       data-extents={extents ? extents.map((v) => formatFixed(v, 3)).join(",") : ""}
+      data-view={view}
+      data-highlights={highlight.length}
     >
       {object && shown && (
         <Canvas frameloop="demand" dpr={[1, 2]} camera={{ fov: 35, near: 0.01, far: 500 }}>
@@ -105,8 +161,9 @@ export function ModelPreview({ model, busy, testId = "model-preview" }: { model:
           <directionalLight position={[-reach * 2, reach, -reach * 2]} intensity={0.3} />
           <Grid position={[0, 0.001, 0]} cellSize={0.1} sectionSize={1} cellColor="#4a5058" sectionColor="#5e666f" fadeDistance={reach * 6} infiniteGrid />
           <primitive object={object} />
+          <Highlights boxes={highlight} />
           <OrbitControls makeDefault enableDamping={false} />
-          <Frame extents={shown.extents} />
+          <Frame extents={shown.extents} view={view} />
         </Canvas>
       )}
       {state !== "ready" && !failed && <p className="model-preview-status">{object ? "Updating the model…" : "Building the model…"}</p>}

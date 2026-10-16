@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "e3c465c56e989508:add a glass back panel behind the shelves",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "Inspection case (synthetic (GEN-05 t03 had a photo-made bookshelf)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\"outcome\": \"revision\", \"message\": null, \"summary\": \"Added a glass back panel.\", \"envelope_m\": {\"x\": 1.8, \"y\": 2.0, \"z\": 0.6}, \"remove\": [], \"change\": [], \"add\": [{\"id\": \"back-glass\", \"label\": \"glass back panel\", \"shape\": \"box\", \"material\": \"glass_clear\", \"center_m\": {\"x\": 0, \"y\": 1.0, \"z\": -0.29}, \"size_m\": {\"x\": 1.74, \"y\": 1.9, \"z\": 0.01}, \"axis\": \"y\", \"taper\": null, \"narrow_end\": null, \"basis\": \"inferred\"}], \"repeat\": [], \"not_representable\": []}"
+  ]
+}

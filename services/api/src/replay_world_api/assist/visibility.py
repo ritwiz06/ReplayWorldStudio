@@ -1,46 +1,56 @@
-"""Can the user see what a revision added? Checks on the proposed specification (GEN-05).
+"""Can the user see what a revision added? Checks on the proposed specification (GEN-05, GEN-06).
 
 A schema-valid proposal can still draw a requested part where nobody can see it: a stop button
 wholly inside its box, cushions sunk into a seat of the same fabric, a stack light floating
-above the machine, a cable tray hidden under a table top, or "slatted" sides drawn as single
-boards. This module finds those cases for the parts a revision **added**, and fixes the ones a
-deterministic rule can fix without guessing (colours). Everything else is reported, so the
-review never presents a hidden or floating part as shown.
+above the machine, a cable tray hidden under a table top, "slatted" sides drawn as single
+boards, or a glass panel that vanishes against the background. This module finds those cases
+for the parts a revision **added**, fixes the ones a deterministic rule can fix without guessing
+(colours, a bounded size for a small item whose size was not given), and reports everything
+else, so the review never presents a hidden or floating part as shown.
 
 Geometry (every approved shape, exact membership tests on a sample grid):
 
 * **hidden**: at least 95 % of the part lies inside other opaque parts;
-* **buried**: at least 40 % of it lies inside a part of the same material (it cannot be told
-  apart there);
+* **buried**: at least 40 % of it lies inside a part of the same material;
 * **floating**: no chain of touching parts links it to the floor or to a part kept from the
-  current model (parts within 0.5 cm plus
-  0.3 % of the object's largest side of each other count as touching),
-  unless the instruction says it hangs or is mounted (a wall or ceiling outside the object);
+  current model, unless the instruction says it hangs or is mounted. Two parts touch when they
+  come within a tolerance that depends on both: 1 cm plus 0.6 % of the object's largest side,
+  or 60 % of the thinner part's smallest side if that is more, at most 3 cm (a slat 1.6 cm
+  from its post touches; a stack light 11 cm above its machine does not);
 * **solid slats**: the instruction asks for slats or gaps, but a side is one board.
 
-Render (the generator's own meshes, a z-buffer from the review dialog's default camera):
+Render (the generator's own meshes, a z-buffer from the review dialog's cameras):
 
-* **tiny**: a part the user asked for, with no size given, under 4 % of the object's largest
-  side and covering under 12 pixels from that view;
-* **unseen**: under 15 % of the part shows from that view (it is behind or under something).
-  Copies with the same label are judged together. The object's structure (panels spanning at
-  least 60 % of it on two axes; posts or rails spanning 60 % on one axis and at most 12 % on
-  the others) counts as unseen only if the mirrored rear-left view does not show it either, so a
-  back panel or rear post passes and a sheet under a table top does not;
-* **blends in**: under 30 % of its outline borders the background or a clearly different
-  colour.
+* **tiny**: a part the user asked for, with no size given, still under 4 % of the object's
+  largest side and covering under 12 pixels after the bounded enlargement below;
+* **unseen**: under 15 % of the part shows from the front-right view (it is behind or under
+  something). Copies with the same label are judged together; the object's structure (large
+  panels, long posts and rails) only fails if the rear-left view does not show it either;
+* **transparent parts** (glass, clear plastic) are judged on the composited picture, not on
+  raw pixels: the review draws their edges in a mid-tone blue that reads on light and dark
+  backgrounds, and blends their surface over what is behind. A transparent part counts as shown
+  when the mean of its showing outline share and its noticeably shifted surface share is at
+  least 30 % (on the dialog's dark background);
+* **blends in**: a part whose colour the user named, where under 30 % of its outline borders
+  the background or a clearly different colour (reported; the named colour is kept).
 
-Colour rules: a colour the instruction names for a part is honoured (the part is recoloured if
-the model did not); an added part whose colour was not named and that blends into a part that
-was already there (or sinks into one of its own material) gets an approved contrasting finish; a
-requested colour whose texture the generator lacks ("red fabric") is drawn
-in that colour, and only the texture is listed as not shown. Glass and clear plastic stay
-transparent: they never hide what is behind them and are never recoloured for contrast.
+Corrections that need no guess:
 
-Approximations: rounded boxes are tested as boxes; touch tests sample each part's box faces, so
-round parts can count as touching slightly early; the render is 200 x 150 pixels, so parts that
-cover fewer than 4 pixels from the default view are too small to judge there and are not
-reported as unseen.
+* a colour the instruction names for a part is shown (recoloured if the model did not); a
+  texture the generator lacks ("dark blue fabric") is listed and the colour drawn; "the legs
+  black and the armrests blue" carries the verb across "and"; "red and white" gives one part
+  two colours, of which a part can show one (the other is listed);
+* an added part whose colour was not named and that blends into a part that was already there
+  gets an approved contrasting finish;
+* a requested small part with no size given, under 4 % of the object's largest side, is
+  enlarged, about the face that touches what holds it, to 5 % of that side, at most 12 cm and
+  3 times its size, and only inside
+  the object's recorded size; each enlargement is listed as an estimate. Pieces of one
+  requested assembly ("lamp arm", "lamp head") are left as drawn.
+
+Approximations: rounded boxes are tested as boxes; touching is sampled in the overlap of two
+parts; the render is 200 x 150 pixels with flat material colours (no lighting), so parts that
+cover fewer than 4 pixels are too small to judge for "unseen".
 """
 
 from __future__ import annotations
@@ -68,7 +78,19 @@ VIEW_H: Final = 150
 FOV_DEG: Final = 35.0
 TOUCH_SAMPLES: Final = 12
 TINY_SHARE: Final = 0.04
+VISIBLE_SHARE: Final = 0.05
+"""An enlarged small part becomes this share of the object's largest side (within the caps)."""
 TINY_PIXELS: Final = 12
+MAX_ENLARGED_M: Final = 0.12
+MAX_ENLARGE_FACTOR: Final = 3.0
+TOUCH_MAX_M: Final = 0.03
+EDGE_SHARE: Final = 0.30
+GLASS_EDGE: Final = "#3a8fd6"
+"""The colour the review draws transparent parts' edges in (apps/web/src/scene/modelLoader.ts)."""
+PREVIEW_BACKGROUND: Final = "#1f2329"
+"""The review dialog's preview background (apps/web/src/scene/ModelPreview.tsx)."""
+VIEWS: Final = ("front-right", "rear-left", "low-front")
+"""The review dialog's camera views (apps/web/src/scene/ModelPreview.tsx keeps the same ones)."""
 SAMPLES: Final = 6
 """Sample points per axis inside a part (6 x 6 x 6) for the volume tests."""
 
@@ -125,6 +147,9 @@ CONTRAST_FINISHES: Final = (
     "paint_light_grey",
 )
 _MODIFIERS: Final = frozenset({"safety", "dark", "light", "bright", "pale", "deep"})
+_NOT_PARTS: Final = frozenset(
+    {"colour", "color", "finish", "paint", "shade", "tone", "look", "one"}
+)
 _VERBS: Final = frozenset({"paint", "make", "colour", "color", "turn", "change", "give"})
 _ENDS: Final = frozenset(
     [
@@ -177,16 +202,31 @@ class Problem:
 
     part_id: str
     label: str
-    kind: str  # hidden, buried, floating, unseen, solid_slats
+    kind: str  # hidden, buried, floating, tiny, unseen, blends, solid_slats
     text: str  # for the user
     feedback: str  # for the model's one corrected answer
     retry: bool = True  # False when asking again cannot help (the user chose the place)
+    part_ids: tuple[str, ...] = ()  # every part the problem is about (copies with one label)
+
+    @property
+    def parts(self) -> tuple[str, ...]:
+        return self.part_ids or (self.part_id,)
+
+
+@dataclass(frozen=True)
+class Adjustment:
+    """A visual choice the app made without asking (never a measurement)."""
+
+    kind: str  # enlarged, coloured_as_asked, contrast
+    part_ids: tuple[str, ...]
+    text: str
 
 
 @dataclass(frozen=True)
 class ColourResult:
     spec: GeometrySpec
     notes: list[str]
+    adjustments: list[Adjustment]
     honoured: set[str]  # colour words shown on the parts they were asked for
     texture_limits: list[str]  # not-represented entries for textures that cannot be shown
     named_parts: set[str]  # ids of parts whose colour the instruction names
@@ -227,9 +267,20 @@ def _samples(part: GeometryPart) -> list[tuple[float, float, float]]:
     return [p for p in points if _inside(part, p)] or [(c.x, c.y, c.z)]
 
 
-def _touches(a: GeometryPart, b: GeometryPart, gap: float) -> bool:
-    """True when the two parts overlap or come within ``gap`` of each other: points sampled in
-    the overlap of their boxes (each grown by the gap) lie in both shapes (grown by half)."""
+def touch_tolerance(a: GeometryPart, b: GeometryPart, base: float) -> float:
+    """How close two parts must come to count as touching: ``base`` (1 cm plus 0.6 % of the
+    object's largest side), or 60 % of the thinner part's smallest side if that is more, at
+    most 3 cm. A slat 1.6 cm from a 3 cm post touches; a light 11 cm above its machine does
+    not."""
+    thinner = min(min(a.size_m.x, a.size_m.y, a.size_m.z), min(b.size_m.x, b.size_m.y, b.size_m.z))
+    return min(TOUCH_MAX_M, max(base, 0.6 * thinner))
+
+
+def _touches(a: GeometryPart, b: GeometryPart, tolerance: float) -> bool:
+    """True when the two parts overlap or come within ``tolerance`` of each other: points
+    sampled in the overlap of their boxes (each grown by half the tolerance) lie in both
+    shapes (each grown by half)."""
+    gap = tolerance / 2
     lo, hi = [], []
     for k in "xyz":
         ca, sa = getattr(a.center_m, k), getattr(a.size_m, k) / 2 + gap
@@ -263,13 +314,23 @@ class View:
     opaque_depth: list[float]
 
 
-def render(spec: GeometrySpec, side: int = 1) -> View:
-    """A z-buffer of the generator's meshes from the review dialog's default camera (front-right,
-    above), or with ``side=-1`` from the mirrored rear-left camera."""
+def camera(
+    spec: GeometrySpec, view: str
+) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
+    """Eye and target of one of the review dialog's views (ModelPreview.tsx uses the same)."""
     e = spec.envelope_m
     reach = max(e.x, e.y, e.z)
-    eye = (side * reach * 1.6, e.y * 0.9 + reach * 0.7, side * reach * 2.1)
-    target = (0.0, e.y / 2, 0.0)
+    if view == "rear-left":
+        return (-reach * 1.6, e.y * 0.9 + reach * 0.7, -reach * 2.1), (0.0, e.y / 2, 0.0)
+    if view == "low-front":
+        return (reach * 1.1, e.y * 0.12, reach * 2.6), (0.0, e.y * 0.4, 0.0)
+    return (reach * 1.6, e.y * 0.9 + reach * 0.7, reach * 2.1), (0.0, e.y / 2, 0.0)
+
+
+def render(spec: GeometrySpec, side: int = 1, view: str | None = None) -> View:
+    """A z-buffer of the generator's meshes from one of the review dialog's views: the default
+    front-right view from above, the rear-left view (``side=-1``), or the low front view."""
+    eye, target = camera(spec, view or ("front-right" if side > 0 else "rear-left"))
     f = _norm(tuple(target[i] - eye[i] for i in range(3)))
     r = _norm(_cross(f, (0.0, 1.0, 0.0)))
     u = _cross(r, f)
@@ -312,8 +373,10 @@ def render(spec: GeometrySpec, side: int = 1) -> View:
                     pix = py * VIEW_W + px
                     if z < mine.get(pix, math.inf):
                         mine[pix] = z
-                    if opaque and z < depth[pix]:
-                        depth[pix], seen[pix] = z, index
+                    # A later part wins a face it shares with an earlier one, as in the viewer
+                    # (apps/web/src/scene/modelLoader.ts, separateCoincidentFaces).
+                    if opaque and z <= depth[pix] + 1e-9:
+                        depth[pix], seen[pix] = min(z, depth[pix]), index
         covered.append(mine)
     return View(seen=seen, covered=covered, opaque_depth=depth)
 
@@ -354,6 +417,49 @@ def contrast_share(view: View, spec: GeometrySpec, index: int) -> tuple[float, i
     return (contrast / edge if edge else 1.0), beside
 
 
+FILL_CONTRAST: Final = 30.0
+"""How far (in sRGB units) a transparent surface must shift what is behind it to be noticed."""
+
+
+def outline_share(
+    view: View, spec: GeometrySpec, index: int, background: str = PREVIEW_BACKGROUND
+) -> float:
+    """For a transparent part, how much of it shows in the composited picture: the mean of (a)
+    the share of its outline that shows, drawn in the review's edge colour, against what is
+    actually behind it, and (b) the share of its unoccluded surface whose blend (the part's
+    colour at its opacity over what is behind) differs noticeably from what is behind."""
+    mine = view.covered[index]
+    if not mine:
+        return 0.0
+    material = MATERIALS[spec.parts[index].material]
+    alpha = material.opacity if material.opacity is not None else 1.0
+    glass = _rgb(material.color_srgb)
+    edge = _rgb(GLASS_EDGE)
+    outline = outlined = fill = filled = 0
+    for pix, z in mine.items():
+        px, py = pix % VIEW_W, pix // VIEW_W
+        border = any(
+            not (0 <= nx < VIEW_W and 0 <= ny < VIEW_H) or (ny * VIEW_W + nx) not in mine
+            for nx, ny in ((px + 1, py), (px - 1, py), (px, py + 1), (px, py - 1))
+        )
+        occluded = z > view.opaque_depth[pix] + 1e-6
+        seen = view.seen[pix]
+        behind = (
+            _rgb(MATERIALS[spec.parts[seen].material].color_srgb) if seen >= 0 else _rgb(background)
+        )
+        if border:
+            outline += 1
+            if not occluded and math.dist(edge, behind) > 60:
+                outlined += 1
+        else:
+            fill += 1
+            if not occluded and alpha * math.dist(glass, behind) > FILL_CONTRAST:
+                filled += 1
+    edges = outlined / outline if outline else 0.0
+    surface = filled / fill if fill else edges
+    return (edges + surface) / 2
+
+
 def colour_distance(a: str, b: str) -> float:
     ca, cb = _rgb(MATERIALS[a].color_srgb), _rgb(MATERIALS[b].color_srgb)
     return math.dist(ca, cb)
@@ -380,55 +486,77 @@ def _norm(v: tuple[float, ...]) -> tuple[float, float, float]:
 # --- Colours named in the instruction ---------------------------------------------------------
 
 
-@dataclass(frozen=True)
+@dataclass
 class _Named:
-    colour: str
+    colours: list[str]  # one, or two joined by "and" ("red and white")
     head: str  # the noun the colour belongs to ("guard" in "a yellow safety guard")
     nouns: list[str]  # every noun word in the phrase ("safety", "guard")
     texture: str | None
     phrase: str
 
 
-def _clauses(instruction: str) -> list[list[str]]:
-    out: list[list[str]] = []
-    for chunk in re.split(r"[,;.:]|\band\b|\bbut\b|\bthen\b", instruction.lower()):
-        words = _WORD.findall(chunk)
-        if words:
-            out.append(words)
-    return out
-
-
 def named_colours(instruction: str) -> list[_Named]:
     """Colours the instruction gives to particular parts ("a red cushion", "paint the legs
     black"). A colour for the whole object ("make it blue") names no part and is left to the
-    model."""
+    model.
+
+    Elliptical clauses keep the verb of their sentence ("make the legs black and the armrests
+    dark blue fabric"), whichever comes first; a clause that is only a colour ("paint the frame
+    red and white") is a second colour for the part just named.
+    """
     found: list[_Named] = []
-    for words in _clauses(instruction):
-        for i, w in enumerate(words):
-            if w not in COLOURS or (w == "clear" and i + 1 < len(words) and words[i + 1] == "of"):
+    for sentence in re.split(r"[.;:]", instruction.lower()):
+        verb_seen = False
+        for chunk in re.split(r",|\band\b|\bbut\b|\bthen\b", sentence):
+            words = _WORD.findall(chunk)
+            if not words:
                 continue
-            after: list[str] = []
-            for nxt in words[i + 1 : i + 5]:
-                if nxt in _ENDS or nxt in COLOURS:
-                    break
-                after.append(nxt)
-            nouns = [n for n in after if n not in TEXTURES and n not in _DETERMINERS]
-            texture = next((n for n in after if n in TEXTURES), None)
-            if not nouns:
-                start = next((j for j in range(i - 1, -1, -1) if words[j] in _VERBS), None)
-                if start is not None:
-                    nouns = [
-                        n
-                        for n in words[start + 1 : i]
-                        if n not in _DETERMINERS and n not in _MODIFIERS and n not in TEXTURES
-                    ]
-                    texture = texture or next(
-                        (n for n in words[start + 1 : i] if n in TEXTURES), None
-                    )
-            nouns = [n for n in nouns if len(n) >= 3]
-            if nouns:
-                phrase = " ".join([w, *after]) if after else " ".join([*nouns, w])
-                found.append(_Named(w, nouns[-1], nouns, texture, phrase))
+            content = [w for w in words if w not in _DETERMINERS and w not in _MODIFIERS]
+            if found and content and all(w in COLOURS or w in TEXTURES for w in content):
+                # "... red and white": another colour for the part just named.
+                last = found[-1]
+                last.colours += [w for w in content if w in COLOURS and w not in last.colours]
+                last.texture = last.texture or next((w for w in content if w in TEXTURES), None)
+                last.phrase = f"{last.phrase} and {' '.join(content)}"
+                verb_seen = verb_seen or any(w in _VERBS for w in words)
+                continue
+            for i, w in enumerate(words):
+                if w not in COLOURS or (
+                    w == "clear" and i + 1 < len(words) and words[i + 1] == "of"
+                ):
+                    continue
+                after: list[str] = []
+                for nxt in words[i + 1 : i + 5]:
+                    if nxt in _ENDS or nxt in COLOURS:
+                        break
+                    after.append(nxt)
+                nouns = [
+                    n
+                    for n in after
+                    if n not in TEXTURES and n not in _DETERMINERS and n not in _NOT_PARTS
+                ]
+                texture = next((n for n in after if n in TEXTURES), None)
+                if not nouns:
+                    start = next((j for j in range(i - 1, -1, -1) if words[j] in _VERBS), None)
+                    if start is None and verb_seen:
+                        start = -1  # the verb is in an earlier clause of the sentence
+                    if start is not None:
+                        before_colour = words[start + 1 : i]
+                        nouns = [
+                            n
+                            for n in before_colour
+                            if n not in _DETERMINERS
+                            and n not in _MODIFIERS
+                            and n not in TEXTURES
+                            and n not in COLOURS
+                            and n not in _NOT_PARTS
+                        ]
+                        texture = texture or next((n for n in before_colour if n in TEXTURES), None)
+                nouns = [n for n in nouns if len(n) >= 3]
+                if nouns:
+                    phrase = " ".join([w, *after]) if after else " ".join([*nouns, w])
+                    found.append(_Named([w], nouns[-1], nouns, texture, phrase))
+            verb_seen = verb_seen or any(w in _VERBS for w in words)
     return found
 
 
@@ -446,15 +574,16 @@ def _matches(label: str, nouns: list[str]) -> bool:
 
 
 def honour_colours(spec: GeometrySpec, current: GeometrySpec, instruction: str) -> ColourResult:
-    """Recolour parts whose named colour the proposal did not show; list missing textures."""
+    """Recolour parts whose named colour the proposal did not show; list missing textures, and
+    a second colour one part cannot show."""
     before = {p.id for p in current.parts}
     parts = list(spec.parts)
     notes: list[str] = []
+    adjustments: list[Adjustment] = []
     honoured: set[str] = set()
     textures: list[str] = []
     named: set[str] = set()
     for item in named_colours(instruction):
-        family = COLOURS[item.colour]
         # The colour belongs to the head noun's parts; parts named by the other words of the
         # phrase ("button" in "a red stop button box") may already show it.
         matched = [i for i, p in enumerate(parts) if _matches(p.label, [item.head])]
@@ -462,13 +591,26 @@ def honour_colours(spec: GeometrySpec, current: GeometrySpec, instruction: str) 
             continue
         related = [i for i, p in enumerate(parts) if _matches(p.label, item.nouns)]
         named |= {parts[i].id for i in related}
-        if not any(parts[i].material in family for i in related):
+        shown = [c for c in item.colours if any(parts[i].material in COLOURS[c] for i in related)]
+        if not shown:
+            colour = item.colours[0]
             new = [i for i in matched if parts[i].id not in before] or matched
             for i in new:
-                parts[i] = parts[i].model_copy(update={"material": family[0]})
+                parts[i] = parts[i].model_copy(update={"material": COLOURS[colour][0]})
             labels = ", ".join(sorted({f"“{parts[i].label}”" for i in new}))
-            notes.append(f"Coloured {labels} {item.colour}, as asked.")
-        honoured.add(item.colour)
+            note = f"Coloured {labels} {colour}, as asked."
+            notes.append(note)
+            adjustments.append(
+                Adjustment("coloured_as_asked", tuple(parts[i].id for i in new), note)
+            )
+            shown = [colour]
+        honoured |= set(shown)
+        missing = [c for c in item.colours if c not in shown]
+        if missing:
+            textures.append(
+                f"“{item.phrase}”: one part shows one colour; {' and '.join(missing)} is not "
+                f"shown, {' and '.join(shown)} is."
+            )
         if item.texture and not any(
             parts[i].material == _NATURAL.get(item.texture) for i in related
         ):
@@ -478,6 +620,7 @@ def honour_colours(spec: GeometrySpec, current: GeometrySpec, instruction: str) 
     return ColourResult(
         spec=spec.model_copy(update={"parts": parts}),
         notes=notes,
+        adjustments=adjustments,
         honoured=honoured,
         texture_limits=textures,
         named_parts=named,
@@ -515,6 +658,149 @@ def contrast_additions(
     return spec.model_copy(update={"parts": parts}), notes
 
 
+def enlarge_small(
+    spec: GeometrySpec, current: GeometrySpec, instruction: str
+) -> tuple[GeometrySpec, list[Adjustment]]:
+    """Bring a requested small part whose size the user did not give up to a size that can be
+    seen: 4 % of the object's largest side, at most 12 cm and 3 times its size, about the face
+    that touches what holds it, and only inside the object's recorded size (which never
+    changes here). Each enlargement is an estimate and says so."""
+    before = {p.id for p in current.parts}
+    e = spec.envelope_m
+    reach = max(e.x, e.y, e.z)
+    least = VISIBLE_SHARE * reach
+    base = 0.01 + 0.006 * reach
+    parts = list(spec.parts)
+    adjustments: list[Adjustment] = []
+    by_label: dict[str, list[int]] = {}
+    for i, p in enumerate(parts):
+        if (
+            p.id not in before
+            and _asked_for(p.label, instruction)
+            and not _sized(p.label, instruction)
+        ):
+            by_label.setdefault(p.label, []).append(i)
+    pieces = _assembly_pieces(spec, current, instruction)
+    for label, group in by_label.items():
+        if label in pieces:
+            continue  # pieces of one requested assembly ("lamp arm", "lamp head"): left as drawn
+        size = max(max(parts[i].size_m.x, parts[i].size_m.y, parts[i].size_m.z) for i in group)
+        if size >= TINY_SHARE * reach:
+            continue
+        target = min(least, MAX_ENLARGED_M, MAX_ENLARGE_FACTOR * size)
+        if target <= size * 1.05:
+            continue
+        factor = target / size
+        changed: list[int] = []
+        for i in group:
+            grown = _grow(parts[i], factor, parts, e, base)
+            if grown is not None:
+                parts[i] = grown
+                changed.append(i)
+        if changed:
+            new = max(max(parts[i].size_m.x, parts[i].size_m.y, parts[i].size_m.z) for i in changed)
+            adjustments.append(
+                Adjustment(
+                    "enlarged",
+                    tuple(parts[i].id for i in changed),
+                    f"Enlarged “{label}” from {size * 100:.0f} cm to {new * 100:.0f} cm across so "
+                    "it can be seen. No size was given, so this is an estimate, not a "
+                    "measurement; the object's overall size is unchanged.",
+                )
+            )
+    return spec.model_copy(update={"parts": parts}), adjustments
+
+
+def _assembly_pieces(spec: GeometrySpec, current: GeometrySpec, instruction: str) -> set[str]:
+    """Labels of added parts that are pieces of one requested item: several labels share the
+    requested word ("lamp arm", "lamp head", "lamp joint" for "a desk lamp")."""
+    before = {p.id for p in current.parts}
+    asked = {_stem(w) for w in _WORD.findall(instruction.lower()) if len(w) >= 3}
+    labels = {p.label for p in spec.parts if p.id not in before}
+    keys = {label: {_stem(w) for w in _WORD.findall(label.lower())} & asked for label in labels}
+    return {
+        label
+        for label in labels
+        if keys[label] and any(keys[label] & keys[other] for other in labels if other != label)
+    }
+
+
+def _grow(
+    part: GeometryPart, factor: float, parts: list[GeometryPart], e: Extent3, base: float
+) -> GeometryPart | None:
+    """The part scaled by ``factor``, keeping the face that touches what holds it in place and
+    staying inside the envelope; None when it cannot grow there."""
+    holder = next(
+        (q for q in parts if q.id != part.id and _touches(part, q, touch_tolerance(part, q, base))),
+        None,
+    )
+    center = {a: getattr(part.center_m, a) for a in "xyz"}
+    size = {a: getattr(part.size_m, a) for a in "xyz"}
+    low = {"x": -e.x / 2, "y": 0.0, "z": -e.z / 2}
+    high = {"x": e.x / 2, "y": e.y, "z": e.z / 2}
+    anchor: dict[str, str] = {}
+    for a in "xyz":
+        lo, hi = center[a] - size[a] / 2, center[a] + size[a] / 2
+        if holder is not None:
+            q_lo = getattr(holder.center_m, a) - getattr(holder.size_m, a) / 2
+            q_hi = getattr(holder.center_m, a) + getattr(holder.size_m, a) / 2
+            if abs(lo - q_hi) <= 0.02:
+                anchor[a] = "low"  # resting on the holder's face: keep that face
+            elif abs(hi - q_lo) <= 0.02:
+                anchor[a] = "high"  # hanging from the holder's face: keep that face
+    # Grow only as far as the envelope allows on every axis (it never changes here).
+    room = factor
+    for a in "xyz":
+        lo, hi = center[a] - size[a] / 2, center[a] + size[a] / 2
+        if anchor.get(a) == "low":
+            room = min(room, (high[a] - lo) / size[a])
+        elif anchor.get(a) == "high":
+            room = min(room, (hi - low[a]) / size[a])
+        else:
+            room = min(room, 2 * min(center[a] - low[a], high[a] - center[a]) / size[a])
+    if room <= 1.05:
+        return None
+    new_size = {a: size[a] * room for a in "xyz"}
+    for a in "xyz":
+        lo, hi = center[a] - size[a] / 2, center[a] + size[a] / 2
+        if anchor.get(a) == "low":
+            center[a] = lo + new_size[a] / 2
+        elif anchor.get(a) == "high":
+            center[a] = hi - new_size[a] / 2
+    return part.model_copy(
+        update={
+            "center_m": part.center_m.model_copy(update={a: round(center[a], 6) for a in "xyz"}),
+            "size_m": part.size_m.model_copy(update={a: round(new_size[a], 6) for a in "xyz"}),
+        }
+    )
+
+
+def best_view(spec: GeometrySpec, current: GeometrySpec, instruction: str) -> str:
+    """The review view that shows the requested additions best: the standard front-right view
+    unless another view shows clearly more of them (at least half again, and visibly)."""
+    before = {p.id for p in current.parts}
+    wanted = [
+        i
+        for i, p in enumerate(spec.parts)
+        if p.id not in before and _asked_for(p.label, instruction)
+    ]
+    if not wanted:
+        return "front-right"
+    scores: dict[str, float] = {}
+    for name in VIEWS:
+        view = render(spec, view=name)
+        scores[name] = sum(
+            outline_share(view, spec, i) * len(view.covered[i])
+            if spec.parts[i].material in TRANSPARENT
+            else visible_pixels(view, i, False)
+            for i in wanted
+        )
+    best = max(VIEWS, key=lambda n: scores[n])
+    if best != "front-right" and scores[best] >= max(1.5 * scores["front-right"], MIN_PIXELS):
+        return best
+    return "front-right"
+
+
 def _same_material_share(part: GeometryPart, parts: list[GeometryPart]) -> float:
     others = [q for q in parts if q.id != part.id and q.material == part.material]
     if not others:
@@ -538,22 +824,37 @@ def _most_overlapped(part: GeometryPart, parts: list[GeometryPart]) -> GeometryP
 # --- Problems ----------------------------------------------------------------------------------
 
 
+VIEW_NAMES: Final = {
+    "front-right": "the usual front-right view",
+    "rear-left": "the view from behind",
+    "low-front": "the low view from the front",
+}
+
+
 def find_problems(spec: GeometrySpec, current: GeometrySpec, instruction: str) -> list[Problem]:
-    """What the added parts do that a viewer cannot see past (nothing is changed here)."""
+    """What the added parts do that a viewer cannot see past (nothing is changed here). One
+    problem per kind and label, naming every part it is about."""
     before = {p.id for p in current.parts}
     parts = spec.parts
     added = [i for i, p in enumerate(parts) if p.id not in before]
     if not added:
         return []
     e = spec.envelope_m
-    gap = 0.005 + 0.003 * max(e.x, e.y, e.z)
-    problems: list[Problem] = []
-    view = render(spec)
+    reach = max(e.x, e.y, e.z)
+    base = 0.01 + 0.006 * reach
+    found: list[Problem] = []
+    views: dict[str, View] = {"front-right": render(spec)}
+
+    def view_of(name: str) -> View:
+        if name not in views:
+            views[name] = render(spec, view=name)
+        return views[name]
+
     hangs = bool(_HANGS.search(instruction))
-    grounded = _grounded(parts, gap, before)
-    unseen_reported: set[str] = set()
-    behind: View | None = None
-    sized = bool(_LENGTH.search(instruction))
+    grounded = _grounded(list(parts), base, before)
+    judged: set[str] = set()
+    pieces = _assembly_pieces(spec, current, instruction)
+    colours = {pid for item in named_colours(instruction) for pid in _named_ids(item, parts)}
     for i in added:
         part = parts[i]
         points = _samples(part)
@@ -562,7 +863,7 @@ def find_problems(spec: GeometrySpec, current: GeometrySpec, instruction: str) -
         inside = sum(any(_inside(q, p) for q in opaque) for p in points) / len(points)
         if inside >= HIDDEN_SHARE:
             host = opaque[holders.index(max(holders))]
-            problems.append(
+            found.append(
                 Problem(
                     part.id,
                     part.label,
@@ -575,7 +876,7 @@ def find_problems(spec: GeometrySpec, current: GeometrySpec, instruction: str) -
             continue
         same = 0.0 if part.material in TRANSPARENT else _same_material_share(part, list(parts))
         if same >= BURIED_SHARE:
-            problems.append(
+            found.append(
                 Problem(
                     part.id,
                     part.label,
@@ -587,7 +888,7 @@ def find_problems(spec: GeometrySpec, current: GeometrySpec, instruction: str) -
                 )
             )
         if i not in grounded and not hangs:
-            problems.append(
+            found.append(
                 Problem(
                     part.id,
                     part.label,
@@ -597,18 +898,21 @@ def find_problems(spec: GeometrySpec, current: GeometrySpec, instruction: str) -
                     "Move it, or add a short mount or post, so it is attached to the object.",
                 )
             )
-        if part.label in unseen_reported or not _asked_for(part.label, instruction):
+        if part.label in judged or not _asked_for(part.label, instruction):
             continue  # a helper part the user did not name (a mounting post) is not judged
-        size = max(part.size_m.x, part.size_m.y, part.size_m.z)
+        judged.add(part.label)
+        group = [j for j in added if parts[j].label == part.label]
+        ids = tuple(parts[j].id for j in group)
+        size = max(max(parts[j].size_m.x, parts[j].size_m.y, parts[j].size_m.z) for j in group)
+        main = view_of("front-right")
         if (
-            size < TINY_SHARE * max(e.x, e.y, e.z)
-            and sum(len(view.covered[j]) for j in added if parts[j].label == part.label)
-            < TINY_PIXELS
-            and not sized
+            part.label not in pieces
+            and size * 1.05 < TINY_SHARE * reach
+            and sum(len(main.covered[j]) for j in group) < TINY_PIXELS
+            and not _sized(part.label, instruction)
         ):
-            unseen_reported.add(part.label)
-            least = TINY_SHARE * max(e.x, e.y, e.z)
-            problems.append(
+            least = min(TINY_SHARE * reach, MAX_ENLARGED_M)
+            found.append(
                 Problem(
                     part.id,
                     part.label,
@@ -618,46 +922,115 @@ def find_problems(spec: GeometrySpec, current: GeometrySpec, instruction: str) -
                     f"Part {part.id} (“{part.label}”) is only {size * 100:.0f} cm across, too "
                     f"small to see. No size was given: make it at least {least * 100:.0f} cm "
                     "across.",
+                    part_ids=ids,
                 )
             )
             continue
-        # Copies with the same label are judged together: one rear wheel of four out of view
-        # is fine; all four under the pallet is not. The structure (a back panel, a rear post)
-        # only counts as unseen when the rear-left view does not show it either.
-        group = [j for j in added if parts[j].label == part.label]
-        views = [view]
-        if all(_structural(parts[j], e) for j in group):
-            if behind is None:
-                behind = render(spec, side=-1)
-            views.append(behind)
-        alone = [sum(len(v.covered[j]) for j in group) for v in views]
-        shown = [
-            sum(visible_pixels(v, j, parts[j].material in TRANSPARENT) for j in group)
-            for v in views
-        ]
-        if alone[0] >= MIN_PIXELS and all(
-            s_ < UNSEEN_SHARE * a for s_, a in zip(shown, alone, strict=True)
-        ):
-            shown, alone = shown[:1], alone[:1]
-            unseen_reported.add(part.label)
+
+        # How much shows, from each view, in the composited picture: for glass and clear
+        # plastic the share of their edges that stand out from what is behind them.
+        def shown(name: str, group: list[int] = group) -> float:
+            v = view_of(name)
+            alone = sum(len(v.covered[j]) for j in group)
+            if alone < MIN_PIXELS:
+                return 1.0  # too small to judge from this view (the tiny rule covers it)
+            if all(parts[j].material in TRANSPARENT for j in group):
+                return sum(outline_share(v, spec, j) * len(v.covered[j]) for j in group) / alone
+            return (
+                sum(visible_pixels(v, j, parts[j].material in TRANSPARENT) for j in group) / alone
+            )
+
+        transparent = all(parts[j].material in TRANSPARENT for j in group)
+        threshold = EDGE_SHARE if transparent else UNSEEN_SHARE
+        front = shown("front-right")
+        if front < threshold:
+            structural = all(_structural(parts[j], e) for j in group)
+            others = {name: shown(name) for name in VIEWS if name != "front-right"}
+            better = max(others, key=lambda n: others[n])
+            if structural and others["rear-left"] >= threshold:
+                continue  # a back panel or rear post: the view from behind shows it
             placed = bool(_PLACED_OUT_OF_VIEW.search(instruction))
             where = " where you asked for it" if placed else ""
-            problems.append(
+            elsewhere = f"; {VIEW_NAMES[better]} shows it" if others[better] >= threshold else ""
+            if transparent:
+                text = (
+                    f"“{part.label}” is hard to see: only {front * 100:.0f} % of its edges show "
+                    f"against what is behind it in the usual view{elsewhere}."
+                )
+            else:
+                text = (
+                    f"“{part.label}”{where} cannot be seen from the usual front-right view (only "
+                    f"{front * 100:.0f} % of it shows){elsewhere or '; turn the model to see it'}."
+                )
+            occluded = sum(visible_pixels(main, j, parts[j].material in TRANSPARENT) for j in group)
+            found.append(
                 Problem(
                     part.id,
                     part.label,
                     "unseen",
-                    f"“{part.label}”{where} cannot be seen from the usual front-right view "
-                    f"(only {shown[0] * 100 / alone[0]:.0f} % of it shows); turn the model to see "
-                    "it.",
+                    text,
                     f"Part {part.id} (“{part.label}”) is almost completely covered by other parts "
                     "when the object is seen from the front-right, above. Place it where it can "
                     "be seen, for example at the front edge.",
-                    retry=not placed,
+                    # Asking again cannot move a part from where the user put it, nor make clear
+                    # glass less clear.
+                    retry=not placed
+                    and not (transparent and occluded >= UNSEEN_SHARE * len(main.covered[i])),
+                    part_ids=ids,
                 )
             )
-    problems += _slat_problems(spec, current, instruction)
-    return problems
+            continue
+        if part.id in colours and not transparent and not any(part.id in f.parts for f in found):
+            share, _beside = contrast_share(main, spec, i)
+            if share < CONTRAST_SHARE and visible_pixels(main, i, False) >= MIN_PIXELS:
+                found.append(
+                    Problem(
+                        part.id,
+                        part.label,
+                        "blends",
+                        f"“{part.label}” is in the colour you asked for, but blends into what is "
+                        "around it, so it is hard to tell apart.",
+                        "",
+                        retry=False,
+                        part_ids=ids,
+                    )
+                )
+    found += _slat_problems(spec, current, instruction)
+    return _merge(found)
+
+
+def _merge(problems: list[Problem]) -> list[Problem]:
+    """One problem per kind and label: copies of one part share a sentence and list every id."""
+    merged: dict[tuple[str, str], Problem] = {}
+    for p in problems:
+        key = (p.kind, p.label)
+        if key in merged:
+            old = merged[key]
+            merged[key] = Problem(
+                old.part_id,
+                old.label,
+                old.kind,
+                old.text,
+                old.feedback,
+                old.retry and p.retry,
+                tuple(dict.fromkeys(old.parts + p.parts)),
+            )
+        else:
+            merged[key] = Problem(p.part_id, p.label, p.kind, p.text, p.feedback, p.retry, p.parts)
+    return list(merged.values())
+
+
+def _named_ids(item: _Named, parts: list[GeometryPart] | tuple[GeometryPart, ...]) -> list[str]:
+    return [p.id for p in parts if _matches(p.label, [item.head])]
+
+
+def _sized(label: str, instruction: str) -> bool:
+    """The user gave a size in the clause that names this part ("a 30 cm lamp")."""
+    words = {_stem(w) for w in _WORD.findall(label.lower()) if len(w) >= 3}
+    for clause in re.split(r",|;|\.|\band\b|\bbut\b", instruction.lower()):
+        if _LENGTH.search(clause) and words & {_stem(w) for w in _WORD.findall(clause)}:
+            return True
+    return False
 
 
 def _asked_for(label: str, instruction: str) -> bool:
@@ -678,17 +1051,19 @@ def _structural(part: GeometryPart, envelope: Extent3) -> bool:
     return panel or member
 
 
-def _grounded(parts: list[GeometryPart], gap: float, kept: set[str]) -> set[int]:
+def _grounded(parts: list[GeometryPart], base: float, kept: set[str]) -> set[int]:
     """Indices of parts linked to the floor, or to a part kept from the current model, through
     touching parts. The model the user started from counts as supported: only additions are
     judged (a template whose legs stand clear of its round body does not make every addition
     to it "floating")."""
-    floor = {i for i, p in enumerate(parts) if p.center_m.y - p.size_m.y / 2 <= gap or p.id in kept}
+    floor = {
+        i for i, p in enumerate(parts) if p.center_m.y - p.size_m.y / 2 <= base or p.id in kept
+    }
     reached, frontier = set(floor), list(floor)
     while frontier:
         i = frontier.pop()
         for j, q in enumerate(parts):
-            if j not in reached and _touches(parts[i], q, gap):
+            if j not in reached and _touches(parts[i], q, touch_tolerance(parts[i], q, base)):
                 reached.add(j)
                 frontier.append(j)
     return reached

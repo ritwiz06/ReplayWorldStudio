@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "d7c28edb5b1cc4ee:add a white wall bracket behind the screen",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "Inspection case (synthetic (GEN-05 p03 had a photo-made TV)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\"outcome\": \"revision\", \"message\": null, \"summary\": \"Added a white wall bracket behind the screen.\", \"envelope_m\": {\"x\": 1.1, \"y\": 1.43, \"z\": 0.4}, \"remove\": [], \"change\": [], \"add\": [{\"id\": \"bracket\", \"label\": \"wall bracket\", \"shape\": \"box\", \"material\": \"paint_white\", \"center_m\": {\"x\": 0, \"y\": 1.1, \"z\": -0.06}, \"size_m\": {\"x\": 0.3, \"y\": 0.3, \"z\": 0.05}, \"axis\": \"y\", \"taper\": null, \"narrow_end\": null, \"basis\": \"inferred\"}], \"repeat\": [], \"not_representable\": []}"
+  ]
+}

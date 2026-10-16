@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "e89aed2ce7655f61:add two throw pillows against the backrest",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "Inspection case (GEN-05 frozen answer v06 (development regression)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\"add\": [{\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.3, \"y\": 0.55, \"z\": -0.18}, \"id\": \"pillow-1\", \"label\": \"throw pillow\", \"material\": \"fabric_grey\", \"narrow_end\": null, \"shape\": \"rounded_box\", \"size_m\": {\"x\": 0.3, \"y\": 0.15, \"z\": 0.3}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": 0.3, \"y\": 0.55, \"z\": -0.18}, \"id\": \"pillow-2\", \"label\": \"throw pillow\", \"material\": \"fabric_grey\", \"narrow_end\": null, \"shape\": \"rounded_box\", \"size_m\": {\"x\": 0.3, \"y\": 0.15, \"z\": 0.3}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 1.9, \"y\": 0.84, \"z\": 0.85}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Added two throw pillows against the backrest, each made of fabric_grey rounded_box, positioned slightly in front of the backrest and centered vertically on the seat back.\"}"
+  ]
+}

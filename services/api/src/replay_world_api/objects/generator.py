@@ -29,6 +29,7 @@ from typing import Any, Final, assert_never
 
 from replay_world_contracts import (
     GENERATED_MODEL_PREFIX,
+    GENERATOR_VERSION,
     Extent3,
     GeometryDraft,
     GeometryPart,
@@ -203,12 +204,26 @@ def _check_bounds(low: tuple[float, ...], high: tuple[float, ...], envelope: Ext
             )
 
 
-def build_model(spec: GeometrySpec) -> BuiltModel:
+SUPPORTED_GENERATORS: Final = (GENERATOR_VERSION,)
+"""Generator versions this build can reproduce byte for byte. A rebuild uses the version the
+asset records; a future output change adds a new version here and keeps the old path."""
+
+
+def build_model(spec: GeometrySpec, generator: str = GENERATOR_VERSION) -> BuiltModel:
     """Mesh, merge per material, write and verify the model for ``spec``.
 
     ``spec`` should come from :func:`fit_to_envelope`: the contract accepts parts within 1 mm
     of the envelope, but the model's origin must be the bottom-centre within 0.1 mm.
+    ``generator`` is the version the asset records (a rebuild must reproduce that version's
+    bytes); an unknown version is refused rather than built differently. Display-only aids in
+    the review (edge lines on transparent parts, highlights) are drawn by the viewer and never
+    change these bytes.
     """
+    if generator not in SUPPORTED_GENERATORS:
+        raise GeneratorError(
+            f"this build cannot reproduce generator {generator!r} (it supports "
+            f"{', '.join(SUPPORTED_GENERATORS)}), so the model is not rebuilt"
+        )
     groups: dict[str, list[Mesh]] = {}
     for part in spec.parts:  # materials in order of first use
         groups.setdefault(part.material, []).append(part_mesh(part))

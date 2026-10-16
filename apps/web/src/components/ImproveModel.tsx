@@ -4,7 +4,18 @@
 // change, and shows the old and new models side by side with the changes in plain words. Nothing
 // in the project changes until Apply: the API then builds the revision as a new, immutable
 // catalog asset, and one revision-checked command switches the chosen objects to it (undoable).
-import type { CatalogAsset, GeneratedAssetRevisionRequest, GeneratedModel, GeometryDraft, GeometryPart, LanguageModelRef, Project, SceneObject } from "@replay-world/contracts";
+import type {
+  CatalogAsset,
+  GeneratedAssetRevisionRequest,
+  GeneratedModel,
+  GeometryDraft,
+  GeometryPart,
+  LanguageModelRef,
+  Project,
+  RevisionAdjustment,
+  RevisionProblem,
+  SceneObject,
+} from "@replay-world/contracts";
 import { useEffect, useRef, useState } from "react";
 import type { ApiClient } from "../api/client";
 import { ENVELOPE_LIMITS } from "../assist/objectDraft";
@@ -29,7 +40,7 @@ import {
 import type { CommandRequest } from "../editing/commands";
 import { formatFixed, LENGTH_DECIMALS, parseDecimal } from "../editing/units";
 import type { AssistState } from "../hooks/useAssistStatus";
-import { ModelPreview } from "../scene/ModelPreview";
+import { type Highlight, ModelPreview, type RevisionView } from "../scene/ModelPreview";
 import { PartsEditor } from "./PartsEditor";
 
 interface Props {
@@ -50,7 +61,9 @@ interface Proposal {
   notRepresented: string[];
   checks: string[];
   /** Added parts the API found a viewer cannot see as asked, not fixed by the model (GEN-05). */
-  problems: string[];
+  problems: RevisionProblem[];
+  /** Visual choices the API made without asking: estimates, never measurements (GEN-06). */
+  adjustments: RevisionAdjustment[];
   /** The user changed the proposal by hand afterwards. */
   adjusted: boolean;
 }
@@ -63,6 +76,12 @@ const COLOURS: GeometryPart["material"][] = [
   "cardboard", "fabric_grey", "concrete", "copper", "rubber_black", "hmi_screen", "motor_blue",
 ];
 const LABEL: Record<DimensionKey, string> = { width: "Width", height: "Height", depth: "Depth" };
+const VIEW_LABEL: Record<RevisionView, string> = { "front-right": "Standard view", "rear-left": "From behind", "low-front": "Low view" };
+const VIEW_WHY: Record<RevisionView, string> = {
+  "front-right": "",
+  "rear-left": "Opened from behind, where the requested change can be seen.",
+  "low-front": "Opened from low down, where the requested change can be seen.",
+};
 const words = (s: string) => s.replaceAll("_", " ");
 const metres = (v: number) => `${formatFixed(v, 3)} m`;
 
@@ -91,6 +110,9 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
   const [scope, setScope] = useState<"selected" | "all">("selected");
   const [adopt, setAdopt] = useState<ReadonlySet<string>>(new Set());
   const [applying, setApplying] = useState<{ busy: boolean; status: string; error: string | null }>({ busy: false, status: "", error: null });
+  // The camera both previews use, and the parts pointed out in the proposed one (GEN-07).
+  const [view, setView] = useState<RevisionView>("front-right");
+  const [focus, setFocus] = useState<string[]>([]);
   const pending = useRef<AbortController | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   // A modal dialog, above the viewport and its panels.
@@ -160,6 +182,8 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
     setConfirmed(new Set());
     setProposal(null);
     setAskNotice(null);
+    setView("front-right");
+    setFocus([]);
   }
 
   async function ask(startedAt: number) {
@@ -197,8 +221,12 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
       notRepresented: answer.not_represented,
       checks: answer.checks,
       problems: answer.problems,
+      adjustments: answer.adjustments,
       adjusted: false,
     });
+    // Open on the view that shows the requested change, pointing out what a warning refers to.
+    setView(answer.view);
+    setFocus(answer.problems.flatMap((p) => p.part_ids));
   }
 
   function cancelAsk() {
@@ -212,9 +240,11 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
     setApplying({ busy: true, status: "Building the improved model…", error: null });
     const controller = new AbortController();
     pending.current = controller;
-    // Problems the checks found stay on the record of the version, so it never reads as fully shown.
-    const problems = (proposal?.problems ?? []).map((p) => `Problem found in the proposal: ${p}`);
-    const listed = [...(proposal?.adjusted ? [...changes, "Adjusted by the user after the proposal"] : changes), ...problems];
+    // Problems the checks found and the app's own visual estimates stay on the record of the
+    // version, so it never reads as fully shown or as measured.
+    const problems = (proposal?.problems ?? []).map((p) => `Problem found in the proposal: ${p.text}`);
+    const estimates = (proposal?.adjustments ?? []).map((a) => `Visual choice by the app: ${a.text}`);
+    const listed = [...(proposal?.adjusted ? [...changes, "Adjusted by the user after the proposal"] : changes), ...estimates, ...problems];
     let built;
     try {
       built = await client.reviseGeneratedAsset(
@@ -243,6 +273,12 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
   }
 
   const colours = colourGroups(draft.parts);
+  const shownSpec = fitted ?? draft;
+  const highlight: Highlight[] = shownSpec.parts
+    .filter((p) => focus.includes(p.id))
+    .map((p) => ({ center: [p.center_m.x, p.center_m.y, p.center_m.z], size: [p.size_m.x, p.size_m.y, p.size_m.z] }));
+  const estimates = proposal?.adjustments.filter((a) => a.kind === "enlarged") ?? [];
+  const colourChoices = proposal?.adjustments.filter((a) => a.kind !== "enlarged") ?? [];
 
   return (
     <dialog
@@ -269,17 +305,39 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
       <div className="improve-compare">
         <figure>
           <figcaption>Current (version {versionOf(previous)})</figcaption>
-          <ModelPreview model={oldPreview.status === "ready" ? oldPreview.model : null} busy={oldPreview.status === "building"} testId="improve-preview-old" />
+          <ModelPreview model={oldPreview.status === "ready" ? oldPreview.model : null} busy={oldPreview.status === "building"} testId="improve-preview-old" view={view} />
         </figure>
         <figure>
           <figcaption>Proposed</figcaption>
-          <ModelPreview model={newPreview.status === "ready" ? newPreview.model : null} busy={newPreview.status === "building"} testId="improve-preview-new" />
+          <ModelPreview
+            model={newPreview.status === "ready" ? newPreview.model : null}
+            busy={newPreview.status === "building"}
+            testId="improve-preview-new"
+            view={view}
+            highlight={highlight}
+          />
           {newPreview.status === "failed" && (
             <p className="status-error small" role="alert" data-testid="improve-build-error">
               This version cannot be built: {newPreview.message}
             </p>
           )}
         </figure>
+      </div>
+      <div className="improve-views" role="group" aria-label="Camera for both previews" data-testid="improve-views">
+        {(Object.keys(VIEW_LABEL) as RevisionView[]).map((v) => (
+          <button key={v} type="button" className="button" aria-pressed={view === v} data-testid={`improve-view-${v}`} onClick={() => setView(v)}>
+            {VIEW_LABEL[v]}
+          </button>
+        ))}
+        {view !== "front-right" && (
+          <button type="button" className="button button-primary" data-testid="improve-view-back" onClick={() => setView("front-right")}>
+            Back to the standard view
+          </button>
+        )}
+        <span className="muted small" data-testid="improve-view-note">
+          {VIEW_WHY[view] || "Both previews use the same camera; drag to turn."}
+          {highlight.length > 0 ? " The part a warning refers to is outlined in orange." : ""}
+        </span>
       </div>
 
       <div className="improve-body">
@@ -337,7 +395,39 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
                   </p>
                   <ul>
                     {proposal.problems.map((p) => (
-                      <li key={p}>{p}</li>
+                      <li key={p.text}>
+                        {p.text}{" "}
+                        <button type="button" className="link-button" data-testid={`improve-show-${p.part_ids[0]}`} onClick={() => setFocus(p.part_ids)}>
+                          Show it
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {estimates.length > 0 && (
+                <div className="improve-estimates small" data-testid="improve-estimates">
+                  <p>
+                    <strong>Enlarged as an estimate</strong> (no size was given, so these are visual choices, not measurements):
+                  </p>
+                  <ul>
+                    {estimates.map((a) => (
+                      <li key={a.text}>
+                        {a.text}{" "}
+                        <button type="button" className="link-button" data-testid={`improve-show-${a.part_ids[0]}`} onClick={() => setFocus(a.part_ids)}>
+                          Show it
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {colourChoices.length > 0 && (
+                <div className="improve-checks small" data-testid="improve-colour-choices">
+                  <p>Colours chosen by the app:</p>
+                  <ul>
+                    {colourChoices.map((a) => (
+                      <li key={a.text}>{a.text}</li>
                     ))}
                   </ul>
                 </div>
@@ -465,6 +555,19 @@ export function ImproveModel({ client, assist, project, object, onApply, onClose
             <p className="status-error small" role="alert" data-testid="improve-error">
               {applying.error}
             </p>
+          )}
+          {proposal && proposal.problems.length > 0 && !applying.busy && (
+            <div className="status-warn small improve-apply-problems" data-testid="improve-apply-problems">
+              <p>
+                <strong>Applying keeps {proposal.problems.length === 1 ? "this problem" : `these ${proposal.problems.length} problems`}:</strong>
+              </p>
+              <ul>
+                {proposal.problems.map((p) => (
+                  <li key={p.text}>{p.text}</li>
+                ))}
+              </ul>
+              <p className="muted">You can still change the parts by hand above, or start over with a different request.</p>
+            </div>
           )}
           <div className="modal-actions">
             <button type="button" className="button button-primary" disabled={!canApply} data-testid="improve-apply" onClick={() => void apply()}>

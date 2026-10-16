@@ -1919,7 +1919,7 @@
     },
     "ModelRevisionProposalResult": {
       "additionalProperties": false,
-      "description": "A proposed specification change, checked and fitted; nothing is built or stored.\n\nThree outcomes (GEN-04):\n\n* ``proposal``: the drawable part of the request, as a new specification. ``partial`` is\n  true when the request also asked for things the generator cannot show; they are listed in\n  ``not_represented``, each grounded in the user's own words.\n* ``unsupported``: nothing drawable was asked for (or the proposal would misrepresent the\n  object, such as a solid block offered as an open shelf); ``message`` says why,\n  ``not_represented`` lists what could not be shown, and nothing changes.\n* ``already_satisfied``: the current model already shows what was asked; ``message`` says\n  how, and no identical new version is made.\n\n``problems`` (GEN-05) lists what a proposal draws but the user may not be able to see, as\nfound by the API's checks and not fixed by the model's one corrected answer: an added part\nhidden inside another, sunk into a part of the same material, without support, not visible\nfrom the usual view, or slats drawn without gaps. The review shows them before Apply; a\nproposal with problems is never described as fully shown.",
+      "description": "A proposed specification change, checked and fitted; nothing is built or stored.\n\nThree outcomes (GEN-04):\n\n* ``proposal``: the drawable part of the request, as a new specification. ``partial`` is\n  true when the request also asked for things the generator cannot show; they are listed in\n  ``not_represented``, each grounded in the user's own words.\n* ``unsupported``: nothing drawable was asked for (or the proposal would misrepresent the\n  object, such as a solid block offered as an open shelf); ``message`` says why,\n  ``not_represented`` lists what could not be shown, and nothing changes.\n* ``already_satisfied``: the current model already shows what was asked; ``message`` says\n  how, and no identical new version is made.\n\n``problems`` (GEN-05) lists what a proposal draws but the user may not be able to see, as\nfound by the API's checks and not fixed by the model's one corrected answer: an added part\nhidden inside another, sunk into a part of the same material, without support, too small,\nnot visible from the usual view (for glass, not standing out from what is behind it), or\nslats drawn without gaps. The review shows them before Apply; a proposal with problems is\nnever described as fully shown.\n\n``adjustments`` (GEN-06) lists the visual choices the API made without asking: a small\npart enlarged to a visible size (an estimate), a colour shown as asked, a contrasting finish.\n``view`` (GEN-07) is the review camera that shows the requested additions best.",
       "properties": {
         "outcome": {
           "enum": [
@@ -1987,11 +1987,23 @@
         },
         "problems": {
           "items": {
-            "maxLength": 500,
-            "minLength": 1,
-            "type": "string"
+            "$ref": "#/$defs/RevisionProblem"
           },
           "type": "array"
+        },
+        "adjustments": {
+          "items": {
+            "$ref": "#/$defs/RevisionAdjustment"
+          },
+          "type": "array"
+        },
+        "view": {
+          "enum": [
+            "front-right",
+            "rear-left",
+            "low-front"
+          ],
+          "type": "string"
         },
         "provider": {
           "$ref": "#/$defs/ProviderRun"
@@ -2007,6 +2019,8 @@
         "not_represented",
         "checks",
         "problems",
+        "adjustments",
+        "view",
         "provider"
       ],
       "title": "ModelRevisionProposalResult",
@@ -3042,6 +3056,78 @@
         "confirmed"
       ],
       "title": "RevisedLength",
+      "type": "object"
+    },
+    "RevisionAdjustment": {
+      "additionalProperties": false,
+      "description": "A visual choice the API made without asking, shown as such: never a measurement.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "enlarged",
+            "coloured_as_asked",
+            "contrast"
+          ],
+          "type": "string"
+        },
+        "part_ids": {
+          "items": {
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "part_ids",
+        "text"
+      ],
+      "title": "RevisionAdjustment",
+      "type": "object"
+    },
+    "RevisionProblem": {
+      "additionalProperties": false,
+      "description": "An added part a viewer may not see as asked, found by the API's checks (GEN-05/06).",
+      "properties": {
+        "kind": {
+          "enum": [
+            "hidden",
+            "buried",
+            "floating",
+            "tiny",
+            "unseen",
+            "blends",
+            "solid_slats"
+          ],
+          "type": "string"
+        },
+        "part_ids": {
+          "items": {
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "part_ids",
+        "text"
+      ],
+      "title": "RevisionProblem",
       "type": "object"
     },
     "RotateIntent": {

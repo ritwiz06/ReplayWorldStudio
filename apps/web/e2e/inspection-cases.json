@@ -1,0 +1,79 @@
+[
+ {
+  "label": "glass-top",
+  "template": "table",
+  "instruction": "give it a clear glass top on the same frame",
+  "origin": "synthetic (GEN-05 t01 had a photo-made table)",
+  "name": "Workbench"
+ },
+ {
+  "label": "glass-back",
+  "template": "rack",
+  "instruction": "add a glass back panel behind the shelves",
+  "origin": "synthetic (GEN-05 t03 had a photo-made bookshelf)",
+  "name": "Shelving rack"
+ },
+ {
+  "label": "clear-sides",
+  "template": "rack",
+  "instruction": "add clear plastic side panels on both ends",
+  "origin": "GEN-05 frozen answer t02 (development regression)",
+  "name": "Shelving rack"
+ },
+ {
+  "label": "status-lamp",
+  "template": "rack",
+  "instruction": "add a green status lamp on top of one front post",
+  "origin": "GEN-05 frozen answer v03 (development regression)",
+  "name": "Shelving rack"
+ },
+ {
+  "label": "label-holders",
+  "template": "rack",
+  "instruction": "add a red label holder on each beam and print the bay numbers on them",
+  "origin": "GEN-05 frozen answer p02 (development regression)",
+  "name": "Shelving rack"
+ },
+ {
+  "label": "blue-armrests",
+  "template": "sofa",
+  "instruction": "make the legs black and the armrests dark blue fabric",
+  "origin": "GEN-05 frozen answer e03 (development regression)",
+  "name": "Sofa"
+ },
+ {
+  "label": "throw-pillows",
+  "template": "sofa",
+  "instruction": "add two throw pillows against the backrest",
+  "origin": "GEN-05 frozen answer v06 (development regression)",
+  "name": "Sofa"
+ },
+ {
+  "label": "slatted-back",
+  "template": "chair",
+  "instruction": "make the backrest three horizontal slats with gaps between them",
+  "origin": "GEN-05 frozen answer o05 (development regression)",
+  "name": "Chair"
+ },
+ {
+  "label": "tiny-light",
+  "template": "screen",
+  "instruction": "add a small green status light on top of the frame",
+  "origin": "GEN-05 pilot first answer p1 (development example)",
+  "name": "Screen on a stand"
+ },
+ {
+  "label": "valve-under",
+  "template": "tank",
+  "instruction": "add a red drain valve at the bottom of the cone",
+  "origin": "synthetic (GEN-05 p04 had a described tank)",
+  "name": "Tank"
+ },
+ {
+  "label": "bracket-behind",
+  "template": "screen",
+  "instruction": "add a white wall bracket behind the screen",
+  "origin": "synthetic (GEN-05 p03 had a photo-made TV)",
+  "name": "Screen on a stand"
+ }
+]

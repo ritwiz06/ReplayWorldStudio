@@ -1,0 +1,12 @@
+{
+  "task": "revision",
+  "key": "e89aed2ce7655f61:make the legs black and the armrests dark blue fabric",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "gen-05.1",
+  "recorded_at": "2026-10-16",
+  "note": "Inspection case (GEN-05 frozen answer e03 (development regression)); replayed by the offline test provider, never live AI.",
+  "responses": [
+    "{\"add\": [], \"change\": [{\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.875, \"y\": 0.04, \"z\": -0.38}, \"id\": \"leg-1\", \"label\": \"leg\", \"material\": \"plastic_black\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.05, \"y\": 0.08, \"z\": 0.05}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.875, \"y\": 0.04, \"z\": -0.38}, \"id\": \"leg-2\", \"label\": \"leg\", \"material\": \"plastic_black\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.05, \"y\": 0.08, \"z\": 0.05}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.875, \"y\": 0.04, \"z\": 0.37}, \"id\": \"leg-3\", \"label\": \"leg\", \"material\": \"plastic_black\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.05, \"y\": 0.08, \"z\": 0.05}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.875, \"y\": 0.04, \"z\": 0.37}, \"id\": \"leg-4\", \"label\": \"leg\", \"material\": \"plastic_black\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.05, \"y\": 0.08, \"z\": 0.05}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.86, \"y\": 0.4, \"z\": 0.035}, \"id\": \"arm-l\", \"label\": \"armrest\", \"material\": \"fabric_grey\", \"narrow_end\": null, \"shape\": \"rounded_box\", \"size_m\": {\"x\": 0.18, \"y\": 0.6, \"z\": 0.78}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.86, \"y\": 0.4, \"z\": 0.035}, \"id\": \"arm-r\", \"label\": \"armrest\", \"material\": \"fabric_grey\", \"narrow_end\": null, \"shape\": \"rounded_box\", \"size_m\": {\"x\": 0.18, \"y\": 0.6, \"z\": 0.78}, \"taper\": null}], \"envelope_m\": {\"x\": 1.9, \"y\": 0.84, \"z\": 0.85}, \"message\": null, \"not_representable\": [\"dark blue fabric\"], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Changed leg material to black (plastic_black) and armrests to grey fabric; 'dark blue fabric' cannot be represented.\"}"
+  ]
+}

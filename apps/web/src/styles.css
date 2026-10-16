@@ -1276,6 +1276,35 @@ kbd {
   color: var(--warn);
   font-size: 12px;
 }
+.improve-views {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 2px;
+}
+.improve-views .button[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.improve-estimates {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-left: 3px solid #ffb020;
+  background: var(--panel-raised);
+}
+.improve-estimates p,
+.improve-apply-problems p {
+  margin: 0;
+}
+.improve-estimates ul,
+.improve-apply-problems ul {
+  margin: 2px 0;
+  padding-left: 18px;
+}
+.improve-apply-problems {
+  margin: 8px 0 4px;
+}
 .improve-checks {
   margin-top: 8px;
   color: var(--muted);

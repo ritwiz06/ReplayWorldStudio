@@ -30,6 +30,7 @@ from .models import (
     LanguageModelRef,
     NonEmptyText,
     ObjectKind,
+    PartId,
     PhotoMediaType,
     PositiveLength,
     Sha256Hex,
@@ -362,6 +363,27 @@ class ModelRevisionProposalRequest(ContractModel):
     instruction: RevisionText
 
 
+RevisionView = Literal["front-right", "rear-left", "low-front"]
+"""The review dialog's camera views: the standard view from the front-right above, the view
+from behind (rear-left, above) and a low view from the front (under tops and shelves)."""
+
+
+class RevisionProblem(ContractModel):
+    """An added part a viewer may not see as asked, found by the API's checks (GEN-05/06)."""
+
+    kind: Literal["hidden", "buried", "floating", "tiny", "unseen", "blends", "solid_slats"]
+    part_ids: list[PartId] = Field(min_length=1)
+    text: NonEmptyText
+
+
+class RevisionAdjustment(ContractModel):
+    """A visual choice the API made without asking, shown as such: never a measurement."""
+
+    kind: Literal["enlarged", "coloured_as_asked", "contrast"]
+    part_ids: list[PartId] = Field(min_length=1)
+    text: NonEmptyText
+
+
 class ModelRevisionProposalResult(ContractModel):
     """A proposed specification change, checked and fitted; nothing is built or stored.
 
@@ -378,9 +400,14 @@ class ModelRevisionProposalResult(ContractModel):
 
     ``problems`` (GEN-05) lists what a proposal draws but the user may not be able to see, as
     found by the API's checks and not fixed by the model's one corrected answer: an added part
-    hidden inside another, sunk into a part of the same material, without support, not visible
-    from the usual view, or slats drawn without gaps. The review shows them before Apply; a
-    proposal with problems is never described as fully shown.
+    hidden inside another, sunk into a part of the same material, without support, too small,
+    not visible from the usual view (for glass, not standing out from what is behind it), or
+    slats drawn without gaps. The review shows them before Apply; a proposal with problems is
+    never described as fully shown.
+
+    ``adjustments`` (GEN-06) lists the visual choices the API made without asking: a small
+    part enlarged to a visible size (an estimate), a colour shown as asked, a contrasting finish.
+    ``view`` (GEN-07) is the review camera that shows the requested additions best.
     """
 
     outcome: Literal["proposal", "unsupported", "already_satisfied"]
@@ -391,7 +418,9 @@ class ModelRevisionProposalResult(ContractModel):
     size_changed: bool
     not_represented: list[NonEmptyText]
     checks: list[NonEmptyText]
-    problems: list[NonEmptyText]
+    problems: list[RevisionProblem]
+    adjustments: list[RevisionAdjustment]
+    view: RevisionView
     provider: ProviderRun
 
     @model_validator(mode="after")
@@ -404,8 +433,8 @@ class ModelRevisionProposalResult(ContractModel):
             raise ValueError(
                 "'partial' marks exactly the proposals that leave requested features unshown"
             )
-        if self.problems and self.outcome != "proposal":
-            raise ValueError("only a proposal can carry 'problems'")
+        if (self.problems or self.adjustments) and self.outcome != "proposal":
+            raise ValueError("only a proposal can carry 'problems' or 'adjustments'")
         return self
 
 
