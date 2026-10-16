@@ -581,6 +581,8 @@ Append entries in chronological order. If a live repository session log already 
 - **Decisions:** ADR-046.
 - **Known limitations:** warnings are not re-checked after hand edits; a glass cylinder's side outline is not drawn; **independent review pending** (nobody contacted; no participants).
 - **Milestone status after this session:** M2 complete; GEN-09 in progress (engineering done, last criterion open); M3 in progress (IMG-01 done; IMG-02 next; IMG-03 open).
+- **Commits and CI:** `c8f2273` (GEN-09); CI run 38944397980 failed at type check: one mypy error in `tests/test_gen09_review.py`, written after the last local `pnpm check`. Fixed in `1309a75`; https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38944976643 green (both jobs).
+- **Time:** 17:05:42–18:04:17 UTC (58.6 min active; no provider calls).
 - **Next concrete task:** IMG-02 (Stage B), in a separate commit.
 
 ## Copy this template for a coding session
