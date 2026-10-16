@@ -679,3 +679,52 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - development: docs/assist-evaluation/gen-05.1.json;
   - tests: `services/api/tests/test_visibility.py`, `tests/test_gen05_evaluation.py`, `apps/web/e2e/improve.spec.ts`.
 - Revisit when: GEN-06 makes transparent parts recognisable and enforces visible sizes, a second preview angle is added, or a faster model is offered.
+
+### ADR-045 - Recognisable additions and a beginner-friendly review: viewer edges, composited checks, bounded estimates
+
+- Date: 2026-10-16. Status: adopted (GEN-06, GEN-07).
+- Context:
+  - GEN-05's frozen visual review (1.10) failed because glass and clear-plastic additions were invisible, small requested items stayed small, one elliptical colour phrase was missed, and parts placed behind or under something could not be seen in the single preview.
+  - The checks counted raw pixels, so they never noticed the glass problem.
+  - The generator writes GLB files whose sha256 is recorded in every saved project.
+- Options considered:
+  - change the generator's transparent materials (new GLB bytes, a new generator version, every new hash different);
+  - draw readable edges and composite transparency in the viewer, with the checks judging the composited picture (chosen);
+  - more preview angles behind an orbit control only (left to the user to find).
+- Decision:
+  - **Transparency in the viewer, not the file.**
+    - Glass and clear plastic get mid-tone blue edges (`#3a8fd6`, readable on light and dark backgrounds) and stop writing depth.
+    - Coincident faces resolve deterministically: a later part wins, with a capped polygon offset.
+    - Both happen after a model is verified, in the dialog preview and the placed scene alike. GLB bytes and every recorded sha256 are unchanged, so there is no generator version bump.
+  - **Versioned rebuilds.** `build_model` takes the generator version an asset records and refuses versions this build cannot reproduce; rebuilds pass the asset's own version. A future output change adds a version and keeps the old path.
+  - **Composited checks.** A transparent addition counts as shown from the mean of two shares: edges that show against what is actually behind them, and a surface that shifts its background noticeably (on the dialog's dark ground). Raw pixels never count as "clearly shown". Parts in a colour the user named that blend in are reported.
+  - **Bounded estimates, never measurements.**
+    - A requested small part with no size given is enlarged about its contact face to 5 % of the object's largest side, at most 12 cm and 3 times its size, only inside the recorded size, and listed as an estimate.
+    - A size the user states is never touched. Pieces of one requested assembly are left as drawn.
+    - The object's recorded dimensions never change here; a size change still needs the existing confirmation.
+  - **Contact.** Two parts touch within 60 % of the thinner part's smallest side, or 1 cm plus 0.6 % of the object's largest side if that is more, and at most 3 cm.
+  - **Colour clauses.**
+    - The verb carries across "and", whichever clause comes first.
+    - "red and white" gives one part two colours: one is drawn, the other listed.
+    - "dark blue fabric" draws blue and lists only the texture.
+    - Colour words such as "colour" or "finish" never name a part.
+  - **Review (GEN-07).**
+    - Three views (standard, from behind, low), one click each, shared by both previews. The dialog opens on the view the API judged to show the requested additions best, with "Back to the standard view".
+    - Parts a warning names are outlined in the preview only.
+    - Estimates are listed apart from measurements, and unresolved problems are repeated beside "Apply despite these problems".
+    - The response carries structured problems, adjustments and the first view (response-only; project schema unchanged).
+- Rationale: the change to what users see belongs to the viewer, where it costs no reproducibility. The checks must judge the same picture the user gets. Estimates must say they are estimates.
+- Consequences:
+  - On a light background (the GEN-05 fixed camera) glass still reads faintly; the dialog is dark.
+  - Highlights and edges are never written to a file or the project.
+  - The inspection harness (`e2e/inspect-revisions.spec.ts`) and the review journeys (`e2e/review.spec.ts`) cover old, photo-made and described models.
+- Evidence:
+  - `services/api/tests/test_recognisable.py`: 33 recorded GEN-04/05 models rebuild byte-identically; a project saved before GEN-06 validates and rebuilds;
+  - `test_visibility.py`;
+  - Vitest `views.test.ts`;
+  - `e2e/review.spec.ts`;
+  - docs/gen-07/inspect/*.jpg.
+- Revisit when: the generator gains real transparent-material output (then add a generator version), or a user study shows the views or estimates mislead.
+- **Outcome (GEN-08, 2026-10-16).** On the fresh frozen set (`51d052d`), every pre-registered revision gate passes on the default model (visual mean in the dialog 1.24 against 1.2), so M2 closes.
+  - The fixed GEN-05 camera, a different viewing method, scored 1.08 for context.
+  - Two results look done but are not, with no warning: a glass door over a solid body, and kept parts left floating. A transparent part's edge passing the check does not guarantee a person notices it on a light surface. These are GEN-09.

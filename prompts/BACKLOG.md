@@ -317,7 +317,7 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P0
 - Dependencies: GEN-05
-- Baseline status: planned (added 2026-10-16 after GEN-05 as the M2 corrective task; M2 closes when it passes)
+- Status: **done** (2026-10-16; `03448ed`, CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38862406247 green). Its own acceptance evidence exists, below. The fresh frozen evaluation is GEN-08's.
 - Done when:
   - Glass and clear plastic are recognisable in the preview: a visible edge, or a minimum opacity. This is a versioned generator change, and existing models stay rebuildable. The visibility check counts perceptual contrast, not raw pixels.
   - A requested small item with no size given is scaled deterministically up to a minimum visible size, and the change list says so.
@@ -326,13 +326,28 @@ After M1 the user approved guided creation and described custom objects as the n
   - The touch tolerance scales with part size.
   - A fresh frozen set (never the GEN-03, GEN-04 or GEN-05 sets) passes the same revision gates, including a visual mean ≥ 1.2.
 - Note (2026-10-16): from the GEN-05 report. Every automatic gate passes; the visual mean is 1.10 (t02 and t03 invisible transparent panels, e03 colour missed, p03 and p04 out of view, several small items).
-- Evidence: not recorded
+- Evidence (ADR-045):
+  - **Transparent parts.** Glass and clear plastic get mid-tone edges and stop writing depth, in the dialog preview and the placed scene (`apps/web/src/scene/modelLoader.ts`, after verification; GLB bytes unchanged). Coincident faces resolve deterministically.
+    - The checks judge the composited picture (edges against what is behind, and the surface shift), never raw pixels.
+    - Inspected in the browser from three views and in the placed scene: docs/gen-07/inspect (glass top, glass back panel, clear side panels; equivalents of GEN-05 t01–t03).
+  - **Small parts.** A requested part with no size given is enlarged about its contact face to 5 % of the object's largest side (at most 12 cm and 3×), only inside the recorded size, and listed as an estimate.
+    - A stated size is never changed, and assembly pieces are left as drawn.
+    - Examples: the GEN-05 pilot status light 2 → 6 cm; the GEN-05 v03 lamp 6 → 10 cm; the v01 button 9 → 11 cm.
+  - **Touch tolerance** depends on the parts: the GEN-05 o05 slats (1.65 cm from their posts) are no longer called floating, while the detached stack light (11 cm) still is.
+  - **Colour clauses** carry the verb across "and" (in either order); "red and white" gives one part two colours and lists the second; GEN-05 e03 now draws the blue armrests and lists only the fabric texture.
+  - **Versioning.** Rebuilds dispatch on the recorded generator version, and unknown versions are refused.
+    - All 33 models built in the GEN-04 and GEN-05 runs rebuild byte-identically.
+    - A project saved by the pre-GEN-06 code (fixtures/legacy/generated-0.7.0-pre-gen06.json, made from a `0849030` worktree) validates, rebuilds its missing file to its recorded hash and reopens, in pytest and in the browser.
+    - A new asset of the same specification has the same hash.
+  - **Tests:** `services/api/tests/test_recognisable.py` (reproducibility, composited glass, explicit and inferred sizes, assemblies, touch tolerance, colour clauses); `test_visibility.py`; Vitest `src/scene/views.test.ts`.
+  - **Development probes** (bounded, live; docs/assist-evaluation/gen-05.1.json): stop button and stack light fixed by the retry; the tray under the top opens on the low view and is honestly warned about; glass top clear; cushions recoloured for contrast.
+  - **Remaining visual failures:** on a light background glass still reads faintly (the dialog is dark); enlarged items stay modest by design (at most 12 cm); a part placed where the user asked but hidden from every view is warned about, not fixed.
 
 ### GEN-07 - Beginner-friendly revision review
 
 - Priority: P0
 - Dependencies: GEN-06
-- Baseline status: planned (added 2026-10-16; part of the M2 corrective work)
+- Status: **done** (2026-10-16; `03448ed`, CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38862406247 green).
 - Done when:
   - **Views.** The Improve dialog keeps a clear before/after comparison and the "Not clearly shown" honesty. A second camera angle (behind, below) is one click away when requested parts are hidden from the main view. The first view is chosen deterministically to show the requested change, and there is an obvious way back to the standard view.
   - **Highlights.** A part a warning refers to is highlighted in the preview only, never in the generated GLB or the project's data.
@@ -341,13 +356,25 @@ After M1 the user approved guided creation and described custom objects as the n
   - **Browser tests** cover an older saved model, a photo-made model and a described model: improve, inspect two angles, apply, undo, save, reopen, and rebuild a missing file.
   - **Inspection.** Screenshots at the desktop reference sizes and at 1280 px are inspected (keyboard access, modal layering, labels, clear and glass rendering, warning placement), and the issues found are fixed.
 - Acceptance evidence: browser tests; inspected screenshots in docs/gen-07/; scripted task steps (not a user study).
-- Evidence: not recorded
+- Evidence:
+  - **Views.** Standard, from behind and low, one click each, shared by both previews.
+    - The first view is chosen deterministically by the API to show the requested additions (for example the bracket behind the screen opens from behind, and the valve under the tank opens on the low view).
+    - "Back to the standard view" is one click.
+  - **Highlights.** Parts a warning names are outlined in orange in the preview only, with "Show it" per warning. The browser test checks that nothing of the preview (edges, outlines) reaches the saved version.
+  - **Plain explanations:** "Enlarged as an estimate (… visual choices, not measurements)", "Colours chosen by the app", "Partial: … Not shown, and not imitated", "Not clearly shown". The overall-size evidence is unchanged.
+  - **Informed Apply.** The unresolved problems are repeated beside "Apply despite these problems". Problems and visual choices are kept on the version's change list. Refusals, cancellation and already-satisfied answers still create no version (`e2e/improve.spec.ts`).
+  - **Browser tests:** `e2e/review.spec.ts` (3 journeys: the pre-GEN-06 saved model, a photo-made model, a described model). Each asks with the keyboard, inspects two angles, applies, undoes, redoes, saves, reopens and rebuilds a missing file to its recorded hash.
+  - **Inspection:** screenshots at 1440 × 900 (the desktop reference) and 1280 × 800 in docs/gen-07/inspect. Issues found and fixed:
+    - the placed-scene shot needed "frame selection";
+    - a recoloured armrest flickered on faces it shares with the seat (now resolved deterministically);
+    - the warning text now names the view that shows the part.
+  - **Scripted steps** (not a user study; no participants): to see an addition placed behind or under the object takes 0 extra actions (the dialog opens on that view), another angle 1 click, and back 1 click. Before GEN-07 it needed orbit dragging with no guidance.
 
 ### GEN-08 - Revision evaluation and the M2 decision
 
 - Priority: P0
 - Dependencies: GEN-06, GEN-07
-- Baseline status: planned (added 2026-10-16)
+- Status: **done** (2026-10-16; frozen set `51d052d`; results commit recorded in SESSION_LOG.md). **M2 closes**: every pre-registered gate passes, narrowly on the visual review.
 - Done when:
   - **Pilot.** The whole live → score → render → blind-review path is first run on a few new development cases, and tooling faults are fixed before anything is frozen.
   - **Frozen set.** A new set of at least 24 revisions, with its scoring rules, is committed before any live call. It covers transparent parts, small named additions, explicit colour phrases, occluded placements, open structures, partial requests, photo-made objects and stated dimensions.
@@ -356,6 +383,36 @@ After M1 the user approved guided creation and described custom objects as the n
   - **Blind review and report.** Scored and reviewed blind before the key is opened. Reported against the established revision gates, safety and provenance checks.
   - **The M2 decision**, documented: M2 closes only if every applicable gate passes.
 - Acceptance evidence: docs/assist-evaluation/gen-08/ (criteria committed before the run, results, review, scores, report).
+- Evidence (docs/assist-evaluation/gen-08/report.md):
+  - **Pilot.** Three new development cases ran through the whole path before the freeze, and two renderer faults were fixed (a moiré grid; downscaled sheets).
+  - **Frozen set** (`51d052d`, before any live call): 26 cases on targets no development case touched (4 transparent, 4 small additions, 4 colour phrases, 4 occluded, 3 open, 3 partial, 3 stated sizes, 1 already satisfied; 13 photo-made). The rules for provider errors (wrong outcome; 0 in the visual mean) and for warned problems (no change to the visual score) were fixed in advance.
+  - **Run:** one sequential pass, 15.0 min, 26 requests, 32 provider calls, 6 shared retries, none cut by the budget, host kept awake, no run faults.
+  - **Gates:**
+    - outcomes 26/26;
+    - change 25/25;
+    - size (envelope and stated part sizes) 25/25;
+    - open 3/3;
+    - listed 5/5;
+    - median 29.5 s (p95 83.0 s);
+    - timeouts 0/26;
+    - safety and provenance clean;
+    - **visual mean, dialog method, 1.24 ≥ 1.2** (2: 10, 1: 11, 0: 4).
+  - **Context, a different method:** the fixed GEN-05 camera, 1.08.
+  - **Honesty:** 6 of the 15 weak sheets carried a warning. Misleading and unwarned: t2 (a glass door over the still-solid body) and p3 (kept panel and light left floating).
+  - **Beginner corrections without a parts specification:** colour per group, overall sizes, rephrasing or starting over, the three views, scope. Moving or removing one part still needs the parts list.
+
+### GEN-09 - Misleading-but-unwarned revisions
+
+- Priority: P1
+- Dependencies: GEN-08
+- Baseline status: planned (added 2026-10-16 after GEN-08; quality work after M2)
+- Done when:
+  - A transparent part in front of a solid part of the same object is warned about.
+  - Kept parts left floating by a revision, and unrelated parts changed by fitting or overlap separation, are warned about.
+  - Edges on light surfaces are made readable, so the check's edge threshold matches what people notice.
+  - Simple one-part actions (remove, move, resize) are available without the parts list.
+  - The visual review is repeated by an independent reviewer, or as a small user study, on a fresh set.
+- Note (2026-10-16): from the GEN-08 report. t2 (glass door over a solid body) and p3 (floating kept panel) looked done but were not, and carried no warning; 9 of 15 weak sheets were unwarned.
 - Evidence: not recorded
 
 ## M3 - Image to editable world

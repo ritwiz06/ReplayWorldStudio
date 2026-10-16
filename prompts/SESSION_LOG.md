@@ -509,6 +509,46 @@ Append entries in chronological order. If a live repository session log already 
 - **Milestone status after this session:** M2 in progress (GEN-01..03 done; GEN-04 and GEN-05 closed with their last criterion not met; GEN-06 open). M3 in progress.
 - **Next concrete task:** GEN-06, recognisable additions in the preview (see BACKLOG.md).
 
+### 2026-10-16 - GEN-06 to GEN-08: recognisable additions, beginner review, evaluation; M2 complete
+
+- **Active milestone / issues:** M2; GEN-06, GEN-07, GEN-08 (GEN-07 and GEN-08 added to the backlog at the start).
+- **Starting commit:** `0849030`.
+- **Work completed.**
+  - **Implementation `03448ed`** (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38862406247 green):
+    - viewer edges and compositing for transparent parts (GLB bytes unchanged), and deterministic coincident faces;
+    - composited visibility checks;
+    - bounded estimate enlargement;
+    - per-pair contact;
+    - colour clauses;
+    - generator-version dispatch for rebuilds;
+    - review views, outlines, estimates listed apart, and the issues beside Apply;
+    - the legacy fixture made from a pre-GEN-06 worktree;
+    - inspection harness and review journeys.
+  - **Freeze `51d052d`:** pilot (3 cases; 2 renderer faults fixed), tooling, and the 26-case frozen set with criteria, before any live call.
+  - **Results commit:** the run, the two blind reviews (dialog method, gated; fixed GEN-05 camera, context), scores, report, renders and records.
+- **Commands and outcomes.**
+  - `pnpm check` exit 0 (pytest 706; Vitest 152); the full Playwright suite 29 passed (the 15 inspection runs skip without `INSPECT_OUT`).
+  - **Live calls:**
+    - two bounded development probes of 5 cases: the first lost its results to a serialisation fault, and the repeat recorded them;
+    - the pilot: 3 cases;
+    - **the frozen run:** 26 requests and 32 provider calls, 06:56:49–07:11:51 UTC, no run faults.
+  - `scripts/score_gen08.py`:
+    - outcomes 26/26, change 25/25, size 25/25, open 3/3, listed 5/5;
+    - median 29.5 s (p95 83.0 s), timeouts 0/26, safety clean;
+    - **visual mean, dialog method, 1.24 ≥ 1.2**; the fixed camera 1.08 for context.
+- **Time:** about 2 h 24 min elapsed (05:41–08:06 UTC).
+  - Provider waiting was 23.7 min: 8.7 min of probes and pilot, waited out; 15.0 min of the frozen run, spent writing the records.
+  - Active work was about 2 h 15 min.
+- **Visual evidence:** docs/gen-07/inspect/*.jpg (1440 × 900 and 1280 × 800); docs/assist-evaluation/gen-08/renders/{dialog,fixed}/.
+- **Decisions:** ADR-045 and its GEN-08 outcome.
+- **Known limitations.**
+  - The visual margin is 0.04, and the reviewer is not independent.
+  - Unwarned misleading results remain (t2 glass door over a solid body; p3 floating kept parts).
+  - Thin edges are weak on light surfaces.
+  - Fixing one part needs the parts list.
+- **Milestone status after this session:** **M2 complete.** M3 in progress (IMG-01 done; IMG-02, IMG-03 open).
+- **Next concrete task:** GEN-09 (misleading-but-unwarned revisions), then IMG-02.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

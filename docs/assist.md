@@ -401,3 +401,80 @@ Why the visual review fails:
   preview.
 
 M2 stays open; GEN-06 is next.
+
+## Recognisable additions and an easier review (GEN-06, GEN-07)
+
+[ADR-045](../prompts/DECISIONS.md)
+
+**What you see.**
+
+- **Glass and clear plastic** are drawn with thin blue edges and stay see-through, in the Improve
+  dialog and in the placed scene. Only the display changes: the model files and their recorded
+  sha256 do not.
+- **Flush faces of two differently coloured parts** (an armrest on a seat) no longer flicker.
+
+**The review dialog.**
+
+- Both previews share one camera, with three views one click away: **Standard view**, **From
+  behind** and **Low view**.
+- The dialog opens on the view that shows what you asked for (a bracket behind a screen opens
+  from behind), and **Back to the standard view** returns.
+- A part a warning refers to is outlined in orange (preview only), and each warning has **Show
+  it**.
+- The proposal says separately:
+  - what was drawn;
+  - what was **enlarged as an estimate** (no size was given, so this is a visual choice, not a
+    measurement; the object's size is unchanged);
+  - which colours the app chose;
+  - what cannot be shown;
+  - what is **not clearly shown**.
+- Unresolved problems are repeated next to **Apply despite these problems**, and are kept on the
+  new version's change list if you apply.
+
+**What the checks do now.**
+
+- **Glass and clear plastic** count as shown only in the composited picture, from their edges
+  against what is behind them and their tint over it, never from raw pixels.
+- **A small part you asked for without a size** (a status light) is enlarged about the face that
+  holds it to 5 % of the object's largest side, at most 12 cm and 3 times its size, and only
+  inside the object's recorded size.
+  - A size you give ("a 4 cm light") is never changed.
+  - Pieces of one item (a lamp's arm and head) are left as drawn.
+- **Touching** depends on the parts: a slat 1.6 cm from its post is attached; a light 11 cm above
+  its machine floats.
+- **Colour phrases** work across "and": "make the legs black and the armrests dark blue fabric"
+  draws blue armrests and lists only the fabric texture; "paint the frame red and white" draws
+  red and lists white.
+
+**Reproducibility.**
+
+- Rebuilds use the generator version each asset records; an unknown version is refused.
+- All 33 models built in the GEN-04 and GEN-05 evaluations rebuild byte-identically.
+- A project saved before GEN-06 (`fixtures/legacy/generated-0.7.0-pre-gen06.json`) validates,
+  rebuilds its missing file to its recorded hash and reopens.
+
+Screenshots: [docs/gen-07/inspect](gen-07/inspect/), at 1440 × 900 and 1280 × 800.
+
+**Evaluation (GEN-08)** ([report](assist-evaluation/gen-08/report.md)). A fresh set of 26 cases
+was frozen in `51d052d`, then run once (15 min, 32 provider calls, no run faults).
+
+| Measure | Result | Gate |
+| --- | --- | --- |
+| Outcomes | 26/26 ✓ | ≥ 85 % |
+| Change present | 25/25 ✓ | ≥ 75 % |
+| Size, including stated part sizes | 25/25 ✓ | ≥ 90 % |
+| Open | 3/3 ✓ | ≥ 90 % |
+| Listed | 5/5 ✓ | ≥ 80 % |
+| Median wait | 29.5 s ✓ | ≤ 60 s |
+| Timeouts | 0/26 ✓ | ≤ 5 % |
+| Visual mean, as the dialog shows it | **1.24 ✓** | ≥ 1.2 |
+
+**M2 is complete.** For context only, the fixed GEN-05 camera, a different viewing method, scored
+1.08.
+
+Still misleading and unwarned:
+
+- a glass door placed over a body that is still solid;
+- kept parts left floating.
+
+Thin glass edges are weak on light surfaces. These are GEN-09.

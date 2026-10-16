@@ -1,0 +1,312 @@
+{
+ "reviewer": "Claude (the assistant running this evaluation), not a study participant",
+ "viewing_method": "dialog",
+ "method": "GEN-08 dialog method (render-gen08.ts 'dialog'): numbered sheets in a shuffled order, each with the instruction and before/after renders as the updated Improve dialog shows them on opening; scored from the pictures before sheet-key-dialog.json, the fixed-camera sheets, the automatic scores or any answer text were opened. 2 = the requested drawable change is clearly visible and right; 1 = partly; 0 = missing, hidden or wrong. An orange outline around a part that cannot be seen does not count as seeing it.",
+ "sheets": {
+  "Sheet 01": {
+   "score": 1,
+   "corrections": 1,
+   "note": "Open frame of posts and rails shown, but the control panel and stack light now float inside it."
+  },
+  "Sheet 02": {
+   "score": 0,
+   "corrections": 1,
+   "note": "Only orange outlines where wheels should be; no wheels can be seen."
+  },
+  "Sheet 03": {
+   "score": 1,
+   "corrections": 1,
+   "note": "A small light in an outline next to the existing one; small."
+  },
+  "Sheet 04": {
+   "score": 1,
+   "corrections": 1,
+   "note": "A dark box under the desk; small but there."
+  },
+  "Sheet 05": {
+   "score": 1,
+   "corrections": 1,
+   "note": "A small dark square on the tank side; readable only up close."
+  },
+  "Sheet 06": {
+   "score": 2,
+   "corrections": 0,
+   "note": "A red stop button clearly on the front."
+  },
+  "Sheet 07": {
+   "score": 1,
+   "corrections": 1,
+   "note": "The frame is red, but the screen face turned white; not the frame in red and white."
+  },
+  "Sheet 08": {
+   "score": 1,
+   "corrections": 1,
+   "note": "A tiny pale shape on the desk; a lamp only up close."
+  },
+  "Sheet 09": {
+   "score": 0,
+   "corrections": 1,
+   "note": "Only an orange outline at the front base; no light can be seen."
+  },
+  "Sheet 10": {
+   "score": 2,
+   "corrections": 0,
+   "note": "An open shelf with three shelves and no door."
+  },
+  "Sheet 11": {
+   "score": 1,
+   "corrections": 1,
+   "note": "A dark pot on the top shelf, but a lower shelf now has a corner missing."
+  },
+  "Sheet 12": {
+   "score": 2,
+   "corrections": 0,
+   "note": "A red cushion clearly on the seat."
+  },
+  "Sheet 13": {
+   "score": 1,
+   "corrections": 1,
+   "note": "A small dark box with an outline on the back of the screen."
+  },
+  "Sheet 14": {
+   "score": 2,
+   "corrections": 0,
+   "note": "White legs and a green seat."
+  },
+  "Sheet 15": {
+   "score": 2,
+   "corrections": 0,
+   "note": "A blue motor box clearly at one end."
+  },
+  "Sheet 16": {
+   "score": 0,
+   "corrections": 1,
+   "note": "The door still looks solid; no glass can be seen."
+  },
+  "Sheet 17": {
+   "score": 2,
+   "corrections": 0,
+   "note": "Blue cartons on a black pallet."
+  },
+  "Sheet 18": {
+   "score": 2,
+   "corrections": 0,
+   "note": "Four posts with top and bottom panels, open."
+  },
+  "Sheet 19": {
+   "score": 2,
+   "corrections": 0,
+   "note": "A red button clearly on the front edge."
+  },
+  "Sheet 20": {
+   "score": 1,
+   "corrections": 1,
+   "note": "A dark box behind the machine, outlined; small."
+  },
+  "Sheet 21": {
+   "score": 1,
+   "corrections": 1,
+   "note": "The drawer unit changed slightly; a new drawer is hard to make out."
+  },
+  "Sheet 22": {
+   "score": 2,
+   "corrections": 0,
+   "note": "A clear glass panel with readable edges on the back edge."
+  },
+  "Sheet 23": {
+   "score": 1,
+   "corrections": 1,
+   "note": "Thin blue edge lines on the front; glass doors only faintly readable."
+  },
+  "Sheet 24": {
+   "score": 0,
+   "corrections": 1,
+   "note": "An outline under the tank, but no valve can be seen inside it."
+  },
+  "Sheet 25": {
+   "score": 2,
+   "corrections": 0,
+   "note": "Clear guards with readable edges along both sides."
+  }
+ },
+ "model": "qwen3-235b-a22b-instruct-2507",
+ "key": {
+  "Sheet 01": "p3",
+  "Sheet 02": "q1",
+  "Sheet 03": "d1",
+  "Sheet 04": "o2",
+  "Sheet 05": "s4",
+  "Sheet 06": "s2",
+  "Sheet 07": "c3",
+  "Sheet 08": "s3",
+  "Sheet 09": "s1",
+  "Sheet 10": "p1",
+  "Sheet 11": "d2",
+  "Sheet 12": "c4",
+  "Sheet 13": "o4",
+  "Sheet 14": "c1",
+  "Sheet 15": "q2",
+  "Sheet 16": "t2",
+  "Sheet 17": "c2",
+  "Sheet 18": "p2",
+  "Sheet 19": "d3",
+  "Sheet 20": "o1",
+  "Sheet 21": "q3",
+  "Sheet 22": "t4",
+  "Sheet 23": "t1",
+  "Sheet 24": "o3",
+  "Sheet 25": "t3"
+ },
+ "cases": {
+  "p3": {
+   "sheet": "Sheet 01",
+   "score": 1,
+   "corrections": 1,
+   "note": "Open frame of posts and rails shown, but the control panel and stack light now float inside it."
+  },
+  "q1": {
+   "sheet": "Sheet 02",
+   "score": 0,
+   "corrections": 1,
+   "note": "Only orange outlines where wheels should be; no wheels can be seen."
+  },
+  "d1": {
+   "sheet": "Sheet 03",
+   "score": 1,
+   "corrections": 1,
+   "note": "A small light in an outline next to the existing one; small."
+  },
+  "o2": {
+   "sheet": "Sheet 04",
+   "score": 1,
+   "corrections": 1,
+   "note": "A dark box under the desk; small but there."
+  },
+  "s4": {
+   "sheet": "Sheet 05",
+   "score": 1,
+   "corrections": 1,
+   "note": "A small dark square on the tank side; readable only up close."
+  },
+  "s2": {
+   "sheet": "Sheet 06",
+   "score": 2,
+   "corrections": 0,
+   "note": "A red stop button clearly on the front."
+  },
+  "c3": {
+   "sheet": "Sheet 07",
+   "score": 1,
+   "corrections": 1,
+   "note": "The frame is red, but the screen face turned white; not the frame in red and white."
+  },
+  "s3": {
+   "sheet": "Sheet 08",
+   "score": 1,
+   "corrections": 1,
+   "note": "A tiny pale shape on the desk; a lamp only up close."
+  },
+  "s1": {
+   "sheet": "Sheet 09",
+   "score": 0,
+   "corrections": 1,
+   "note": "Only an orange outline at the front base; no light can be seen."
+  },
+  "p1": {
+   "sheet": "Sheet 10",
+   "score": 2,
+   "corrections": 0,
+   "note": "An open shelf with three shelves and no door."
+  },
+  "d2": {
+   "sheet": "Sheet 11",
+   "score": 1,
+   "corrections": 1,
+   "note": "A dark pot on the top shelf, but a lower shelf now has a corner missing."
+  },
+  "c4": {
+   "sheet": "Sheet 12",
+   "score": 2,
+   "corrections": 0,
+   "note": "A red cushion clearly on the seat."
+  },
+  "o4": {
+   "sheet": "Sheet 13",
+   "score": 1,
+   "corrections": 1,
+   "note": "A small dark box with an outline on the back of the screen."
+  },
+  "c1": {
+   "sheet": "Sheet 14",
+   "score": 2,
+   "corrections": 0,
+   "note": "White legs and a green seat."
+  },
+  "q2": {
+   "sheet": "Sheet 15",
+   "score": 2,
+   "corrections": 0,
+   "note": "A blue motor box clearly at one end."
+  },
+  "t2": {
+   "sheet": "Sheet 16",
+   "score": 0,
+   "corrections": 1,
+   "note": "The door still looks solid; no glass can be seen."
+  },
+  "c2": {
+   "sheet": "Sheet 17",
+   "score": 2,
+   "corrections": 0,
+   "note": "Blue cartons on a black pallet."
+  },
+  "p2": {
+   "sheet": "Sheet 18",
+   "score": 2,
+   "corrections": 0,
+   "note": "Four posts with top and bottom panels, open."
+  },
+  "d3": {
+   "sheet": "Sheet 19",
+   "score": 2,
+   "corrections": 0,
+   "note": "A red button clearly on the front edge."
+  },
+  "o1": {
+   "sheet": "Sheet 20",
+   "score": 1,
+   "corrections": 1,
+   "note": "A dark box behind the machine, outlined; small."
+  },
+  "q3": {
+   "sheet": "Sheet 21",
+   "score": 1,
+   "corrections": 1,
+   "note": "The drawer unit changed slightly; a new drawer is hard to make out."
+  },
+  "t4": {
+   "sheet": "Sheet 22",
+   "score": 2,
+   "corrections": 0,
+   "note": "A clear glass panel with readable edges on the back edge."
+  },
+  "t1": {
+   "sheet": "Sheet 23",
+   "score": 1,
+   "corrections": 1,
+   "note": "Thin blue edge lines on the front; glass doors only faintly readable."
+  },
+  "o3": {
+   "sheet": "Sheet 24",
+   "score": 0,
+   "corrections": 1,
+   "note": "An outline under the tank, but no valve can be seen inside it."
+  },
+  "t3": {
+   "sheet": "Sheet 25",
+   "score": 2,
+   "corrections": 0,
+   "note": "Clear guards with readable edges along both sides."
+  }
+ }
+}
