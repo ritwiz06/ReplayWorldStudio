@@ -1,0 +1,460 @@
+{
+ "service": "ASU Voyager",
+ "base_url": "https://openai.rc.asu.edu/v1",
+ "model": "llama4-scout-17b",
+ "prompt_version": "img-01.2",
+ "settings": {
+  "temperature": 0,
+  "schema_guided": true,
+  "timeout_s": 150.0,
+  "validation_retries": 1
+ },
+ "split": null,
+ "awake": "caffeinate -i -w <pid> (macOS idle and system sleep prevented)",
+ "started_at": "2026-10-16T23:14:31+00:00",
+ "rows": [
+  {
+   "case": "office-a",
+   "sha256": "b919956a01b6c1575ce6304e1a9b8260b96fb26c8c169fc6b1d57ec41c05cd70",
+   "started_at": "2026-10-16T23:14:31+00:00",
+   "result": {
+    "outcome": "proposal",
+    "proposal": {
+     "objects": [
+      {
+       "id": "obs-1",
+       "label": "table",
+       "category": "table",
+       "template": "table",
+       "material": "wood",
+       "box": {
+        "left": 0.34,
+        "top": 0.544,
+        "right": 0.51,
+        "bottom": 0.704
+       },
+       "floor_contact": {
+        "u": 0.425,
+        "v": 0.704
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "toward_camera",
+       "size_guess_m": {
+        "x": 1.7,
+        "y": 0.8,
+        "z": 0.7
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-2",
+       "label": "chair",
+       "category": "chair",
+       "template": "chair",
+       "material": "fabric_grey",
+       "box": {
+        "left": 0.35,
+        "top": 0.576,
+        "right": 0.43,
+        "bottom": 0.744
+       },
+       "floor_contact": {
+        "u": 0.39,
+        "v": 0.744
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "toward_camera",
+       "size_guess_m": {
+        "x": 0.6,
+        "y": 0.9,
+        "z": 0.6
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-3",
+       "label": "chair",
+       "category": "chair",
+       "template": "chair",
+       "material": "fabric_grey",
+       "box": {
+        "left": 0.51,
+        "top": 0.576,
+        "right": 0.59,
+        "bottom": 0.744
+       },
+       "floor_contact": {
+        "u": 0.55,
+        "v": 0.744
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "toward_camera",
+       "size_guess_m": {
+        "x": 0.6,
+        "y": 0.9,
+        "z": 0.6
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-4",
+       "label": "shelf",
+       "category": "shelf",
+       "template": "shelf",
+       "material": "steel_dark",
+       "box": {
+        "left": 0.68,
+        "top": 0.4,
+        "right": 0.78,
+        "bottom": 0.616
+       },
+       "floor_contact": {
+        "u": 0.73,
+        "v": 0.616
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "toward_camera",
+       "size_guess_m": {
+        "x": 1.0,
+        "y": 1.6,
+        "z": 0.4
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-5",
+       "label": "table",
+       "category": "table",
+       "template": "table",
+       "material": "steel_dark",
+       "box": {
+        "left": 0.76,
+        "top": 0.544,
+        "right": 0.84,
+        "bottom": 0.704
+       },
+       "floor_contact": {
+        "u": 0.8,
+        "v": 0.704
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "toward_camera",
+       "size_guess_m": {
+        "x": 0.8,
+        "y": 0.8,
+        "z": 0.6
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-6",
+       "label": "chair",
+       "category": "chair",
+       "template": "chair",
+       "material": "fabric_grey",
+       "box": {
+        "left": 0.77,
+        "top": 0.576,
+        "right": 0.83,
+        "bottom": 0.744
+       },
+       "floor_contact": {
+        "u": 0.8,
+        "v": 0.744
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "toward_camera",
+       "size_guess_m": {
+        "x": 0.6,
+        "y": 0.9,
+        "z": 0.6
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-7",
+       "label": "cabinet",
+       "category": "cabinet",
+       "template": "cabinet",
+       "material": "steel_dark",
+       "box": {
+        "left": 0.35,
+        "top": 0.416,
+        "right": 0.43,
+        "bottom": 0.56
+       },
+       "floor_contact": {
+        "u": 0.39,
+        "v": 0.56
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "toward_camera",
+       "size_guess_m": {
+        "x": 0.8,
+        "y": 1.4,
+        "z": 0.4
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-8",
+       "label": "cabinet",
+       "category": "cabinet",
+       "template": "cabinet",
+       "material": "steel_dark",
+       "box": {
+        "left": 0.44,
+        "top": 0.416,
+        "right": 0.52,
+        "bottom": 0.56
+       },
+       "floor_contact": {
+        "u": 0.48,
+        "v": 0.56
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "toward_camera",
+       "size_guess_m": {
+        "x": 0.8,
+        "y": 1.4,
+        "z": 0.4
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-9",
+       "label": "plant",
+       "category": "plant",
+       "template": "plant",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.9,
+        "top": 0.488,
+        "right": 0.98,
+        "bottom": 0.624
+       },
+       "floor_contact": {
+        "u": 0.94,
+        "v": 0.624
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "toward_camera",
+       "size_guess_m": {
+        "x": 0.8,
+        "y": 0.8,
+        "z": 0.4
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-10",
+       "label": "monitor",
+       "category": "monitor",
+       "template": "screen",
+       "material": "plastic_black",
+       "box": {
+        "left": 0.53,
+        "top": 0.432,
+        "right": 0.61,
+        "bottom": 0.488
+       },
+       "floor_contact": null,
+       "contact_basis": null,
+       "on_floor": false,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "toward_camera",
+       "size_guess_m": {
+        "x": 0.8,
+        "y": 0.6,
+        "z": 0.4
+       },
+       "suggest_accept": false,
+       "notes": [
+        "Stands on another object: not placed on the floor."
+       ]
+      }
+     ],
+     "floor_rectangles": [
+      {
+       "label": "pink rug",
+       "corners": [
+        {
+         "u": 0.096,
+         "v": 0.872
+        },
+        {
+         "u": 0.096,
+         "v": 0.876
+        },
+        {
+         "u": 0.804,
+         "v": 0.876
+        },
+        {
+         "u": 0.804,
+         "v": 0.872
+        }
+       ]
+      }
+     ],
+     "visible_text": []
+    },
+    "message": null,
+    "checks": [
+     "Floor rectangles from the model are rough suggestions: place the corners on the real feature and enter its size."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "llama4-scout-17b",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 23737
+    }
+   },
+   "error": null,
+   "wall_s": 23.75,
+   "clock_s": 23.75,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 23.74,
+     "answer": "{\"floor_rectangles\": [\n  {\n    \"corners\": [\n      [\n        96,\n        872\n      ],\n      [\n        96,\n        876\n      ],\n      [\n        804,\n        876\n      ],\n      [\n        804,\n        872\n      ]\n    ]\n  ,\n  \"label\": \"pink rug\"\n} \n], \"objects\": [\n  {\n    \"box\": [\n      340,\n      544,\n      510,\n      704\n    ],\n    \"category\": \"table\",\n    \"facing\": \"toward_camera\",\n    \"floor_contact\": [\n      425,\n      624\n    ],\n    \"label\": \"table\",\n    \"material\": \"wood\",\n    \"size_m\": [\n      1.7,\n      0.8,\n      0.7\n    ]\n  ,\n  \"support\": \"floor\"\n  ,\n  \"visibility\":  \"full\"\n} ,\n  {\n    \"box\": [\n      350,\n      576,\n      430,\n      744\n    ],\n    \"category\": \"chair\",\n    \"facing\": \"toward_camera\",\n    \"floor_contact\": [\n      390,\n      680\n    ],\n    \"label\": \"chair\",\n    \"material\": \"fabric_grey\",\n    \"size_m\": [\n      0.6,\n      0.9,\n      0.6\n    ]\n  ,\n  \"support\": \"floor\"\n  ,\n  \"visibility\":  \"full\"\n} ,\n  {\n    \"box\": [\n      510,\n      576,\n      590,\n      744\n    ],\n    \"category\": \"chair\",\n    \"facing\": \"toward_camera\",\n    \"floor_contact\": [\n      550,\n      680\n    ],\n    \"label\": \"chair\",\n    \"material\": \"fabric_grey\",\n    \"size_m\": [\n      0.6,\n      0.9,\n      0.6\n    ]\n  ,\n  \"support\": \"floor\"\n  ,\n  \"visibility\":  \"full\"\n} ,\n  {\n    \"box\": [\n      680,\n      400,\n      780,\n      616\n    ],\n    \"category\": \"shelf\",\n    \"facing\": \"toward_camera\",\n    \"floor_contact\": [\n      730,\n      560\n    ],\n    \"label\": \"shelf\",\n    \"material\": \"steel_dark\",\n    \"size_m\": [\n      1,\n      1.6,\n      0.4\n    ]\n  ,\n  \"support\": \"floor\"\n  ,\n  \"visibility\":  \"full\"\n} ,\n  {\n    \"box\": [\n      760,\n      544,\n      840,\n      704\n    ],\n    \"category\": \"table\",\n    \"facing\": \"toward_camera\",\n    \"floor_contact\": [\n      800,\n      624\n    ],\n    \"label\": \"table\",\n    \"material\": \"steel_dark\",\n    \"size_m\": [\n      0.8,\n      0.8,\n      0.6\n    ]\n  ,\n  \"support\": \"floor\"\n  ,\n  \"visibility\":  \"full\"\n} ,\n  {\n    \"box\": [\n      770,\n      576,\n      830,\n      744\n    ],\n    \"category\": \"chair\",\n    \"facing\": \"toward_camera\",\n    \"floor_contact\": [\n      800,\n      680\n    ],\n    \"label\": \"chair\",\n    \"material\": \"fabric_grey\",\n    \"size_m\": [\n      0.6,\n      0.9,\n      0.6\n    ]\n  ,\n  \"support\": \"floor\"\n  ,\n  \"visibility\":  \"full\"\n} ,\n  {\n    \"box\": [\n      350,\n      416,\n      430,\n      560\n    ],\n    \"category\": \"cabinet\",\n    \"facing\": \"toward_camera\",\n    \"floor_contact\": [\n      390,\n      480\n    ],\n    \"label\": \"cabinet\",\n    \"material\": \"steel_dark\",\n    \"size_m\": [\n      0.8,\n      1.4,\n      0.4\n    ]\n  ,\n  \"support\": \"floor\"\n  ,\n  \"visibility\":  \"full\"\n} ,\n  {\n    \"box\": [\n      440,\n      416,\n      520,\n      560\n    ],\n    \"category\": \"cabinet\",\n    \"facing\": \"toward_camera\",\n    \"floor_contact\": [\n      480,\n      480\n    ],\n    \"label\": \"cabinet\",\n    \"material\": \"steel_dark\",\n    \"size_m\": [\n      0.8,\n      1.4,\n      0.4\n    ]\n  ,\n  \"support\": \"floor\"\n  ,\n  \"visibility\":  \"full\"\n} ,\n  {\n    \"box\": [\n      900,\n      488,\n      980,\n      624\n    ],\n    \"category\": \"plant\",\n    \"facing\": \"toward_camera\",\n    \"floor_contact\": [\n      940,\n      560\n    ],\n    \"label\": \"plant\",\n    \"material\": \"plastic_grey\",\n    \"size_m\": [\n      0.8,\n      0.8,\n      0.4\n    ]\n  ,\n  \"support\": \"floor\"\n  ,\n  \"visibility\":  \"full\"\n} ,\n  {\n    \"box\": [\n      530,\n      432,\n      610,\n      488\n    ],\n    \"category\": \"monitor\",\n    \"facing\": \"toward_camera\",\n    \"floor_contact\": null,\n    \"label\": \"monitor\",\n    \"material\": \"plastic_black\",\n    \"size_m\": [\n      0.8,\n      0.6,\n      0.4\n    ]\n  ,\n  \"support\": \"another_object\"\n  ,\n  \"visibility\":  \"full\"\n} \n],\n\"scene\": \"room_or_work_area\",\n\"visible_text\": [\n  \n] \n}"
+    }
+   ]
+  },
+  {
+   "case": "store-a",
+   "sha256": "1c577fbfc6bd1cbf7cd7b5004f073f00b109e107fd7b21013e53da36e371c504",
+   "started_at": "2026-10-16T23:14:55+00:00",
+   "result": {
+    "outcome": "proposal",
+    "proposal": {
+     "objects": [
+      {
+       "id": "obs-1",
+       "label": "blue and orange shelf",
+       "category": "shelf",
+       "template": "shelf",
+       "material": "wood",
+       "box": {
+        "left": 0.086,
+        "top": 0.465,
+        "right": 0.184,
+        "bottom": 0.6
+       },
+       "floor_contact": {
+        "u": 0.135,
+        "v": 0.6
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 2.0,
+        "y": 2.0,
+        "z": 0.8
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-2",
+       "label": "pallet with boxes",
+       "category": "pallet",
+       "template": "pallet",
+       "material": "wood",
+       "box": {
+        "left": 0.58,
+        "top": 0.521,
+        "right": 0.78,
+        "bottom": 0.654
+       },
+       "floor_contact": {
+        "u": 0.68,
+        "v": 0.654
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 2.0,
+        "y": 1.5,
+        "z": 1.5
+       },
+       "suggest_accept": true,
+       "notes": []
+      }
+     ],
+     "floor_rectangles": [],
+     "visible_text": []
+    },
+    "message": null,
+    "checks": [
+     "5 duplicate detection(s) were merged."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "llama4-scout-17b",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 12578
+    }
+   },
+   "error": null,
+   "wall_s": 12.58,
+   "clock_s": 12.58,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 12.58,
+     "answer": "{\"floor_rectangles\": [], \"objects\": [{\"box\": [86, 465, 184, 600], \"category\": \"shelf\", \"facing\": \"right\", \"floor_contact\": [135, 532], \"label\": \"blue and orange shelf\", \"material\": \"wood\", \"size_m\": [2, 2, 0.8], \"support\": \"floor\", \"visibility\":  \"full\"}, {\"box\": [86, 465, 184, 600], \"category\": \"shelf\", \"facing\": \"right\", \"floor_contact\": [135, 532], \"label\": \"blue and orange shelf\", \"material\": \"wood\", \"size_m\": [2, 2, 0.8], \"support\": \"floor\", \"visibility\":  \"full\"}, {\"box\": [86, 465, 184, 600], \"category\": \"shelf\", \"facing\": \"right\", \"floor_contact\": [135, 532], \"label\": \"blue and orange shelf\", \"material\": \"wood\", \"size_m\": [2, 2, 0.8], \"support\": \"floor\", \"visibility\":  \"full\"}, {\"box\": [580, 521, 780, 654], \"category\": \"pallet\", \"facing\": \"right\", \"floor_contact\": [680, 587], \"label\": \"pallet with boxes\", \"material\": \"wood\", \"size_m\": [2, 1.5, 1.5], \"support\": \"floor\", \"visibility\":  \"full\"}, {\"box\": [86, 465, 184, 600], \"category\": \"shelf\", \"facing\": \"right\", \"floor_contact\": [135, 532], \"label\": \"blue and orange shelf\", \"material\": \"wood\", \"size_m\": [2, 2, 0.8], \"support\": \"floor\", \"visibility\":  \"full\"}, {\"box\": [86, 465, 184, 600], \"category\": \"shelf\", \"facing\": \"right\", \"floor_contact\": [135, 532], \"label\": \"blue and orange shelf\", \"material\": \"wood\", \"size_m\": [2, 2, 0.8], \"support\": \"floor\", \"visibility\":  \"full\"}, {\"box\": [580, 521, 780, 654], \"category\": \"pallet\", \"facing\": \"right\", \"floor_contact\": [680, 587], \"label\": \"pallet with boxes\", \"material\": \"wood\", \"size_m\": [2, 1.5, 1.5], \"support\": \"floor\", \"visibility\":  \"full\"}], \"scene\": \"room_or_work_area\", \"visible_text\": []}"
+    }
+   ]
+  }
+ ]
+}

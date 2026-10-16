@@ -1,0 +1,172 @@
+{
+ "service": "ASU Voyager",
+ "base_url": "https://openai.rc.asu.edu/v1",
+ "model": "llama4-scout-17b",
+ "prompt_version": "img-01.2",
+ "settings": {
+  "temperature": 0,
+  "schema_guided": true,
+  "timeout_s": 150.0,
+  "validation_retries": 1
+ },
+ "split": null,
+ "awake": "caffeinate -i -w <pid> (macOS idle and system sleep prevented)",
+ "started_at": "2026-10-16T23:13:19+00:00",
+ "rows": [
+  {
+   "case": "line-a",
+   "sha256": "cb766f7f11923df22452af336b8faf823d0ad4f134b811907efa64bc9b2fdbfc",
+   "started_at": "2026-10-16T23:13:19+00:00",
+   "result": {
+    "outcome": "proposal",
+    "proposal": {
+     "objects": [
+      {
+       "id": "obs-1",
+       "label": "machine 1",
+       "category": "machine",
+       "template": "machine",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.118,
+        "top": 0.478,
+        "right": 0.34,
+        "bottom": 0.64
+       },
+       "floor_contact": {
+        "u": 0.229,
+        "v": 0.64
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "left",
+       "size_guess_m": {
+        "x": 2.0,
+        "y": 2.0,
+        "z": 2.0
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-2",
+       "label": "machine 2",
+       "category": "machine",
+       "template": "machine",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.591,
+        "top": 0.478,
+        "right": 0.802,
+        "bottom": 0.638
+       },
+       "floor_contact": {
+        "u": 0.6965,
+        "v": 0.638
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 2.0,
+        "y": 2.0,
+        "z": 2.0
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-3",
+       "label": "conveyor",
+       "category": "conveyor",
+       "template": "conveyor",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.345,
+        "top": 0.543,
+        "right": 0.648,
+        "bottom": 0.638
+       },
+       "floor_contact": {
+        "u": 0.4965,
+        "v": 0.638
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "left",
+       "size_guess_m": {
+        "x": 3.0,
+        "y": 0.1,
+        "z": 1.0
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-4",
+       "label": "pallet",
+       "category": "pallet",
+       "template": "pallet",
+       "material": "wood",
+       "box": {
+        "left": 0.848,
+        "top": 0.543,
+        "right": 0.999,
+        "bottom": 0.683
+       },
+       "floor_contact": {
+        "u": 0.9235,
+        "v": 0.683
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [
+        "right"
+       ],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+       },
+       "suggest_accept": true,
+       "notes": [
+        "Continues outside the photo (right): size and position are approximate."
+       ]
+      }
+     ],
+     "floor_rectangles": [],
+     "visible_text": []
+    },
+    "message": null,
+    "checks": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "llama4-scout-17b",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 10813
+    }
+   },
+   "error": null,
+   "wall_s": 10.82,
+   "clock_s": 10.82,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 10.81,
+     "answer": "{\"floor_rectangles\": [], \"objects\": [{\"box\": [118, 478, 340, 640], \"category\": \"machine\", \"facing\": \"left\", \"floor_contact\": [229, 620], \"label\": \"machine_1\", \"material\": \"plastic_grey\", \"size_m\": [2, 2, 2], \"support\": \"floor\", \"visibility\":  \"full\"}, {\"box\": [591, 478, 802, 638], \"category\": \"machine\", \"facing\": \"right\", \"floor_contact\": [696, 620], \"label\": \"machine_2\", \"material\": \"plastic_grey\", \"size_m\": [2, 2, 2], \"support\": \"floor\", \"visibility\":  \"full\"}, {\"box\": [345, 543, 648, 638], \"category\": \"conveyor\", \"facing\": \"left\", \"floor_contact\": [496, 630], \"label\": \"conveyor\", \"material\": \"plastic_grey\", \"size_m\": [3, 0.1, 1], \"support\": \"floor\", \"visibility\":  \"full\"}, {\"box\": [848, 543, 999, 683], \"category\": \"pallet\", \"facing\": \"right\", \"floor_contact\": [924, 670], \"label\": \"pallet\", \"material\": \"wood\", \"size_m\": [1, 1, 1], \"support\": \"floor\", \"visibility\":  \"full\"}], \"scene\": \"room_or_work_area\", \"visible_text\":  []}"
+    }
+   ]
+  }
+ ]
+}

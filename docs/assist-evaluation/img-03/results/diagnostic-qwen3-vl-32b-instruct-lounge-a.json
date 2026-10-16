@@ -1,0 +1,366 @@
+{
+ "service": "ASU Voyager",
+ "base_url": "https://openai.rc.asu.edu/v1",
+ "model": "qwen3-vl-32b-instruct",
+ "prompt_version": "img-01.2",
+ "settings": {
+  "temperature": 0,
+  "schema_guided": true,
+  "timeout_s": 150.0,
+  "validation_retries": 1
+ },
+ "split": null,
+ "awake": "caffeinate -i -w <pid> (macOS idle and system sleep prevented)",
+ "started_at": "2026-10-16T23:15:24+00:00",
+ "rows": [
+  {
+   "case": "lounge-a",
+   "sha256": "b3dcdc06a8bb2aae97979fd6bdcc0b24298700e3fbaa20c7132b5573ffb0f457",
+   "started_at": "2026-10-16T23:15:24+00:00",
+   "result": {
+    "outcome": "proposal",
+    "proposal": {
+     "objects": [
+      {
+       "id": "obs-1",
+       "label": "sofa",
+       "category": "sofa",
+       "template": "sofa",
+       "material": "fabric_grey",
+       "box": {
+        "left": 0.646,
+        "top": 0.47,
+        "right": 0.842,
+        "bottom": 0.59
+       },
+       "floor_contact": {
+        "u": 0.744,
+        "v": 0.59
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 1.8,
+        "y": 0.7,
+        "z": 0.8
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-2",
+       "label": "coffee table",
+       "category": "table",
+       "template": "table",
+       "material": "wood",
+       "box": {
+        "left": 0.692,
+        "top": 0.54,
+        "right": 0.814,
+        "bottom": 0.63
+       },
+       "floor_contact": {
+        "u": 0.753,
+        "v": 0.63
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 0.8,
+        "y": 0.4,
+        "z": 0.5
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-3",
+       "label": "dining table",
+       "category": "table",
+       "template": "table",
+       "material": "wood",
+       "box": {
+        "left": 0.328,
+        "top": 0.49,
+        "right": 0.484,
+        "bottom": 0.61
+       },
+       "floor_contact": {
+        "u": 0.406,
+        "v": 0.61
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 1.2,
+        "y": 0.7,
+        "z": 0.8
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-4",
+       "label": "small table",
+       "category": "table",
+       "template": "table",
+       "material": "wood",
+       "box": {
+        "left": 0.59,
+        "top": 0.445,
+        "right": 0.664,
+        "bottom": 0.5
+       },
+       "floor_contact": {
+        "u": 0.627,
+        "v": 0.5
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 0.6,
+        "y": 0.4,
+        "z": 0.5
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-5",
+       "label": "chair",
+       "category": "chair",
+       "template": "chair",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.344,
+        "top": 0.49,
+        "right": 0.42,
+        "bottom": 0.62
+       },
+       "floor_contact": {
+        "u": 0.382,
+        "v": 0.62
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0.5
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-6",
+       "label": "chair",
+       "category": "chair",
+       "template": "chair",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.456,
+        "top": 0.48,
+        "right": 0.526,
+        "bottom": 0.61
+       },
+       "floor_contact": {
+        "u": 0.491,
+        "v": 0.61
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0.5
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-7",
+       "label": "chair",
+       "category": "chair",
+       "template": "chair",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.4,
+        "top": 0.47,
+        "right": 0.466,
+        "bottom": 0.59
+       },
+       "floor_contact": {
+        "u": 0.433,
+        "v": 0.59
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0.5
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-8",
+       "label": "chair",
+       "category": "chair",
+       "template": "chair",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.296,
+        "top": 0.475,
+        "right": 0.35,
+        "bottom": 0.595
+       },
+       "floor_contact": {
+        "u": 0.323,
+        "v": 0.595
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 0.5,
+        "y": 0.8,
+        "z": 0.5
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-9",
+       "label": "shelf",
+       "category": "shelf",
+       "template": "shelf",
+       "material": "plastic_black",
+       "box": {
+        "left": 0.3,
+        "top": 0.365,
+        "right": 0.402,
+        "bottom": 0.5
+       },
+       "floor_contact": {
+        "u": 0.351,
+        "v": 0.5
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 0.6,
+        "y": 1.5,
+        "z": 0.6
+       },
+       "suggest_accept": true,
+       "notes": []
+      },
+      {
+       "id": "obs-10",
+       "label": "potted plant",
+       "category": "plant",
+       "template": "plant",
+       "material": "plastic_grey",
+       "box": {
+        "left": 0.86,
+        "top": 0.425,
+        "right": 0.914,
+        "bottom": 0.58
+       },
+       "floor_contact": {
+        "u": 0.887,
+        "v": 0.58
+       },
+       "contact_basis": "box_bottom",
+       "on_floor": true,
+       "visibility": "full",
+       "cut_off": [],
+       "facing": "right",
+       "size_guess_m": {
+        "x": 0.3,
+        "y": 0.8,
+        "z": 0.3
+       },
+       "suggest_accept": true,
+       "notes": []
+      }
+     ],
+     "floor_rectangles": [
+      {
+       "label": "blue rug",
+       "corners": [
+        {
+         "u": 0.196,
+         "v": 0.65
+        },
+        {
+         "u": 0.646,
+         "v": 0.65
+        },
+        {
+         "u": 0.646,
+         "v": 0.87
+        },
+        {
+         "u": 0.196,
+         "v": 0.87
+        }
+       ]
+      }
+     ],
+     "visible_text": []
+    },
+    "message": null,
+    "checks": [
+     "Floor rectangles from the model are rough suggestions: place the corners on the real feature and enter its size."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-vl-32b-instruct",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 71659
+    }
+   },
+   "error": null,
+   "wall_s": 71.67,
+   "clock_s": 71.66,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 71.66,
+     "answer": "{\n  \"floor_rectangles\": [\n    {\n      \"corners\": [\n        [196, 650],\n        [646, 650],\n        [646, 870],\n        [196, 870]\n      ]\n    ,\n      \"label\": \"blue rug\"\n    }\n  ],\n  \"objects\": [\n    {\n      \"box\": [646, 470, 842, 590],\n      \"category\": \"sofa\",\n      \"facing\": \"right\",\n      \"floor_contact\": [744, 580],\n      \"label\": \"sofa\",\n      \"material\": \"fabric_grey\",\n      \"size_m\": [1.8, 0.7, 0.8]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [692, 540, 814, 630],\n      \"category\": \"table\",\n      \"facing\": \"right\",\n      \"floor_contact\": [753, 620],\n      \"label\": \"coffee table\",\n      \"material\": \"wood\",\n      \"size_m\": [0.8, 0.4, 0.5],\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [328, 490, 484, 610],\n      \"category\": \"table\",\n      \"facing\": \"right\",\n      \"floor_contact\": [406, 600],\n      \"label\": \"dining table\",\n      \"material\": \"wood\",\n      \"size_m\": [1.2, 0.7, 0.8],\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [590, 445, 664, 500],\n      \"category\": \"table\",\n      \"facing\": \"right\",\n      \"floor_contact\": [627, 490],\n      \"label\": \"small table\",\n      \"material\": \"wood\",\n      \"size_m\": [0.6, 0.4, 0.5],\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [344, 490, 420, 620],\n      \"category\": \"chair\",\n      \"facing\": \"right\",\n      \"floor_contact\": [382, 610],\n      \"label\": \"chair\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [0.5, 0.8, 0.5],\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [456, 480, 526, 610],\n      \"category\": \"chair\",\n      \"facing\": \"right\",\n      \"floor_contact\": [491, 600],\n      \"label\": \"chair\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [0.5, 0.8, 0.5],\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [400, 470, 466, 590],\n      \"category\": \"chair\",\n      \"facing\": \"right\",\n      \"floor_contact\": [433, 580],\n      \"label\": \"chair\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [0.5, 0.8, 0.5],\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [296, 475, 350, 595],\n      \"category\": \"chair\",\n      \"facing\": \"right\",\n      \"floor_contact\": [323, 585],\n      \"label\": \"chair\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [0.5, 0.8, 0.5],\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [300, 365, 402, 500],\n      \"category\": \"shelf\",\n      \"facing\": \"right\",\n      \"floor_contact\": [351, 490],\n      \"label\": \"shelf\",\n      \"material\": \"plastic_black\",\n      \"size_m\": [0.6, 1.5, 0.6],\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [860, 425, 914, 580],\n      \"category\": \"plant\",\n      \"facing\": \"right\",\n      \"floor_contact\": [887, 570],\n      \"label\": \"potted plant\",\n      \"material\": \"plastic_grey\",\n      \"size_m\": [0.3, 0.8, 0.3],\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    }\n  ],\n  \"scene\": \"room_or_work_area\",\n  \"visible_text\": []\n}"
+    }
+   ]
+  }
+ ]
+}

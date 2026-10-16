@@ -1,0 +1,7791 @@
+{
+ "rules": "docs/assist-evaluation/img-03/criteria.md",
+ "models": {
+  "qwen3-vl-32b-instruct": {
+   "prompt_version": "img-01.2",
+   "images": 8,
+   "provider": {
+    "errors": 1,
+    "run_faults": 0,
+    "calls": 8,
+    "retries": 0,
+    "wall_s": {
+     "n": 8,
+     "median": 56.715,
+     "p90": 91.075,
+     "max": 150.12
+    }
+   },
+   "detection_initial": {
+    "tp": 45,
+    "fp": 1,
+    "fn": 23,
+    "precision": 0.978,
+    "recall": 0.662
+   },
+   "detection_all_proposals": {
+    "tp": 45,
+    "fp": 5,
+    "fn": 23,
+    "precision": 0.9,
+    "recall": 0.662
+   },
+   "groups": 6,
+   "duplicates": 1,
+   "label_agreement": "39/45",
+   "by_scene_type": {
+    "industrial": {
+     "images": 2,
+     "initial": {
+      "tp": 8,
+      "fp": 0,
+      "fn": 5,
+      "precision": 1,
+      "recall": 0.615
+     },
+     "all_proposals": {
+      "tp": 8,
+      "fp": 2,
+      "fn": 5,
+      "precision": 0.8,
+      "recall": 0.615
+     }
+    },
+    "lounge": {
+     "images": 2,
+     "initial": {
+      "tp": 9,
+      "fp": 1,
+      "fn": 11,
+      "precision": 0.9,
+      "recall": 0.45
+     },
+     "all_proposals": {
+      "tp": 9,
+      "fp": 1,
+      "fn": 11,
+      "precision": 0.9,
+      "recall": 0.45
+     }
+    },
+    "office": {
+     "images": 2,
+     "initial": {
+      "tp": 18,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1,
+      "recall": 0.9
+     },
+     "all_proposals": {
+      "tp": 18,
+      "fp": 2,
+      "fn": 2,
+      "precision": 0.9,
+      "recall": 0.9
+     }
+    },
+    "storage": {
+     "images": 2,
+     "initial": {
+      "tp": 10,
+      "fp": 0,
+      "fn": 5,
+      "precision": 1,
+      "recall": 0.667
+     },
+     "all_proposals": {
+      "tp": 10,
+      "fp": 0,
+      "fn": 5,
+      "precision": 1,
+      "recall": 0.667
+     }
+    }
+   },
+   "geometry": {
+    "initial": {
+     "all": {
+      "n": 45,
+      "centre_m": {
+       "n": 45,
+       "median": 0.194,
+       "p90": 1.309,
+       "max": 4.31
+      },
+      "across_abs_rel": {
+       "n": 45,
+       "median": 0.071,
+       "p90": 0.371,
+       "max": 0.974
+      },
+      "along_abs_rel": {
+       "n": 45,
+       "median": 0.273,
+       "p90": 0.795,
+       "max": 1.792
+      },
+      "along_signed_rel_median": 0.034,
+      "height_abs_m": {
+       "n": 45,
+       "median": 0.059,
+       "p90": 0.215,
+       "max": 1.029
+      }
+     },
+     "not_near_horizon": {
+      "n": 42,
+      "centre_m": {
+       "n": 42,
+       "median": 0.179,
+       "p90": 0.741,
+       "max": 4.31
+      },
+      "across_abs_rel": {
+       "n": 42,
+       "median": 0.07,
+       "p90": 0.251,
+       "max": 0.974
+      },
+      "along_abs_rel": {
+       "n": 42,
+       "median": 0.234,
+       "p90": 0.834,
+       "max": 1.792
+      },
+      "along_signed_rel_median": 0.038,
+      "height_abs_m": {
+       "n": 42,
+       "median": 0.057,
+       "p90": 0.207,
+       "max": 1.029
+      }
+     },
+     "near_horizon": {
+      "n": 3,
+      "centre_m": {
+       "n": 3,
+       "median": 1.212,
+       "p90": 1.489,
+       "max": 1.559
+      },
+      "across_abs_rel": {
+       "n": 3,
+       "median": 0.382,
+       "p90": 0.776,
+       "max": 0.875
+      },
+      "along_abs_rel": {
+       "n": 3,
+       "median": 0.382,
+       "p90": 0.483,
+       "max": 0.508
+      },
+      "along_signed_rel_median": -0.382,
+      "height_abs_m": {
+       "n": 3,
+       "median": 0.101,
+       "p90": 0.351,
+       "max": 0.413
+      },
+      "flagged": 3
+     },
+     "partly_visible": {
+      "n": 15,
+      "centre_m": {
+       "n": 15,
+       "median": 0.308,
+       "p90": 2.685,
+       "max": 4.31
+      },
+      "across_abs_rel": {
+       "n": 15,
+       "median": 0.092,
+       "p90": 0.746,
+       "max": 0.974
+      },
+      "along_abs_rel": {
+       "n": 15,
+       "median": 0.253,
+       "p90": 0.795,
+       "max": 1.792
+      },
+      "along_signed_rel_median": -0.056,
+      "height_abs_m": {
+       "n": 15,
+       "median": 0.072,
+       "p90": 0.193,
+       "max": 0.229
+      }
+     },
+     "estimates_labelled": "45/45"
+    },
+    "reviewed": {
+     "all": {
+      "n": 58,
+      "centre_m": {
+       "n": 58,
+       "median": 0.201,
+       "p90": 0.901,
+       "max": 1.969
+      },
+      "across_abs_rel": {
+       "n": 58,
+       "median": 0.059,
+       "p90": 0.16,
+       "max": 0.297
+      },
+      "along_abs_rel": {
+       "n": 58,
+       "median": 0.291,
+       "p90": 1.382,
+       "max": 3.862
+      },
+      "along_signed_rel_median": 0.013,
+      "height_abs_m": {
+       "n": 58,
+       "median": 0.042,
+       "p90": 0.117,
+       "max": 0.22
+      }
+     },
+     "not_near_horizon": {
+      "n": 48,
+      "centre_m": {
+       "n": 48,
+       "median": 0.168,
+       "p90": 0.65,
+       "max": 1.969
+      },
+      "across_abs_rel": {
+       "n": 48,
+       "median": 0.061,
+       "p90": 0.16,
+       "max": 0.253
+      },
+      "along_abs_rel": {
+       "n": 48,
+       "median": 0.229,
+       "p90": 0.819,
+       "max": 3.52
+      },
+      "along_signed_rel_median": 0.025,
+      "height_abs_m": {
+       "n": 48,
+       "median": 0.047,
+       "p90": 0.131,
+       "max": 0.22
+      }
+     },
+     "near_horizon": {
+      "n": 10,
+      "centre_m": {
+       "n": 10,
+       "median": 0.688,
+       "p90": 1.064,
+       "max": 1.221
+      },
+      "across_abs_rel": {
+       "n": 10,
+       "median": 0.052,
+       "p90": 0.106,
+       "max": 0.297
+      },
+      "along_abs_rel": {
+       "n": 10,
+       "median": 0.627,
+       "p90": 3.274,
+       "max": 3.862
+      },
+      "along_signed_rel_median": -0.148,
+      "height_abs_m": {
+       "n": 10,
+       "median": 0.015,
+       "p90": 0.064,
+       "max": 0.083
+      },
+      "flagged": 10
+     },
+     "partly_visible": {
+      "n": 25,
+      "centre_m": {
+       "n": 25,
+       "median": 0.383,
+       "p90": 1.173,
+       "max": 1.969
+      },
+      "across_abs_rel": {
+       "n": 25,
+       "median": 0.048,
+       "p90": 0.143,
+       "max": 0.253
+      },
+      "along_abs_rel": {
+       "n": 25,
+       "median": 0.303,
+       "p90": 3.183,
+       "max": 3.862
+      },
+      "along_signed_rel_median": 0.017,
+      "height_abs_m": {
+       "n": 25,
+       "median": 0.02,
+       "p90": 0.101,
+       "max": 0.185
+      }
+     },
+     "estimates_labelled": "58/58"
+    },
+    "manual": {
+     "all": {
+      "n": 68,
+      "centre_m": {
+       "n": 68,
+       "median": 0.11,
+       "p90": 0.747,
+       "max": 1.877
+      },
+      "across_abs_rel": {
+       "n": 68,
+       "median": 0.029,
+       "p90": 0.093,
+       "max": 0.322
+      },
+      "along_abs_rel": {
+       "n": 68,
+       "median": 0.289,
+       "p90": 0.898,
+       "max": 1.93
+      },
+      "along_signed_rel_median": 0.164,
+      "height_abs_m": {
+       "n": 68,
+       "median": 0.01,
+       "p90": 0.066,
+       "max": 0.149
+      }
+     },
+     "not_near_horizon": {
+      "n": 58,
+      "centre_m": {
+       "n": 58,
+       "median": 0.11,
+       "p90": 0.47,
+       "max": 1.877
+      },
+      "across_abs_rel": {
+       "n": 58,
+       "median": 0.031,
+       "p90": 0.086,
+       "max": 0.322
+      },
+      "along_abs_rel": {
+       "n": 58,
+       "median": 0.233,
+       "p90": 0.945,
+       "max": 1.93
+      },
+      "along_signed_rel_median": 0.141,
+      "height_abs_m": {
+       "n": 58,
+       "median": 0.012,
+       "p90": 0.079,
+       "max": 0.149
+      }
+     },
+     "near_horizon": {
+      "n": 10,
+      "centre_m": {
+       "n": 10,
+       "median": 0.128,
+       "p90": 1.194,
+       "max": 1.357
+      },
+      "across_abs_rel": {
+       "n": 10,
+       "median": 0.01,
+       "p90": 0.119,
+       "max": 0.297
+      },
+      "along_abs_rel": {
+       "n": 10,
+       "median": 0.376,
+       "p90": 0.576,
+       "max": 0.619
+      },
+      "along_signed_rel_median": 0.347,
+      "height_abs_m": {
+       "n": 10,
+       "median": 0.008,
+       "p90": 0.047,
+       "max": 0.062
+      },
+      "flagged": 10
+     },
+     "partly_visible": {
+      "n": 31,
+      "centre_m": {
+       "n": 31,
+       "median": 0.138,
+       "p90": 0.754,
+       "max": 1.877
+      },
+      "across_abs_rel": {
+       "n": 31,
+       "median": 0.024,
+       "p90": 0.077,
+       "max": 0.319
+      },
+      "along_abs_rel": {
+       "n": 31,
+       "median": 0.317,
+       "p90": 0.685,
+       "max": 1.69
+      },
+      "along_signed_rel_median": 0.282,
+      "height_abs_m": {
+       "n": 31,
+       "median": 0.011,
+       "p90": 0.045,
+       "max": 0.089
+      }
+     },
+     "estimates_labelled": "68/68"
+    },
+    "reviewed_corner_offsets": {
+     "all": {
+      "n": 58,
+      "centre_m": {
+       "n": 58,
+       "median": 0.32,
+       "p90": 1.529,
+       "max": 2.782
+      },
+      "across_abs_rel": {
+       "n": 58,
+       "median": 0.072,
+       "p90": 0.197,
+       "max": 0.287
+      },
+      "along_abs_rel": {
+       "n": 58,
+       "median": 0.259,
+       "p90": 1.381,
+       "max": 3.894
+      },
+      "along_signed_rel_median": 0.054,
+      "height_abs_m": {
+       "n": 58,
+       "median": 0.086,
+       "p90": 0.203,
+       "max": 0.432
+      }
+     },
+     "not_near_horizon": {
+      "n": 47,
+      "centre_m": {
+       "n": 47,
+       "median": 0.274,
+       "p90": 0.664,
+       "max": 2.782
+      },
+      "across_abs_rel": {
+       "n": 47,
+       "median": 0.064,
+       "p90": 0.173,
+       "max": 0.287
+      },
+      "along_abs_rel": {
+       "n": 47,
+       "median": 0.235,
+       "p90": 1.026,
+       "max": 3.787
+      },
+      "along_signed_rel_median": 0.058,
+      "height_abs_m": {
+       "n": 47,
+       "median": 0.086,
+       "p90": 0.151,
+       "max": 0.364
+      }
+     },
+     "near_horizon": {
+      "n": 11,
+      "centre_m": {
+       "n": 11,
+       "median": 1.139,
+       "p90": 2.021,
+       "max": 2.069
+      },
+      "across_abs_rel": {
+       "n": 11,
+       "median": 0.091,
+       "p90": 0.197,
+       "max": 0.245
+      },
+      "along_abs_rel": {
+       "n": 11,
+       "median": 0.506,
+       "p90": 3.267,
+       "max": 3.894
+      },
+      "along_signed_rel_median": -0.245,
+      "height_abs_m": {
+       "n": 11,
+       "median": 0.058,
+       "p90": 0.265,
+       "max": 0.432
+      },
+      "flagged": 11
+     },
+     "partly_visible": {
+      "n": 25,
+      "centre_m": {
+       "n": 25,
+       "median": 0.432,
+       "p90": 1.988,
+       "max": 2.782
+      },
+      "across_abs_rel": {
+       "n": 25,
+       "median": 0.05,
+       "p90": 0.196,
+       "max": 0.244
+      },
+      "along_abs_rel": {
+       "n": 25,
+       "median": 0.323,
+       "p90": 3.329,
+       "max": 3.894
+      },
+      "along_signed_rel_median": 0.067,
+      "height_abs_m": {
+       "n": 25,
+       "median": 0.085,
+       "p90": 0.179,
+       "max": 0.364
+      }
+     },
+     "estimates_labelled": "58/58"
+    }
+   },
+   "effort": {
+    "reviewed_actions_per_image": {
+     "n": 7,
+     "median": 9,
+     "p90": 10.4,
+     "max": 11
+    },
+    "reviewed_klm_s_per_image": {
+     "n": 7,
+     "median": 36,
+     "p90": 40,
+     "max": 43
+    },
+    "manual_actions_per_image": {
+     "n": 8,
+     "median": 21.5,
+     "p90": 25.3,
+     "max": 26
+    },
+    "manual_klm_s_per_image": {
+     "n": 8,
+     "median": 109.5,
+     "p90": 125.9,
+     "max": 128
+    }
+   },
+   "worst_centre_errors": [
+    {
+     "case": "office-a",
+     "world": "initial",
+     "gt": "cabinet-1",
+     "centre_m": 4.31,
+     "depression_deg": 8.53,
+     "visibility": "partly_visible"
+    },
+    {
+     "case": "office-a",
+     "world": "initial",
+     "gt": "cabinet-2",
+     "centre_m": 3.163,
+     "depression_deg": 8.917,
+     "visibility": "partly_visible"
+    },
+    {
+     "case": "store-a",
+     "world": "initial",
+     "gt": "rack-3",
+     "centre_m": 1.969,
+     "depression_deg": 6.568,
+     "visibility": "partly_visible"
+    },
+    {
+     "case": "store-a",
+     "world": "reviewed",
+     "gt": "rack-3",
+     "centre_m": 1.969,
+     "depression_deg": 6.568,
+     "visibility": "partly_visible"
+    },
+    {
+     "case": "store-a",
+     "world": "manual",
+     "gt": "rack-3",
+     "centre_m": 1.877,
+     "depression_deg": 6.568,
+     "visibility": "partly_visible"
+    },
+    {
+     "case": "lounge-b",
+     "world": "initial",
+     "gt": "plant-1",
+     "centre_m": 1.559,
+     "depression_deg": 5.585,
+     "visibility": "visible"
+    },
+    {
+     "case": "store-a",
+     "world": "initial",
+     "gt": "rack-1",
+     "centre_m": 1.374,
+     "depression_deg": 9.461,
+     "visibility": "partly_visible"
+    },
+    {
+     "case": "lounge-b",
+     "world": "manual",
+     "gt": "table-far",
+     "centre_m": 1.357,
+     "depression_deg": 4.288,
+     "visibility": "partly_visible"
+    }
+   ],
+   "cases": [
+    {
+     "case": "line-a",
+     "scene_type": "industrial",
+     "wall_s": 37.08,
+     "calls": 1,
+     "run_fault": null,
+     "counted": 6,
+     "proposals": 4,
+     "accepted": 4,
+     "detection": {
+      "tp": 4,
+      "fp": 0,
+      "fn": 2,
+      "groups": 1,
+      "duplicates": 0
+     },
+     "detection_all_proposals": {
+      "tp": 4,
+      "fp": 0,
+      "fn": 2
+     },
+     "proposals_scored": [
+      {
+       "label": "left machine with yellow frame",
+       "template": "machine",
+       "accepted": true,
+       "box": {
+        "left": 0.278,
+        "top": 0.39,
+        "right": 0.438,
+        "bottom": 0.598
+       },
+       "status": "tp",
+       "gt": "cell-1",
+       "iou": 0.923,
+       "covers": [
+        "cell-1"
+       ]
+      },
+      {
+       "label": "conveyor belt",
+       "template": "conveyor",
+       "accepted": true,
+       "box": {
+        "left": 0.42,
+        "top": 0.415,
+        "right": 0.625,
+        "bottom": 0.6
+       },
+       "status": "tp",
+       "gt": "conveyor-1",
+       "iou": 0.506,
+       "covers": [
+        "conveyor-1",
+        "cabinet-1",
+        "cabinet-2"
+       ]
+      },
+      {
+       "label": "right machine with yellow frame",
+       "template": "machine",
+       "accepted": true,
+       "box": {
+        "left": 0.625,
+        "top": 0.375,
+        "right": 0.8,
+        "bottom": 0.62
+       },
+       "status": "tp",
+       "gt": "cell-2",
+       "iou": 0.945,
+       "covers": [
+        "cell-2"
+       ]
+      },
+      {
+       "label": "pallet with stacked boxes",
+       "template": "pallet",
+       "accepted": true,
+       "box": {
+        "left": 0.845,
+        "top": 0.515,
+        "right": 1,
+        "bottom": 0.665
+       },
+       "status": "tp",
+       "gt": "pallet-1",
+       "iou": 0.915,
+       "covers": [
+        "pallet-1"
+       ]
+      }
+     ],
+     "missed": [
+      "cabinet-1",
+      "cabinet-2"
+     ],
+     "calibration": {
+      "derived_depth_rel": 0,
+      "camera_height_error_m": 0,
+      "fov_error_deg": 0,
+      "fov_basis": "from_sides",
+      "corner_residual_px": 0.002
+     },
+     "actions": {
+      "reviewed": {
+       "reject": 0,
+       "accept": 0,
+       "split": 1,
+       "merge": 0,
+       "add": 0,
+       "outline": 3,
+       "shape": 0,
+       "visibility": 2
+      },
+      "manual": {
+       "reject": 0,
+       "accept": 0,
+       "split": 0,
+       "merge": 0,
+       "add": 6,
+       "outline": 0,
+       "shape": 6,
+       "visibility": 3
+      }
+     },
+     "geometry": {
+      "initial": [
+       {
+        "gt": "cell-1",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 8.732,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.61,
+        "acrossErrorM": -0.315,
+        "acrossRel": -0.118,
+        "alongErrorM": -1.042,
+        "alongRel": -0.396,
+        "heightErrorM": -0.22,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "conveyor-1",
+        "cls": "conveyor",
+        "visibility": "visible",
+        "depressionDeg": 9.628,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.143,
+        "acrossErrorM": -0.194,
+        "acrossRel": -0.062,
+        "alongErrorM": -0.758,
+        "alongRel": -0.482,
+        "heightErrorM": 1.029,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cell-2",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 9.954,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.31,
+        "acrossErrorM": 0.128,
+        "acrossRel": 0.062,
+        "alongErrorM": -0.344,
+        "alongRel": -0.178,
+        "heightErrorM": -0.157,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-1",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 11.47,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.225,
+        "acrossErrorM": 0.002,
+        "acrossRel": 0.001,
+        "alongErrorM": 0.337,
+        "alongRel": 0.303,
+        "heightErrorM": 0.024,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "reviewed": [
+       {
+        "gt": "cell-1",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 8.732,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.61,
+        "acrossErrorM": -0.315,
+        "acrossRel": -0.118,
+        "alongErrorM": -1.042,
+        "alongRel": -0.396,
+        "heightErrorM": -0.22,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "conveyor-1",
+        "cls": "conveyor",
+        "visibility": "visible",
+        "depressionDeg": 9.628,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.331,
+        "acrossErrorM": -0.227,
+        "acrossRel": -0.073,
+        "alongErrorM": -0.767,
+        "alongRel": -0.488,
+        "heightErrorM": 0.046,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 6.987,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 1.347,
+        "acrossErrorM": 0,
+        "acrossRel": 0,
+        "alongErrorM": 2.571,
+        "alongRel": 3.52,
+        "heightErrorM": -0.016,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 7.089,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 1.103,
+        "acrossErrorM": 0.061,
+        "acrossRel": 0.068,
+        "alongErrorM": 2.169,
+        "alongRel": 3.144,
+        "heightErrorM": -0.007,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cell-2",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 9.954,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.31,
+        "acrossErrorM": 0.128,
+        "acrossRel": 0.062,
+        "alongErrorM": -0.344,
+        "alongRel": -0.178,
+        "heightErrorM": -0.157,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-1",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 11.47,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.225,
+        "acrossErrorM": 0.002,
+        "acrossRel": 0.001,
+        "alongErrorM": 0.337,
+        "alongRel": 0.303,
+        "heightErrorM": 0.024,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "manual": [
+       {
+        "gt": "cell-1",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 8.732,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.148,
+        "acrossErrorM": -0.225,
+        "acrossRel": -0.084,
+        "alongErrorM": -0.179,
+        "alongRel": -0.068,
+        "heightErrorM": -0.129,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "conveyor-1",
+        "cls": "conveyor",
+        "visibility": "visible",
+        "depressionDeg": 9.628,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.744,
+        "acrossErrorM": -0.157,
+        "acrossRel": -0.05,
+        "alongErrorM": 1.383,
+        "alongRel": 0.879,
+        "heightErrorM": -0.099,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cell-2",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 9.954,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.078,
+        "acrossErrorM": 0.088,
+        "acrossRel": 0.043,
+        "alongErrorM": 0.203,
+        "alongRel": 0.105,
+        "heightErrorM": -0.145,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 6.987,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.123,
+        "acrossErrorM": -0.07,
+        "acrossRel": -0.077,
+        "alongErrorM": 0.113,
+        "alongRel": 0.154,
+        "heightErrorM": -0.016,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 7.089,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.106,
+        "acrossErrorM": -0.008,
+        "acrossRel": -0.009,
+        "alongErrorM": 0.194,
+        "alongRel": 0.282,
+        "heightErrorM": -0.007,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-1",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 11.47,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.123,
+        "acrossErrorM": -0.077,
+        "acrossRel": -0.056,
+        "alongErrorM": 0.193,
+        "alongRel": 0.173,
+        "heightErrorM": 0.015,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ]
+     }
+    },
+    {
+     "case": "line-b",
+     "scene_type": "industrial",
+     "wall_s": 55.92,
+     "calls": 1,
+     "run_fault": null,
+     "counted": 7,
+     "proposals": 6,
+     "accepted": 4,
+     "detection": {
+      "tp": 4,
+      "fp": 0,
+      "fn": 3,
+      "groups": 1,
+      "duplicates": 0
+     },
+     "detection_all_proposals": {
+      "tp": 4,
+      "fp": 2,
+      "fn": 3
+     },
+     "proposals_scored": [
+      {
+       "label": "left machine with yellow frame and control panel",
+       "template": "machine",
+       "accepted": true,
+       "box": {
+        "left": 0.2,
+        "top": 0.37,
+        "right": 0.375,
+        "bottom": 0.6
+       },
+       "status": "tp",
+       "gt": "cell-1",
+       "iou": 0.886,
+       "covers": [
+        "cell-1"
+       ]
+      },
+      {
+       "label": "right machine with yellow frame and control panel",
+       "template": "machine",
+       "accepted": true,
+       "box": {
+        "left": 0.585,
+        "top": 0.38,
+        "right": 0.745,
+        "bottom": 0.595
+       },
+       "status": "tp",
+       "gt": "cell-2",
+       "iou": 0.963,
+       "covers": [
+        "cell-2"
+       ]
+      },
+      {
+       "label": "conveyor belt with boxes",
+       "template": "conveyor",
+       "accepted": true,
+       "box": {
+        "left": 0.385,
+        "top": 0.415,
+        "right": 0.585,
+        "bottom": 0.595
+       },
+       "status": "group",
+       "gt": "conveyor-1",
+       "iou": 0.498,
+       "covers": [
+        "conveyor-1",
+        "cabinet-1",
+        "cabinet-2",
+        "pallet-far"
+       ]
+      },
+      {
+       "label": "stacked cardboard boxes on wooden pallet",
+       "template": "box",
+       "accepted": true,
+       "box": {
+        "left": 0.79,
+        "top": 0.495,
+        "right": 0.91,
+        "bottom": 0.605
+       },
+       "status": "tp",
+       "gt": "pallet-1",
+       "iou": 0.929,
+       "covers": [
+        "pallet-1"
+       ]
+      },
+      {
+       "label": "monitor on left machine",
+       "template": "screen",
+       "accepted": false,
+       "box": {
+        "left": 0.325,
+        "top": 0.435,
+        "right": 0.36,
+        "bottom": 0.48
+       },
+       "status": "no_object",
+       "gt": null,
+       "iou": 0.043,
+       "covers": []
+      },
+      {
+       "label": "monitor on right machine",
+       "template": "screen",
+       "accepted": false,
+       "box": {
+        "left": 0.705,
+        "top": 0.44,
+        "right": 0.74,
+        "bottom": 0.485
+       },
+       "status": "no_object",
+       "gt": null,
+       "iou": 0.046,
+       "covers": []
+      }
+     ],
+     "missed": [
+      "cabinet-1",
+      "cabinet-2",
+      "pallet-far"
+     ],
+     "calibration": {
+      "derived_depth_rel": 0,
+      "camera_height_error_m": 0,
+      "fov_error_deg": 0,
+      "fov_basis": "from_rectangle",
+      "corner_residual_px": 0.001
+     },
+     "actions": {
+      "reviewed": {
+       "reject": 0,
+       "accept": 0,
+       "split": 1,
+       "merge": 0,
+       "add": 0,
+       "outline": 4,
+       "shape": 1,
+       "visibility": 3
+      },
+      "manual": {
+       "reject": 0,
+       "accept": 0,
+       "split": 0,
+       "merge": 0,
+       "add": 7,
+       "outline": 0,
+       "shape": 7,
+       "visibility": 3
+      }
+     },
+     "geometry": {
+      "initial": [
+       {
+        "gt": "cell-1",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 6.418,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.109,
+        "acrossErrorM": 0.157,
+        "acrossRel": 0.071,
+        "alongErrorM": -0.436,
+        "alongRel": -0.207,
+        "heightErrorM": -0.152,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cell-2",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 6.008,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.473,
+        "acrossErrorM": -0.27,
+        "acrossRel": -0.105,
+        "alongErrorM": -0.947,
+        "alongRel": -0.379,
+        "heightErrorM": -0.208,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "conveyor-1",
+        "cls": "conveyor",
+        "visibility": "visible",
+        "depressionDeg": 6.396,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.248,
+        "acrossErrorM": -0.273,
+        "acrossRel": -0.089,
+        "alongErrorM": -0.495,
+        "alongRel": -0.399,
+        "heightErrorM": 0.945,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-1",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 6.234,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.225,
+        "acrossErrorM": 0,
+        "acrossRel": 0,
+        "alongErrorM": -0.089,
+        "alongRel": -0.066,
+        "heightErrorM": 0.033,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "reviewed": [
+       {
+        "gt": "cell-1",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 6.418,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.109,
+        "acrossErrorM": 0.157,
+        "acrossRel": 0.071,
+        "alongErrorM": -0.436,
+        "alongRel": -0.207,
+        "heightErrorM": -0.152,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cell-2",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 6.008,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.473,
+        "acrossErrorM": -0.27,
+        "acrossRel": -0.105,
+        "alongErrorM": -0.947,
+        "alongRel": -0.379,
+        "heightErrorM": -0.208,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "conveyor-1",
+        "cls": "conveyor",
+        "visibility": "visible",
+        "depressionDeg": 6.396,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.126,
+        "acrossErrorM": -0.149,
+        "acrossRel": -0.048,
+        "alongErrorM": -0.461,
+        "alongRel": -0.371,
+        "heightErrorM": 0.012,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 4.827,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.868,
+        "acrossErrorM": 0.047,
+        "acrossRel": 0.058,
+        "alongErrorM": 1.825,
+        "alongRel": 3.208,
+        "heightErrorM": -0.012,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 4.809,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 1.221,
+        "acrossErrorM": 0.072,
+        "acrossRel": 0.085,
+        "alongErrorM": 2.372,
+        "alongRel": 3.862,
+        "heightErrorM": -0.016,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-far",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 3.624,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.383,
+        "acrossErrorM": -0.026,
+        "acrossRel": -0.019,
+        "alongErrorM": -0.65,
+        "alongRel": -0.639,
+        "heightErrorM": 0.014,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-1",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 6.234,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.225,
+        "acrossErrorM": 0,
+        "acrossRel": 0,
+        "alongErrorM": -0.089,
+        "alongRel": -0.066,
+        "heightErrorM": 0.033,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "manual": [
+       {
+        "gt": "cell-1",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 6.418,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.113,
+        "acrossErrorM": -0.043,
+        "acrossRel": -0.019,
+        "alongErrorM": 0.06,
+        "alongRel": 0.029,
+        "heightErrorM": -0.149,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "conveyor-1",
+        "cls": "conveyor",
+        "visibility": "visible",
+        "depressionDeg": 6.396,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.975,
+        "acrossErrorM": -0.112,
+        "acrossRel": -0.036,
+        "alongErrorM": 1.733,
+        "alongRel": 1.395,
+        "heightErrorM": -0.036,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cell-2",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 6.008,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.198,
+        "acrossErrorM": -0.154,
+        "acrossRel": -0.06,
+        "alongErrorM": -0.088,
+        "alongRel": -0.035,
+        "heightErrorM": -0.143,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 4.827,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.064,
+        "acrossErrorM": 0.001,
+        "acrossRel": 0.001,
+        "alongErrorM": 0.25,
+        "alongRel": 0.44,
+        "heightErrorM": -0.012,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 4.809,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.151,
+        "acrossErrorM": 0.007,
+        "acrossRel": 0.009,
+        "alongErrorM": 0.241,
+        "alongRel": 0.392,
+        "heightErrorM": -0.016,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-1",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 6.234,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.018,
+        "acrossErrorM": -0.01,
+        "acrossRel": -0.007,
+        "alongErrorM": 0.088,
+        "alongRel": 0.065,
+        "heightErrorM": -0.003,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-far",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 3.624,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.105,
+        "acrossErrorM": 0.007,
+        "acrossRel": 0.005,
+        "alongErrorM": 0.322,
+        "alongRel": 0.317,
+        "heightErrorM": 0.005,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ]
+     }
+    },
+    {
+     "case": "lounge-a",
+     "scene_type": "lounge",
+     "error": "ASU Voyager did not answer within 150 s.",
+     "counted": 10,
+     "calibration": {
+      "derived_depth_rel": 0,
+      "camera_height_error_m": 0,
+      "fov_error_deg": -0.001,
+      "fov_basis": "from_rectangle",
+      "corner_residual_px": 0.007
+     }
+    },
+    {
+     "case": "lounge-b",
+     "scene_type": "lounge",
+     "wall_s": 65.77,
+     "calls": 1,
+     "run_fault": null,
+     "counted": 10,
+     "proposals": 10,
+     "accepted": 10,
+     "detection": {
+      "tp": 9,
+      "fp": 1,
+      "fn": 1,
+      "groups": 1,
+      "duplicates": 1
+     },
+     "detection_all_proposals": {
+      "tp": 9,
+      "fp": 1,
+      "fn": 1
+     },
+     "proposals_scored": [
+      {
+       "label": "shelves",
+       "template": "shelf",
+       "accepted": true,
+       "box": {
+        "left": 0.158,
+        "top": 0.39,
+        "right": 0.275,
+        "bottom": 0.565
+       },
+       "status": "tp",
+       "gt": "shelf-1",
+       "iou": 0.926,
+       "covers": [
+        "shelf-1"
+       ]
+      },
+      {
+       "label": "table",
+       "template": "table",
+       "accepted": true,
+       "box": {
+        "left": 0.335,
+        "top": 0.48,
+        "right": 0.465,
+        "bottom": 0.595
+       },
+       "status": "tp",
+       "gt": "table-1",
+       "iou": 0.738,
+       "covers": [
+        "table-1",
+        "chair-front",
+        "chair-back",
+        "table-far"
+       ]
+      },
+      {
+       "label": "table",
+       "template": "table",
+       "accepted": true,
+       "box": {
+        "left": 0.598,
+        "top": 0.52,
+        "right": 0.688,
+        "bottom": 0.575
+       },
+       "status": "tp",
+       "gt": "coffee-table",
+       "iou": 0.846,
+       "covers": [
+        "coffee-table"
+       ]
+      },
+      {
+       "label": "sofa",
+       "template": "sofa",
+       "accepted": true,
+       "box": {
+        "left": 0.53,
+        "top": 0.48,
+        "right": 0.665,
+        "bottom": 0.565
+       },
+       "status": "tp",
+       "gt": "sofa-1",
+       "iou": 0.86,
+       "covers": [
+        "sofa-1"
+       ]
+      },
+      {
+       "label": "chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.295,
+        "top": 0.485,
+        "right": 0.345,
+        "bottom": 0.6
+       },
+       "status": "tp",
+       "gt": "chair-left",
+       "iou": 0.912,
+       "covers": [
+        "chair-left"
+       ]
+      },
+      {
+       "label": "chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.37,
+        "top": 0.485,
+        "right": 0.415,
+        "bottom": 0.595
+       },
+       "status": "tp",
+       "gt": "chair-back",
+       "iou": 0.855,
+       "covers": [
+        "chair-back"
+       ]
+      },
+      {
+       "label": "chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.445,
+        "top": 0.485,
+        "right": 0.495,
+        "bottom": 0.595
+       },
+       "status": "tp",
+       "gt": "chair-right",
+       "iou": 0.658,
+       "covers": [
+        "chair-right"
+       ]
+      },
+      {
+       "label": "chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.385,
+        "top": 0.485,
+        "right": 0.445,
+        "bottom": 0.595
+       },
+       "status": "tp",
+       "gt": "chair-front",
+       "iou": 0.751,
+       "covers": [
+        "chair-front"
+       ]
+      },
+      {
+       "label": "chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.665,
+        "top": 0.485,
+        "right": 0.695,
+        "bottom": 0.565
+       },
+       "status": "tp",
+       "gt": "plant-1",
+       "iou": 0.569,
+       "covers": []
+      },
+      {
+       "label": "plant in pot",
+       "template": "plant",
+       "accepted": true,
+       "box": {
+        "left": 0.66,
+        "top": 0.445,
+        "right": 0.695,
+        "bottom": 0.515
+       },
+       "status": "duplicate",
+       "gt": "plant-1",
+       "iou": 0.54,
+       "covers": []
+      }
+     ],
+     "missed": [
+      "table-far"
+     ],
+     "calibration": {
+      "derived_depth_rel": 0,
+      "camera_height_error_m": 0,
+      "fov_error_deg": -0.003,
+      "fov_basis": "from_rectangle",
+      "corner_residual_px": 0.009
+     },
+     "actions": {
+      "reviewed": {
+       "reject": 0,
+       "accept": 0,
+       "split": 1,
+       "merge": 1,
+       "add": 0,
+       "outline": 4,
+       "shape": 1,
+       "visibility": 4
+      },
+      "manual": {
+       "reject": 0,
+       "accept": 0,
+       "split": 0,
+       "merge": 0,
+       "add": 10,
+       "outline": 0,
+       "shape": 10,
+       "visibility": 4
+      }
+     },
+     "geometry": {
+      "initial": [
+       {
+        "gt": "shelf-1",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 6.052,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.071,
+        "acrossErrorM": 0.089,
+        "acrossRel": 0.058,
+        "alongErrorM": 0.705,
+        "alongRel": 1.313,
+        "heightErrorM": 0.051,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "table-1",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.274,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.068,
+        "acrossErrorM": 0.044,
+        "acrossRel": 0.029,
+        "alongErrorM": 0.032,
+        "alongRel": 0.031,
+        "heightErrorM": 0.229,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "coffee-table",
+        "cls": "table",
+        "visibility": "visible",
+        "depressionDeg": 6.963,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.071,
+        "acrossErrorM": 0.072,
+        "acrossRel": 0.061,
+        "alongErrorM": -0.104,
+        "alongRel": -0.102,
+        "heightErrorM": 0.066,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "sofa-1",
+        "cls": "sofa",
+        "visibility": "visible",
+        "depressionDeg": 6.218,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.376,
+        "acrossErrorM": -0.113,
+        "acrossRel": -0.052,
+        "alongErrorM": -0.542,
+        "alongRel": -0.317,
+        "heightErrorM": 0.084,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-left",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 8.378,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.119,
+        "acrossErrorM": -0.001,
+        "acrossRel": -0.003,
+        "alongErrorM": 0.018,
+        "alongRel": 0.034,
+        "heightErrorM": 0.049,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-back",
+        "cls": "chair",
+        "visibility": "partly_visible",
+        "depressionDeg": 7.661,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.755,
+        "acrossErrorM": -0.053,
+        "acrossRel": -0.092,
+        "alongErrorM": -0.069,
+        "alongRel": -0.118,
+        "heightErrorM": 0.042,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-right",
+        "cls": "chair",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.063,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.371,
+        "acrossErrorM": -0.049,
+        "acrossRel": -0.076,
+        "alongErrorM": -0.035,
+        "alongRel": -0.056,
+        "heightErrorM": 0.039,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-front",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 8.992,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.58,
+        "acrossErrorM": 0.128,
+        "acrossRel": 0.219,
+        "alongErrorM": 0.112,
+        "alongRel": 0.186,
+        "heightErrorM": 0.037,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "plant-1",
+        "cls": "plant",
+        "visibility": "visible",
+        "depressionDeg": 5.585,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 1.559,
+        "acrossErrorM": -0.265,
+        "acrossRel": -0.382,
+        "alongErrorM": -0.265,
+        "alongRel": -0.382,
+        "heightErrorM": -0.413,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "reviewed": [
+       {
+        "gt": "shelf-1",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 6.052,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.071,
+        "acrossErrorM": 0.089,
+        "acrossRel": 0.058,
+        "alongErrorM": 0.705,
+        "alongRel": 1.313,
+        "heightErrorM": 0.051,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "table-1",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.274,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.193,
+        "acrossErrorM": -0.037,
+        "acrossRel": -0.024,
+        "alongErrorM": -0.023,
+        "alongRel": -0.022,
+        "heightErrorM": 0.02,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "table-far",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 4.288,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 1.047,
+        "acrossErrorM": 0.119,
+        "acrossRel": 0.078,
+        "alongErrorM": 0,
+        "alongRel": 0,
+        "heightErrorM": -0.029,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "coffee-table",
+        "cls": "table",
+        "visibility": "visible",
+        "depressionDeg": 6.963,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.071,
+        "acrossErrorM": 0.072,
+        "acrossRel": 0.061,
+        "alongErrorM": -0.104,
+        "alongRel": -0.102,
+        "heightErrorM": 0.066,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "sofa-1",
+        "cls": "sofa",
+        "visibility": "visible",
+        "depressionDeg": 6.218,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.376,
+        "acrossErrorM": -0.113,
+        "acrossRel": -0.052,
+        "alongErrorM": -0.542,
+        "alongRel": -0.317,
+        "heightErrorM": 0.084,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-left",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 8.378,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.119,
+        "acrossErrorM": -0.001,
+        "acrossRel": -0.003,
+        "alongErrorM": 0.018,
+        "alongRel": 0.034,
+        "heightErrorM": 0.049,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-back",
+        "cls": "chair",
+        "visibility": "partly_visible",
+        "depressionDeg": 7.661,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.755,
+        "acrossErrorM": -0.053,
+        "acrossRel": -0.092,
+        "alongErrorM": -0.069,
+        "alongRel": -0.118,
+        "heightErrorM": 0.042,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-right",
+        "cls": "chair",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.063,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.172,
+        "acrossErrorM": -0.003,
+        "acrossRel": -0.005,
+        "alongErrorM": 0.01,
+        "alongRel": 0.017,
+        "heightErrorM": -0.001,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-front",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 8.992,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.58,
+        "acrossErrorM": 0.128,
+        "acrossRel": 0.219,
+        "alongErrorM": 0.112,
+        "alongRel": 0.186,
+        "heightErrorM": 0.037,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "plant-1",
+        "cls": "plant",
+        "visibility": "visible",
+        "depressionDeg": 5.585,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.052,
+        "acrossErrorM": -0.206,
+        "acrossRel": -0.297,
+        "alongErrorM": -0.206,
+        "alongRel": -0.297,
+        "heightErrorM": -0.006,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "manual": [
+       {
+        "gt": "table-1",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.274,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.118,
+        "acrossErrorM": 0.017,
+        "acrossRel": 0.011,
+        "alongErrorM": 0.51,
+        "alongRel": 0.5,
+        "heightErrorM": -0.006,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-front",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 8.992,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.027,
+        "acrossErrorM": -0.014,
+        "acrossRel": -0.024,
+        "alongErrorM": -0.03,
+        "alongRel": -0.05,
+        "heightErrorM": -0.012,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-back",
+        "cls": "chair",
+        "visibility": "partly_visible",
+        "depressionDeg": 7.661,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.083,
+        "acrossErrorM": -0.024,
+        "acrossRel": -0.042,
+        "alongErrorM": -0.041,
+        "alongRel": -0.069,
+        "heightErrorM": -0.001,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-left",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 8.378,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.071,
+        "acrossErrorM": -0.015,
+        "acrossRel": -0.028,
+        "alongErrorM": 0.004,
+        "alongRel": 0.008,
+        "heightErrorM": -0.002,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-right",
+        "cls": "chair",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.063,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.172,
+        "acrossErrorM": -0.003,
+        "acrossRel": -0.005,
+        "alongErrorM": 0.01,
+        "alongRel": 0.017,
+        "heightErrorM": -0.001,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "sofa-1",
+        "cls": "sofa",
+        "visibility": "visible",
+        "depressionDeg": 6.218,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.248,
+        "acrossErrorM": 0.037,
+        "acrossRel": 0.017,
+        "alongErrorM": 0.517,
+        "alongRel": 0.302,
+        "heightErrorM": -0.012,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "coffee-table",
+        "cls": "table",
+        "visibility": "visible",
+        "depressionDeg": 6.963,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.029,
+        "acrossErrorM": 0.013,
+        "acrossRel": 0.011,
+        "alongErrorM": 0.153,
+        "alongRel": 0.149,
+        "heightErrorM": -0.005,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "plant-1",
+        "cls": "plant",
+        "visibility": "visible",
+        "depressionDeg": 5.585,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.052,
+        "acrossErrorM": -0.206,
+        "acrossRel": -0.297,
+        "alongErrorM": -0.206,
+        "alongRel": -0.297,
+        "heightErrorM": -0.006,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "shelf-1",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 6.052,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.141,
+        "acrossErrorM": 0.027,
+        "acrossRel": 0.018,
+        "alongErrorM": 1.021,
+        "alongRel": 1.903,
+        "heightErrorM": -0.004,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "table-far",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 4.288,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 1.357,
+        "acrossErrorM": 0.152,
+        "acrossRel": 0.099,
+        "alongErrorM": 0.614,
+        "alongRel": 0.571,
+        "heightErrorM": -0.045,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ]
+     }
+    },
+    {
+     "case": "office-a",
+     "scene_type": "office",
+     "wall_s": 57.51,
+     "calls": 1,
+     "run_fault": null,
+     "counted": 10,
+     "proposals": 10,
+     "accepted": 9,
+     "detection": {
+      "tp": 9,
+      "fp": 0,
+      "fn": 1,
+      "groups": 0,
+      "duplicates": 0
+     },
+     "detection_all_proposals": {
+      "tp": 9,
+      "fp": 1,
+      "fn": 1
+     },
+     "proposals_scored": [
+      {
+       "label": "left desk",
+       "template": "table",
+       "accepted": true,
+       "box": {
+        "left": 0.315,
+        "top": 0.5,
+        "right": 0.48,
+        "bottom": 0.62
+       },
+       "status": "tp",
+       "gt": "desk-1",
+       "iou": 0.93,
+       "covers": [
+        "desk-1",
+        "chair-1"
+       ]
+      },
+      {
+       "label": "right desk",
+       "template": "table",
+       "accepted": true,
+       "box": {
+        "left": 0.47,
+        "top": 0.505,
+        "right": 0.64,
+        "bottom": 0.64
+       },
+       "status": "tp",
+       "gt": "desk-2",
+       "iou": 0.927,
+       "covers": [
+        "desk-2",
+        "chair-2"
+       ]
+      },
+      {
+       "label": "left chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.33,
+        "top": 0.5,
+        "right": 0.405,
+        "bottom": 0.625
+       },
+       "status": "tp",
+       "gt": "chair-1",
+       "iou": 0.882,
+       "covers": [
+        "chair-1"
+       ]
+      },
+      {
+       "label": "right chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.495,
+        "top": 0.51,
+        "right": 0.575,
+        "bottom": 0.645
+       },
+       "status": "tp",
+       "gt": "chair-2",
+       "iou": 0.776,
+       "covers": [
+        "chair-2"
+       ]
+      },
+      {
+       "label": "isolated chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.755,
+        "top": 0.485,
+        "right": 0.835,
+        "bottom": 0.605
+       },
+       "status": "tp",
+       "gt": "chair-3",
+       "iou": 0.803,
+       "covers": [
+        "chair-3"
+       ]
+      },
+      {
+       "label": "orange shelf",
+       "template": "shelf",
+       "accepted": true,
+       "box": {
+        "left": 0.675,
+        "top": 0.385,
+        "right": 0.78,
+        "bottom": 0.565
+       },
+       "status": "tp",
+       "gt": "shelf-1",
+       "iou": 0.901,
+       "covers": [
+        "shelf-1"
+       ]
+      },
+      {
+       "label": "left cabinet",
+       "template": "cabinet",
+       "accepted": true,
+       "box": {
+        "left": 0.335,
+        "top": 0.38,
+        "right": 0.405,
+        "bottom": 0.505
+       },
+       "status": "tp",
+       "gt": "cabinet-1",
+       "iou": 0.66,
+       "covers": [
+        "cabinet-1"
+       ]
+      },
+      {
+       "label": "right cabinet",
+       "template": "cabinet",
+       "accepted": true,
+       "box": {
+        "left": 0.395,
+        "top": 0.435,
+        "right": 0.46,
+        "bottom": 0.515
+       },
+       "status": "tp",
+       "gt": "cabinet-2",
+       "iou": 0.636,
+       "covers": [
+        "cabinet-2"
+       ]
+      },
+      {
+       "label": "green plant in pot",
+       "template": "plant",
+       "accepted": true,
+       "box": {
+        "left": 0.92,
+        "top": 0.47,
+        "right": 0.999,
+        "bottom": 0.665
+       },
+       "status": "tp",
+       "gt": "plant-1",
+       "iou": 0.884,
+       "covers": [
+        "plant-1"
+       ]
+      },
+      {
+       "label": "monitor on stand",
+       "template": "screen",
+       "accepted": false,
+       "box": {
+        "left": 0.525,
+        "top": 0.415,
+        "right": 0.605,
+        "bottom": 0.48
+       },
+       "status": "poor_outline",
+       "gt": "screen-1",
+       "iou": 0.42,
+       "covers": []
+      }
+     ],
+     "missed": [
+      "screen-1"
+     ],
+     "calibration": {
+      "derived_depth_rel": 0.04,
+      "camera_height_error_m": 0,
+      "fov_error_deg": 0,
+      "fov_basis": "from_sides",
+      "corner_residual_px": 0.001
+     },
+     "actions": {
+      "reviewed": {
+       "reject": 0,
+       "accept": 1,
+       "split": 0,
+       "merge": 0,
+       "add": 0,
+       "outline": 3,
+       "shape": 0,
+       "visibility": 4
+      },
+      "manual": {
+       "reject": 0,
+       "accept": 0,
+       "split": 0,
+       "merge": 0,
+       "add": 10,
+       "outline": 0,
+       "shape": 10,
+       "visibility": 5
+      }
+     },
+     "geometry": {
+      "initial": [
+       {
+        "gt": "desk-1",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 12.833,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.226,
+        "acrossErrorM": -0.028,
+        "acrossRel": -0.016,
+        "alongErrorM": -0.261,
+        "alongRel": -0.179,
+        "heightErrorM": 0.072,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "desk-2",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 14.081,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.229,
+        "acrossErrorM": -0.104,
+        "acrossRel": -0.06,
+        "alongErrorM": -0.102,
+        "alongRel": -0.088,
+        "heightErrorM": 0.097,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-1",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 13.917,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.094,
+        "acrossErrorM": 0.048,
+        "acrossRel": 0.069,
+        "alongErrorM": 0.041,
+        "alongRel": 0.058,
+        "heightErrorM": -0.027,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-2",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 15.552,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.194,
+        "acrossErrorM": 0.147,
+        "acrossRel": 0.237,
+        "alongErrorM": 0.133,
+        "alongRel": 0.21,
+        "heightErrorM": -0.055,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-3",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 11.808,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.134,
+        "acrossErrorM": 0.063,
+        "acrossRel": 0.088,
+        "alongErrorM": 0.064,
+        "alongRel": 0.089,
+        "heightErrorM": 0.042,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "shelf-1",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 9.76,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.15,
+        "acrossErrorM": 0.133,
+        "acrossRel": 0.11,
+        "alongErrorM": 0.656,
+        "alongRel": 1.542,
+        "heightErrorM": 0.053,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.53,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 4.31,
+        "acrossErrorM": 0.555,
+        "acrossRel": 0.553,
+        "alongErrorM": 0.715,
+        "alongRel": 0.848,
+        "heightErrorM": 0.198,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.917,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 3.163,
+        "acrossErrorM": 0.357,
+        "acrossRel": 0.355,
+        "alongErrorM": 0.569,
+        "alongRel": 0.716,
+        "heightErrorM": -0.013,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "plant-1",
+        "cls": "plant",
+        "visibility": "partly_visible",
+        "depressionDeg": 13.799,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.067,
+        "acrossErrorM": -0.159,
+        "acrossRel": -0.253,
+        "alongErrorM": -0.159,
+        "alongRel": -0.253,
+        "heightErrorM": 0.009,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "reviewed": [
+       {
+        "gt": "desk-1",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 12.833,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.226,
+        "acrossErrorM": -0.028,
+        "acrossRel": -0.016,
+        "alongErrorM": -0.261,
+        "alongRel": -0.179,
+        "heightErrorM": 0.072,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "desk-2",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 14.081,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.229,
+        "acrossErrorM": -0.104,
+        "acrossRel": -0.06,
+        "alongErrorM": -0.102,
+        "alongRel": -0.088,
+        "heightErrorM": 0.097,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-1",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 13.917,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.094,
+        "acrossErrorM": 0.048,
+        "acrossRel": 0.069,
+        "alongErrorM": 0.041,
+        "alongRel": 0.058,
+        "heightErrorM": -0.027,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-2",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 15.552,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.194,
+        "acrossErrorM": 0.147,
+        "acrossRel": 0.237,
+        "alongErrorM": 0.133,
+        "alongRel": 0.21,
+        "heightErrorM": -0.055,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-3",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 11.808,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.134,
+        "acrossErrorM": 0.063,
+        "acrossRel": 0.088,
+        "alongErrorM": 0.064,
+        "alongRel": 0.089,
+        "heightErrorM": 0.042,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "shelf-1",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 9.76,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.15,
+        "acrossErrorM": 0.133,
+        "acrossRel": 0.11,
+        "alongErrorM": 0.656,
+        "alongRel": 1.542,
+        "heightErrorM": 0.053,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.53,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.096,
+        "acrossErrorM": -0.048,
+        "acrossRel": -0.048,
+        "alongErrorM": 0.113,
+        "alongRel": 0.133,
+        "heightErrorM": -0.004,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.917,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.138,
+        "acrossErrorM": -0.019,
+        "acrossRel": -0.019,
+        "alongErrorM": 0.193,
+        "alongRel": 0.242,
+        "heightErrorM": -0.005,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "plant-1",
+        "cls": "plant",
+        "visibility": "partly_visible",
+        "depressionDeg": 13.799,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.067,
+        "acrossErrorM": -0.159,
+        "acrossRel": -0.253,
+        "alongErrorM": -0.159,
+        "alongRel": -0.253,
+        "heightErrorM": 0.009,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "screen-1",
+        "cls": "screen",
+        "visibility": "visible",
+        "depressionDeg": 9.623,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.052,
+        "acrossErrorM": -0.086,
+        "acrossRel": -0.069,
+        "alongErrorM": -0.088,
+        "alongRel": -0.134,
+        "heightErrorM": 0,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "manual": [
+       {
+        "gt": "desk-1",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 12.833,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.188,
+        "acrossErrorM": 0.043,
+        "acrossRel": 0.024,
+        "alongErrorM": 0.374,
+        "alongRel": 0.256,
+        "heightErrorM": -0.035,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "desk-2",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 14.081,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.175,
+        "acrossErrorM": -0.025,
+        "acrossRel": -0.014,
+        "alongErrorM": 0.565,
+        "alongRel": 0.49,
+        "heightErrorM": -0.042,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-1",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 13.917,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.004,
+        "acrossErrorM": -0.015,
+        "acrossRel": -0.022,
+        "alongErrorM": -0.022,
+        "alongRel": -0.031,
+        "heightErrorM": -0.048,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-2",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 15.552,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.029,
+        "acrossErrorM": -0.012,
+        "acrossRel": -0.019,
+        "alongErrorM": -0.026,
+        "alongRel": -0.041,
+        "heightErrorM": -0.049,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-3",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 11.808,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.08,
+        "acrossErrorM": -0.066,
+        "acrossRel": -0.092,
+        "alongErrorM": -0.065,
+        "alongRel": -0.091,
+        "heightErrorM": 0.016,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.53,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.096,
+        "acrossErrorM": -0.048,
+        "acrossRel": -0.048,
+        "alongErrorM": 0.113,
+        "alongRel": 0.133,
+        "heightErrorM": -0.004,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.917,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.138,
+        "acrossErrorM": -0.019,
+        "acrossRel": -0.019,
+        "alongErrorM": 0.193,
+        "alongRel": 0.242,
+        "heightErrorM": -0.005,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "shelf-1",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 9.76,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.128,
+        "acrossErrorM": 0.039,
+        "acrossRel": 0.032,
+        "alongErrorM": 0.822,
+        "alongRel": 1.93,
+        "heightErrorM": 0.003,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "plant-1",
+        "cls": "plant",
+        "visibility": "partly_visible",
+        "depressionDeg": 13.799,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.053,
+        "acrossErrorM": -0.201,
+        "acrossRel": -0.319,
+        "alongErrorM": -0.201,
+        "alongRel": -0.319,
+        "heightErrorM": -0.014,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "screen-1",
+        "cls": "screen",
+        "visibility": "visible",
+        "depressionDeg": 9.623,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.274,
+        "acrossErrorM": -0.046,
+        "acrossRel": -0.036,
+        "alongErrorM": 0.556,
+        "alongRel": 0.847,
+        "heightErrorM": -0.006,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ]
+     }
+    },
+    {
+     "case": "office-b",
+     "scene_type": "office",
+     "wall_s": 60.28,
+     "calls": 1,
+     "run_fault": null,
+     "counted": 10,
+     "proposals": 10,
+     "accepted": 9,
+     "detection": {
+      "tp": 9,
+      "fp": 0,
+      "fn": 1,
+      "groups": 0,
+      "duplicates": 0
+     },
+     "detection_all_proposals": {
+      "tp": 9,
+      "fp": 1,
+      "fn": 1
+     },
+     "proposals_scored": [
+      {
+       "label": "table",
+       "template": "table",
+       "accepted": true,
+       "box": {
+        "left": 0.235,
+        "top": 0.505,
+        "right": 0.415,
+        "bottom": 0.64
+       },
+       "status": "tp",
+       "gt": "desk-1",
+       "iou": 0.869,
+       "covers": [
+        "desk-1",
+        "chair-1"
+       ]
+      },
+      {
+       "label": "table",
+       "template": "table",
+       "accepted": true,
+       "box": {
+        "left": 0.408,
+        "top": 0.505,
+        "right": 0.568,
+        "bottom": 0.62
+       },
+       "status": "tp",
+       "gt": "desk-2",
+       "iou": 0.898,
+       "covers": [
+        "desk-2",
+        "chair-2"
+       ]
+      },
+      {
+       "label": "chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.3,
+        "top": 0.505,
+        "right": 0.37,
+        "bottom": 0.645
+       },
+       "status": "tp",
+       "gt": "chair-1",
+       "iou": 0.864,
+       "covers": [
+        "chair-1"
+       ]
+      },
+      {
+       "label": "chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.475,
+        "top": 0.5,
+        "right": 0.545,
+        "bottom": 0.625
+       },
+       "status": "tp",
+       "gt": "chair-2",
+       "iou": 0.856,
+       "covers": [
+        "chair-2"
+       ]
+      },
+      {
+       "label": "chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.575,
+        "top": 0.48,
+        "right": 0.62,
+        "bottom": 0.57
+       },
+       "status": "tp",
+       "gt": "chair-3",
+       "iou": 0.894,
+       "covers": [
+        "chair-3"
+       ]
+      },
+      {
+       "label": "shelf",
+       "template": "shelf",
+       "accepted": true,
+       "box": {
+        "left": 0.465,
+        "top": 0.405,
+        "right": 0.55,
+        "bottom": 0.555
+       },
+       "status": "tp",
+       "gt": "shelf-1",
+       "iou": 0.841,
+       "covers": [
+        "shelf-1"
+       ]
+      },
+      {
+       "label": "cabinet",
+       "template": "cabinet",
+       "accepted": true,
+       "box": {
+        "left": 0.083,
+        "top": 0.385,
+        "right": 0.17,
+        "bottom": 0.585
+       },
+       "status": "tp",
+       "gt": "cabinet-1",
+       "iou": 0.939,
+       "covers": [
+        "cabinet-1"
+       ]
+      },
+      {
+       "label": "cabinet",
+       "template": "cabinet",
+       "accepted": true,
+       "box": {
+        "left": 0.17,
+        "top": 0.45,
+        "right": 0.25,
+        "bottom": 0.58
+       },
+       "status": "tp",
+       "gt": "cabinet-2",
+       "iou": 0.852,
+       "covers": [
+        "cabinet-2"
+       ]
+      },
+      {
+       "label": "plant in pot",
+       "template": "plant",
+       "accepted": true,
+       "box": {
+        "left": 0.7,
+        "top": 0.455,
+        "right": 0.745,
+        "bottom": 0.58
+       },
+       "status": "tp",
+       "gt": "plant-1",
+       "iou": 0.826,
+       "covers": [
+        "plant-1"
+       ]
+      },
+      {
+       "label": "monitor",
+       "template": "screen",
+       "accepted": false,
+       "box": {
+        "left": 0.335,
+        "top": 0.43,
+        "right": 0.415,
+        "bottom": 0.5
+       },
+       "status": "poor_outline",
+       "gt": "screen-1",
+       "iou": 0.488,
+       "covers": []
+      }
+     ],
+     "missed": [
+      "screen-1"
+     ],
+     "calibration": {
+      "derived_depth_rel": 0,
+      "camera_height_error_m": 0,
+      "fov_error_deg": 0,
+      "fov_basis": "from_rectangle",
+      "corner_residual_px": 0
+     },
+     "actions": {
+      "reviewed": {
+       "reject": 0,
+       "accept": 1,
+       "split": 0,
+       "merge": 0,
+       "add": 0,
+       "outline": 1,
+       "shape": 0,
+       "visibility": 3
+      },
+      "manual": {
+       "reject": 0,
+       "accept": 0,
+       "split": 0,
+       "merge": 0,
+       "add": 10,
+       "outline": 0,
+       "shape": 10,
+       "visibility": 3
+      }
+     },
+     "geometry": {
+      "initial": [
+       {
+        "gt": "desk-1",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 11.043,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.308,
+        "acrossErrorM": 0.011,
+        "acrossRel": 0.006,
+        "alongErrorM": 0.306,
+        "alongRel": 0.303,
+        "heightErrorM": 0.122,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "desk-2",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 10.332,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.271,
+        "acrossErrorM": -0.129,
+        "acrossRel": -0.072,
+        "alongErrorM": -0.289,
+        "alongRel": -0.215,
+        "heightErrorM": 0.072,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-1",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 12.19,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.051,
+        "acrossErrorM": 0.046,
+        "acrossRel": 0.08,
+        "alongErrorM": 0.029,
+        "alongRel": 0.05,
+        "heightErrorM": 0.009,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-2",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 11.253,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.021,
+        "acrossErrorM": 0.033,
+        "acrossRel": 0.049,
+        "alongErrorM": 0.023,
+        "alongRel": 0.034,
+        "heightErrorM": -0.003,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-3",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 7.802,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.039,
+        "acrossErrorM": 0.014,
+        "acrossRel": 0.021,
+        "alongErrorM": 0.027,
+        "alongRel": 0.042,
+        "heightErrorM": 0.066,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "shelf-1",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 6.959,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.164,
+        "acrossErrorM": 0.161,
+        "acrossRel": 0.128,
+        "alongErrorM": 0.039,
+        "alongRel": 0.045,
+        "heightErrorM": 0.071,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "visible",
+        "depressionDeg": 7.653,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.075,
+        "acrossErrorM": -0.005,
+        "acrossRel": -0.005,
+        "alongErrorM": 0.386,
+        "alongRel": 0.691,
+        "heightErrorM": 0.033,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "visible",
+        "depressionDeg": 7.71,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.016,
+        "acrossErrorM": 0.074,
+        "acrossRel": 0.081,
+        "alongErrorM": 0.514,
+        "alongRel": 1.098,
+        "heightErrorM": 0.111,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "plant-1",
+        "cls": "plant",
+        "visibility": "visible",
+        "depressionDeg": 8.17,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.037,
+        "acrossErrorM": -0.148,
+        "acrossRel": -0.21,
+        "alongErrorM": -0.148,
+        "alongRel": -0.21,
+        "heightErrorM": 0.059,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "reviewed": [
+       {
+        "gt": "desk-1",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 11.043,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.308,
+        "acrossErrorM": 0.011,
+        "acrossRel": 0.006,
+        "alongErrorM": 0.306,
+        "alongRel": 0.303,
+        "heightErrorM": 0.122,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "desk-2",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 10.332,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.271,
+        "acrossErrorM": -0.129,
+        "acrossRel": -0.072,
+        "alongErrorM": -0.289,
+        "alongRel": -0.215,
+        "heightErrorM": 0.072,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-1",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 12.19,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.051,
+        "acrossErrorM": 0.046,
+        "acrossRel": 0.08,
+        "alongErrorM": 0.029,
+        "alongRel": 0.05,
+        "heightErrorM": 0.009,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-2",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 11.253,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.021,
+        "acrossErrorM": 0.033,
+        "acrossRel": 0.049,
+        "alongErrorM": 0.023,
+        "alongRel": 0.034,
+        "heightErrorM": -0.003,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-3",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 7.802,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.039,
+        "acrossErrorM": 0.014,
+        "acrossRel": 0.021,
+        "alongErrorM": 0.027,
+        "alongRel": 0.042,
+        "heightErrorM": 0.066,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "shelf-1",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 6.959,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.164,
+        "acrossErrorM": 0.161,
+        "acrossRel": 0.128,
+        "alongErrorM": 0.039,
+        "alongRel": 0.045,
+        "heightErrorM": 0.071,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "visible",
+        "depressionDeg": 7.653,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.075,
+        "acrossErrorM": -0.005,
+        "acrossRel": -0.005,
+        "alongErrorM": 0.386,
+        "alongRel": 0.691,
+        "heightErrorM": 0.033,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "visible",
+        "depressionDeg": 7.71,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.016,
+        "acrossErrorM": 0.074,
+        "acrossRel": 0.081,
+        "alongErrorM": 0.514,
+        "alongRel": 1.098,
+        "heightErrorM": 0.111,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "plant-1",
+        "cls": "plant",
+        "visibility": "visible",
+        "depressionDeg": 8.17,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.037,
+        "acrossErrorM": -0.148,
+        "acrossRel": -0.21,
+        "alongErrorM": -0.148,
+        "alongRel": -0.21,
+        "heightErrorM": 0.059,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "screen-1",
+        "cls": "screen",
+        "visibility": "visible",
+        "depressionDeg": 7.536,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.013,
+        "acrossErrorM": -0.079,
+        "acrossRel": -0.063,
+        "alongErrorM": 0.006,
+        "alongRel": 0.009,
+        "heightErrorM": 0,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "manual": [
+       {
+        "gt": "desk-1",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 11.043,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.102,
+        "acrossErrorM": 0.006,
+        "acrossRel": 0.004,
+        "alongErrorM": 0.691,
+        "alongRel": 0.685,
+        "heightErrorM": 0,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "desk-2",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 10.332,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.118,
+        "acrossErrorM": -0.138,
+        "acrossRel": -0.077,
+        "alongErrorM": 0.3,
+        "alongRel": 0.223,
+        "heightErrorM": -0.035,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-1",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 12.19,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.071,
+        "acrossErrorM": -0.024,
+        "acrossRel": -0.041,
+        "alongErrorM": -0.041,
+        "alongRel": -0.069,
+        "heightErrorM": -0.019,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-2",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 11.253,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.023,
+        "acrossErrorM": -0.034,
+        "acrossRel": -0.051,
+        "alongErrorM": -0.044,
+        "alongRel": -0.064,
+        "heightErrorM": -0.029,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-3",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 7.802,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.032,
+        "acrossErrorM": -0.017,
+        "acrossRel": -0.027,
+        "alongErrorM": -0.004,
+        "alongRel": -0.007,
+        "heightErrorM": 0.004,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "visible",
+        "depressionDeg": 7.653,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.043,
+        "acrossErrorM": -0.007,
+        "acrossRel": -0.008,
+        "alongErrorM": 0.383,
+        "alongRel": 0.687,
+        "heightErrorM": -0.007,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "visible",
+        "depressionDeg": 7.71,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.053,
+        "acrossErrorM": 0.001,
+        "acrossRel": 0.001,
+        "alongErrorM": 0.442,
+        "alongRel": 0.942,
+        "heightErrorM": -0.001,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "shelf-1",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 6.959,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.314,
+        "acrossErrorM": -0.015,
+        "acrossRel": -0.012,
+        "alongErrorM": 0.383,
+        "alongRel": 0.445,
+        "heightErrorM": 0.003,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "plant-1",
+        "cls": "plant",
+        "visibility": "visible",
+        "depressionDeg": 8.17,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.062,
+        "acrossErrorM": -0.222,
+        "acrossRel": -0.315,
+        "alongErrorM": -0.222,
+        "alongRel": -0.315,
+        "heightErrorM": 0.002,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "screen-1",
+        "cls": "screen",
+        "visibility": "visible",
+        "depressionDeg": 7.536,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.284,
+        "acrossErrorM": -0.044,
+        "acrossRel": -0.035,
+        "alongErrorM": 0.567,
+        "alongRel": 0.876,
+        "heightErrorM": 0,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ]
+     }
+    },
+    {
+     "case": "store-a",
+     "scene_type": "storage",
+     "wall_s": 41.92,
+     "calls": 1,
+     "run_fault": null,
+     "counted": 8,
+     "proposals": 5,
+     "accepted": 5,
+     "detection": {
+      "tp": 5,
+      "fp": 0,
+      "fn": 3,
+      "groups": 2,
+      "duplicates": 0
+     },
+     "detection_all_proposals": {
+      "tp": 5,
+      "fp": 0,
+      "fn": 3
+     },
+     "proposals_scored": [
+      {
+       "label": "large orange and blue shelf",
+       "template": "shelf",
+       "accepted": true,
+       "box": {
+        "left": 0.165,
+        "top": 0.39,
+        "right": 0.515,
+        "bottom": 0.61
+       },
+       "status": "tp",
+       "gt": "rack-1",
+       "iou": 0.514,
+       "covers": [
+        "rack-1",
+        "rack-2",
+        "pallet-c"
+       ]
+      },
+      {
+       "label": "small orange and blue shelf",
+       "template": "shelf",
+       "accepted": true,
+       "box": {
+        "left": 0.565,
+        "top": 0.405,
+        "right": 0.655,
+        "bottom": 0.535
+       },
+       "status": "tp",
+       "gt": "rack-3",
+       "iou": 0.904,
+       "covers": [
+        "rack-3"
+       ]
+      },
+      {
+       "label": "pallet with stacked boxes",
+       "template": "pallet",
+       "accepted": true,
+       "box": {
+        "left": 0.575,
+        "top": 0.5,
+        "right": 0.775,
+        "bottom": 0.625
+       },
+       "status": "tp",
+       "gt": "pallet-a",
+       "iou": 0.517,
+       "covers": [
+        "pallet-a",
+        "pallet-b"
+       ]
+      },
+      {
+       "label": "white cube cabinet",
+       "template": "cabinet",
+       "accepted": true,
+       "box": {
+        "left": 0.255,
+        "top": 0.55,
+        "right": 0.395,
+        "bottom": 0.695
+       },
+       "status": "tp",
+       "gt": "box-1",
+       "iou": 0.886,
+       "covers": [
+        "box-1"
+       ]
+      },
+      {
+       "label": "tall white cabinet",
+       "template": "cabinet",
+       "accepted": true,
+       "box": {
+        "left": 0.09,
+        "top": 0.415,
+        "right": 0.14,
+        "bottom": 0.57
+       },
+       "status": "tp",
+       "gt": "cabinet-s",
+       "iou": 0.897,
+       "covers": [
+        "cabinet-s"
+       ]
+      }
+     ],
+     "missed": [
+      "rack-2",
+      "pallet-b",
+      "pallet-c"
+     ],
+     "calibration": {
+      "derived_depth_rel": 0,
+      "camera_height_error_m": 0,
+      "fov_error_deg": 0,
+      "fov_basis": "from_sides",
+      "corner_residual_px": 0.002
+     },
+     "actions": {
+      "reviewed": {
+       "reject": 0,
+       "accept": 0,
+       "split": 2,
+       "merge": 0,
+       "add": 0,
+       "outline": 3,
+       "shape": 1,
+       "visibility": 4
+      },
+      "manual": {
+       "reject": 0,
+       "accept": 0,
+       "split": 0,
+       "merge": 0,
+       "add": 8,
+       "outline": 0,
+       "shape": 8,
+       "visibility": 4
+      }
+     },
+     "geometry": {
+      "initial": [
+       {
+        "gt": "rack-1",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 9.461,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 1.374,
+        "acrossErrorM": 2.356,
+        "acrossRel": 0.974,
+        "alongErrorM": 1.697,
+        "alongRel": 1.792,
+        "heightErrorM": 0.025,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-3",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 6.568,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 1.969,
+        "acrossErrorM": 0.297,
+        "acrossRel": 0.154,
+        "alongErrorM": -0.986,
+        "alongRel": -0.388,
+        "heightErrorM": 0.185,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-a",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 10.895,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.452,
+        "acrossErrorM": 1.105,
+        "acrossRel": 0.766,
+        "alongErrorM": 0.657,
+        "alongRel": 0.503,
+        "heightErrorM": 0.047,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "box-1",
+        "cls": "box",
+        "visibility": "visible",
+        "depressionDeg": 14.419,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.136,
+        "acrossErrorM": 0.075,
+        "acrossRel": 0.061,
+        "alongErrorM": 0.179,
+        "alongRel": 0.158,
+        "heightErrorM": 0.052,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-s",
+        "cls": "cabinet",
+        "visibility": "visible",
+        "depressionDeg": 7.029,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.13,
+        "acrossErrorM": 0.018,
+        "acrossRel": 0.026,
+        "alongErrorM": -0.37,
+        "alongRel": -0.342,
+        "heightErrorM": 0.064,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "reviewed": [
+       {
+        "gt": "rack-1",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 9.461,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.526,
+        "acrossErrorM": -0.05,
+        "acrossRel": -0.021,
+        "alongErrorM": 0.364,
+        "alongRel": 0.385,
+        "heightErrorM": 0.004,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-c",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 5.482,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.977,
+        "acrossErrorM": 0.061,
+        "acrossRel": 0.048,
+        "alongErrorM": 2.159,
+        "alongRel": 2.31,
+        "heightErrorM": -0.083,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-2",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 9.235,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.223,
+        "acrossErrorM": 0.039,
+        "acrossRel": 0.015,
+        "alongErrorM": -0.535,
+        "alongRel": -0.381,
+        "heightErrorM": 0.04,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-3",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 6.568,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 1.969,
+        "acrossErrorM": 0.297,
+        "acrossRel": 0.154,
+        "alongErrorM": -0.986,
+        "alongRel": -0.388,
+        "heightErrorM": 0.185,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-a",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 10.895,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.351,
+        "acrossErrorM": -0.174,
+        "acrossRel": -0.121,
+        "alongErrorM": -0.328,
+        "alongRel": -0.251,
+        "heightErrorM": 0.098,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-b",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 10.083,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.744,
+        "acrossErrorM": -0.249,
+        "acrossRel": -0.173,
+        "alongErrorM": -0.39,
+        "alongRel": -0.285,
+        "heightErrorM": 0.103,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "box-1",
+        "cls": "box",
+        "visibility": "visible",
+        "depressionDeg": 14.419,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.136,
+        "acrossErrorM": 0.075,
+        "acrossRel": 0.061,
+        "alongErrorM": 0.179,
+        "alongRel": 0.158,
+        "heightErrorM": 0.052,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-s",
+        "cls": "cabinet",
+        "visibility": "visible",
+        "depressionDeg": 7.029,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.13,
+        "acrossErrorM": 0.018,
+        "acrossRel": 0.026,
+        "alongErrorM": -0.37,
+        "alongRel": -0.342,
+        "heightErrorM": 0.064,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "manual": [
+       {
+        "gt": "rack-1",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 9.461,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.214,
+        "acrossErrorM": 0.13,
+        "acrossRel": 0.054,
+        "alongErrorM": 1.6,
+        "alongRel": 1.69,
+        "heightErrorM": 0.004,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-2",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 9.235,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 1.182,
+        "acrossErrorM": 0.242,
+        "acrossRel": 0.095,
+        "alongErrorM": 1.375,
+        "alongRel": 0.978,
+        "heightErrorM": 0.04,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-3",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 6.568,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 1.877,
+        "acrossErrorM": 0.236,
+        "acrossRel": 0.122,
+        "alongErrorM": -0.374,
+        "alongRel": -0.147,
+        "heightErrorM": 0.089,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-a",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 10.895,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.063,
+        "acrossErrorM": 0.007,
+        "acrossRel": 0.005,
+        "alongErrorM": 0.146,
+        "alongRel": 0.112,
+        "heightErrorM": -0.007,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-b",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 10.083,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.035,
+        "acrossErrorM": -0.031,
+        "acrossRel": -0.022,
+        "alongErrorM": 0.044,
+        "alongRel": 0.032,
+        "heightErrorM": -0.005,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "box-1",
+        "cls": "box",
+        "visibility": "visible",
+        "depressionDeg": 14.419,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.139,
+        "acrossErrorM": -0.034,
+        "acrossRel": -0.028,
+        "alongErrorM": 0.069,
+        "alongRel": 0.061,
+        "heightErrorM": 0.026,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-s",
+        "cls": "cabinet",
+        "visibility": "visible",
+        "depressionDeg": 7.029,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.359,
+        "acrossErrorM": -0.041,
+        "acrossRel": -0.059,
+        "alongErrorM": -0.429,
+        "alongRel": -0.397,
+        "heightErrorM": -0.004,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-c",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 5.482,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.028,
+        "acrossErrorM": -0.014,
+        "acrossRel": -0.011,
+        "alongErrorM": 0.336,
+        "alongRel": 0.36,
+        "heightErrorM": -0.009,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ]
+     }
+    },
+    {
+     "case": "store-b",
+     "scene_type": "storage",
+     "wall_s": 37.92,
+     "calls": 1,
+     "run_fault": null,
+     "counted": 7,
+     "proposals": 5,
+     "accepted": 5,
+     "detection": {
+      "tp": 5,
+      "fp": 0,
+      "fn": 2,
+      "groups": 1,
+      "duplicates": 0
+     },
+     "detection_all_proposals": {
+      "tp": 5,
+      "fp": 0,
+      "fn": 2
+     },
+     "proposals_scored": [
+      {
+       "label": "large orange and blue shelf",
+       "template": "shelf",
+       "accepted": true,
+       "box": {
+        "left": 0.307,
+        "top": 0.402,
+        "right": 0.567,
+        "bottom": 0.568
+       },
+       "status": "tp",
+       "gt": "rack-2",
+       "iou": 0.527,
+       "covers": [
+        "rack-1",
+        "rack-2",
+        "cabinet-s"
+       ]
+      },
+      {
+       "label": "small orange and blue shelf",
+       "template": "shelf",
+       "accepted": true,
+       "box": {
+        "left": 0.732,
+        "top": 0.406,
+        "right": 0.792,
+        "bottom": 0.568
+       },
+       "status": "tp",
+       "gt": "rack-3",
+       "iou": 0.882,
+       "covers": [
+        "rack-3"
+       ]
+      },
+      {
+       "label": "stack of cardboard boxes on pallet",
+       "template": "box",
+       "accepted": true,
+       "box": {
+        "left": 0.533,
+        "top": 0.488,
+        "right": 0.627,
+        "bottom": 0.606
+       },
+       "status": "tp",
+       "gt": "pallet-a",
+       "iou": 0.863,
+       "covers": [
+        "pallet-a"
+       ]
+      },
+      {
+       "label": "stack of cardboard boxes on pallet",
+       "template": "box",
+       "accepted": true,
+       "box": {
+        "left": 0.627,
+        "top": 0.498,
+        "right": 0.729,
+        "bottom": 0.612
+       },
+       "status": "tp",
+       "gt": "pallet-b",
+       "iou": 0.944,
+       "covers": [
+        "pallet-b"
+       ]
+      },
+      {
+       "label": "white cabinet",
+       "template": "cabinet",
+       "accepted": true,
+       "box": {
+        "left": 0.238,
+        "top": 0.516,
+        "right": 0.328,
+        "bottom": 0.6
+       },
+       "status": "tp",
+       "gt": "box-1",
+       "iou": 0.909,
+       "covers": [
+        "box-1"
+       ]
+      }
+     ],
+     "missed": [
+      "rack-1",
+      "cabinet-s"
+     ],
+     "calibration": {
+      "derived_depth_rel": 0,
+      "camera_height_error_m": 0,
+      "fov_error_deg": -0.004,
+      "fov_basis": "from_rectangle",
+      "corner_residual_px": 0.011
+     },
+     "actions": {
+      "reviewed": {
+       "reject": 0,
+       "accept": 0,
+       "split": 1,
+       "merge": 0,
+       "add": 0,
+       "outline": 3,
+       "shape": 3,
+       "visibility": 3
+      },
+      "manual": {
+       "reject": 0,
+       "accept": 0,
+       "split": 0,
+       "merge": 0,
+       "add": 7,
+       "outline": 0,
+       "shape": 7,
+       "visibility": 3
+      }
+     },
+     "geometry": {
+      "initial": [
+       {
+        "gt": "rack-2",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 5.714,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 1.212,
+        "acrossErrorM": 2.242,
+        "acrossRel": 0.875,
+        "alongErrorM": -0.447,
+        "alongRel": -0.273,
+        "heightErrorM": 0.101,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-3",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 4.89,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.675,
+        "acrossErrorM": 0.057,
+        "acrossRel": 0.057,
+        "alongErrorM": -1.238,
+        "alongRel": -0.508,
+        "heightErrorM": 0.046,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-a",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 7.579,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.193,
+        "acrossErrorM": -0.024,
+        "acrossRel": -0.018,
+        "alongErrorM": 0.535,
+        "alongRel": 0.519,
+        "heightErrorM": 0.115,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-b",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 7.721,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.13,
+        "acrossErrorM": 0.064,
+        "acrossRel": 0.051,
+        "alongErrorM": 0.616,
+        "alongRel": 0.699,
+        "heightErrorM": 0.014,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "box-1",
+        "cls": "box",
+        "visibility": "visible",
+        "depressionDeg": 7.014,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.149,
+        "acrossErrorM": 0.053,
+        "acrossRel": 0.045,
+        "alongErrorM": 0.388,
+        "alongRel": 0.371,
+        "heightErrorM": 0.01,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "reviewed": [
+       {
+        "gt": "rack-1",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 5.282,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.471,
+        "acrossErrorM": -0.082,
+        "acrossRel": -0.033,
+        "alongErrorM": -0.957,
+        "alongRel": -0.489,
+        "heightErrorM": 0.002,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-s",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 4.044,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.701,
+        "acrossErrorM": 0.031,
+        "acrossRel": 0.033,
+        "alongErrorM": 1.104,
+        "alongRel": 0.991,
+        "heightErrorM": 0.006,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-2",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 5.714,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.209,
+        "acrossErrorM": -0.014,
+        "acrossRel": -0.006,
+        "alongErrorM": -1.007,
+        "alongRel": -0.615,
+        "heightErrorM": 0.062,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-3",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 4.89,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.675,
+        "acrossErrorM": 0.057,
+        "acrossRel": 0.057,
+        "alongErrorM": -1.238,
+        "alongRel": -0.508,
+        "heightErrorM": 0.046,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-a",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 7.579,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.193,
+        "acrossErrorM": -0.024,
+        "acrossRel": -0.018,
+        "alongErrorM": 0.535,
+        "alongRel": 0.519,
+        "heightErrorM": 0.115,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-b",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 7.721,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.13,
+        "acrossErrorM": 0.064,
+        "acrossRel": 0.051,
+        "alongErrorM": 0.616,
+        "alongRel": 0.699,
+        "heightErrorM": 0.014,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "box-1",
+        "cls": "box",
+        "visibility": "visible",
+        "depressionDeg": 7.014,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.149,
+        "acrossErrorM": 0.053,
+        "acrossRel": 0.045,
+        "alongErrorM": 0.388,
+        "alongRel": 0.371,
+        "heightErrorM": 0.01,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "manual": [
+       {
+        "gt": "rack-1",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 5.282,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.376,
+        "acrossErrorM": 0.077,
+        "acrossRel": 0.03,
+        "alongErrorM": 0.653,
+        "alongRel": 0.334,
+        "heightErrorM": 0.002,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-2",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 5.714,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 1.176,
+        "acrossErrorM": 0.001,
+        "acrossRel": 0.001,
+        "alongErrorM": 0.926,
+        "alongRel": 0.565,
+        "heightErrorM": 0.062,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-3",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 4.89,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.935,
+        "acrossErrorM": -0.071,
+        "acrossRel": -0.071,
+        "alongErrorM": -1.508,
+        "alongRel": -0.619,
+        "heightErrorM": 0.006,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-a",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 7.579,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.065,
+        "acrossErrorM": 0.003,
+        "acrossRel": 0.003,
+        "alongErrorM": 0.313,
+        "alongRel": 0.303,
+        "heightErrorM": -0.004,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-b",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 7.721,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.071,
+        "acrossErrorM": -0.008,
+        "acrossRel": -0.006,
+        "alongErrorM": 0.363,
+        "alongRel": 0.413,
+        "heightErrorM": -0.001,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "box-1",
+        "cls": "box",
+        "visibility": "visible",
+        "depressionDeg": 7.014,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.076,
+        "acrossErrorM": -0.007,
+        "acrossRel": -0.006,
+        "alongErrorM": 0.13,
+        "alongRel": 0.124,
+        "heightErrorM": -0.013,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-s",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 4.044,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.007,
+        "acrossErrorM": -0.006,
+        "acrossRel": -0.006,
+        "alongErrorM": -0.173,
+        "alongRel": -0.155,
+        "heightErrorM": 0.006,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "llama4-scout-17b": {
+   "prompt_version": "img-01.2",
+   "images": 4,
+   "provider": {
+    "errors": 1,
+    "run_faults": 0,
+    "calls": 4,
+    "retries": 0,
+    "wall_s": {
+     "n": 3,
+     "median": 12.58,
+     "p90": 21.516,
+     "max": 23.75
+    }
+   },
+   "detection_initial": {
+    "tp": 3,
+    "fp": 12,
+    "fn": 31,
+    "precision": 0.2,
+    "recall": 0.088
+   },
+   "detection_all_proposals": {
+    "tp": 3,
+    "fp": 13,
+    "fn": 31,
+    "precision": 0.188,
+    "recall": 0.088
+   },
+   "groups": 1,
+   "duplicates": 0,
+   "label_agreement": "3/3",
+   "by_scene_type": {
+    "industrial": {
+     "images": 1,
+     "initial": {
+      "tp": 1,
+      "fp": 3,
+      "fn": 5,
+      "precision": 0.25,
+      "recall": 0.167
+     },
+     "all_proposals": {
+      "tp": 1,
+      "fp": 3,
+      "fn": 5,
+      "precision": 0.25,
+      "recall": 0.167
+     }
+    },
+    "lounge": {
+     "images": 1,
+     "initial": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 10,
+      "precision": null,
+      "recall": 0
+     },
+     "all_proposals": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 10,
+      "precision": null,
+      "recall": 0
+     }
+    },
+    "storage": {
+     "images": 1,
+     "initial": {
+      "tp": 1,
+      "fp": 1,
+      "fn": 7,
+      "precision": 0.5,
+      "recall": 0.125
+     },
+     "all_proposals": {
+      "tp": 1,
+      "fp": 1,
+      "fn": 7,
+      "precision": 0.5,
+      "recall": 0.125
+     }
+    },
+    "office": {
+     "images": 1,
+     "initial": {
+      "tp": 1,
+      "fp": 8,
+      "fn": 9,
+      "precision": 0.111,
+      "recall": 0.1
+     },
+     "all_proposals": {
+      "tp": 1,
+      "fp": 9,
+      "fn": 9,
+      "precision": 0.1,
+      "recall": 0.1
+     }
+    }
+   },
+   "geometry": {
+    "initial": {
+     "all": {
+      "n": 3,
+      "centre_m": {
+       "n": 3,
+       "median": 0.602,
+       "p90": 1.988,
+       "max": 2.334
+      },
+      "across_abs_rel": {
+       "n": 3,
+       "median": 0.232,
+       "p90": 0.513,
+       "max": 0.584
+      },
+      "along_abs_rel": {
+       "n": 3,
+       "median": 0.459,
+       "p90": 0.983,
+       "max": 1.114
+      },
+      "along_signed_rel_median": 0.459,
+      "height_abs_m": {
+       "n": 3,
+       "median": 0.14,
+       "p90": 0.162,
+       "max": 0.167
+      }
+     },
+     "not_near_horizon": {
+      "n": 3,
+      "centre_m": {
+       "n": 3,
+       "median": 0.602,
+       "p90": 1.988,
+       "max": 2.334
+      },
+      "across_abs_rel": {
+       "n": 3,
+       "median": 0.232,
+       "p90": 0.513,
+       "max": 0.584
+      },
+      "along_abs_rel": {
+       "n": 3,
+       "median": 0.459,
+       "p90": 0.983,
+       "max": 1.114
+      },
+      "along_signed_rel_median": 0.459,
+      "height_abs_m": {
+       "n": 3,
+       "median": 0.14,
+       "p90": 0.162,
+       "max": 0.167
+      }
+     },
+     "near_horizon": {
+      "n": 0,
+      "centre_m": {
+       "n": 0,
+       "median": null,
+       "p90": null,
+       "max": null
+      },
+      "across_abs_rel": {
+       "n": 0,
+       "median": null,
+       "p90": null,
+       "max": null
+      },
+      "along_abs_rel": {
+       "n": 0,
+       "median": null,
+       "p90": null,
+       "max": null
+      },
+      "along_signed_rel_median": null,
+      "height_abs_m": {
+       "n": 0,
+       "median": null,
+       "p90": null,
+       "max": null
+      },
+      "flagged": 0
+     },
+     "partly_visible": {
+      "n": 1,
+      "centre_m": {
+       "n": 1,
+       "median": 0.504,
+       "p90": 0.504,
+       "max": 0.504
+      },
+      "across_abs_rel": {
+       "n": 1,
+       "median": 0.11,
+       "p90": 0.11,
+       "max": 0.11
+      },
+      "along_abs_rel": {
+       "n": 1,
+       "median": 0.106,
+       "p90": 0.106,
+       "max": 0.106
+      },
+      "along_signed_rel_median": 0.106,
+      "height_abs_m": {
+       "n": 1,
+       "median": 0.14,
+       "p90": 0.14,
+       "max": 0.14
+      }
+     },
+     "estimates_labelled": "3/3"
+    },
+    "reviewed": {
+     "all": {
+      "n": 24,
+      "centre_m": {
+       "n": 24,
+       "median": 0.135,
+       "p90": 0.527,
+       "max": 1.877
+      },
+      "across_abs_rel": {
+       "n": 24,
+       "median": 0.049,
+       "p90": 0.118,
+       "max": 1.529
+      },
+      "along_abs_rel": {
+       "n": 24,
+       "median": 0.286,
+       "p90": 0.955,
+       "max": 1.69
+      },
+      "along_signed_rel_median": 0.083,
+      "height_abs_m": {
+       "n": 24,
+       "median": 0.025,
+       "p90": 0.117,
+       "max": 0.145
+      }
+     },
+     "not_near_horizon": {
+      "n": 23,
+      "centre_m": {
+       "n": 23,
+       "median": 0.139,
+       "p90": 0.53,
+       "max": 1.877
+      },
+      "across_abs_rel": {
+       "n": 23,
+       "median": 0.054,
+       "p90": 0.12,
+       "max": 1.529
+      },
+      "along_abs_rel": {
+       "n": 23,
+       "median": 0.282,
+       "p90": 0.962,
+       "max": 1.69
+      },
+      "along_signed_rel_median": 0.061,
+      "height_abs_m": {
+       "n": 23,
+       "median": 0.026,
+       "p90": 0.121,
+       "max": 0.145
+      }
+     },
+     "near_horizon": {
+      "n": 1,
+      "centre_m": {
+       "n": 1,
+       "median": 0.028,
+       "p90": 0.028,
+       "max": 0.028
+      },
+      "across_abs_rel": {
+       "n": 1,
+       "median": 0.011,
+       "p90": 0.011,
+       "max": 0.011
+      },
+      "along_abs_rel": {
+       "n": 1,
+       "median": 0.36,
+       "p90": 0.36,
+       "max": 0.36
+      },
+      "along_signed_rel_median": 0.36,
+      "height_abs_m": {
+       "n": 1,
+       "median": 0.009,
+       "p90": 0.009,
+       "max": 0.009
+      },
+      "flagged": 1
+     },
+     "partly_visible": {
+      "n": 12,
+      "centre_m": {
+       "n": 12,
+       "median": 0.121,
+       "p90": 0.483,
+       "max": 1.877
+      },
+      "across_abs_rel": {
+       "n": 12,
+       "median": 0.049,
+       "p90": 0.121,
+       "max": 0.33
+      },
+      "along_abs_rel": {
+       "n": 12,
+       "median": 0.291,
+       "p90": 0.48,
+       "max": 1.69
+      },
+      "along_signed_rel_median": 0.13,
+      "height_abs_m": {
+       "n": 12,
+       "median": 0.014,
+       "p90": 0.087,
+       "max": 0.14
+      }
+     },
+     "estimates_labelled": "24/24"
+    },
+    "manual": {
+     "all": {
+      "n": 34,
+      "centre_m": {
+       "n": 34,
+       "median": 0.125,
+       "p90": 0.719,
+       "max": 1.877
+      },
+      "across_abs_rel": {
+       "n": 34,
+       "median": 0.037,
+       "p90": 0.094,
+       "max": 0.322
+      },
+      "along_abs_rel": {
+       "n": 34,
+       "median": 0.249,
+       "p90": 0.929,
+       "max": 1.93
+      },
+      "along_signed_rel_median": 0.144,
+      "height_abs_m": {
+       "n": 34,
+       "median": 0.016,
+       "p90": 0.085,
+       "max": 0.145
+      }
+     },
+     "not_near_horizon": {
+      "n": 33,
+      "centre_m": {
+       "n": 33,
+       "median": 0.128,
+       "p90": 0.728,
+       "max": 1.877
+      },
+      "across_abs_rel": {
+       "n": 33,
+       "median": 0.037,
+       "p90": 0.095,
+       "max": 0.322
+      },
+      "along_abs_rel": {
+       "n": 33,
+       "median": 0.242,
+       "p90": 0.936,
+       "max": 1.93
+      },
+      "along_signed_rel_median": 0.133,
+      "height_abs_m": {
+       "n": 33,
+       "median": 0.016,
+       "p90": 0.086,
+       "max": 0.145
+      }
+     },
+     "near_horizon": {
+      "n": 1,
+      "centre_m": {
+       "n": 1,
+       "median": 0.028,
+       "p90": 0.028,
+       "max": 0.028
+      },
+      "across_abs_rel": {
+       "n": 1,
+       "median": 0.011,
+       "p90": 0.011,
+       "max": 0.011
+      },
+      "along_abs_rel": {
+       "n": 1,
+       "median": 0.36,
+       "p90": 0.36,
+       "max": 0.36
+      },
+      "along_signed_rel_median": 0.36,
+      "height_abs_m": {
+       "n": 1,
+       "median": 0.009,
+       "p90": 0.009,
+       "max": 0.009
+      },
+      "flagged": 1
+     },
+     "partly_visible": {
+      "n": 18,
+      "centre_m": {
+       "n": 18,
+       "median": 0.151,
+       "p90": 0.689,
+       "max": 1.877
+      },
+      "across_abs_rel": {
+       "n": 18,
+       "median": 0.037,
+       "p90": 0.09,
+       "max": 0.319
+      },
+      "along_abs_rel": {
+       "n": 18,
+       "median": 0.262,
+       "p90": 0.774,
+       "max": 1.69
+      },
+      "along_signed_rel_median": 0.249,
+      "height_abs_m": {
+       "n": 18,
+       "median": 0.014,
+       "p90": 0.052,
+       "max": 0.089
+      }
+     },
+     "estimates_labelled": "34/34"
+    },
+    "reviewed_corner_offsets": {
+     "all": {
+      "n": 24,
+      "centre_m": {
+       "n": 24,
+       "median": 0.238,
+       "p90": 0.919,
+       "max": 2.652
+      },
+      "across_abs_rel": {
+       "n": 24,
+       "median": 0.044,
+       "p90": 0.184,
+       "max": 1.645
+      },
+      "along_abs_rel": {
+       "n": 24,
+       "median": 0.239,
+       "p90": 1.028,
+       "max": 1.738
+      },
+      "along_signed_rel_median": 0.09,
+      "height_abs_m": {
+       "n": 24,
+       "median": 0.075,
+       "p90": 0.12,
+       "max": 0.254
+      }
+     },
+     "not_near_horizon": {
+      "n": 23,
+      "centre_m": {
+       "n": 23,
+       "median": 0.237,
+       "p90": 0.756,
+       "max": 2.652
+      },
+      "across_abs_rel": {
+       "n": 23,
+       "median": 0.044,
+       "p90": 0.19,
+       "max": 1.645
+      },
+      "along_abs_rel": {
+       "n": 23,
+       "median": 0.237,
+       "p90": 1.04,
+       "max": 1.738
+      },
+      "along_signed_rel_median": 0.079,
+      "height_abs_m": {
+       "n": 23,
+       "median": 0.073,
+       "p90": 0.12,
+       "max": 0.254
+      }
+     },
+     "near_horizon": {
+      "n": 1,
+      "centre_m": {
+       "n": 1,
+       "median": 0.977,
+       "p90": 0.977,
+       "max": 0.977
+      },
+      "across_abs_rel": {
+       "n": 1,
+       "median": 0.067,
+       "p90": 0.067,
+       "max": 0.067
+      },
+      "along_abs_rel": {
+       "n": 1,
+       "median": 0.469,
+       "p90": 0.469,
+       "max": 0.469
+      },
+      "along_signed_rel_median": 0.469,
+      "height_abs_m": {
+       "n": 1,
+       "median": 0.084,
+       "p90": 0.084,
+       "max": 0.084
+      },
+      "flagged": 1
+     },
+     "partly_visible": {
+      "n": 12,
+      "centre_m": {
+       "n": 12,
+       "median": 0.3,
+       "p90": 0.944,
+       "max": 2.652
+      },
+      "across_abs_rel": {
+       "n": 12,
+       "median": 0.036,
+       "p90": 0.193,
+       "max": 0.318
+      },
+      "along_abs_rel": {
+       "n": 12,
+       "median": 0.294,
+       "p90": 0.529,
+       "max": 1.738
+      },
+      "along_signed_rel_median": 0.16,
+      "height_abs_m": {
+       "n": 12,
+       "median": 0.085,
+       "p90": 0.12,
+       "max": 0.254
+      }
+     },
+     "estimates_labelled": "24/24"
+    }
+   },
+   "effort": {
+    "reviewed_actions_per_image": {
+     "n": 3,
+     "median": 19,
+     "p90": 19,
+     "max": 19
+    },
+    "reviewed_klm_s_per_image": {
+     "n": 3,
+     "median": 77,
+     "p90": 86.6,
+     "max": 89
+    },
+    "manual_actions_per_image": {
+     "n": 4,
+     "median": 22.5,
+     "p90": 25.7,
+     "max": 26
+    },
+    "manual_klm_s_per_image": {
+     "n": 4,
+     "median": 112.5,
+     "p90": 127.1,
+     "max": 128
+    }
+   },
+   "worst_centre_errors": [
+    {
+     "case": "office-a",
+     "world": "initial",
+     "gt": "shelf-1",
+     "centre_m": 2.334,
+     "depression_deg": 9.76,
+     "visibility": "visible"
+    },
+    {
+     "case": "store-a",
+     "world": "manual",
+     "gt": "rack-3",
+     "centre_m": 1.877,
+     "depression_deg": 6.568,
+     "visibility": "partly_visible"
+    },
+    {
+     "case": "store-a",
+     "world": "reviewed",
+     "gt": "rack-3",
+     "centre_m": 1.877,
+     "depression_deg": 6.568,
+     "visibility": "partly_visible"
+    },
+    {
+     "case": "store-a",
+     "world": "manual",
+     "gt": "rack-2",
+     "centre_m": 1.182,
+     "depression_deg": 9.235,
+     "visibility": "visible"
+    },
+    {
+     "case": "store-a",
+     "world": "reviewed",
+     "gt": "rack-2",
+     "centre_m": 1.182,
+     "depression_deg": 9.235,
+     "visibility": "visible"
+    },
+    {
+     "case": "lounge-a",
+     "world": "manual",
+     "gt": "chair-back",
+     "centre_m": 0.754,
+     "depression_deg": 12.26,
+     "visibility": "partly_visible"
+    },
+    {
+     "case": "line-a",
+     "world": "manual",
+     "gt": "conveyor-1",
+     "centre_m": 0.744,
+     "depression_deg": 9.628,
+     "visibility": "visible"
+    },
+    {
+     "case": "lounge-a",
+     "world": "manual",
+     "gt": "shelf-1",
+     "centre_m": 0.661,
+     "depression_deg": 8.688,
+     "visibility": "partly_visible"
+    }
+   ],
+   "cases": [
+    {
+     "case": "line-a",
+     "scene_type": "industrial",
+     "wall_s": 10.82,
+     "calls": 1,
+     "run_fault": null,
+     "counted": 6,
+     "proposals": 4,
+     "accepted": 4,
+     "detection": {
+      "tp": 1,
+      "fp": 3,
+      "fn": 5,
+      "groups": 0,
+      "duplicates": 0
+     },
+     "detection_all_proposals": {
+      "tp": 1,
+      "fp": 3,
+      "fn": 5
+     },
+     "proposals_scored": [
+      {
+       "label": "machine 1",
+       "template": "machine",
+       "accepted": true,
+       "box": {
+        "left": 0.118,
+        "top": 0.478,
+        "right": 0.34,
+        "bottom": 0.64
+       },
+       "status": "poor_outline",
+       "gt": "cell-1",
+       "iou": 0.116,
+       "covers": []
+      },
+      {
+       "label": "machine 2",
+       "template": "machine",
+       "accepted": true,
+       "box": {
+        "left": 0.591,
+        "top": 0.478,
+        "right": 0.802,
+        "bottom": 0.638
+       },
+       "status": "poor_outline",
+       "gt": "cell-2",
+       "iou": 0.47,
+       "covers": []
+      },
+      {
+       "label": "conveyor",
+       "template": "conveyor",
+       "accepted": true,
+       "box": {
+        "left": 0.345,
+        "top": 0.543,
+        "right": 0.648,
+        "bottom": 0.638
+       },
+       "status": "poor_outline",
+       "gt": "conveyor-1",
+       "iou": 0.336,
+       "covers": []
+      },
+      {
+       "label": "pallet",
+       "template": "pallet",
+       "accepted": true,
+       "box": {
+        "left": 0.848,
+        "top": 0.543,
+        "right": 0.999,
+        "bottom": 0.683
+       },
+       "status": "tp",
+       "gt": "pallet-1",
+       "iou": 0.78,
+       "covers": [
+        "pallet-1"
+       ]
+      }
+     ],
+     "missed": [
+      "cell-1",
+      "conveyor-1",
+      "cell-2",
+      "cabinet-1",
+      "cabinet-2"
+     ],
+     "calibration": {
+      "derived_depth_rel": 0,
+      "camera_height_error_m": 0,
+      "fov_error_deg": 0,
+      "fov_basis": "from_sides",
+      "corner_residual_px": 0.002
+     },
+     "actions": {
+      "reviewed": {
+       "reject": 0,
+       "accept": 0,
+       "split": 0,
+       "merge": 0,
+       "add": 2,
+       "outline": 3,
+       "shape": 2,
+       "visibility": 2
+      },
+      "manual": {
+       "reject": 0,
+       "accept": 0,
+       "split": 0,
+       "merge": 0,
+       "add": 6,
+       "outline": 0,
+       "shape": 6,
+       "visibility": 3
+      }
+     },
+     "geometry": {
+      "initial": [
+       {
+        "gt": "pallet-1",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 11.47,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.504,
+        "acrossErrorM": -0.151,
+        "acrossRel": -0.11,
+        "alongErrorM": 0.118,
+        "alongRel": 0.106,
+        "heightErrorM": -0.14,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "reviewed": [
+       {
+        "gt": "cell-1",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 8.732,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.148,
+        "acrossErrorM": -0.225,
+        "acrossRel": -0.084,
+        "alongErrorM": -0.179,
+        "alongRel": -0.068,
+        "heightErrorM": -0.129,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cell-2",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 9.954,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.078,
+        "acrossErrorM": 0.088,
+        "acrossRel": 0.043,
+        "alongErrorM": 0.203,
+        "alongRel": 0.105,
+        "heightErrorM": -0.145,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "conveyor-1",
+        "cls": "conveyor",
+        "visibility": "visible",
+        "depressionDeg": 9.628,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.212,
+        "acrossErrorM": -0.22,
+        "acrossRel": -0.071,
+        "alongErrorM": -0.528,
+        "alongRel": -0.336,
+        "heightErrorM": 0.03,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-1",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 11.47,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.504,
+        "acrossErrorM": -0.151,
+        "acrossRel": -0.11,
+        "alongErrorM": 0.118,
+        "alongRel": 0.106,
+        "heightErrorM": -0.14,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 6.987,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.123,
+        "acrossErrorM": -0.07,
+        "acrossRel": -0.077,
+        "alongErrorM": 0.113,
+        "alongRel": 0.154,
+        "heightErrorM": -0.016,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 7.089,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.106,
+        "acrossErrorM": -0.008,
+        "acrossRel": -0.009,
+        "alongErrorM": 0.194,
+        "alongRel": 0.282,
+        "heightErrorM": -0.007,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "manual": [
+       {
+        "gt": "cell-1",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 8.732,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.148,
+        "acrossErrorM": -0.225,
+        "acrossRel": -0.084,
+        "alongErrorM": -0.179,
+        "alongRel": -0.068,
+        "heightErrorM": -0.129,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "conveyor-1",
+        "cls": "conveyor",
+        "visibility": "visible",
+        "depressionDeg": 9.628,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.744,
+        "acrossErrorM": -0.157,
+        "acrossRel": -0.05,
+        "alongErrorM": 1.383,
+        "alongRel": 0.879,
+        "heightErrorM": -0.099,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cell-2",
+        "cls": "machine",
+        "visibility": "visible",
+        "depressionDeg": 9.954,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.078,
+        "acrossErrorM": 0.088,
+        "acrossRel": 0.043,
+        "alongErrorM": 0.203,
+        "alongRel": 0.105,
+        "heightErrorM": -0.145,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 6.987,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.123,
+        "acrossErrorM": -0.07,
+        "acrossRel": -0.077,
+        "alongErrorM": 0.113,
+        "alongRel": 0.154,
+        "heightErrorM": -0.016,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 7.089,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.106,
+        "acrossErrorM": -0.008,
+        "acrossRel": -0.009,
+        "alongErrorM": 0.194,
+        "alongRel": 0.282,
+        "heightErrorM": -0.007,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-1",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 11.47,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.123,
+        "acrossErrorM": -0.077,
+        "acrossRel": -0.056,
+        "alongErrorM": 0.193,
+        "alongRel": 0.173,
+        "heightErrorM": 0.015,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ]
+     }
+    },
+    {
+     "case": "lounge-a",
+     "scene_type": "lounge",
+     "error": "no proposal: the answer arrived without a proposal, and its text was lost when the runner's progress print crashed before the row was saved (fixed after the run). Scored as a failure, as observed; not re-run for the score.",
+     "counted": 10,
+     "calibration": {
+      "derived_depth_rel": 0,
+      "camera_height_error_m": 0,
+      "fov_error_deg": -0.001,
+      "fov_basis": "from_rectangle",
+      "corner_residual_px": 0.007
+     }
+    },
+    {
+     "case": "store-a",
+     "scene_type": "storage",
+     "wall_s": 12.58,
+     "calls": 1,
+     "run_fault": null,
+     "counted": 8,
+     "proposals": 2,
+     "accepted": 2,
+     "detection": {
+      "tp": 1,
+      "fp": 1,
+      "fn": 7,
+      "groups": 1,
+      "duplicates": 0
+     },
+     "detection_all_proposals": {
+      "tp": 1,
+      "fp": 1,
+      "fn": 7
+     },
+     "proposals_scored": [
+      {
+       "label": "blue and orange shelf",
+       "template": "shelf",
+       "accepted": true,
+       "box": {
+        "left": 0.086,
+        "top": 0.465,
+        "right": 0.184,
+        "bottom": 0.6
+       },
+       "status": "poor_outline",
+       "gt": "cabinet-s",
+       "iou": 0.326,
+       "covers": [
+        "cabinet-s"
+       ]
+      },
+      {
+       "label": "pallet with boxes",
+       "template": "pallet",
+       "accepted": true,
+       "box": {
+        "left": 0.58,
+        "top": 0.521,
+        "right": 0.78,
+        "bottom": 0.654
+       },
+       "status": "group",
+       "gt": "pallet-a",
+       "iou": 0.4,
+       "covers": [
+        "pallet-a",
+        "pallet-b"
+       ]
+      }
+     ],
+     "missed": [
+      "rack-1",
+      "rack-2",
+      "rack-3",
+      "pallet-b",
+      "box-1",
+      "cabinet-s",
+      "pallet-c"
+     ],
+     "calibration": {
+      "derived_depth_rel": 0,
+      "camera_height_error_m": 0,
+      "fov_error_deg": 0,
+      "fov_basis": "from_sides",
+      "corner_residual_px": 0.002
+     },
+     "actions": {
+      "reviewed": {
+       "reject": 0,
+       "accept": 0,
+       "split": 1,
+       "merge": 0,
+       "add": 5,
+       "outline": 3,
+       "shape": 6,
+       "visibility": 4
+      },
+      "manual": {
+       "reject": 0,
+       "accept": 0,
+       "split": 0,
+       "merge": 0,
+       "add": 8,
+       "outline": 0,
+       "shape": 8,
+       "visibility": 4
+      }
+     },
+     "geometry": {
+      "initial": [
+       {
+        "gt": "pallet-a",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 10.895,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.602,
+        "acrossErrorM": 0.843,
+        "acrossRel": 0.584,
+        "alongErrorM": 1.453,
+        "alongRel": 1.114,
+        "heightErrorM": -0.167,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "reviewed": [
+       {
+        "gt": "cabinet-s",
+        "cls": "cabinet",
+        "visibility": "visible",
+        "depressionDeg": 7.029,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.537,
+        "acrossErrorM": 1.059,
+        "acrossRel": 1.529,
+        "alongErrorM": 1.108,
+        "alongRel": 1.025,
+        "heightErrorM": -0.004,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-a",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 10.895,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.233,
+        "acrossErrorM": 0.035,
+        "acrossRel": 0.025,
+        "alongErrorM": 0.48,
+        "alongRel": 0.368,
+        "heightErrorM": -0.033,
+        "sources": {
+         "width": "hidden",
+         "height": "photo",
+         "depth": "photo",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-b",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 10.083,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.119,
+        "acrossErrorM": -0.009,
+        "acrossRel": -0.006,
+        "alongErrorM": 0.285,
+        "alongRel": 0.208,
+        "heightErrorM": -0.025,
+        "sources": {
+         "width": "hidden",
+         "height": "partial",
+         "depth": "partial",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-1",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 9.461,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.214,
+        "acrossErrorM": 0.13,
+        "acrossRel": 0.054,
+        "alongErrorM": 1.6,
+        "alongRel": 1.69,
+        "heightErrorM": 0.004,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-2",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 9.235,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 1.182,
+        "acrossErrorM": 0.242,
+        "acrossRel": 0.095,
+        "alongErrorM": 1.375,
+        "alongRel": 0.978,
+        "heightErrorM": 0.04,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-3",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 6.568,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 1.877,
+        "acrossErrorM": 0.236,
+        "acrossRel": 0.122,
+        "alongErrorM": -0.374,
+        "alongRel": -0.147,
+        "heightErrorM": 0.089,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "box-1",
+        "cls": "box",
+        "visibility": "visible",
+        "depressionDeg": 14.419,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.139,
+        "acrossErrorM": -0.034,
+        "acrossRel": -0.028,
+        "alongErrorM": 0.069,
+        "alongRel": 0.061,
+        "heightErrorM": 0.026,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-c",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 5.482,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.028,
+        "acrossErrorM": -0.014,
+        "acrossRel": -0.011,
+        "alongErrorM": 0.336,
+        "alongRel": 0.36,
+        "heightErrorM": -0.009,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "manual": [
+       {
+        "gt": "rack-1",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 9.461,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.214,
+        "acrossErrorM": 0.13,
+        "acrossRel": 0.054,
+        "alongErrorM": 1.6,
+        "alongRel": 1.69,
+        "heightErrorM": 0.004,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-2",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 9.235,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 1.182,
+        "acrossErrorM": 0.242,
+        "acrossRel": 0.095,
+        "alongErrorM": 1.375,
+        "alongRel": 0.978,
+        "heightErrorM": 0.04,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "rack-3",
+        "cls": "shelf",
+        "visibility": "partly_visible",
+        "depressionDeg": 6.568,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 1.877,
+        "acrossErrorM": 0.236,
+        "acrossRel": 0.122,
+        "alongErrorM": -0.374,
+        "alongRel": -0.147,
+        "heightErrorM": 0.089,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-a",
+        "cls": "pallet",
+        "visibility": "visible",
+        "depressionDeg": 10.895,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.063,
+        "acrossErrorM": 0.007,
+        "acrossRel": 0.005,
+        "alongErrorM": 0.146,
+        "alongRel": 0.112,
+        "heightErrorM": -0.007,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-b",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 10.083,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.035,
+        "acrossErrorM": -0.031,
+        "acrossRel": -0.022,
+        "alongErrorM": 0.044,
+        "alongRel": 0.032,
+        "heightErrorM": -0.005,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "box-1",
+        "cls": "box",
+        "visibility": "visible",
+        "depressionDeg": 14.419,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.139,
+        "acrossErrorM": -0.034,
+        "acrossRel": -0.028,
+        "alongErrorM": 0.069,
+        "alongRel": 0.061,
+        "heightErrorM": 0.026,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-s",
+        "cls": "cabinet",
+        "visibility": "visible",
+        "depressionDeg": 7.029,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.359,
+        "acrossErrorM": -0.041,
+        "acrossRel": -0.059,
+        "alongErrorM": -0.429,
+        "alongRel": -0.397,
+        "heightErrorM": -0.004,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "pallet-c",
+        "cls": "pallet",
+        "visibility": "partly_visible",
+        "depressionDeg": 5.482,
+        "nearHorizon": true,
+        "flagged": true,
+        "centreErrorM": 0.028,
+        "acrossErrorM": -0.014,
+        "acrossRel": -0.011,
+        "alongErrorM": 0.336,
+        "alongRel": 0.36,
+        "heightErrorM": -0.009,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ]
+     }
+    },
+    {
+     "case": "office-a",
+     "scene_type": "office",
+     "wall_s": 23.75,
+     "calls": 1,
+     "run_fault": null,
+     "counted": 10,
+     "proposals": 10,
+     "accepted": 9,
+     "detection": {
+      "tp": 1,
+      "fp": 8,
+      "fn": 9,
+      "groups": 0,
+      "duplicates": 0
+     },
+     "detection_all_proposals": {
+      "tp": 1,
+      "fp": 9,
+      "fn": 9
+     },
+     "proposals_scored": [
+      {
+       "label": "table",
+       "template": "table",
+       "accepted": true,
+       "box": {
+        "left": 0.34,
+        "top": 0.544,
+        "right": 0.51,
+        "bottom": 0.704
+       },
+       "status": "poor_outline",
+       "gt": "desk-1",
+       "iou": 0.293,
+       "covers": []
+      },
+      {
+       "label": "chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.35,
+        "top": 0.576,
+        "right": 0.43,
+        "bottom": 0.744
+       },
+       "status": "poor_outline",
+       "gt": "chair-1",
+       "iou": 0.146,
+       "covers": []
+      },
+      {
+       "label": "chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.51,
+        "top": 0.576,
+        "right": 0.59,
+        "bottom": 0.744
+       },
+       "status": "poor_outline",
+       "gt": "chair-2",
+       "iou": 0.261,
+       "covers": []
+      },
+      {
+       "label": "shelf",
+       "template": "shelf",
+       "accepted": true,
+       "box": {
+        "left": 0.68,
+        "top": 0.4,
+        "right": 0.78,
+        "bottom": 0.616
+       },
+       "status": "tp",
+       "gt": "shelf-1",
+       "iou": 0.729,
+       "covers": [
+        "shelf-1"
+       ]
+      },
+      {
+       "label": "table",
+       "template": "table",
+       "accepted": true,
+       "box": {
+        "left": 0.76,
+        "top": 0.544,
+        "right": 0.84,
+        "bottom": 0.704
+       },
+       "status": "poor_outline",
+       "gt": "chair-3",
+       "iou": 0.275,
+       "covers": []
+      },
+      {
+       "label": "chair",
+       "template": "chair",
+       "accepted": true,
+       "box": {
+        "left": 0.77,
+        "top": 0.576,
+        "right": 0.83,
+        "bottom": 0.744
+       },
+       "status": "poor_outline",
+       "gt": "chair-3",
+       "iou": 0.123,
+       "covers": []
+      },
+      {
+       "label": "cabinet",
+       "template": "cabinet",
+       "accepted": true,
+       "box": {
+        "left": 0.35,
+        "top": 0.416,
+        "right": 0.43,
+        "bottom": 0.56
+       },
+       "status": "poor_outline",
+       "gt": "cabinet-1",
+       "iou": 0.465,
+       "covers": [
+        "cabinet-1"
+       ]
+      },
+      {
+       "label": "cabinet",
+       "template": "cabinet",
+       "accepted": true,
+       "box": {
+        "left": 0.44,
+        "top": 0.416,
+        "right": 0.52,
+        "bottom": 0.56
+       },
+       "status": "poor_outline",
+       "gt": "cabinet-2",
+       "iou": 0.121,
+       "covers": []
+      },
+      {
+       "label": "plant",
+       "template": "plant",
+       "accepted": true,
+       "box": {
+        "left": 0.9,
+        "top": 0.488,
+        "right": 0.98,
+        "bottom": 0.624
+       },
+       "status": "poor_outline",
+       "gt": "plant-1",
+       "iou": 0.411,
+       "covers": []
+      },
+      {
+       "label": "monitor",
+       "template": "screen",
+       "accepted": false,
+       "box": {
+        "left": 0.53,
+        "top": 0.432,
+        "right": 0.61,
+        "bottom": 0.488
+       },
+       "status": "poor_outline",
+       "gt": "screen-1",
+       "iou": 0.391,
+       "covers": []
+      }
+     ],
+     "missed": [
+      "desk-1",
+      "desk-2",
+      "chair-1",
+      "chair-2",
+      "chair-3",
+      "cabinet-1",
+      "cabinet-2",
+      "plant-1",
+      "screen-1"
+     ],
+     "calibration": {
+      "derived_depth_rel": 0.04,
+      "camera_height_error_m": 0,
+      "fov_error_deg": 0,
+      "fov_basis": "from_sides",
+      "corner_residual_px": 0.001
+     },
+     "actions": {
+      "reviewed": {
+       "reject": 1,
+       "accept": 1,
+       "split": 0,
+       "merge": 0,
+       "add": 1,
+       "outline": 9,
+       "shape": 2,
+       "visibility": 5
+      },
+      "manual": {
+       "reject": 0,
+       "accept": 0,
+       "split": 0,
+       "merge": 0,
+       "add": 10,
+       "outline": 0,
+       "shape": 10,
+       "visibility": 5
+      }
+     },
+     "geometry": {
+      "initial": [
+       {
+        "gt": "shelf-1",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 9.76,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 2.334,
+        "acrossErrorM": -0.28,
+        "acrossRel": -0.232,
+        "alongErrorM": 0.195,
+        "alongRel": 0.459,
+        "heightErrorM": -0.124,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "reviewed": [
+       {
+        "gt": "desk-1",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 12.833,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.297,
+        "acrossErrorM": -0.078,
+        "acrossRel": -0.044,
+        "alongErrorM": -0.54,
+        "alongRel": -0.371,
+        "heightErrorM": 0.069,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-1",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 13.917,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.004,
+        "acrossErrorM": -0.015,
+        "acrossRel": -0.022,
+        "alongErrorM": -0.022,
+        "alongRel": -0.031,
+        "heightErrorM": -0.048,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-2",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 15.552,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.029,
+        "acrossErrorM": -0.012,
+        "acrossRel": -0.019,
+        "alongErrorM": -0.026,
+        "alongRel": -0.041,
+        "heightErrorM": -0.049,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "shelf-1",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 9.76,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.145,
+        "acrossErrorM": 0.001,
+        "acrossRel": 0.001,
+        "alongErrorM": 0.383,
+        "alongRel": 0.899,
+        "heightErrorM": 0.003,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-3",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 11.808,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.13,
+        "acrossErrorM": -0.073,
+        "acrossRel": -0.101,
+        "alongErrorM": -0.133,
+        "alongRel": -0.185,
+        "heightErrorM": 0.025,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.53,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.098,
+        "acrossErrorM": -0.066,
+        "acrossRel": -0.065,
+        "alongErrorM": -0.244,
+        "alongRel": -0.29,
+        "heightErrorM": -0.004,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.917,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.083,
+        "acrossErrorM": -0.041,
+        "acrossRel": -0.041,
+        "alongErrorM": -0.232,
+        "alongRel": -0.292,
+        "heightErrorM": 0.012,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "plant-1",
+        "cls": "plant",
+        "visibility": "partly_visible",
+        "depressionDeg": 13.799,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.022,
+        "acrossErrorM": -0.208,
+        "acrossRel": -0.33,
+        "alongErrorM": -0.246,
+        "alongRel": -0.391,
+        "heightErrorM": -0.005,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "screen-1",
+        "cls": "screen",
+        "visibility": "visible",
+        "depressionDeg": 9.623,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.008,
+        "acrossErrorM": -0.08,
+        "acrossRel": -0.063,
+        "alongErrorM": 0.022,
+        "alongRel": 0.033,
+        "heightErrorM": -0.001,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "desk-2",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 14.081,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.175,
+        "acrossErrorM": -0.025,
+        "acrossRel": -0.014,
+        "alongErrorM": 0.565,
+        "alongRel": 0.49,
+        "heightErrorM": -0.042,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ],
+      "manual": [
+       {
+        "gt": "desk-1",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 12.833,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.188,
+        "acrossErrorM": 0.043,
+        "acrossRel": 0.024,
+        "alongErrorM": 0.374,
+        "alongRel": 0.256,
+        "heightErrorM": -0.035,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "desk-2",
+        "cls": "table",
+        "visibility": "partly_visible",
+        "depressionDeg": 14.081,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.175,
+        "acrossErrorM": -0.025,
+        "acrossRel": -0.014,
+        "alongErrorM": 0.565,
+        "alongRel": 0.49,
+        "heightErrorM": -0.042,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-1",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 13.917,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.004,
+        "acrossErrorM": -0.015,
+        "acrossRel": -0.022,
+        "alongErrorM": -0.022,
+        "alongRel": -0.031,
+        "heightErrorM": -0.048,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-2",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 15.552,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.029,
+        "acrossErrorM": -0.012,
+        "acrossRel": -0.019,
+        "alongErrorM": -0.026,
+        "alongRel": -0.041,
+        "heightErrorM": -0.049,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "chair-3",
+        "cls": "chair",
+        "visibility": "visible",
+        "depressionDeg": 11.808,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.08,
+        "acrossErrorM": -0.066,
+        "acrossRel": -0.092,
+        "alongErrorM": -0.065,
+        "alongRel": -0.091,
+        "heightErrorM": 0.016,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-1",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.53,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.096,
+        "acrossErrorM": -0.048,
+        "acrossRel": -0.048,
+        "alongErrorM": 0.113,
+        "alongRel": 0.133,
+        "heightErrorM": -0.004,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "cabinet-2",
+        "cls": "cabinet",
+        "visibility": "partly_visible",
+        "depressionDeg": 8.917,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.138,
+        "acrossErrorM": -0.019,
+        "acrossRel": -0.019,
+        "alongErrorM": 0.193,
+        "alongRel": 0.242,
+        "heightErrorM": -0.005,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "shelf-1",
+        "cls": "shelf",
+        "visibility": "visible",
+        "depressionDeg": 9.76,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.128,
+        "acrossErrorM": 0.039,
+        "acrossRel": 0.032,
+        "alongErrorM": 0.822,
+        "alongRel": 1.93,
+        "heightErrorM": 0.003,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "plant-1",
+        "cls": "plant",
+        "visibility": "partly_visible",
+        "depressionDeg": 13.799,
+        "nearHorizon": false,
+        "flagged": false,
+        "centreErrorM": 0.053,
+        "acrossErrorM": -0.201,
+        "acrossRel": -0.319,
+        "alongErrorM": -0.201,
+        "alongRel": -0.319,
+        "heightErrorM": -0.014,
+        "sources": {
+         "width": "partial",
+         "height": "partial",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       },
+       {
+        "gt": "screen-1",
+        "cls": "screen",
+        "visibility": "visible",
+        "depressionDeg": 9.623,
+        "nearHorizon": false,
+        "flagged": true,
+        "centreErrorM": 0.274,
+        "acrossErrorM": -0.046,
+        "acrossRel": -0.036,
+        "alongErrorM": 0.556,
+        "alongRel": 0.847,
+        "heightErrorM": -0.006,
+        "sources": {
+         "width": "photo",
+         "height": "photo",
+         "depth": "hidden",
+         "yaw": "photo",
+         "position": "photo"
+        },
+        "estimatesLabelled": true
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}
