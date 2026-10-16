@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { type CatalogAsset, type Project, validateProject } from "@replay-world/contracts";
 import { describe, expect, it } from "vitest";
 import { calibrateFromRectangle } from "./floor";
-import { assetRequest, buildPhotoProject, isPlaced, type PlacedItem, placeItems, type ReviewItem, type ScaleInput } from "./world";
+import { analysisNotes, assetRequest, buildPhotoProject, isPlaced, type PlacedItem, placeItems, type ReviewItem, type ScaleInput } from "./world";
 
 // The repository's industrial demo rendered from its walk view (fixtures/photos/factory-walk.png,
 // 1328 x 1000, camera at x 0, height 1.6, z 6, 70 deg). The scale reference is the walkway between
@@ -156,5 +156,17 @@ describe("photo world", () => {
     expect(reference.width).toMatchObject({ origin: "user_supplied", review_status: "unreviewed" });
     expect(reference.width.source_ref).toMatch(/^Assumed by the user: .*not measured$/);
     expect(JSON.stringify(project)).not.toContain("Measured by the user");
+  });
+});
+
+describe("the analysis's notes after the user's corrections (IMG-03)", () => {
+  it("are kept, marked as said before the corrections, once the user changed the object", () => {
+    const base = item("obs-1", "desk with computers", "table", { left: 0.1, top: 0.4, right: 0.5, bottom: 0.8 }, "toward_camera", [1.5, 0.75, 0.7]);
+    const noted = { ...base, notes: ["Its outline may include the things around it (the label names a group): drag the box edges to this object alone."] };
+    expect(analysisNotes(noted)).toEqual(noted.notes);
+    expect(analysisNotes({ ...noted, edited: true })[0]).toBe("Before your corrections, the analysis said: Its outline may include the things around it (the label names a group): drag the box edges to this object alone.");
+    expect(analysisNotes({ ...noted, corrections: ["Marked by you as partly visible."] })[0]).toMatch(/^Before your corrections/);
+    // An object the user marked has no analysis to qualify.
+    expect(analysisNotes({ ...noted, foundBy: "user", edited: true })).toEqual(noted.notes);
   });
 });

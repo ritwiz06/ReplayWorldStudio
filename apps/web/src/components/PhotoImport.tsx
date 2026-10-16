@@ -14,7 +14,7 @@ import { type Calibration, calibrateFromRectangle, imagePointOf } from "../photo
 import { type Pixels, suggestAppearance } from "../photo/colour";
 import { mergeItems, splitItem, suggestions, unmergeItem, unsplitItem, VISIBILITY_NAME } from "../photo/corrections";
 import { footprintClashes, photoOverlaps } from "../photo/layoutChecks";
-import { assetRequest, buildPhotoProject, type DimensionSource, isPlaced, type PlacedItem, placeItems, type ReviewItem, reviewItemsFrom, type ScaleInput, userItem, type Visibility } from "../photo/world";
+import { analysisNotes, assetRequest, buildPhotoProject, type DimensionSource, isPlaced, type PlacedItem, placeItems, type ReviewItem, reviewItemsFrom, type ScaleInput, userItem, type Visibility } from "../photo/world";
 
 const PHOTO_LIMITS = { maxBytes: 15 * 1024 * 1024, maxPixels: 50_000_000, minSide: 64, analysisSide: 1600 } as const;
 const ACCEPT = "image/jpeg,image/png,image/webp";
@@ -226,7 +226,9 @@ export function PhotoImport({ client, assist, onCreated, onClose }: Props) {
     setStep({ kind: "review", photo: target });
   }
 
-  const update = (id: string, patch: Partial<ReviewItem>) => setItems((list) => list.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+  // Any change to what was found makes the analysis's own notes about it pre-edit findings.
+  const update = (id: string, patch: Partial<ReviewItem>) =>
+    setItems((list) => list.map((i) => (i.id === id ? { ...i, ...patch, edited: i.edited === true || Object.keys(patch).some((k) => EDITS.has(k)) } : i)));
 
   async function create() {
     if (!photo || !cal || scale.widthM === null) return;
@@ -995,9 +997,16 @@ function ObjectsPanel(props: {
                       )}
                     </>
                   )}
-                  {[...item.notes, ...(isPlaced(p) ? p.notes : [])].length > 0 && (
-                    <ul className="create-checks">
-                      {[...new Set([...item.notes, ...(isPlaced(p) ? p.notes : [])])].map((n) => (
+                  {isPlaced(p) && p.notes.length > 0 && (
+                    <ul className="create-checks" data-testid={`photo-placement-notes-${item.id}`}>
+                      {[...new Set(p.notes)].map((n) => (
+                        <li key={n}>{n}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {item.notes.length > 0 && (
+                    <ul className="create-checks photo-analysis-notes" data-testid={`photo-analysis-notes-${item.id}`}>
+                      {analysisNotes(item).map((n) => (
                         <li key={n}>{n}</li>
                       ))}
                     </ul>
@@ -1026,6 +1035,9 @@ function withEntered(entered: ReviewItem["entered"], key: keyof ReviewItem["ente
 }
 
 const OVERLAPS_SHOWN = 6;
+
+/** Changes to an object that can make what the analysis said about it out of date. */
+const EDITS = new Set(["box", "contact", "label", "template", "facing", "visibility", "entered", "decision"]);
 
 const VISIBILITY_SHORT: Record<Visibility, string> = { visible: "visible", partly_visible: "partly visible", added: "not seen" };
 

@@ -43,6 +43,7 @@ interface Observation {
   derived_from: string | null;
   replaced_by: string | null;
   corrections: string[];
+  notes: string[];
 }
 interface Saved {
   sources: { photo_import: { vision_model: unknown; observations: Observation[] } | null }[];
@@ -256,6 +257,11 @@ test("classroom: split a table outlined with its chairs, merge a chair outlined 
   expect(obs[cabinet]!.corrections.some((c) => c.startsWith("Moved in the layout by you"))).toBe(true);
   expect(obs[cabinet]!.corrections).toContain("Depth entered by you: 0.45 m.");
   expect(obs["obs-4"]!.corrections).toEqual(["Facing entered by you: 0.0°."]);
+  // What the analysis said about the desk (its outline may include the computers) predates that
+  // correction, and the record says so; an untouched chair's notes stand as they were.
+  expect(obs["obs-4"]!.notes.length).toBeGreaterThan(0);
+  expect(obs["obs-4"]!.notes.every((n) => n.startsWith("Before your corrections, the analysis said: "))).toBe(true);
+  expect(obs["obs-14"]!.notes.some((n) => n.startsWith("Before your corrections"))).toBe(false);
   // Evidence never stronger than the photo: the bin is an estimate, never observed.
   const objectOf = (id: string) => first.json.scene.objects.find((o) => o.id === obs[id]!.object_id)!;
   const assetOf = (id: string) => first.json.catalog.find((a) => a.id === objectOf(id).asset_id)!;

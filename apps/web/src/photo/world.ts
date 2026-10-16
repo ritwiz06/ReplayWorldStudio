@@ -54,6 +54,14 @@ export interface ReviewItem {
   replacedBy: string | null;
   /** What the user corrected, in words, in order (kept in the saved project). */
   corrections: string[];
+  /** The user changed it after the analysis, so the analysis's notes may no longer hold. */
+  edited?: boolean;
+}
+
+/** The analysis's notes for an item, marked as said before the user's corrections once it changed. */
+export function analysisNotes(item: ReviewItem): string[] {
+  const stale = item.edited === true || item.corrections.length > 0;
+  return item.notes.map((n) => (stale && item.foundBy === "model" ? `Before your corrections, the analysis said: ${n}` : n));
 }
 
 export interface ScaleInput {
@@ -427,7 +435,7 @@ export function buildPhotoProject(input: WorldInput): Project {
       derived_from: item.derivedFrom,
       replaced_by: item.decision === "merged" ? item.replacedBy : null,
       corrections: [...item.corrections, ...(objectId && isPlaced(placed) ? layoutCorrections(placed) : [])].slice(0, 12) as PhotoObservation["corrections"],
-      notes: item.notes.slice(0, 12),
+      notes: analysisNotes(item).slice(0, 12),
     };
   });
 
