@@ -221,7 +221,7 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P0
 - Dependencies: GEN-02, GEN-03
-- Status: **closed with its last criterion not met** (2026-10-15; the first three criteria are met; the frozen set fails 2 of 8 gates, carried to GEN-05; feature `61a653b`, CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38821169936 green; frozen set `1f8d31b`; results commit recorded in SESSION_LOG.md). Failing gates: timeouts 2/20 and visual mean 1.15. M2 is **not** complete.
+- Status: **closed with its last criterion not met** (2026-10-15; the first three criteria are met; the frozen set fails 2 of 8 gates, carried to GEN-05; feature `61a653b`, CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38821169936 green; frozen set `1f8d31b`, CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38822490229 green; results `9251ea3`, CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38844690308 green). Failing gates: timeouts 2/20 and visual mean 1.15. M2 is **not** complete.
 - Done when:
   - When an instruction mixes representable and unrepresentable requests, the revision does the representable part and lists the rest in `not_represented`; "unsupported" is kept for instructions with nothing representable in them.
   - When the answer is "unsupported" because of unrepresentable features, those features are copied into `not_represented`.

@@ -445,7 +445,7 @@ Append entries in chronological order. If a live repository session log already 
     - an explicit 40-part limit;
     - dialog changes, regression tests, and re-recorded development fixtures.
   - Freeze (`1f8d31b`): docs/assist-evaluation/gen-04/{revisions.json, criteria.md, README.md}, the runner, scorer, renderer and unblinding scripts, and their tests. Committed before any live call.
-  - Results commit: the run, a numbered-sheet visual review scored before the key and the scores were opened, the scores, report.md, renders, and the record updates. The dialog's own check notes are now listed apart from "not shown". The runner now records real elapsed time.
+  - Results commit `9251ea3` (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38844690308 green): the run, a numbered-sheet visual review scored before the key and the scores were opened, the scores, report.md, renders, and the record updates. The dialog's own check notes are now listed apart from "not shown". The runner now records real elapsed time.
 - **Commands run and outcomes.**
   - `pnpm check` exit 0; pytest 628; `pnpm test:e2e` 25 passed.
   - `uv run python scripts/evaluate_gen04.py`: 20 requests, 23:15–00:54 UTC, 17.4 min of measured request time.
