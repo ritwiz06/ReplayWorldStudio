@@ -810,3 +810,80 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - Product fixes are named, not made, because the held-out set is now used. A fix needs new photos to be judged.
   - The next evidence must come from a real, permissioned, measured site.
 
+### ADR-049 - Product direction locked: "Upload a plan. Walk through it. Change it. See what happens."
+
+- Date: 2026-10-16. Status: adopted (user-approved product direction). Supersedes the ordering and framing of M4 in ADR-030 (drawing import); ADR-030's other decisions stand.
+- **Context.**
+  - The world model, guided creation (M2) and one-photo import (IMG-01/02) exist.
+  - IMG-03 showed that real, measured photos are needed to claim photo-import accuracy, and none exist.
+  - The user set the product direction for what comes next.
+- **Positioning.**
+  - Existing factory products already connect 2D layouts with 3D assets and simulation [S01, S14], so the claim is **not** that 2D-to-3D is new.
+  - The distinction is a simple, progressively enriched review experience: one world that a non-CAD manager can upload, walk through, change and compare, and that improves as better evidence arrives.
+- **Decision.**
+  1. **One world, progressively enriched.** What the user supplies improves the same world; enrichment never resets placement or edits.
+
+     | Supplied | What improves |
+     | --- | --- |
+     | One floor plan or rough drawing | Floor, equipment footprints, approximate 3D models, walk and top views. Height and appearance are provisional when absent. |
+     | A machine photo or 3D model | The matching placeholder gains a better appearance and, where the file supports it, checked geometry. Placement and edits stay intact. |
+     | A supplier drawing or specification | Confirmed dimensions, door swing, access area and other documented values replace estimates. |
+     | Process information | Cycle times, routes and capacities unlock a production scenario. |
+     | Engineering data | Load or motion analyses become possible only when their required inputs and validated models exist. |
+
+  2. **The evidence rule.**
+     - The agent never turns a plausible value into a verified one.
+     - A clearly marked provisional height may be used so that the first world can be viewed. It is replaced when better evidence arrives.
+     - A check that depends on it asks for confirmation, or returns **"height needed"**: a result state of its own, like "input missing". It never passes on a provisional value.
+  3. **A small interaction.**
+     - The main screen has three actions: **Upload**, **Change something**, **Play or compare**.
+     - After upload, the emerging plan is shown at once while the 3D scene builds.
+     - The app asks a question only when the answer changes what the user is trying to do: one scale measurement for a unitless drawing, or a machine's height before an overhead-clearance check.
+     - No long form.
+  4. **One orchestrating agent with bounded tools**, not many visible agents.
+     - It identifies files, extracts layout candidates, matches equipment, builds a draft world and proposes changes.
+     - Geometry calculations and checks stay deterministic.
+     - The user sees a simple result; the source and uncertainty of every value stay available to an engineer.
+  5. **"Play" has clear, separate levels.**
+     - *Immediately:* explore, move objects, compare layouts, and show geometric conflicts from the dimensions available.
+     - *With process data:* material flow, queues, throughput.
+     - *With engineering data and validated models:* defined motion, loads or other physical effects.
+
+     A visually realistic world helps review; it does not establish real machine behaviour. Validation and uncertainty are part of credibility [S09].
+  6. **First release and growth loop.**
+     - The first polished use case is **one production area from one drawing**.
+     - Rough images are accepted through a review path that shows lower confidence.
+     - Richer formats are supported incrementally; no format or simulation is a launch prerequisite beyond the first.
+     - The shareable result is a **private, view-only, interactive before/after scenario**. A manager sends it to an engineer, who can name the missing measurements a decision needs. That is the adoption loop to test.
+     - Company drawings are never shared publicly or automatically.
+  7. **Targets to measure, never claimed as current performance:**
+     - onboarding from one file;
+     - a useful first view without a long form;
+     - a non-CAD user making and sharing a layout change within minutes.
+  8. **M4 is reframed** as **first world from one file → review → enrich the existing world**, and its adapters are built in that order (BACKLOG M4; MILESTONES).
+     - The journey's checks ("does the pallet route still fit?") come from GEO-01/02. They follow the review step, before the enrichment that reruns them.
+     - DWG, named in the journey, needs a conversion route whose licensing is decided first (IMP-04). Until then the app asks for a DXF export.
+  9. **IMG-03's six measured photos are a research evaluation requirement** for claiming photo-import accuracy, **not something a customer must supply to start**. IMG-03 stays open and does not gate M4.
+- **Flagship journey** (to build towards; nothing here is current performance):
+  1. Upload `Packaging-Line.dwg`; get a walkable draft with named equipment and provisional models.
+  2. Move the filling cell and ask "Does the pallet route still fit?"; see the route and the exact dimensions used.
+  3. Add `Filling-Cell.step`; the existing cell becomes more detailed without resetting its position or edits.
+  4. Add its specification; the height and service area become sourced values; rerun the checks.
+- **Consequences.**
+  - **New M4 issues:**
+    - ONB-01: first world from one file;
+    - AGT-01: orchestrating agent;
+    - UX-01: three-action main screen;
+    - ENR-01/02: enrichment;
+    - IMP-04: DWG route;
+    - SHR-01: private view-only scenario;
+    - UX-02: measured onboarding targets.
+
+    IMP-01..03 keep their IDs, re-scoped to this order.
+  - The M4 estimate (32-48 h, DXF import only) no longer describes the scope. It is re-estimated after ONB-01.
+  - Implementation starts from a separate prompt; this decision changes records only.
+- **Revisit when:**
+  - the first one-file journey shows that a useful first view needs more than one question;
+  - measured onboarding misses its targets;
+  - the user changes the priority.
+

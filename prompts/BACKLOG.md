@@ -476,6 +476,7 @@ After M1 the user approved guided creation and described custom objects as the n
 - Priority: P0
 - Dependencies: IMG-01
 - Baseline status: planned → in progress (2026-10-16; infrastructure and synthetic stratum done; real stratum missing)
+- Note (2026-10-16, ADR-049): the six or more measured photos are a **research evaluation requirement** for claiming photo-import accuracy. They are **not** something a customer must upload to start: a customer starts from one file. IMG-03 stays open and does not gate M4.
 - Done when: Object precision and recall, scale error against measured references, and manual correction time are reported on held-out, permissioned images, split by scene type; failure cases are kept.
 - Note (2026-10-14, after IMG-01): IMG-01 measured placement only against one render with known ground truth and five development photos (docs/assist-evaluation/img-01.*.json). No real photo of a measured site exists yet, so scale error against a measured reference is still unmeasured; held-out photos and a second vision model are needed.
 - Status (2026-10-16): **open: the real, measured stratum is missing.**
@@ -513,7 +514,66 @@ After M1 the user approved guided creation and described custom objects as the n
     - the hidden-base cabinets look right from the photo's camera, and nothing warns about them;
     - one outline around two twin racks, or two twin pallets, gets no split suggestion.
 
-## M4 - Drawing import
+## M4 - First world from one file → review → enrich the existing world
+
+Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See what happens."
+
+- **The work runs in this order:**
+  - first world from one file: ONB-01, with AGT-01, UX-01 and the DXF adapter IMP-01;
+  - review: IMP-02;
+  - the first checks: GEO-01, GEO-02 (M5);
+  - enrichment of the existing world: ENR-01, ENR-02;
+  - the private view-only scenario: SHR-01.
+- **More first-world adapters follow incrementally:** IMP-04 (DWG route), then IMP-03 (PDF and rough images, through the review path with lower confidence).
+- **Process data** unlocks M6. **Engineering data** unlocks M7 and later.
+- **No format or simulation beyond the first** is a launch prerequisite.
+- **IMG-03's measured photos** are a research evaluation, not an onboarding step, and do not gate M4.
+
+### ONB-01 - First world from one file
+
+- Priority: P0
+- Dependencies: WRL-03, GEN-01 (provisional models), IMP-01 (the first file type)
+- Baseline status: planned (added 2026-10-16, ADR-049)
+- Done when:
+  - One drawing of one production area (DXF first) uploaded through **Upload** shows its emerging plan at once while the 3D scene builds.
+  - The result is a walkable draft:
+    - the floor;
+    - equipment footprints with names;
+    - recognisable provisional models;
+    - top and walk views.
+  - Every height and appearance not in the drawing is marked provisional, with its source and uncertainty available.
+  - At most one question is asked, and only when its answer changes what the user can do (one scale measurement for a unitless drawing).
+  - No long form.
+  - The original file is stored as a hash-checked source, and the draft goes through the command path (undo, save, reopen).
+- Evidence: not recorded
+
+### AGT-01 - One orchestrating agent with bounded tools
+
+- Priority: P0
+- Dependencies: GEN-01 (provider boundary), ONB-01
+- Baseline status: planned (added 2026-10-16, ADR-049)
+- Done when:
+  - One agent, invisible as such to the user, does the interpretation through typed, validated tools:
+    - identify a file;
+    - extract layout candidates;
+    - match equipment to catalog or generated models;
+    - build the draft world;
+    - propose changes.
+  - Geometry calculations and checks stay deterministic code, never model output.
+  - Each value records its source and uncertainty.
+  - Uploaded files are data, never instructions.
+  - It runs without AI (R09): deterministic import and manual mapping still work.
+- Evidence: not recorded
+
+### UX-01 - Three-action main screen
+
+- Priority: P0
+- Dependencies: ONB-01
+- Baseline status: planned (added 2026-10-16, ADR-049)
+- Done when:
+  - The main screen leads with **Upload**, **Change something** and **Play or compare**. Everything else is contextual, and engineering detail (sources, uncertainty, evidence) is one step away, not in the way.
+  - A first-time user reaches a walkable view from one file without reading instructions. This is checked in browser journeys; measured with people only in UX-02.
+- Evidence: not recorded
 
 ### IMP-01 - Build DXF geometry adapter
 
@@ -522,6 +582,7 @@ After M1 the user approved guided creation and described custom objects as the n
 - Baseline status: planned; reconcile with actual repository
 - Done when: Parse declared entity subset; warn on unsupported data and nested-unit conflicts.
 - Note (2026-10-10): unchanged in scope; it feeds the same world model and source records that described and image objects use.
+- Note (2026-10-16, ADR-049): the first adapter of ONB-01, so it must produce layout candidates (floor, walls and columns, equipment footprints, labels and blocks) for the agent and the draft world, not only geometry.
 - Evidence: not recorded by this package
 
 ### IMP-02 - Review scale and map equipment
@@ -531,7 +592,59 @@ After M1 the user approved guided creation and described custom objects as the n
 - Baseline status: planned; reconcile with actual repository
 - Done when: Overlay aligns with known measurements; user can correct mappings and dimensions.
 - Note (2026-10-10): mapped equipment can use catalog assets or GEN-01 generated objects; reuse the GEN-01 review flow where it fits.
+- Note (2026-10-16, ADR-049): this is the "review" step after the first world.
+  - Corrections happen in place in the draft, never by restarting the import.
+  - Provisional values stay marked until evidence replaces them.
+  - Reuse the IMG-02 correction patterns: split, merge, add, and record every correction.
 - Evidence: not recorded by this package
+
+### ENR-01 - Enrich an object from a machine photo or 3D model
+
+- Priority: P0
+- Dependencies: ONB-01, IMP-02
+- Baseline status: planned (added 2026-10-16, ADR-049)
+- Done when:
+  - Adding a machine photo, GLB or STEP file to an existing object improves that object in place. Its placement, edits, name and links stay intact, and the change is one undoable step.
+  - Appearance comes from the photo or model. Geometry is accepted as checked only where the file supports it: units, bounds and a footprint against the recorded one, with any conflict shown, never averaged.
+  - STEP conversion has its licence and units decided first.
+  - The previous version is kept.
+  - Journey step 3: `Filling-Cell.step` makes the existing cell more detailed without resetting it.
+- Evidence: not recorded
+
+### ENR-02 - Enrich from a supplier drawing or specification
+
+- Priority: P0
+- Dependencies: ENR-01, GEO-01
+- Baseline status: planned (added 2026-10-16, ADR-049)
+- Done when:
+  - Values a supplier drawing or specification documents explicitly replace the estimates they cover, each citing its document: dimensions, height, door swing, access or service area.
+  - Undocumented values stay provisional.
+  - Checks that depended on the old values are marked outdated and can be rerun.
+  - Journey step 4: the height and service area become sourced, and the route and clearance checks rerun.
+- Evidence: not recorded
+
+### SHR-01 - Private view-only before/after scenario
+
+- Priority: P1
+- Dependencies: GEO-02, ENR-02 (comparison of variants)
+- Baseline status: planned (added 2026-10-16, ADR-049)
+- Done when:
+  - A manager shares a private, view-only, interactive before/after of a layout change with an engineer.
+  - The engineer can walk it, see the checks and their dimensions, and mark the missing measurements a decision needs. Those come back as requests on the values concerned.
+  - Nothing is shared publicly or automatically.
+  - The first mechanism is a local view-only package; a hosted link needs authentication and access control (TEAM-01).
+- Note: this is the adoption loop to test.
+- Evidence: not recorded
+
+### IMP-04 - DWG conversion route
+
+- Priority: P1
+- Dependencies: IMP-01
+- Baseline status: planned (added 2026-10-16, ADR-049)
+- Done when:
+  - A DWG route is chosen and documented with its licence, versions supported and failure modes: a licensed converter or an open library, evaluated on permissioned sample files.
+  - Until then the app asks for a DXF export (one question that changes what the user can do) and never implies native DWG support (ARCHITECTURE "Import and asset boundaries").
+- Evidence: not recorded
 
 ### IMP-03 - Add calibrated PDF/PNG reference
 
@@ -539,7 +652,21 @@ After M1 the user approved guided creation and described custom objects as the n
 - Dependencies: WRL-03
 - Baseline status: planned; reconcile with actual repository
 - Done when: Manual scale and object placement persist; inferred values remain labeled.
+- Note (2026-10-16, ADR-049): PDFs, scanned plans and rough images enter through the review path, with lower confidence shown. They reuse the IMG-01/02 review, with one scale measurement asked for.
 - Evidence: not recorded by this package
+
+### UX-02 - Measure the onboarding targets with people
+
+- Priority: P1
+- Dependencies: UX-01, SHR-01
+- Baseline status: planned (added 2026-10-16, ADR-049)
+- Done when: Three targets are measured with consenting participants, not claimed:
+  - onboarding from one file;
+  - a useful first view without a long form;
+  - a non-CAD user making and sharing a layout change within minutes.
+
+  The tasks, participants and consent are recorded, after an ASU research-ethics check if results are reported as research. Failures are kept. Scripted timings are not a substitute.
+- Evidence: not recorded
 
 ## M5 - Spatial checks
 
@@ -549,6 +676,7 @@ After M1 the user approved guided creation and described custom objects as the n
 - Dependencies: IMP-02
 - Baseline status: planned; reconcile with actual repository
 - Done when: Labeled overlap/clearance fixtures pass with explicit tolerances.
+- Note (2026-10-16, ADR-049): part of the first release (journey step 2). Results distinguish "passed", "failed", "not evaluated", "input missing" and "height needed". A check that depends on a provisional value asks for confirmation or returns the value it needs; it never passes on an estimate. Each result shows the exact dimensions it used.
 - Evidence: not recorded by this package
 
 ### GEO-02 - Check specified routes and envelopes
@@ -557,6 +685,7 @@ After M1 the user approved guided creation and described custom objects as the n
 - Dependencies: GEO-01
 - Baseline status: planned; reconcile with actual repository
 - Done when: Seeded route obstruction is highlighted; unmodeled vehicle kinematics remain explicit.
+- Note (2026-10-16, ADR-049): answers the journey's "Does the pallet route still fit?" after a move, showing the route and the exact dimensions used. Overhead clearance needs a confirmed height ("height needed" otherwise).
 - Evidence: not recorded by this package
 
 ## M6 - Production-event simulation and comparison

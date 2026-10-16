@@ -87,5 +87,11 @@ Physics-informed reconstruction of selected deformable objects from interaction 
 
 <https://jianghanxiao.github.io/phystwin-web/>
 
+## S14  Autodesk Help: factory layout tools (2D layouts with 3D assets)
+
+Existing products already connect 2D factory layouts with 3D assets and simulation; cited by the user for the positioning in ADR-049 (2026-10-16). The exact help page was not given and is to be confirmed before it is quoted.
+
+<https://help.autodesk.com/>
+
 
 These references were reviewed for the original plan. When implementing version-sensitive details, check current official documentation and the repository lockfiles. No source establishes that this application has already achieved the proposed targets.

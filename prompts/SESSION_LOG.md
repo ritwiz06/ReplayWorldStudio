@@ -694,6 +694,46 @@ Append entries in chronological order. If a live repository session log already 
   - GEN-09 open on independent review only (fresh material and a real reviewer needed).
 - **Next concrete task:** photograph and measure permissioned sites by protocol.md, and run the frozen evaluation on them. Separately, the shape-family proportions fix, judged on new photos.
 
+### 2026-10-16 - Product direction locked; M4 reframed (records only)
+
+- **Active milestone / issue:** planning; ADR-049.
+- **Starting commit:** `65496d1`.
+- **Goal:** fix the user's product direction in the project records before the next implementation prompt. **No code changed.**
+- **Work completed:**
+  - **ADR-049:**
+    - the statement and positioning;
+    - one world, progressively enriched;
+    - the evidence rule ("height needed");
+    - three actions;
+    - one orchestrating agent with deterministic checks;
+    - "Play" levels;
+    - the first release and its adoption loop;
+    - targets to measure;
+    - M4 reframed;
+    - IMG-03 clarified.
+  - **PRODUCT_REQUIREMENTS:** the direction, the journey, levels, release; R10-R14.
+  - **UI_UX_REQUIREMENTS:** the main screen.
+  - **ARCHITECTURE:** enrichment inputs, the DWG route, the orchestrating agent.
+  - **PROJECT_CONTEXT, EXPANSION_ROADMAP:** the direction and the M4 reframe.
+  - **MILESTONES:** revision note, M3/M4/M5 rows, outcomes, learning checkpoint.
+  - **BACKLOG M4:**
+    - new ONB-01, AGT-01, UX-01, ENR-01, ENR-02, SHR-01, IMP-04, UX-02;
+    - IMP-01..03 re-scoped notes;
+    - GEO-01/02 "height needed" notes;
+    - the IMG-03 note.
+  - **SOURCES:** S14 (Autodesk help, as cited by the user; the exact page is to be confirmed).
+- **Decisions:** ADR-049 (supersedes ADR-030 for M4's ordering and framing only).
+- **Choices made in recording**, to confirm or change in the next prompt:
+  - the first-release order puts GEO-01/02 between the review (IMP-02) and enrichment (ENR-01/02), because the journey's route check comes before the specification rerun;
+  - DXF is the first file type, and DWG waits for a licensed or open conversion route (IMP-04);
+  - SHR-01 starts as a local view-only package; a hosted link needs TEAM-01's authentication;
+  - M4 is re-estimated after ONB-01.
+- **Milestone status:**
+  - M3 open (IMG-03 is a research evaluation);
+  - M4 reframed, not started;
+  - GEN-09 open on independent review only.
+- **Next concrete task:** ONB-01 with IMP-01, AGT-01 and UX-01, on the user's implementation prompt.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

@@ -109,8 +109,10 @@ Reduce manual work while preserving a correction path
 | --- | --- | --- |
 | DXF | Parse supported layers, lines, polylines, text, dimensions and block references; review mappings. | List unsupported entities and unresolved external references. Never silently discard relevant geometry. |
 | PDF / PNG | Render or show as a reference; calibrate with known dimensions; trace or place objects manually. | OCR and vector extraction after the first workflow works; retain confidence and review status. |
-| DWG | Ask the user to export DXF using their existing CAD workflow. | Evaluate a licensed conversion route separately; do not imply native DWG support. |
+| DWG | Ask the user to export DXF using their existing CAD workflow. | Evaluate a licensed conversion route separately; do not imply native DWG support. The flagship journey names a DWG, so this route is IMP-04 (ADR-049). |
 | Equipment CAD | Use a separately prepared GLB visual asset plus verified footprint and metadata. | A CAD conversion pipeline with licensing, units and geometry checks. |
+| Machine photo or 3D model (enrichment, ENR-01) | Attach it to an existing object: better appearance; geometry accepted as checked only where the file supports it (units, bounds, footprint against the recorded one). | Placement, edits and links are kept; conflicts are shown, never averaged; the previous version is kept. |
+| Supplier drawing or specification (enrichment, ENR-02) | Documented values (dimensions, height, door swing, access area) replace the estimates they cover, each citing the document. | Undocumented values stay provisional; dependent checks are marked outdated and rerun. |
 | Photo / video | Store reference evidence associated with objects. | Multi-view reconstruction and object separation are an expansion workstream. |
 
 ## Import review sequence
@@ -126,7 +128,17 @@ Each entry includes a visual asset, footprint, bounds, optional collision geomet
 
 ## AI workflow
 
-Useful automation with inspectable actions
+Useful automation with inspectable actions.
+
+**One orchestrating agent with bounded tools** (ADR-049), not many visible agents:
+
+- **Its tools:** identify a file, extract layout candidates, match equipment, build a draft
+  world, propose changes.
+- **Every tool is typed and validated.** Geometry calculations and checks are deterministic code.
+- **The agent proposes; the command path applies.**
+- **Every value keeps its source and uncertainty.**
+- **A provisional value is never promoted to a verified one.** A check that needs it returns
+  "height needed" or asks.
 
 | Capability | How it works | When it cannot answer |
 | --- | --- | --- |

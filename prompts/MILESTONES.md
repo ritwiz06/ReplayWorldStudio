@@ -2,13 +2,29 @@
 
 Effort ranges are estimates, not delivery guarantees.
 
+## Revision 2026-10-16: product direction locked (ADR-049)
+
+**"Upload a plan. Walk through it. Change it. See what happens."**
+
+- A manager uploads a floor plan or rough drawing and gets a first 3D layout with recognisable, provisional machines.
+- They walk through it, move equipment, add something by describing it, and compare layouts.
+- An orchestrating agent interprets files and keeps track of what is known.
+- Better evidence enriches the **same** world without resetting it: a machine photo or 3D model, a supplier specification, process data, and later engineering data.
+
+Changes to the plan:
+
+- **M4 is reframed:** first world from one file → review → enrich the existing world, with its adapters built in that order (BACKLOG M4).
+- **The first release** is one production area from one drawing, including the first geometric checks (GEO-01/02), and a private view-only before/after scenario to share (SHR-01).
+- **IMG-03's measured photos** are a research evaluation requirement, not a customer prerequisite. IMG-03 stays open and does not gate M4.
+- **No new estimate yet:** M4 is re-estimated after ONB-01.
+
 ## Revision 2026-10-10: guided creation first
 
 After M1 the user approved a broader product direction. Factory planning is the **first example** of a general editable-world platform, and the next priority is a beginner-friendly way to create and change objects without CAD skills. The sequence after M1 is therefore:
 
 1. **Guided creation and described custom objects** (new M2, GEN issues).
 2. **General image-to-editable-world import** (new M3, IMG issues).
-3. **Drawing import** (M4). IMP-01 DXF import stays planned and feeds the same world model.
+3. **Drawing import** (M4). IMP-01 DXF import stays planned and feeds the same world model. (Reframed 2026-10-16, ADR-049: first world from one file → review → enrich.)
 4. Spatial checks, then simulation split into **explicit supported models**: production events, rigid-body interactions, and later validated structural and chemical cases.
 
 The earlier M2 ("Drawing import", 32-48 h) and the old total (208-312 h for M0-M6) no longer describe the plan, because the scope changed. They are kept in the history below only as the original baseline. Issue IDs are unchanged; new work has new IDs (GEN, IMG, PHY-02, CHEM-01). See ADR-030.
@@ -20,9 +36,9 @@ The earlier M2 ("Drawing import", 32-48 h) and the old total (208-312 h for M0-M
 | M0 | Foundation | **Complete** (2026-10-09/10; SET-01..03) | Existing repo inspected; reproducible web/API baseline; docs, lockfiles and CI; no remote changes. |
 | M1 | World and assets | **Complete** (2026-10-10; WRL-01..04) | One coherent industrial scene; catalog metadata; reliable editing, save/reload and graphic benchmark. |
 | M2 | Guided creation and described objects | 48-72 h | A first-time user can describe a missing object in ordinary language, review a typed proposal that separates stated facts from inferences, confirm the dimensions that matter, see an original provisional model, place it through the command path, and change it with one bounded language request; a manual builder works without the AI provider; an evaluated description and edit set (GEN-01..03; corrective tasks GEN-04 to GEN-08; **complete 2026-10-16**, GEN-08). |
-| M3 | Image to editable world | 60-100 h (feasibility first) | One image becomes a reviewed, editable scene: a vision model proposes objects, the user sets scale from a known dimension and accepts, corrects or rejects each object; held-out precision, scale error and correction time are reported (IMG-01..03). |
-| M4 | Drawing import | 32-48 h | Supported DXF ingestion, scale review, layer/block mapping and correction workflow; PDF/PNG reference; imported equipment lands in the same world model and review flow as described and image objects (IMP-01..03). |
-| M5 | Spatial checks | 28-40 h | Footprint, service-envelope and defined route checks with seeded fixtures and highlighted evidence (GEO-01..02). |
+| M3 | Image to editable world | 60-100 h (feasibility first); **open** (IMG-01/02 done; IMG-03 in progress) | One image becomes a reviewed, editable scene: a vision model proposes objects, the user sets scale from a known dimension and accepts, corrects or rejects each object; held-out precision, scale error and correction time are reported (IMG-01..03). The measured photos IMG-03 needs are a research evaluation requirement, not a customer prerequisite (ADR-049). |
+| M4 | **First world from one file → review → enrich** (reframed 2026-10-16, ADR-049) | Re-estimate after ONB-01 (the old 32-48 h covered DXF import only) | **Upload** one drawing of one production area (DXF first) and get a walkable draft at once: named equipment, recognisable provisional models, and provisional heights marked as such. At most one question that changes what the user can do. Review and correct it in place. Enrich an existing object from a machine photo or 3D model, and then from a specification, without resetting its placement or edits; sourced values replace estimates and checks rerun. Share a private view-only before/after. One orchestrating agent; deterministic geometry; source and uncertainty for every value (ONB-01, AGT-01, UX-01, IMP-01, IMP-02, ENR-01, ENR-02, SHR-01; then IMP-04, IMP-03, UX-02). |
+| M5 | Spatial checks | 28-40 h | Footprint, service-envelope and defined route checks with seeded fixtures and highlighted evidence (GEO-01..02). Part of the first release ("Does the pallet route still fit?"). A check needing a provisional value returns "height needed" or asks for confirmation (ADR-049). |
 | M6 | Production-event simulation and comparison | 40-60 h | Defined process templates, reproducible shift runs, event replay and baseline/candidate metrics (SIM-01..04). |
 | M7 | Rigid-body interactions | 32-56 h | A bounded, fixed-step rigid-body adapter with documented contact and friction fixtures, inputs with evidence (no mass inferred from appearance), and replay kept separate from production events (PHY-01..02). |
 | M8 | AI assistance across the workflow | 28-48 h | Language requests cover the supported commands, scenario runs and grounded explanations, evaluated on held-out requests (AI-01..03). GEN-01 already provides the provider boundary for object proposals and one edit. |
@@ -72,11 +88,11 @@ The original plan listed M2 "Drawing import" (32-48 h), M3 spatial checks (28-40
 
 ## Earlier visible outcomes
 
-M1 provides an editable, visually coherent industrial world. M2 lets a first-time user add a missing object by describing it, and change it with words, without CAD skills. M3 turns a picture into a reviewed scene. M4 adds drawing-accurate geometry to the same world model. M6 delivers the first end-to-end operational workflow without requiring AI. These milestones are demonstrable releases, not hidden infrastructure work.
+M1 provides an editable, visually coherent industrial world. M2 lets a first-time user add a missing object by describing it, and change it with words, without CAD skills. M3 turns a picture into a reviewed scene. M4 turns one uploaded plan into a walkable first world that the user reviews, changes and enriches with better evidence without starting over. M6 delivers the first end-to-end operational workflow without requiring AI. These milestones are demonstrable releases, not hidden infrastructure work.
 
 ## Dependencies and feedback
 
-Use the sequence above as the critical path. GEN-01 creates the object proposal, model generation and provider boundary that IMG-01 and IMP-02 reuse: an object proposed from words, an image or a drawing is reviewed the same way and placed through the same command path. Asset preparation, fixture annotation and documentation can overlap after their contracts stabilize; do not assume overlap reduces a solo developer's total effort. Re-estimate after GEN-01 (described objects), after the IMG-01 feasibility timebox, and after M4 import evaluation.
+Use the sequence above as the critical path. GEN-01 creates the object proposal, model generation and provider boundary that IMG-01 and IMP-02 reuse: an object proposed from words, an image or a drawing is reviewed the same way and placed through the same command path. Asset preparation, fixture annotation and documentation can overlap after their contracts stabilize; do not assume overlap reduces a solo developer's total effort. Re-estimate after GEN-01 (described objects), after the IMG-01 feasibility timebox, after ONB-01 (the first world from one file), and after M4 import evaluation.
 
 > Expansion features beyond the listed gates are outside this estimate. A complete platform spanning factories, arbitrary image and video worlds, structural engineering and chemistry is a multi-stage research and engineering program.
 
@@ -115,7 +131,7 @@ Each milestone includes an explanation you should be able to give
 | M1 | Coordinates, transforms, cameras, meshes, materials, scene graphs and rendering budgets. | Explain why visual scale, physical dimensions and collision geometry are distinct. |
 | M2 | Structured model output, schema-guided decoding, grounding, bounded generation, provenance and review. | Show why a valid JSON proposal can still be wrong, and how stated facts, inferences and unknowns stay separate. |
 | M3 | Camera geometry, scale from a known length, object detection versus segmentation, occlusion and uncertainty. | Explain what one image can and cannot establish about size and hidden parts. |
-| M4 | CAD entities, units, nested blocks, coordinate mapping, annotations and uncertainty. | Trace one machine from its source entity through a reviewed 3D placement. |
+| M4 | CAD entities, units, nested blocks, coordinate mapping, annotations, uncertainty, provenance and enrichment. | Trace one machine from its source entity through a reviewed 3D placement, and show which of its values a later 3D model or specification replaced, without moving it. |
 | M5 | Polygons, distance, intersections, tolerances, path envelopes and dimensional limits. | Explain what a clearance check proves and what it leaves untested. |
 | M6 | Discrete-event simulation, resources, queues, utilization, seeds and confidence intervals. | Derive one known-answer case and explain a bottleneck using an event trace. |
 | M7 | Rigid bodies, contacts, friction, fixed time steps and determinism. | Show a contact fixture against its expected result and name what the model ignores. |

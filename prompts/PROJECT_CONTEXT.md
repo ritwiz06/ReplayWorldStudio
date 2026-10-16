@@ -6,6 +6,19 @@ Build an AI-assisted platform that turns drawings, photos, videos and specificat
 
 The long-term vision includes complete environments, object interactions, forces, selected material effects and degradation. Factory planning is the first application of this platform; it does not replace the wider vision.
 
+## Product direction (locked 2026-10-16, ADR-049)
+
+**"Upload a plan. Walk through it. Change it. See what happens."**
+
+- A manager uploads a floor plan or rough drawing and gets a walkable first 3D layout with
+  recognisable, provisional machines.
+- They move equipment, add something by describing it, and compare layouts.
+- Better evidence (a machine photo or 3D model, a specification, process data, engineering data)
+  enriches the same world without resetting it.
+- Plausible values are never presented as verified.
+- **First release:** one production area from one drawing, and a private view-only before/after to
+  share with an engineer. See PRODUCT_REQUIREMENTS.md.
+
 ## First application: factory project planning
 
 A manufacturing project engineer or system integrator uploads a layout drawing. The platform helps reconstruct the space, add prototype machine models, verify dimensions, inspect access, define the production process and simulate operation. The engineer can change a layout, ask AI to run an experiment, and compare alternatives before a physical change.
@@ -13,6 +26,15 @@ A manufacturing project engineer or system integrator uploads a layout drawing. 
 The initial supported scale is one small production area with roughly 5-20 equipment instances and one process family. This is a planning scope, not a demonstrated capability or runtime limit.
 
 ## Flagship user journey
+
+The first-release journey (ADR-049):
+
+1. upload `Packaging-Line.dwg` and walk the draft;
+2. move the filling cell and ask whether the pallet route still fits;
+3. add `Filling-Cell.step` without resetting the cell;
+4. add its specification and rerun the checks.
+
+The longer journey below continues once process data exists.
 
 1. Import a DXF, or use a calibrated PDF/PNG as a reference.
 2. Review the space, source scale and machine footprints.
