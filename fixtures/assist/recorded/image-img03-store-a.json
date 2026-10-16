@@ -1,0 +1,13 @@
+{
+  "task": "image",
+  "key": "1c577fbfc6bd1cbf7cd7b5004f073f00b109e107fd7b21013e53da36e371c504",
+  "photo": "../../docs/assist-evaluation/img-03/photos/store-a.jpg",
+  "service": "ASU Voyager",
+  "model": "qwen3-vl-32b-instruct",
+  "prompt_version": "img-01.2",
+  "recorded_at": "2026-10-16",
+  "note": "IMG-03 held-out answer for store-a (already scored in docs/assist-evaluation/img-03/results), replayed offline only to show its worst errors in the browser; never re-scored. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"floor_rectangles\": [\n    {\n      \"corners\": [\n           [343, 683],\n        [828, 683],\n        [828, 828],\n        [343, 828]\n      ]\n    ,\n      \"label\": \"blue mat\"\n    }\n  ],\n  \"objects\": [\n    {\n      \"box\": [165, 390, 515, 610],\n      \"category\": \"shelf\",\n      \"facing\": \"left\",\n      \"floor_contact\": [340, 600],\n      \"label\": \"large orange and blue shelf\",\n      \"material\": \"plastic_black\",\n      \"size_m\": [2.5, 1.5, 0.6]\n    ,\n      \"support\": \"floor\"\n    ,\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [565, 405, 655, 535],\n      \"category\": \"shelf\",\n      \"facing\": \"left\",\n      \"floor_contact\": [595, 525],\n      \"label\": \"small orange and blue shelf\",\n      \"material\": \"plastic_black\",\n      \"size_m\": [1.0, 1.5, 0.6],\n      \"support\": \"floor\",\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [575, 500, 775, 625],\n      \"category\": \"pallet\",\n      \"facing\": \"left\",\n      \"floor_contact\": [675, 615],\n      \"label\": \"pallet with stacked boxes\",\n      \"material\": \"wood\",\n      \"size_m\": [1.2, 0.8, 0.8],\n      \"support\": \"floor\",\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [255, 550, 395, 695],\n      \"category\": \"cabinet\",\n      \"facing\": \"left\",\n      \"floor_contact\": [325, 685],\n      \"label\": \"white cube cabinet\",\n      \"material\": \"plastic_black\",\n      \"size_m\": [0.8, 0.8, 0.8],\n      \"support\": \"floor\",\n      \"visibility\": \"full\"\n    },\n    {\n      \"box\": [90, 415, 140, 570],\n      \"category\": \"cabinet\",\n      \"facing\": \"left\",\n      \"floor_contact\": [115, 560],\n      \"label\": \"tall white cabinet\",\n      \"material\": \"plastic_black\",\n      \"size_m\": [0.5, 1.5, 0.5],\n      \"support\": \"floor\",\n      \"visibility\": \"full\"\n    }\n  ],\n  \"scene\": \"room_or_work_area\",\n  \"visible_text\": []\n}"
+  ]
+}

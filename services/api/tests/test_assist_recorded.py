@@ -232,8 +232,9 @@ def photo_proposal(name: str) -> ImageProposalResult:
 
 
 def test_every_committed_photo_has_a_recorded_answer() -> None:
-    # The permitted photos in fixtures/photos/, and one IMG-03 development render (its "photo" is a
-    # path from fixtures/photos/ to docs/assist-evaluation/img-03/photos/).
+    # The permitted photos in fixtures/photos/, and three IMG-03 renders (a development one for the
+    # browser cross-check, two held-out ones only to show their scored errors; "photo" is a path
+    # from fixtures/photos/ to docs/assist-evaluation/img-03/photos/).
     fixtures = {
         p.name
         for p in (ROOT / "fixtures" / "photos").iterdir()
@@ -241,7 +242,10 @@ def test_every_committed_photo_has_a_recorded_answer() -> None:
     }
     recorded = {recording(name)["photo"] for name in PHOTOS}
     assert fixtures <= recorded
-    assert recorded - fixtures == {"../../docs/assist-evaluation/img-03/photos/dev-office-a.jpg"}
+    assert recorded - fixtures == {
+        f"../../docs/assist-evaluation/img-03/photos/{name}.jpg"
+        for name in ("dev-office-a", "office-a", "store-a")
+    }
 
 
 @pytest.mark.parametrize("name", PHOTOS)

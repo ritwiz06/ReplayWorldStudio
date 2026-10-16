@@ -170,6 +170,14 @@ development check: an invalid 14,230-character answer, mostly whitespace, then a
    - The idealised review, whose outline reaches the floor between the desk legs, brings them
      within 0.23 m.
    - [sheet](sheets/qwen3-vl-32b-instruct/office-a.jpg)
+   - **In the browser** ([layout](browser/office-a-layout.jpg),
+     [photo's camera](browser/office-a-photo-camera.jpg)), the same answer is replayed offline
+     through the real dialog:
+     - seen from the photo's own camera, the misplaced cabinets look right, because their outline
+       is consistent;
+     - only the plan shows them far behind the desks;
+     - **no warning mentions them.** The Layout's checks see no clash, and a base hidden behind
+       another outline is not flagged.
 2. **Turned objects.**
    - The app sets each object facing the camera (its front square to the camera's view of the
      floor), not square to the room.
@@ -185,6 +193,10 @@ development check: an invalid 14,230-character answer, mostly whitespace, then a
      outline decides the distance.
 4. **Group outlines and their pieces.**
    - One outline around two objects finds one and misses the other until a reviewer splits it.
+   - **In the browser, twins are not suggested for splitting**
+     ([store-a](browser/store-a-layout.jpg)). One "large orange and blue shelf" outline covers
+     both racks, and one "pallet with stacked boxes" covers both pallets. The IMG-02 split hint
+     looks for plural labels such as "with chairs", and these labels are singular.
    - A split piece keeps the group outline's size guess. The cabinets split from the conveyors'
      outlines came out with hidden depths **+314 % to +386 %** of the true one.
 
@@ -287,6 +299,8 @@ photos.
     `results/llama4-scout-17b.scored.json`;
   - diagnostics in `results/diagnostic-*.json`.
 - **Scores:** `scores.json` (per photo, per proposal, per object); `worlds.json` (placements).
+- **Browser screenshots** of `office-a` and `store-a`: `browser/`, with the Objects and Layout
+  views, the plan and the photo's camera, at 1440 × 900 (`e2e/img03-inspect.spec.ts`).
 - **Sheets:** `sheets/<model>/<photo>.jpg`, which show:
   - the model's outlines, coloured by how they were scored;
   - the true outlines, dashed;
