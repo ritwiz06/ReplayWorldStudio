@@ -11,6 +11,7 @@ import csv
 import importlib.util
 import json
 import sys
+from collections.abc import Collection
 from pathlib import Path
 from types import ModuleType
 
@@ -51,7 +52,7 @@ def test_the_packet_has_every_gen08_sheet_in_a_new_order_without_identifiers() -
     assert "key.json" not in {p.name for p in PACKET.rglob("*")}
 
 
-def answers(tmp_path: Path, scores: dict[str, int], done: set[str] = frozenset()) -> Path:
+def answers(tmp_path: Path, scores: dict[str, int], done: Collection[str] = ()) -> Path:
     path = tmp_path / "answers.csv"
     with path.open("w", newline="") as handle:
         writer = csv.writer(handle)
