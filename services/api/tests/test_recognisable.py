@@ -17,9 +17,12 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from fastapi.testclient import TestClient
+from replay_world_api.app import create_app
 from replay_world_api.assist import visibility
 from replay_world_api.generated_assets import create_generated_asset, restore_generated_models
 from replay_world_api.objects import GeneratorError, build_model, fit_to_envelope
+from replay_world_api.settings import Settings
 from replay_world_contracts import (
     GeneratedAssetRequest,
     GeometryDraft,
@@ -27,6 +30,7 @@ from replay_world_contracts import (
     GltfVisual,
     Project,
 )
+from replay_world_contracts.migrations import upgrade_document
 
 ROOT = Path(__file__).resolve().parents[3]
 EVALUATIONS = ROOT / "docs" / "assist-evaluation"
@@ -64,7 +68,11 @@ def test_every_model_built_in_the_gen04_and_gen05_runs_rebuilds_byte_identically
 def test_a_project_saved_before_gen06_validates_and_its_missing_model_is_rebuilt(
     tmp_path: Path,
 ) -> None:
-    project = Project.model_validate_json(LEGACY.read_text())
+    # Saved in 0.7.0: upgraded (adding only photo-observation fields; it has no photo), then the
+    # model it recorded rebuilds to the same hash.
+    upgrade = upgrade_document(json.loads(LEGACY.read_text()))
+    assert upgrade.from_version == "0.7.0"
+    project = Project.model_validate(upgrade.document)
     asset = next(a for a in project.catalog if a.id.startswith("asset-gen-display-rack"))
     assert asset.generation is not None and asset.generation.generator == "rws-object-generator/1"
     assert any(p.material == "polycarbonate" for p in asset.generation.spec.parts)
@@ -75,10 +83,24 @@ def test_a_project_saved_before_gen06_validates_and_its_missing_model_is_rebuilt
     assert (tmp_path / asset.visual.uri).is_file()  # named by the sha256 recorded before GEN-06
 
 
+def test_an_older_project_s_missing_models_are_rebuilt_through_the_api(tmp_path: Path) -> None:
+    # A 0.7.0 file is upgraded on the way in (no specification changes), so its models rebuild to
+    # the recorded hashes, and the upgrade can then be reviewed and opened.
+    with TestClient(create_app(Settings(catalog_dir=tmp_path))) as client:
+        response = client.post(
+            "/api/v1/catalog/generated-models/restore", json=json.loads(LEGACY.read_text())
+        )
+        assert response.status_code == 200, response.text
+        assert {r["status"] for r in response.json()["results"]} <= {"restored", "present"}
+        upgraded = client.post("/api/v1/projects/upgrade", json=json.loads(LEGACY.read_text()))
+        assert upgraded.status_code == 200, upgraded.text
+        assert upgraded.json()["from_version"] == "0.7.0"
+
+
 def test_a_new_asset_rebuilds_to_its_own_hash_and_an_unknown_generator_is_refused(
     tmp_path: Path,
 ) -> None:
-    project = json.loads(LEGACY.read_text())
+    project = upgrade_document(json.loads(LEGACY.read_text())).document
     old = next(a for a in project["catalog"] if a["id"].startswith("asset-gen-display-rack"))
     entered = {"basis": "entered", "quote": None, "confirmed": True, "source_ref": None}
     request = GeneratedAssetRequest.model_validate(

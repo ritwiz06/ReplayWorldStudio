@@ -1961,3 +1961,79 @@ label.button.disabled {
 .improve-confirm p {
   margin: 0;
 }
+/* IMG-02: how much of each object the photo shows, and corrections to the outlines. */
+.photo-box.vis-partly_visible {
+  border-style: dashed;
+}
+.photo-box.vis-added {
+  border-style: dotted;
+  border-color: #c39bff;
+}
+.photo-box.selected.vis-added {
+  border-color: #ffd24d;
+}
+.photo-object.split .photo-object-name,
+.photo-object.merged .photo-object-name {
+  color: var(--muted);
+}
+.photo-hints {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-left: 3px solid #ffb020;
+  background: var(--panel-raised);
+}
+.photo-hints p {
+  margin: 0;
+}
+.photo-hints ul {
+  margin: 2px 0;
+  padding-left: 18px;
+}
+.photo-correct {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.photo-corrections {
+  color: var(--muted);
+}
+.photo-plan .plan-item.vis-partly_visible rect {
+  stroke-dasharray: 0.12 0.08;
+}
+.photo-plan .plan-item.vis-added rect {
+  stroke: #c39bff;
+  stroke-dasharray: 0.04 0.06;
+}
+.photo-plan .plan-item.clashing rect {
+  stroke: #ff6b5a;
+}
+.photo-plan .plan-clash {
+  fill: rgba(255, 90, 70, 0.55);
+  stroke: #ff6b5a;
+  stroke-width: 0.02;
+  pointer-events: none;
+}
+.photo-layout-edit {
+  margin: 8px 0;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.photo-layout-edit p {
+  margin: 0 0 4px;
+}
+.photo-layout-grid {
+  display: grid;
+  grid-template-columns: max-content max-content max-content max-content;
+  gap: 4px 10px;
+  align-items: center;
+}
+.photo-layout-checks ul {
+  margin: 4px 0;
+}
+.photo-overlap-list {
+  margin: 4px 0;
+  padding-left: 18px;
+  color: var(--muted);
+}

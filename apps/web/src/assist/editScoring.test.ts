@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import type { EditIntent, Project } from "@replay-world/contracts";
 import { describe, expect, it } from "vitest";
-import { type EditCase, type EditRow, scoreEdit } from "./editScoring";
+import { type EditCase, type EditRow, frozenScene, scoreEdit } from "./editScoring";
 
 // The GEN-03 packing-room scene (read only); the answers below are synthetic, not model output.
-const scene = JSON.parse(readFileSync(new URL("../../../../docs/assist-evaluation/gen-03/edit-scene.json", import.meta.url), "utf8")) as Project;
+const scene = frozenScene(JSON.parse(readFileSync(new URL("../../../../docs/assist-evaluation/gen-03/edit-scene.json", import.meta.url), "utf8")) as Project);
 
 const base: EditCase = { id: "t", category: "ordinary", text: "", selected: null, expect: "proposal", accept: ["proposal"], target: null, action: null, direction: null, distance_m: null, angle_deg: null };
 const moveCase = (target: string, direction: string, metres: number): EditCase => ({ ...base, target, action: "move", direction, distance_m: metres });

@@ -85,14 +85,18 @@ test("a model saved before GEN-06 validates, rebuilds to its recorded hash and i
   test.setTimeout(180_000);
   await page.goto("/");
   await objects(page, 15);
-  // Its model file is not in this machine's catalog: refused, then rebuilt by today's generator
-  // to exactly the sha256 recorded when it was made.
+  // Saved in contract 0.7.0, and its model file is not in this machine's catalog: refused, then
+  // rebuilt by today's generator to exactly the sha256 recorded when it was made, then upgraded
+  // to 0.8.0 for review (only photo-observation fields are added; it has no photo).
   await page.getByTestId("scene-file-input").setInputFiles(LEGACY);
   const rejected = page.getByTestId("file-rejected");
   await expect(rejected).toBeVisible();
   await rejected.getByTestId("restore-models").click();
   await expect(rejected).toBeHidden();
-  await expect(page.getByTestId("scene-source")).toHaveText("generated-0.7.0-pre-gen06.json (accepted by API)");
+  const review = page.getByTestId("upgrade-dialog");
+  await expect(review).toContainText("This file uses contract 0.7.0");
+  await review.getByRole("button", { name: "Open upgraded project" }).click();
+  await expect(page.getByTestId("scene-source")).toHaveText("generated-0.7.0-pre-gen06.json (upgraded from 0.7.0; not saved yet)");
   await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^(\d+)\/\1 ready, 0 failed$/);
   await journey(page, /^Display rack/, "add a white sign on the back of the rack");
 });

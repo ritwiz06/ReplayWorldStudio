@@ -19,6 +19,7 @@ interface Props {
 }
 
 const pct = (v: number) => `${(v * 100).toFixed(3)}%`;
+const SEEN = { visible: "", partly_visible: " (partly visible: hidden sides are estimates)", added: " (not seen in the photo: added by you; an estimate)", not_recorded: "" } as const;
 
 export function SourcePhoto({ client, project, selectedId, onSelect, onView, missingFiles }: Props) {
   const source = project.sources.find((s): s is SourceDocument & { image: NonNullable<SourceDocument["image"]> } => s.kind === "photo" && s.image !== null);
@@ -66,8 +67,9 @@ export function SourcePhoto({ client, project, selectedId, onSelect, onView, mis
                 <button
                   key={o.id}
                   type="button"
-                  className={`photo-box accepted${o.object_id === selectedId ? " selected" : ""}${live.has(o.object_id!) ? "" : " removed"}`}
-                  title={live.has(o.object_id!) ? `${o.label}: select it in the scene` : `${o.label}: removed from the scene since the import`}
+                  className={`photo-box accepted vis-${o.visibility}${o.object_id === selectedId ? " selected" : ""}${live.has(o.object_id!) ? "" : " removed"}`}
+                  title={`${o.label}${SEEN[o.visibility]}: ${live.has(o.object_id!) ? "select it in the scene" : "removed from the scene since the import"}`}
+                  data-visibility={o.visibility}
                   disabled={!live.has(o.object_id!)}
                   style={{ left: pct(o.box.left), top: pct(o.box.top), width: pct(o.box.right - o.box.left), height: pct(o.box.bottom - o.box.top) }}
                   onClick={() => onSelect(o.object_id!)}
@@ -96,7 +98,7 @@ export function SourcePhoto({ client, project, selectedId, onSelect, onView, mis
             </div>
           )}
           <p className="source-photo-caption">
-            {source.filename} · outlines where each object was seen · placements are approximate
+            {source.filename} · outlines where each object was seen (dashed: partly visible; dotted: not seen, added by you) · placements are approximate
           </p>
           {view && (
             <button type="button" className="button button-small" data-testid="source-photo-view" title="Look at the 3D scene from where the photo was taken, with the same lens" onClick={() => onView(view)}>

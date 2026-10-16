@@ -757,3 +757,27 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - More warnings appear before Apply: the GEN-08 o3 answer now shows floating legs and the unasked changes the proposal made.
   - Warnings can be stale after hand edits; re-checking the edited draft would need a check-only endpoint (not built).
   - The GEN-08 frozen results are not rescored; its t2 and p3 answers are development regressions only.
+
+### ADR-047 - Photo corrections are kept, not overwritten; occlusion is explicit; photo overlap is not 3D overlap
+
+- Date: 2026-10-16. Status: adopted (IMG-02; contract 0.8.0).
+- Context:
+  - IMG-01's photo review could accept, reject, re-box and add objects.
+  - Its known failures were group outlines ("table with chairs"), objects partly hidden behind others, and hidden depths that are guesses (about half the true depth for deep machines).
+  - The record kept only accepted or rejected, so a correction such as "this outline was two objects" or "this is the same chair twice" could not be stated or reproduced.
+- Options considered:
+  - edit observations in place (the original outline lost);
+  - keep every observation and record corrections as links and words (chosen);
+  - re-ask the vision model (another call, and not deterministic).
+- Decision:
+  - **Corrections are links, never deletions.** A split outline stays as `split`, and each piece names it in `derived_from`. A duplicate stays as `merged`, with `replaced_by` naming the kept one. Every correction is also written in words (`corrections`). The contract checks the links across records.
+  - **Visibility is recorded per object**: visible, partly visible, or added (not seen; only the user can add one). Older files get `not_recorded`, which claims nothing.
+    - Sizes on a partly visible object are estimates that may be larger.
+    - Every size of an added object is an estimate from the outline the user drew, never an observation.
+  - **Two overlaps, kept apart.** Outlines that overlap in the photo are how the camera saw the objects (the one behind is partly hidden). Footprints that overlap on the floor plan are a placement question. Seats under tables are listed as probably fine; others say what usually causes it (a guessed side). No clearance or fitness is checked.
+  - **A typed position replaces the photo's.** The size estimate follows from that distance (the outline is fixed), and the photo's own position is kept on record. An object whose base is hidden near the horizon can be metres off from the photo alone.
+  - **Older files keep their recovery.** Rebuilding missing generated models accepts an older contract and upgrades it first (lossless). An upgrade refused only for missing models or a missing photo offers the same recovery as a current file.
+- Consequences:
+  - Saved photo projects are larger (pieces and kept observations), and the observation limit rises to 80.
+  - The classroom's tables still come as group outlines from the model; the user splits them.
+  - Hidden depths are still estimates; IMG-03 measures accuracy on held-out photos.

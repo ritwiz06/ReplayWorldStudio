@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.7.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.8.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -32,7 +32,7 @@ export interface ReplayWorldContracts {
   ModelRevisionProposalResult: ModelRevisionProposalResult;
 }
 export interface Project {
-  schema_version: "0.7.0";
+  schema_version: "0.8.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -136,7 +136,7 @@ export interface PhotoImport {
   vision_model: LanguageModelRef | null;
   calibration: PhotoCalibration;
   /**
-   * @maxItems 60
+   * @maxItems 80
    */
   observations: PhotoObservation[];
   /**
@@ -233,7 +233,17 @@ export interface CameraEstimate {
   position_m: Vec3;
 }
 /**
- * One object seen in the photo, as reviewed: accepted (linked to its scene object) or not.
+ * One object seen in the photo, as reviewed, and what the user corrected.
+ *
+ * ``decision``: ``accepted`` (linked to its scene object), ``rejected``, ``split`` (the outline
+ * held several objects; each piece names it in ``derived_from``) or ``merged`` (the same object
+ * outlined twice; ``replaced_by`` names the observation it was merged into). Nothing is deleted:
+ * split and merged observations are kept with their original outline.
+ *
+ * ``visibility`` says how much of the object the photo shows: ``visible``, ``partly_visible``
+ * (part of it is hidden or cut off, so its hidden sides are estimates), ``added`` (not seen in
+ * the photo at all: the user added it where they know it is, so nothing about it is observed),
+ * or ``not_recorded`` (saved before 0.8.0, which did not ask).
  */
 export interface PhotoObservation {
   /**
@@ -245,8 +255,36 @@ export interface PhotoObservation {
   floor_contact: ImagePoint | null;
   contact_basis: ("box_bottom" | "model_point" | "user") | null;
   found_by: "model" | "user";
-  decision: "accepted" | "rejected";
+  decision: "accepted" | "rejected" | "split" | "merged";
   object_id: string | null;
+  visibility: "visible" | "partly_visible" | "added" | "not_recorded";
+  /**
+   * The split observation this one was cut from; null if it was not split off.
+   */
+  derived_from: string | null;
+  /**
+   * For a merged observation, the observation it was merged into.
+   */
+  replaced_by: string | null;
+  /**
+   * What the user corrected, in words, in order.
+   *
+   * @maxItems 12
+   */
+  corrections:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string];
   notes: string[];
 }
 /**
@@ -833,14 +871,14 @@ export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.7.0";
+  schema_version: "0.8.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.7.0";
+  schema_version: "0.8.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -877,7 +915,7 @@ export interface UpgradeReport {
    * Schema version of the submitted document.
    */
   from_version: string;
-  to_version: "0.7.0";
+  to_version: "0.8.0";
   notes: string[];
   project: Project;
   validation: ValidationReport;

@@ -450,8 +450,9 @@ M2 stays open; GEN-06 is next.
 
 - Rebuilds use the generator version each asset records; an unknown version is refused.
 - All 33 models built in the GEN-04 and GEN-05 evaluations rebuild byte-identically.
-- A project saved before GEN-06 (`fixtures/legacy/generated-0.7.0-pre-gen06.json`) validates,
-  rebuilds its missing file to its recorded hash and reopens.
+- A project saved before GEN-06 (`fixtures/legacy/generated-0.7.0-pre-gen06.json`) rebuilds its
+  missing file to its recorded hash and reopens; since contract 0.8.0 (IMG-02) it first passes the
+  upgrade review, which adds only photo-observation fields.
 
 Screenshots: [docs/gen-07/inspect](gen-07/inspect/), at 1440 × 900 and 1280 × 800.
 

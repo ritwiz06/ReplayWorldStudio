@@ -9,14 +9,14 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import type { Project } from "@replay-world/contracts";
-import { type EditCase, type EditRow, type EditScore, scoreEdit } from "../../src/assist/editScoring.ts";
+import { type EditCase, type EditRow, type EditScore, frozenScene, scoreEdit } from "../../src/assist/editScoring.ts";
 
 const { values: options } = parseArgs({
   options: { set: { type: "string", default: new URL("../../../../docs/assist-evaluation/gen-03/", import.meta.url).pathname } },
 });
 const SET = resolve(options.set);
 const data = JSON.parse(readFileSync(join(SET, "edits.json"), "utf8")) as { scene: string; cases: EditCase[] };
-const scene = JSON.parse(readFileSync(join(SET, data.scene), "utf8")) as Project;
+const scene = frozenScene(JSON.parse(readFileSync(join(SET, data.scene), "utf8")) as Project);
 
 const scores: Record<string, (EditScore | { id: string; category: string; missing: true })[]> = {};
 for (const file of readdirSync(join(SET, "results")).filter((f) => f.endsWith(".json"))) {

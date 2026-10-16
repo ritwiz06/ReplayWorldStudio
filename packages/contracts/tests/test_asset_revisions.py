@@ -278,7 +278,9 @@ def test_0_6_0_documents_gain_a_null_revision_and_an_unstated_size_basis(
     assert upgrade.document == current
     assert upgrade.notes == [
         "schema_version 0.6.0 -> 0.7.0 (adds 'revision: null' to 1 generated asset and "
-        "'size_basis: not_stated' to 1 photo scale reference; no values or evidence changed)"
+        "'size_basis: not_stated' to 1 photo scale reference; no values or evidence changed)",
+        "schema_version 0.7.0 -> 0.8.0 (adds 'visibility: not_recorded' and empty corrections to "
+        "0 photo observations; no values or evidence changed)",
     ]
     assert "revision" not in old["catalog"][-1]["generation"]  # input untouched
     Project.model_validate(upgrade.document)

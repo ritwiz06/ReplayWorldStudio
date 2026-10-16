@@ -1,4 +1,4 @@
-# Image import (IMG-01): one photo to a reviewed, editable world
+# Image import (IMG-01, IMG-02): one photo to a reviewed, editable world
 
 IMG-01 turns **one permitted photo of a room or work area** into a world the user has reviewed and can edit. The world has a floor, a scale reference of known (measured or assumed) size and separate, selectable objects, each with a provisional model. A vision model proposes what it sees. Everything that decides the world's size and layout is either computed by deterministic geometry or entered by the user. All of it is shown for review before anything is built.
 
@@ -220,6 +220,93 @@ The generator cannot show the guard's wire mesh, openings within a part, slanted
 - Photo fixtures are public domain (CC0 or PDM) or rendered here. None shows people (fixtures/photos/README.md).
 - Text in a photo is treated as content.
 
+## Reviewing several objects (IMG-02)
+
+[ADR-047](../prompts/DECISIONS.md). Screenshots, before and after: [docs/img-02](img-02/).
+
+The same photo, scale and creation steps as IMG-01, with corrections in **Objects** and checks in
+**Layout**. Every correction is saved with the photo's observations and comes back the same after
+reopening.
+
+**Objects.**
+
+- **Check these outlines.** An outline whose label names separately standing furniture in the
+  plural ("rectangular table with chairs") is flagged to split. Two outlines of the same kind of
+  thing in nearly the same place are flagged as one object outlined twice.
+  - "machine with yellow safety cage" and "desk with computers" name one object and what is on
+    or around it, so they are not flagged to split. The API's own note still asks to tighten the
+    outline.
+- **Split** an outline into 2–8 objects side by side.
+  - Each piece gets a strip of the outline and stands where its strip meets the floor. A
+    "table with chairs" splits into "rectangular table", "chair", "chair"…, each with a matching
+    shape family.
+  - Drag a piece's edges to fit it.
+  - The original outline is kept, marked *split*, and each piece names it (`derived_from`).
+    **Undo the split** restores it.
+- **Merge** one outline into another ("Merge into this one", or the suggestion, which keeps the
+  tighter outline). The kept outline stays as it is; the other is kept, marked *merged*, pointing
+  at it. **Separate it again** undoes it.
+- **Add a missed object** by dragging a box. It is marked "added by you" in its record.
+- **In the photo**, for each object:
+  - *visible in the photo*;
+  - *partly visible*: part of it is hidden or cut off;
+  - for an object you added, *added: not seen in the photo* (you know it is there).
+
+  The model's own reading starts it: "partly hidden", "mostly hidden" or cut off at the photo's
+  edge is partly visible, never whole.
+- **Sizes say where they come from:**
+  - *from the photo, approximate*;
+  - *partly hidden: an estimate, may be larger*;
+  - *hidden: a guess*;
+  - *not seen: an estimate*;
+  - *entered by you*.
+
+  The saved evidence says the same. An object not seen in the photo is never recorded as
+  observed: every size it has is an estimate until you type it.
+
+**Layout.** The plan from above, and two kinds of overlap, kept apart because they mean different
+things:
+
+- **In the photo**, outlines overlap when one object stands in front of another. That is how the
+  camera saw them, not a problem in 3D. The list (largest first, six shown) offers **Mark …
+  partly visible** for the one behind.
+- **In 3D**, floor footprints that overlap would stand in the same place.
+  - A seat and a table are listed apart as *probably fine: a seat tucked under a table*.
+  - Anything else is a clash: "If they cannot share that floor space (a chair can tuck under a
+    table; two machines cannot), move, resize or turn one." When a side is hidden, the clash says
+    its size is a guess.
+  - Clashing footprints are drawn red on the plan.
+- **Select an object** (on the plan or from a clash) to type its position across (x) and front to
+  back (z), its width, depth and facing in degrees.
+  - Everything is rechecked at once.
+  - A typed position replaces where the photo put it, and the sizes follow from that distance:
+    the outline in the photo is fixed, so further away means larger.
+  - The photo's own position stays on record ("Moved in the layout by you to x …, z … (the photo
+    put it at …)").
+  - An object whose floor point cannot be used (its base is hidden) can be placed by typing where
+    it stands.
+
+Footprints are rectangles; nothing here checks clearance, collisions or real-world fit.
+
+**What was checked** (recorded answers, offline; [e2e/photo-review.spec.ts](../apps/web/e2e/photo-review.spec.ts)):
+
+| | Classroom (`classroom.jpg`, public domain) | Factory render (`factory-walk.png`, this project) |
+| --- | --- | --- |
+| Proposed | 22 objects; 3 tables outlined "with chairs" | 7 objects; nothing flagged to split |
+| Corrected | The front table split into table + chair. The chair piece merged into chair #10, outlined twice. The table piece tightened and marked partly visible. A low white cabinet (partly visible) and a waste bin (not seen) added. | The missed control cabinet behind the centre machine added as partly visible. The left conveyor marked partly visible (behind the left machine). |
+| Layout | 9 seat-under-table overlaps listed as probably fine. The two added objects' guessed depths ran 1.28 m and 0.12 m into the teacher's desk; given a 45 cm depth and moved behind it, the clashes went at once. | The left conveyor's footprint ran 16 cm into the left machine (both have a guessed side); moved 20 cm, the clash went. |
+| Hidden sides | The partly visible cabinet's width from the photo, 1.62 m, is tagged as an estimate that may be larger. 24 objects were created (26 with the floor and scale). | Placed from where its base was drawn, the cabinet landed at z −3.46 m. The truth is −8.53 m in this photo's frame: 5 m short, because its base is hidden near the horizon. At its typed position, its width is 1.23 m against a true 0.80 m: the drawn outline covered parts of both cabinets. |
+| Kept | Observations, corrections and evidence identical after an edit with undo and redo, save, reopen, and re-attaching a missing photo | Identical after save and reopen |
+
+- **Manual only:** **Mark objects myself**, two objects drawn by hand, Create.
+  - `vision_model` is null, and both observations are `found_by: user`.
+  - No request went to a model, only the local availability check.
+- **Views inspected:** outlines, the plan, the 3D world, the photo's camera and the walk view
+  ([docs/img-02](img-02/)).
+
+**Not in IMG-02:** walls, windows and the room boundary; several photos of one place; automatic
+fixes for clashes. Held-out accuracy (precision, recall, scale and correction time) is IMG-03.
+
 ## Known failures and crude geometry (stated plainly)
 
 - **Shapes are generic families**, not the objects in the photo (since GEN-02 they can be improved after creation, within the generator's limits):
@@ -229,10 +316,10 @@ The generator cannot show the guard's wire mesh, openings within a part, slanted
   - chairs are blocky seats.
   - Nothing is textured from the photo.
 - **Colours are approximate.** The classroom's dark maroon chairs mostly stay black or grey: their shadowed pixels are too dark to count as a clear colour. A few chairs take the carpet's blue or the table's beige. Clear colours work: red cabinets, the red easel, the green plant, blue screens.
-- **Hidden depths are guesses**, about 50 % short for the deep machine cells in the render.
+- **Hidden depths are guesses**, about 50 % short for the deep machine cells in the render. Since IMG-02 they are labelled as estimates; a 3D clash points at them, and a typed position or depth replaces them. An object whose base is hidden near the horizon can be metres off: the render's cabinet landed 5 m short.
 - **No walls, windows or room boundary** are built, only a floor slab around the objects.
-- **Group outlines.** The model still boxes tables together with their chairs ("table with chairs"), which makes the table too large until the user tightens the box (a note asks for it).
-- **Missed objects**: the two control cabinets behind the line in the render. The user can add missed objects.
+- **Group outlines.** The model still boxes tables together with their chairs ("table with chairs"). Since IMG-02 such outlines are flagged; split them, merge the pieces with chairs already listed, and tighten the table's outline.
+- **Missed objects**: the two control cabinets behind the line in the render. The user can add missed objects, as partly visible or as not seen (IMG-02).
 - **Far objects** (near the horizon) have uncertain distance and size (flagged). In the classroom the back shelves are 10–15 m from the camera in the reconstruction.
 - **Demonstration sizes are assumptions.** The classroom table width and the living-room rug width are assumed; no real photo of a measured site has been tested (IMG-03).
 - **The scale needs a fully visible floor rectangle.** In the living-room photo the rug's front corners are hidden or outside the frame. Its demonstration (e2e test 2) uses the model's rough rug rectangle with an assumed 2.0 m width, so its layout is only indicative.

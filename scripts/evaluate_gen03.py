@@ -36,6 +36,7 @@ from replay_world_api.assist.provider import Completion, OpenAICompatibleProvide
 from replay_world_api.objects import build_model
 from replay_world_api.settings import Settings
 from replay_world_contracts import GeometrySpec, Project
+from replay_world_contracts.migrations import upgrade_document
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 SET: Final = ROOT / "docs" / "assist-evaluation" / "gen-03"
@@ -125,7 +126,9 @@ def requests_for(workflow: str) -> list[tuple[str, str, dict[str, Any]]]:
         ]
     if workflow == "edits":
         data = json.loads((SET / "edits.json").read_text())
-        scene = Project.model_validate_json((SET / data["scene"]).read_text())
+        # The frozen scene was saved in 0.7.0; it is upgraded on reading (the file is unchanged).
+        frozen = json.loads((SET / data["scene"]).read_text())
+        scene = Project.model_validate(upgrade_document(frozen).document)
         return [
             (
                 c["id"],

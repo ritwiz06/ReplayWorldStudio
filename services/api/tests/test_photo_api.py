@@ -88,6 +88,10 @@ def photo_project(stored: StoredPhoto) -> str:
                     "found_by": "user",
                     "decision": "rejected",
                     "object_id": None,
+                    "visibility": "visible",
+                    "derived_from": None,
+                    "replaced_by": None,
+                    "corrections": [],
                     "notes": [],
                 }
             ],

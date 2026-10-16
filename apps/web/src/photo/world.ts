@@ -23,10 +23,12 @@ import {
 } from "@replay-world/contracts";
 import { type PhotoTemplate, templateSpec } from "../assist/templates";
 import { quantizeDegrees, quantizeMetres, radToDeg, degToRad, wrapDegrees } from "../editing/units";
-import { type Calibration, floorPoint, placeObject } from "./floor";
+import { type Calibration, floorPoint, imagePointOf, placeObject } from "./floor";
 
 export type Facing = ProposedPhotoObject["facing"];
 type Material = GeometryPart["material"];
+/** How much of an object the photo shows (IMG-02); never "observed" for something not seen. */
+export type Visibility = Exclude<PhotoObservation["visibility"], "not_recorded">;
 
 export interface ReviewItem {
   id: string;
@@ -39,11 +41,19 @@ export interface ReviewItem {
   facing: Facing;
   sizeGuess: { x: number; y: number; z: number };
   foundBy: "model" | "user";
-  decision: "accepted" | "rejected";
+  /** split: the outline held several objects (see the pieces); merged: one object outlined twice. */
+  decision: PhotoObservation["decision"];
   onFloor: boolean;
   notes: string[];
-  /** Values the user typed; they replace what the photo suggests. */
-  entered: { width?: number; height?: number; depth?: number; yawDeg?: number };
+  /** Values the user typed; they replace what the photo suggests (x and z in scene metres). */
+  entered: { width?: number; height?: number; depth?: number; yawDeg?: number; x?: number; z?: number };
+  visibility: Visibility;
+  /** The split outline this piece was cut from. */
+  derivedFrom: string | null;
+  /** For a merged outline, the one it was merged into. */
+  replacedBy: string | null;
+  /** What the user corrected, in words, in order (kept in the saved project). */
+  corrections: string[];
 }
 
 export interface ScaleInput {
@@ -71,11 +81,16 @@ export function reviewItemsFrom(proposal: ImageProposal): ReviewItem[] {
     onFloor: o.on_floor,
     notes: [...o.notes],
     entered: {},
+    // The model's own reading; "mostly hidden" is still partly visible, never "seen whole".
+    visibility: o.visibility === "full" && o.cut_off.length === 0 ? "visible" : "partly_visible",
+    derivedFrom: null,
+    replacedBy: null,
+    corrections: [],
   }));
 }
 
 /** An object the user outlined themselves (missed by the model, or without the model). */
-export function userItem(items: readonly ReviewItem[], box: ImageBox): ReviewItem {
+export function userItem(items: readonly ReviewItem[], box: ImageBox, visibility: Visibility = "visible"): ReviewItem {
   const used = new Set(items.map((i) => i.id));
   let n = items.length + 1;
   while (used.has(`obs-${n}`)) n++;
@@ -94,10 +109,19 @@ export function userItem(items: readonly ReviewItem[], box: ImageBox): ReviewIte
     onFloor: true,
     notes: ["Marked by you."],
     entered: {},
+    visibility,
+    derivedFrom: null,
+    replacedBy: null,
+    corrections: ["Added by you: the analysis did not list it."],
   };
 }
 
-export type DimensionSource = "photo" | "hidden" | "entered";
+/**
+ * Where a size comes from: seen in the photo; a visible side that is partly hidden or cut off
+ * (an estimate: at least what shows); a side the photo does not show (a guess); not seen at all
+ * (an object the user added; an estimate from the outline they drew); or typed by the user.
+ */
+export type DimensionSource = "photo" | "partial" | "hidden" | "unseen" | "entered";
 
 export interface PlacedItem {
   item: ReviewItem;
@@ -107,7 +131,11 @@ export interface PlacedItem {
   width: number;
   height: number;
   depth: number;
-  source: { width: DimensionSource; height: DimensionSource; depth: DimensionSource; yaw: "photo" | "entered" };
+  source: { width: DimensionSource; height: DimensionSource; depth: DimensionSource; yaw: "photo" | "entered"; position: "photo" | "entered" };
+  /** Where the photo put it, before any position the user typed. */
+  fromPhoto: { x: number; z: number };
+  /** False when the photo's floor point could not place it (only the typed position does). */
+  photoPlaced: boolean;
   notes: string[];
 }
 
@@ -119,32 +147,57 @@ export function placeItems(cal: Calibration, items: readonly ReviewItem[]): Map<
   const result = new Map<string, PlacedItem | { problem: string }>();
   for (const item of items) {
     if (item.decision !== "accepted") continue;
-    if (!item.contact) {
-      result.set(item.id, { problem: "Mark where it meets the floor (drag its floor point onto the photo)." });
-      continue;
+    const e0 = item.entered;
+    const at = (contact: ImagePoint) => placeObject(cal, { box: item.box, contact, facing: item.facing, sizeGuessM: item.sizeGuess });
+    const fromPhoto = item.contact ? at(item.contact) : null;
+    // A position the user typed replaces where the photo puts it, and the sizes follow from that
+    // distance (the outline in the photo is fixed: further away means larger). This matters most
+    // for an object whose base is hidden, where a floor point a few pixels off near the horizon
+    // moves it by metres. The visible face stands in front of the typed centre by half the depth.
+    let typed: ReturnType<typeof placeObject> = null;
+    if (e0.x !== undefined && e0.z !== undefined) {
+      const centre = imagePointOf(cal, e0.x, 0, e0.z);
+      const first = centre ? at(centre) : null;
+      if (first) {
+        const toward = cal.camera.z >= e0.z ? 1 : -1;
+        const front = imagePointOf(cal, e0.x, 0, e0.z + (toward * (e0.depth ?? first.depthM)) / 2);
+        typed = (front ? at(front) : null) ?? first;
+      }
     }
-    const placement = placeObject(cal, { box: item.box, contact: item.contact, facing: item.facing, sizeGuessM: item.sizeGuess });
+    const placement = typed ?? fromPhoto;
     if (!placement) {
-      result.set(item.id, { problem: "Its floor point is above the horizon or outside the floor: move it onto the floor." });
+      result.set(item.id, {
+        problem: item.contact
+          ? "Its floor point is above the horizon or outside the floor: move it onto the floor, or type where it stands."
+          : "Mark where it meets the floor (drag its floor point onto the photo), or type where it stands.",
+      });
       continue;
     }
     const visibleIsWidth = placement.visibleExtent === "width";
     const e = item.entered;
     const yawDeg = e.yawDeg ?? wrapDegrees(quantizeDegrees(radToDeg(placement.yawRad), 0.1));
+    // A side the photo shows whole is from the photo; partly hidden, it is an estimate (at least
+    // what shows); not seen at all, every size is an estimate from the outline the user drew.
+    const seen: DimensionSource = item.visibility === "added" ? "unseen" : item.visibility === "partly_visible" ? "partial" : "photo";
+    const unseen: DimensionSource = item.visibility === "added" ? "unseen" : "hidden";
     result.set(item.id, {
       item,
-      x: mm(placement.x),
-      z: mm(placement.z),
+      x: mm(e.x ?? placement.x),
+      z: mm(e.z ?? placement.z),
       yawRad: degToRad(yawDeg),
       width: mm(clampLength(e.width ?? placement.widthM)),
       height: mm(clampLength(e.height ?? placement.heightM)),
       depth: mm(clampLength(e.depth ?? placement.depthM)),
       source: {
-        width: e.width !== undefined ? "entered" : visibleIsWidth ? "photo" : "hidden",
-        height: e.height !== undefined ? "entered" : "photo",
-        depth: e.depth !== undefined ? "entered" : visibleIsWidth ? "hidden" : "photo",
+        width: e.width !== undefined ? "entered" : visibleIsWidth ? seen : unseen,
+        height: e.height !== undefined ? "entered" : seen,
+        depth: e.depth !== undefined ? "entered" : visibleIsWidth ? unseen : seen,
         yaw: e.yawDeg !== undefined ? "entered" : "photo",
+        position: e.x !== undefined || e.z !== undefined ? "entered" : "photo",
       },
+      // Where the photo itself put it (its floor point), or nowhere usable: then the typed place.
+      fromPhoto: fromPhoto ? { x: mm(fromPhoto.x), z: mm(fromPhoto.z) } : { x: mm(placement.x), z: mm(placement.z) },
+      photoPlaced: fromPhoto !== null,
       notes: placement.notes,
     });
   }
@@ -152,6 +205,22 @@ export function placeItems(cal: Calibration, items: readonly ReviewItem[]): Map<
 }
 
 export const isPlaced = (p: PlacedItem | { problem: string } | undefined): p is PlacedItem => p !== undefined && "item" in p;
+
+const at = (v: number) => `${v.toFixed(2)} m`;
+
+/** Layout corrections in words, for the saved observation (what the photo said, what was typed). */
+export function layoutCorrections(p: PlacedItem): string[] {
+  const out: string[] = [];
+  if (p.source.position === "entered")
+    out.push(
+      p.photoPlaced
+        ? `Moved in the layout by you to x ${at(p.x)}, z ${at(p.z)} (the photo put it at x ${at(p.fromPhoto.x)}, z ${at(p.fromPhoto.z)}); its sizes follow from that distance.`
+        : `Placed by you at x ${at(p.x)}, z ${at(p.z)}: its base is not usable in the photo; its sizes follow from that distance.`,
+    );
+  for (const axis of ["width", "depth", "height"] as const) if (p.source[axis] === "entered") out.push(`${axis[0]!.toUpperCase()}${axis.slice(1)} entered by you: ${at(p[axis])}.`);
+  if (p.source.yaw === "entered") out.push(`Facing entered by you: ${radToDeg(p.yawRad).toFixed(1)}°.`);
+  return out;
+}
 
 function titleCase(label: string): string {
   const text = label.trim() || "Object";
@@ -170,29 +239,52 @@ function reviewed(source: DimensionSource, ref: string): ReviewedLength {
     : { basis: "photo", quote: null, confirmed: false, source_ref: ref.slice(0, 500) };
 }
 
+/** Why a size is what it is, in words saved with the object (never stronger than the photo). */
+function sizeRef(placed: PlacedItem, axis: "width" | "height" | "depth", ctx: Context): string {
+  const { item } = placed;
+  const where = `From photo ${ctx.filename} (${item.id})`;
+  const visibleSide = placed.source.width === "hidden" || placed.source.width === "unseen" ? "side" : "front";
+  switch (placed.source[axis]) {
+    case "unseen":
+      return `${where}: not seen in the photo; added by the user, size estimated from the outline they drew (an estimate, not observed)`;
+    case "hidden":
+      return `${where}: hidden in the photo; estimated from the typical proportions of a ${item.label} (approximate)`;
+    case "partial":
+      return axis === "height"
+        ? `${where}: partly hidden in the photo; estimated from what shows with the reconstructed camera (an estimate: it may be taller)`
+        : `${where}: partly hidden in the photo; the visible ${visibleSide} projected onto the floor with the ${ctx.feature} as scale reference (an estimate: it may be larger)`;
+    default:
+      return axis === "height"
+        ? `${where}: estimated from the photo with the reconstructed camera (approximate)`
+        : `${where}: the visible ${visibleSide} projected onto the floor with the ${ctx.feature} as scale reference (approximate)`;
+  }
+}
+
 /** The request that builds one object's provisional model and its evidence. */
 export function assetRequest(placed: PlacedItem, ctx: Context): GeneratedAssetRequest {
   const { item } = placed;
-  const where = `From photo ${ctx.filename} (${item.id})`;
-  const visible = `${where}: the visible ${placed.source.width === "photo" ? "front" : "side"} projected onto the floor with the ${ctx.feature} as scale reference (approximate)`;
-  const hidden = `${where}: hidden in the photo; estimated from the typical proportions of a ${item.label} (approximate)`;
-  const height = `${where}: estimated from the photo with the reconstructed camera (approximate)`;
   const spec = templateSpec(item.template, item.material);
+  const seen =
+    item.visibility === "added"
+      ? `${item.label} added to ${ctx.filename} by the user (not seen in the photo)`
+      : item.visibility === "partly_visible"
+        ? `${item.label} partly visible in ${ctx.filename}`
+        : `${item.label} seen in ${ctx.filename}`;
   return {
     name: titleCase(item.label).slice(0, 80),
     kind: "equipment",
     method: "photo",
-    description: `${item.label} seen in ${ctx.filename}`.slice(0, 500),
+    description: seen.slice(0, 500),
     language_model: item.foundBy === "model" ? ctx.visionModel : null,
     spec: { ...spec, envelope_m: { x: placed.width, y: placed.height, z: placed.depth } },
     dimensions: {
-      width: reviewed(placed.source.width, placed.source.width === "photo" ? visible : hidden),
-      height: reviewed(placed.source.height, height),
-      depth: reviewed(placed.source.depth, placed.source.depth === "photo" ? visible : hidden),
+      width: reviewed(placed.source.width, sizeRef(placed, "width", ctx)),
+      height: reviewed(placed.source.height, sizeRef(placed, "height", ctx)),
+      depth: reviewed(placed.source.depth, sizeRef(placed, "depth", ctx)),
     },
     stated_facts: [],
     inferred_facts: [
-      `Seen in the photo as "${item.label}"`,
+      item.visibility === "added" ? `Not seen in the photo: added by the user as "${item.label}"` : item.visibility === "partly_visible" ? `Partly visible in the photo as "${item.label}"` : `Seen in the photo as "${item.label}"`,
       `Drawn with the ${item.template} shape family`,
       ...placed.notes,
     ].slice(0, 12),
@@ -320,6 +412,7 @@ export function buildPhotoProject(input: WorldInput): Project {
 
   const observations: PhotoObservation[] = input.items.map((item) => {
     const objectId = linked.get(item.id) ?? null;
+    const placed = input.placed.get(item.id);
     return {
       id: item.id,
       label: item.label.slice(0, 80) || "object",
@@ -327,8 +420,13 @@ export function buildPhotoProject(input: WorldInput): Project {
       floor_contact: item.contact ? { ...item.contact } : null,
       contact_basis: item.contact ? item.contactBasis : null,
       found_by: item.foundBy,
-      decision: objectId ? "accepted" : "rejected",
+      // Split and merged outlines are kept as they were; anything else not placed is rejected.
+      decision: objectId ? "accepted" : item.decision === "split" || item.decision === "merged" ? item.decision : "rejected",
       object_id: objectId,
+      visibility: item.visibility,
+      derived_from: item.derivedFrom,
+      replaced_by: item.decision === "merged" ? item.replacedBy : null,
+      corrections: [...item.corrections, ...(objectId && isPlaced(placed) ? layoutCorrections(placed) : [])].slice(0, 12) as PhotoObservation["corrections"],
       notes: item.notes.slice(0, 12),
     };
   });

@@ -449,8 +449,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/api/v1/catalog/generated-models/restore", openapi_extra=_PROJECT_BODY_DOC)
     def restore_models(document: Annotated[Any, Body()]) -> GeneratedModelRestoreReport:
-        """Rebuild a project's missing generated models from their recorded specifications."""
-        project = _validated(document)
+        """Rebuild a project's missing generated models from their recorded specifications.
+
+        A document in an older contract is upgraded first, losslessly: upgrades never change a
+        recorded specification or generator version, so the rebuilt files are the same.
+        """
+        upgraded_from = None
+        if isinstance(document, dict) and document.get("schema_version") in LEGACY_SCHEMA_VERSIONS:
+            try:
+                upgrade = upgrade_document(document)
+            except MigrationError as exc:
+                raise RequestValidationError(
+                    [
+                        {
+                            "type": "upgrade_failed",
+                            "loc": ("body",),
+                            "msg": f"The document could not be upgraded: {exc}",
+                        }
+                    ]
+                ) from None
+            document, upgraded_from = upgrade.document, upgrade.from_version
+        project = _validated(document, upgraded_from=upgraded_from)
         try:
             return restore_generated_models(project, settings.catalog_dir)
         except GeneratorError as exc:

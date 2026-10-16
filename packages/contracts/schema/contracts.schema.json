@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.7.0",
+  "$id": "urn:replay-world:contracts:0.8.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.7.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.8.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -1500,7 +1500,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.7.0",
+          "const": "0.8.0",
           "type": "string"
         }
       },
@@ -2409,7 +2409,7 @@
           "items": {
             "$ref": "#/$defs/PhotoObservation"
           },
-          "maxItems": 60,
+          "maxItems": 80,
           "type": "array"
         },
         "visible_text": {
@@ -2433,7 +2433,7 @@
     },
     "PhotoObservation": {
       "additionalProperties": false,
-      "description": "One object seen in the photo, as reviewed: accepted (linked to its scene object) or not.",
+      "description": "One object seen in the photo, as reviewed, and what the user corrected.\n\n``decision``: ``accepted`` (linked to its scene object), ``rejected``, ``split`` (the outline\nheld several objects; each piece names it in ``derived_from``) or ``merged`` (the same object\noutlined twice; ``replaced_by`` names the observation it was merged into). Nothing is deleted:\nsplit and merged observations are kept with their original outline.\n\n``visibility`` says how much of the object the photo shows: ``visible``, ``partly_visible``\n(part of it is hidden or cut off, so its hidden sides are estimates), ``added`` (not seen in\nthe photo at all: the user added it where they know it is, so nothing about it is observed),\nor ``not_recorded`` (saved before 0.8.0, which did not ask).",
       "properties": {
         "id": {
           "description": "Stable, lowercase identifier. Never reused for a different entity.",
@@ -2483,7 +2483,9 @@
         "decision": {
           "enum": [
             "accepted",
-            "rejected"
+            "rejected",
+            "split",
+            "merged"
           ],
           "type": "string"
         },
@@ -2498,6 +2500,51 @@
               "type": "null"
             }
           ]
+        },
+        "visibility": {
+          "enum": [
+            "visible",
+            "partly_visible",
+            "added",
+            "not_recorded"
+          ],
+          "type": "string"
+        },
+        "derived_from": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The split observation this one was cut from; null if it was not split off."
+        },
+        "replaced_by": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "For a merged observation, the observation it was merged into."
+        },
+        "corrections": {
+          "description": "What the user corrected, in words, in order.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 12,
+          "type": "array"
         },
         "notes": {
           "items": {
@@ -2517,6 +2564,10 @@
         "found_by",
         "decision",
         "object_id",
+        "visibility",
+        "derived_from",
+        "replaced_by",
+        "corrections",
         "notes"
       ],
       "title": "PhotoObservation",
@@ -2541,7 +2592,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.7.0",
+          "const": "0.8.0",
           "type": "string"
         },
         "id": {
@@ -3666,7 +3717,7 @@
           "type": "string"
         },
         "to_version": {
-          "const": "0.7.0",
+          "const": "0.8.0",
           "type": "string"
         },
         "notes": {
@@ -3808,7 +3859,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.7.0",
+          "const": "0.8.0",
           "type": "string"
         },
         "project_id": {

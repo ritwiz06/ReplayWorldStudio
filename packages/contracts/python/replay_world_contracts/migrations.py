@@ -32,6 +32,11 @@ each change, and the result is then validated like any other document.
     * every photo scale reference gains ``size_basis: "not_stated"``: 0.6.0 did not ask whether
       the size was measured or assumed, so neither is claimed.
 
+0.7.0 -> 0.8.0
+    * every photo observation gains ``visibility: "not_recorded"``, ``derived_from: null``,
+      ``replaced_by: null`` and ``corrections: []``: 0.7.0 did not record how much of an object
+      the photo showed, and could not split or merge observations, so none is claimed.
+
 Steps run in sequence, so a 0.1.0 document passes through 0.2.0 on its way to the current
 version and its notes describe every step.
 """
@@ -228,6 +233,42 @@ def _from_0_6_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     return upgraded, [note]
 
 
+def _from_0_7_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    sources = []
+    count = 0
+    for source in old["sources"]:
+        photo = source.get("photo_import")
+        upgraded_source = copy.deepcopy(dict(source))
+        if photo is not None:
+            observations = []
+            for observation in photo["observations"]:
+                added = {"visibility", "derived_from", "replaced_by", "corrections"}
+                if added & set(observation):
+                    raise MigrationError(
+                        "malformed 0.7.0 document: observation visibility and corrections only "
+                        "exist from 0.8.0"
+                    )
+                # 0.7.0 did not ask how much of the object showed: say so, claim nothing.
+                observations.append(
+                    {
+                        **copy.deepcopy(dict(observation)),
+                        "visibility": "not_recorded",
+                        "derived_from": None,
+                        "replaced_by": None,
+                        "corrections": [],
+                    }
+                )
+                count += 1
+            upgraded_source["photo_import"]["observations"] = observations
+        sources.append(upgraded_source)
+    upgraded = {**copy.deepcopy(dict(old)), "schema_version": "0.8.0", "sources": sources}
+    note = (
+        f"schema_version 0.7.0 -> 0.8.0 (adds 'visibility: not_recorded' and empty corrections "
+        f"to {count} photo observation{'' if count == 1 else 's'}; no values or evidence changed)"
+    )
+    return upgraded, [note]
+
+
 _STEPS: Final[dict[str, Step]] = {
     "0.1.0": _from_0_1_0,
     "0.2.0": _from_0_2_0,
@@ -235,5 +276,6 @@ _STEPS: Final[dict[str, Step]] = {
     "0.4.0": _from_0_4_0,
     "0.5.0": _from_0_5_0,
     "0.6.0": _from_0_6_0,
+    "0.7.0": _from_0_7_0,
 }
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)

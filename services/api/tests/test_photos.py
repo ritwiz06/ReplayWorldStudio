@@ -688,6 +688,10 @@ def photo_source(stored: StoredPhoto, source_id: str = "src-photo-office") -> di
                     "found_by": "user",
                     "decision": "rejected",
                     "object_id": None,
+                    "visibility": "visible",
+                    "derived_from": None,
+                    "replaced_by": None,
+                    "corrections": [],
                     "notes": [],
                 }
             ],

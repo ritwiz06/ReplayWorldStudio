@@ -2,7 +2,7 @@
 // exactly as the editor would (resolveIntent + the command engine as a dry run), then applied to
 // the evaluation scene to check the preview: the right object, direction and amount, and no other
 // object changed. Used by scripts/assist/score-gen03-edits.ts; never by the app itself.
-import type { EditIntent, Project } from "@replay-world/contracts";
+import { type EditIntent, type Project, SCHEMA_VERSION } from "@replay-world/contracts";
 import { applyCommand } from "../editing/commands";
 import { METRES_PER_UNIT, resolveIntent } from "./editIntent";
 
@@ -49,6 +49,19 @@ const AXIS = { left: ["x", -1], right: ["x", 1], back: ["z", -1], forward: ["z",
 
 /** Text that must never appear in an answer: the key name, an auth header, a system prompt. */
 export const LEAK_MARKS = ["VOYAGER_API_KEY", "Bearer ", "You interpret ONE edit request"];
+
+/**
+ * The frozen GEN-03 scene as current content. It was saved in 0.7.0; 0.8.0 only added fields to
+ * photo observations, so a scene with no photo is unchanged apart from its version (a scene with
+ * a photo would need the API's upgrade, and is refused here). The frozen file is not edited.
+ */
+export function frozenScene(saved: Project): Project {
+  if (saved.schema_version === SCHEMA_VERSION) return saved;
+  if (saved.schema_version !== ("0.7.0" as string) || saved.sources.some((s) => s.photo_import !== null)) {
+    throw new Error(`A ${saved.schema_version} scene with a photo needs the API's upgrade.`);
+  }
+  return { ...saved, schema_version: SCHEMA_VERSION };
+}
 
 export function scoreEdit(scene: Project, c: EditCase, row: EditRow): EditScore {
   const text = JSON.stringify(row.result ?? row.error ?? "");

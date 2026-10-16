@@ -47,7 +47,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.7.0"]
+SchemaVersion = Literal["0.8.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -937,7 +937,7 @@ PHOTO_EXTENSION: Final[dict[str, str]] = {
     "image/png": "png",
     "image/webp": "webp",
 }
-MAX_PHOTO_OBSERVATIONS: Final = 60
+MAX_PHOTO_OBSERVATIONS: Final = 80
 
 
 class ImagePoint(ContractModel):
@@ -1040,7 +1040,18 @@ class PhotoCalibration(ContractModel):
 
 
 class PhotoObservation(ContractModel):
-    """One object seen in the photo, as reviewed: accepted (linked to its scene object) or not."""
+    """One object seen in the photo, as reviewed, and what the user corrected.
+
+    ``decision``: ``accepted`` (linked to its scene object), ``rejected``, ``split`` (the outline
+    held several objects; each piece names it in ``derived_from``) or ``merged`` (the same object
+    outlined twice; ``replaced_by`` names the observation it was merged into). Nothing is deleted:
+    split and merged observations are kept with their original outline.
+
+    ``visibility`` says how much of the object the photo shows: ``visible``, ``partly_visible``
+    (part of it is hidden or cut off, so its hidden sides are estimates), ``added`` (not seen in
+    the photo at all: the user added it where they know it is, so nothing about it is observed),
+    or ``not_recorded`` (saved before 0.8.0, which did not ask).
+    """
 
     id: StableId
     label: ShortText
@@ -1048,8 +1059,18 @@ class PhotoObservation(ContractModel):
     floor_contact: ImagePoint | None
     contact_basis: Literal["box_bottom", "model_point", "user"] | None
     found_by: Literal["model", "user"]
-    decision: Literal["accepted", "rejected"]
+    decision: Literal["accepted", "rejected", "split", "merged"]
     object_id: StableId | None
+    visibility: Literal["visible", "partly_visible", "added", "not_recorded"]
+    derived_from: StableId | None = Field(
+        description="The split observation this one was cut from; null if it was not split off."
+    )
+    replaced_by: StableId | None = Field(
+        description="For a merged observation, the observation it was merged into."
+    )
+    corrections: list[NonEmptyText] = Field(
+        max_length=12, description="What the user corrected, in words, in order."
+    )
     notes: list[NonEmptyText]
 
     @model_validator(mode="after")
@@ -1057,10 +1078,23 @@ class PhotoObservation(ContractModel):
         if (self.decision == "accepted") != (self.object_id is not None):
             raise ValueError(
                 f"observation '{self.id}': an accepted observation names its scene object, and "
-                "a rejected one names none"
+                "any other names none"
             )
         if (self.floor_contact is None) != (self.contact_basis is None):
             raise ValueError(f"observation '{self.id}': a floor contact records how it was found")
+        if (self.decision == "merged") != (self.replaced_by is not None):
+            raise ValueError(
+                f"observation '{self.id}': a merged observation (and only one) names the "
+                "observation it was merged into"
+            )
+        if self.visibility == "added" and self.found_by != "user":
+            raise ValueError(
+                f"observation '{self.id}': only the user can add an object that is not seen"
+            )
+        if self.decision in ("split", "merged") and not self.corrections:
+            raise ValueError(f"observation '{self.id}': a {self.decision} observation says why")
+        if self.derived_from == self.id or self.replaced_by == self.id:
+            raise ValueError(f"observation '{self.id}' cannot refer to itself")
         return self
 
 
@@ -1083,6 +1117,24 @@ class PhotoImport(ContractModel):
             (o.object_id for o in self.observations if o.object_id is not None),
             "object linked to an observation",
         )
+        by_id = {o.id: o for o in self.observations}
+        for o in self.observations:
+            if o.derived_from is not None:
+                parent = by_id.get(o.derived_from)
+                if parent is None or parent.decision != "split":
+                    raise ValueError(
+                        f"observation '{o.id}' names '{o.derived_from}' as the outline it was "
+                        "split from, but no split observation has that id"
+                    )
+            if o.replaced_by is not None:
+                target = by_id.get(o.replaced_by)
+                if target is None or target.decision in ("split", "merged"):
+                    raise ValueError(
+                        f"observation '{o.id}' was merged into '{o.replaced_by}', which is not "
+                        "an observation still in use"
+                    )
+            if o.decision == "split" and not any(p.derived_from == o.id for p in self.observations):
+                raise ValueError(f"split observation '{o.id}' has no pieces")
         return self
 
 

@@ -585,6 +585,44 @@ Append entries in chronological order. If a live repository session log already 
 - **Time:** 17:05:42–18:04:17 UTC (58.6 min active; no provider calls).
 - **Next concrete task:** IMG-02 (Stage B), in a separate commit.
 
+### 2026-10-16 - IMG-02 multi-object layout and occlusion review (Stage B; contract 0.8.0)
+
+- **Active milestone / issue:** M3; IMG-02.
+- **Starting commit:** `b8d71a8` (GEN-09 records). Start 18:04:17 UTC.
+- **Goal:** a vertical slice on IMG-01's known failures (table grouped with chairs, partly hidden objects, uncertain hidden depth) for one indoor photo with a calibrated floor rectangle:
+  - split, merge and add, linked to observations, with corrections recorded;
+  - explicit visibility, and hidden sizes as estimates;
+  - photo overlaps versus 3D footprint intersections, with editable position, footprint and facing;
+  - everything preserved through save, reopen and missing-photo recovery.
+- **Work completed.**
+  - Contract 0.8.0: the `PhotoObservation` fields, cross-record rules, the 0.7.0 → 0.8.0 migration and fixture versions.
+  - Old-file recovery: the rebuild endpoint upgrades first, and the client offers the rebuild or a photo re-attach when an upgrade is refused for those.
+  - `src/photo/corrections.ts`, `src/photo/layoutChecks.ts`, the review model in `world.ts`; the Objects and Layout panels; visibility styles on the stage, the plan and the source photo.
+  - Browser journeys: classroom, factory render, manual only. Screenshots: docs/img-02/.
+- **Found and fixed during the session:**
+  - The first group rule flagged "machine with yellow safety cage" and "desk with computers".
+  - The first duplicate rule flagged every chair inside a "table with chairs" outline.
+  - Seats under tables were listed as clashes.
+  - Merging grew the kept outline.
+  - A typed position did not change the sizes.
+  - A 0.7.0 file with missing models lost its **Rebuild** option after the bump.
+  - Frozen 0.7.0 files (the GEN-03 edit scene, the legacy fixture) are now upgraded on reading; the files are unchanged.
+- **Commands and outcomes:**
+  - `pnpm check` exit 0 (pytest 735, Vitest 167, contracts 10);
+  - `pnpm test:e2e` 46 passed, 15 skipped;
+  - `CI=1 pnpm test:e2e:smoke` 10 passed;
+  - no provider calls (recorded answers only).
+- **Measured on the factory render:** the added cabinet, placed from its drawn base, landed at z −3.46 m (truth −8.53 m); at its typed position its width is 1.23 m (truth 0.80 m; the outline covered parts of both cabinets).
+- **Decisions:** ADR-047.
+- **Known limitations:**
+  - split pieces start as equal strips;
+  - hidden bases near the horizon are unreliable;
+  - clashes are rectangle overlaps;
+  - no walls or room boundary;
+  - one photo only.
+- **Milestone status after this session:** M3 in progress (IMG-01 and IMG-02 done; IMG-03 open). GEN-09 open on independent review only.
+- **Next concrete task:** IMG-03 (held-out, permissioned photos with measured references), when such photos exist; until then, the GEN-09 independent review if a reviewer is available.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

@@ -453,11 +453,22 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P1
 - Dependencies: IMG-01
-- Baseline status: planned
+- Baseline status: planned → done (2026-10-16)
 - Done when: Several objects from one image keep their relative layout; overlaps and occlusions are listed for review; corrections are recorded; nothing hidden is presented as seen.
 - Note (2026-10-14, after IMG-01): IMG-01 already places several objects from one photo with their relative layout, marks hidden sides as guesses and records every observation (accepted or rejected). Left out of IMG-01 and open here or in IMG-03: outdoor scenes, close-ups, photos without a usable floor rectangle, several photos of one place, walls and room boundaries, textured or photo-matched geometry, and automatic scale without a user measurement. IMG-01's known failures this issue should address: no walls or room boundary; hidden depths guessed (about half the true depth for deep machine cells); group outlines ("table with chairs"); generic shapes and approximate colours; missed objects behind others.
 - Note (2026-10-15, after GEN-02): a photo-made object can now be improved after creation with **Improve model…** (in words or by hand), as a new version that keeps the photo link and the photo-inferred evidence of unchanged sizes. This helps with generic shapes (the live pallet became a pallet with stacked cartons) but not with geometry the generator cannot depict (no openings within a part, slanted or curved surfaces, mesh or textures); the machine guard improved only modestly. The scale step now records whether the rectangle's size was measured or assumed (`size_basis`).
-- Evidence: not recorded
+- Status: **done** (2026-10-16), as a vertical slice on IMG-01's known failures: a table grouped with its chairs, objects partly hidden, uncertain hidden depth. The supported input is unchanged: one indoor photo with a visible floor and a user-calibrated rectangle. Walls and room boundaries, and several photos of one place, are not part of it and remain open for a later issue. Held-out accuracy is IMG-03.
+- Evidence (docs/image-import.md "Reviewing several objects (IMG-02)"; ADR-047; screenshots docs/img-02/):
+  - **Contract 0.8.0.** `PhotoObservation` gains `visibility` (`visible`, `partly_visible`, `added`, `not_recorded`), `decision` `split`/`merged`, `derived_from`, `replaced_by` and `corrections`, with cross-record checks. Up to 80 observations. Migration 0.7.0 → 0.8.0 claims nothing (`not_recorded`). Rebuilding missing generated models upgrades an older file first. An upgrade refused only for missing models or a missing photo now offers the same recovery as a current file: a regression caught by the legacy pre-GEN-06 journey and fixed.
+  - **Objects:** split (pieces named from "X with Ys", shape families from the label), merge (the kept outline unchanged), undo for both, add a missed object, visibility per object. Every result is linked to its observation; corrections are recorded in words; split, merged and rejected observations are all kept.
+  - **Occlusion:** per-axis sources from the photo, partly hidden (an estimate, may be larger), hidden (a guess), not seen (an estimate) or entered. An added object is never recorded as observed, and only the user can add one.
+  - **Layout:** photo overlaps (one in front of another, not a 3D problem; mark the one behind partly visible) and 3D footprint intersections listed apart and explained, with seats under tables listed as probably fine. Position, footprint and facing are editable and everything is rechecked at once. A typed position drives the size estimate; the photo's own position stays on record.
+  - **Demonstrated** (recorded answers, offline; `e2e/photo-review.spec.ts`, 3 tests, one `@smoke`):
+    - classroom: split, merge, two added objects, clashes from guessed depths fixed in the layout; 24 objects created; identical observations, corrections and evidence after edit, undo and redo, save, reopen and re-attaching a missing photo;
+    - factory render: the missed cabinet behind the centre machine added and placed by typed position. From its drawn base it landed 5.1 m short, the hidden-depth failure stated. A conveyor/machine clash fixed. Identical after reopening;
+    - manual only: no model call.
+  - **Tests:** contracts (migration and cross-record rules), `tests/test_recognisable.py` (older project rebuilt through the API); Vitest `src/photo/{corrections,layoutChecks}.test.ts`.
+  - **Checks:** `pnpm check` exit 0 (pytest 735; Vitest 167; contracts 10); `pnpm test:e2e` 46 passed, 15 skipped; the smoke set 10 passed.
 
 ### IMG-03 - Evaluate image import on held-out images
 

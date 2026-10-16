@@ -12,7 +12,9 @@ import { formatFixed, LENGTH_DECIMALS, parseDecimal } from "../editing/units";
 import type { AssistState } from "../hooks/useAssistStatus";
 import { type Calibration, calibrateFromRectangle, imagePointOf } from "../photo/floor";
 import { type Pixels, suggestAppearance } from "../photo/colour";
-import { assetRequest, buildPhotoProject, isPlaced, type PlacedItem, placeItems, type ReviewItem, reviewItemsFrom, type ScaleInput, userItem } from "../photo/world";
+import { mergeItems, splitItem, suggestions, unmergeItem, unsplitItem, VISIBILITY_NAME } from "../photo/corrections";
+import { footprintClashes, photoOverlaps } from "../photo/layoutChecks";
+import { assetRequest, buildPhotoProject, type DimensionSource, isPlaced, type PlacedItem, placeItems, type ReviewItem, reviewItemsFrom, type ScaleInput, userItem, type Visibility } from "../photo/world";
 
 const PHOTO_LIMITS = { maxBytes: 15 * 1024 * 1024, maxPixels: 50_000_000, minSide: 64, analysisSide: 1600 } as const;
 const ACCEPT = "image/jpeg,image/png,image/webp";
@@ -408,10 +410,31 @@ export function PhotoImport({ client, assist, onCreated, onClose }: Props) {
               ))}
             </div>
             {tab === "objects" && (
-              <ObjectsPanel items={items} placed={placed} selected={selected} onSelect={setSelected} onItem={update} hasModel={result !== null} />
+              <ObjectsPanel
+                items={items}
+                placed={placed}
+                selected={selected}
+                onSelect={setSelected}
+                onItem={update}
+                hasModel={result !== null}
+                onSplit={(id, count) => {
+                  const next = splitItem(items, id, count);
+                  setItems(next.items);
+                  if (next.pieces[0]) setSelected(next.pieces[0]);
+                }}
+                onUnsplit={(id) => {
+                  setItems(unsplitItem(items, id));
+                  setSelected(id);
+                }}
+                onMerge={(keep, drop) => {
+                  setItems(mergeItems(items, keep, drop));
+                  setSelected(keep);
+                }}
+                onUnmerge={(id) => setItems(unmergeItem(items, id))}
+              />
             )}
             {tab === "scale" && <ScalePanel scale={scale} calibration={calibration} onScale={setScale} suggestion={result?.proposal?.floor_rectangles[0]?.label ?? null} />}
-            {tab === "layout" && <LayoutPanel items={items} placed={placed} calibration={cal} scale={scale} selected={selected} onSelect={setSelected} />}
+            {tab === "layout" && <LayoutPanel items={items} placed={placed} calibration={cal} selected={selected} onSelect={setSelected} onItem={update} />}
 
             <div className="photo-footer">
               {!cal && <p className="muted small" data-testid="photo-needs-scale">Give the scale first: mark a floor rectangle and enter at least one of its sides (tab 2).</p>}
@@ -637,12 +660,15 @@ function PhotoStage({ photo, items, selected, scale, calibration, placed, onSele
           )}
         </svg>
         {items.map((item, index) => {
+          // A split or merged outline is superseded by its pieces or by the outline it joined.
+          if (item.decision === "split" || item.decision === "merged") return null;
           const b = item.box;
           const isSelected = item.id === selected;
           return (
             <div
               key={item.id}
-              className={`photo-box ${item.decision}${isSelected ? " selected" : ""}`}
+              className={`photo-box ${item.decision} vis-${item.visibility}${isSelected ? " selected" : ""}`}
+              title={`${item.label}: ${VISIBILITY_NAME[item.visibility]}`}
               data-testid={`photo-box-${item.id}`}
               style={{ left: pct(b.left), top: pct(b.top), width: pct(b.right - b.left), height: pct(b.bottom - b.top) }}
               onPointerDown={(e) => {
@@ -693,8 +719,8 @@ function PhotoStage({ photo, items, selected, scale, calibration, placed, onSele
   );
 }
 
-function SizeInput({ value, label, testId, onCommit }: { value: number | null; label: string; testId: string; onCommit: (v: number | null) => void }) {
-  const shown = value === null ? "" : formatFixed(value, LENGTH_DECIMALS);
+function SizeInput({ value, label, testId, onCommit, range = [0.05, 50], unit = "m", decimals = LENGTH_DECIMALS }: { value: number | null; label: string; testId: string; onCommit: (v: number | null) => void; range?: [number, number]; unit?: string; decimals?: number }) {
+  const shown = value === null ? "" : formatFixed(value, decimals);
   const [draft, setDraft] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const commit = () => {
@@ -705,9 +731,9 @@ function SizeInput({ value, label, testId, onCommit }: { value: number | null; l
       setError(null);
       return onCommit(null);
     }
-    const parsed = parseDecimal(text, LENGTH_DECIMALS, "m");
+    const parsed = parseDecimal(text.replace("−", "-"), decimals, unit);
     if (!parsed.ok) return setError(parsed.message);
-    if (parsed.value < 0.05 || parsed.value > 50) return setError("Use 0.05–50 m.");
+    if (parsed.value < range[0] || parsed.value > range[1]) return setError(`Use ${range[0]}–${range[1]} ${unit}.`);
     setError(null);
     onCommit(parsed.value);
   };
@@ -719,7 +745,7 @@ function SizeInput({ value, label, testId, onCommit }: { value: number | null; l
         aria-label={label}
         data-testid={testId}
         value={draft ?? shown}
-        placeholder="m"
+        placeholder={unit}
         onFocus={(e) => {
           setDraft(shown);
           e.currentTarget.select();
@@ -728,13 +754,19 @@ function SizeInput({ value, label, testId, onCommit }: { value: number | null; l
         onBlur={commit}
         onKeyDown={(e) => e.key === "Enter" && commit()}
       />
-      <span className="unit">m</span>
+      <span className="unit">{unit}</span>
       {error && <span className="field-error">{error}</span>}
     </span>
   );
 }
 
-const SOURCE_TAG = { photo: "from the photo, approximate", hidden: "hidden: a guess", entered: "entered by you" } as const;
+const SOURCE_TAG: Record<DimensionSource, string> = {
+  photo: "from the photo, approximate",
+  partial: "partly hidden: an estimate, may be larger",
+  hidden: "hidden: a guess",
+  unseen: "not seen: an estimate",
+  entered: "entered by you",
+};
 
 function ObjectsPanel(props: {
   items: ReviewItem[];
@@ -743,8 +775,14 @@ function ObjectsPanel(props: {
   hasModel: boolean;
   onSelect: (id: string) => void;
   onItem: (id: string, patch: Partial<ReviewItem>) => void;
+  onSplit: (id: string, count: number) => void;
+  onUnsplit: (id: string) => void;
+  onMerge: (keep: string, drop: string) => void;
+  onUnmerge: (id: string) => void;
 }) {
-  const { items, placed, selected, hasModel, onSelect, onItem } = props;
+  const { items, placed, selected, hasModel, onSelect, onItem, onSplit, onUnsplit, onMerge, onUnmerge } = props;
+  const [pieces, setPieces] = useState<Record<string, number>>({});
+  const [mergeWith, setMergeWith] = useState<Record<string, string>>({});
   if (items.length === 0) {
     return (
       <p className="muted small" data-testid="photo-no-objects">
@@ -752,103 +790,244 @@ function ObjectsPanel(props: {
       </p>
     );
   }
+  const number = new Map(items.map((i, n) => [i.id, n + 1]));
+  const name = (id: string | null) => {
+    const other = items.find((i) => i.id === id);
+    return other ? `#${number.get(other.id)} “${other.label}”` : "another outline";
+  };
+  const hints = suggestions(items);
+  const live = items.filter((i) => i.decision === "accepted");
   return (
-    <ul className="photo-objects" data-testid="photo-objects">
-      {items.map((item, index) => {
-        const p = placed.get(item.id);
-        const open = item.id === selected;
-        return (
-          <li key={item.id} className={`photo-object ${item.decision}${open ? " open" : ""}`} data-testid={`photo-object-${item.id}`}>
-            <div className="photo-object-head" onClick={() => onSelect(item.id)}>
-              <input
-                type="checkbox"
-                aria-label={`Use ${item.label}`}
-                checked={item.decision === "accepted"}
-                data-testid={`photo-accept-${item.id}`}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => onItem(item.id, { decision: e.target.checked ? "accepted" : "rejected" })}
-              />
-              <span className="badge">{index + 1}</span>
-              <span className="photo-object-name">{item.label}</span>
-              <span className="muted small">{TEMPLATE_NAME[item.template]}</span>
-            </div>
-            {open && (
-              <div className="photo-object-body">
-                <label className="photo-field">
-                  <span>Name</span>
-                  <input type="text" value={item.label} maxLength={80} onChange={(e) => onItem(item.id, { label: e.target.value })} />
-                </label>
-                <label className="photo-field">
-                  <span>Shape</span>
-                  <select value={item.template} data-testid={`photo-template-${item.id}`} onChange={(e) => onItem(item.id, { template: e.target.value as PhotoTemplate })}>
-                    {TEMPLATE_KEYS.map((k) => (
-                      <option key={k} value={k}>
-                        {TEMPLATE_NAME[k]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="photo-field">
-                  <span>Colour</span>
-                  <select value={item.material} onChange={(e) => onItem(item.id, { material: e.target.value as GeometryPart["material"] })}>
-                    {[...new Set([item.material, ...COLOURS])].map((m) => (
-                      <option key={m} value={m}>
-                        {m.replaceAll("_", " ")}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="photo-field">
-                  <span>Facing</span>
-                  <select value={item.facing} onChange={(e) => {
-                      const { yawDeg: _, ...entered } = item.entered;
-                      onItem(item.id, { facing: e.target.value as ReviewItem["facing"], entered });
-                    }}>
-                    <option value="toward_camera">towards the camera</option>
-                    <option value="left">to the left of the photo</option>
-                    <option value="right">to the right of the photo</option>
-                    <option value="away">away from the camera</option>
-                    <option value="unknown">not sure (towards the camera)</option>
-                  </select>
-                </label>
-                {isPlaced(p) ? (
-                  <div className="photo-dims">
-                    {(["width", "height", "depth"] as const).map((axis) => (
-                      <div key={axis} className="size-row">
-                        <span className="size-label">{axis[0]!.toUpperCase() + axis.slice(1)}</span>
-                        <SizeInput
-                          value={p[axis]}
-                          label={`${item.label} ${axis} in metres`}
-                          testId={`photo-${axis}-${item.id}`}
-                          onCommit={(v) => {
-                            const { [axis]: _, ...rest } = item.entered;
-                            onItem(item.id, { entered: v === null ? rest : { ...rest, [axis]: v } });
-                          }}
-                        />
-                        <span className={`size-tag${p.source[axis] === "entered" ? " size-tag-entered" : ""}`}>{SOURCE_TAG[p.source[axis]]}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : p ? (
-                  <p className="status-warn small">{p.problem}</p>
-                ) : (
-                  <p className="muted small">Sizes appear once the scale is set (tab 2).</p>
-                )}
-                {[...item.notes, ...(isPlaced(p) ? p.notes : [])].length > 0 && (
-                  <ul className="create-checks">
-                    {[...new Set([...item.notes, ...(isPlaced(p) ? p.notes : [])])].map((n) => (
-                      <li key={n}>{n}</li>
-                    ))}
-                  </ul>
-                )}
+    <>
+      {hints.length > 0 && (
+        <div className="photo-hints small" data-testid="photo-suggestions">
+          <p>
+            <strong>Check these outlines:</strong>
+          </p>
+          <ul>
+            {hints.map((h) => (
+              <li key={`${h.kind}-${h.ids.join("-")}`} data-kind={h.kind}>
+                {h.text}{" "}
+                <button
+                  type="button"
+                  className="link-button"
+                  data-testid={`photo-hint-${h.kind}-${h.ids[0]}`}
+                  onClick={() => (h.kind === "split" ? onSelect(h.ids[0]!) : onMerge(h.ids[0]!, h.ids[1]!))}
+                >
+                  {h.kind === "split" ? "Review it" : `Merge into ${name(h.ids[0]!)}`}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <ul className="photo-objects" data-testid="photo-objects">
+        {items.map((item, index) => {
+          const p = placed.get(item.id);
+          const open = item.id === selected;
+          const superseded = item.decision === "split" || item.decision === "merged";
+          return (
+            <li key={item.id} className={`photo-object ${item.decision}${open ? " open" : ""}`} data-testid={`photo-object-${item.id}`} data-decision={item.decision}>
+              <div className="photo-object-head" onClick={() => onSelect(item.id)}>
+                <input
+                  type="checkbox"
+                  aria-label={`Use ${item.label}`}
+                  checked={item.decision === "accepted"}
+                  disabled={superseded}
+                  data-testid={`photo-accept-${item.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => onItem(item.id, { decision: e.target.checked ? "accepted" : "rejected" })}
+                />
+                <span className="badge">{index + 1}</span>
+                <span className="photo-object-name">{item.label}</span>
+                <span className="muted small">
+                  {item.decision === "split"
+                    ? `split into ${items.filter((i) => i.derivedFrom === item.id).length}`
+                    : item.decision === "merged"
+                      ? `merged into ${name(item.replacedBy)}`
+                      : `${TEMPLATE_NAME[item.template]} · ${VISIBILITY_SHORT[item.visibility]}`}
+                </span>
               </div>
-            )}
-          </li>
-        );
-      })}
-    </ul>
+              {open && (
+                <div className="photo-object-body">
+                  {item.derivedFrom && <p className="muted small">Split by you from {name(item.derivedFrom)}; it keeps that outline&apos;s photo link.</p>}
+                  {item.decision === "split" && (
+                    <div className="modal-actions">
+                      <p className="small">Kept as it was in the photo; its pieces are used instead.</p>
+                      <button type="button" className="button button-small" data-testid={`photo-unsplit-${item.id}`} onClick={() => onUnsplit(item.id)}>
+                        Undo the split
+                      </button>
+                    </div>
+                  )}
+                  {item.decision === "merged" && (
+                    <div className="modal-actions">
+                      <p className="small">The same object as {name(item.replacedBy)}; kept as it was in the photo.</p>
+                      <button type="button" className="button button-small" data-testid={`photo-unmerge-${item.id}`} onClick={() => onUnmerge(item.id)}>
+                        Separate it again
+                      </button>
+                    </div>
+                  )}
+                  {!superseded && (
+                    <>
+                      <label className="photo-field">
+                        <span>Name</span>
+                        <input type="text" value={item.label} maxLength={80} onChange={(e) => onItem(item.id, { label: e.target.value })} />
+                      </label>
+                      <label className="photo-field">
+                        <span>In the photo</span>
+                        <select
+                          value={item.visibility}
+                          data-testid={`photo-visibility-${item.id}`}
+                          onChange={(e) => {
+                            const visibility = e.target.value as Visibility;
+                            onItem(item.id, { visibility, corrections: [...item.corrections.filter((c) => !c.startsWith("Marked by you as")), `Marked by you as ${VISIBILITY_NAME[visibility]}.`] });
+                          }}
+                        >
+                          <option value="visible">{VISIBILITY_NAME.visible}</option>
+                          <option value="partly_visible">{VISIBILITY_NAME.partly_visible}: part of it is hidden or cut off</option>
+                          {item.foundBy === "user" && <option value="added">{VISIBILITY_NAME.added} (you know it is there)</option>}
+                        </select>
+                      </label>
+                      {item.visibility !== "visible" && (
+                        <p className="small status-warn" data-testid={`photo-visibility-note-${item.id}`}>
+                          {item.visibility === "added"
+                            ? "Not seen in the photo: draw its outline where it stands, behind what hides it. Every size and its position are estimates until you type them."
+                            : "Partly hidden: the sides you cannot see are estimates, and what shows may be smaller than the object."}
+                        </p>
+                      )}
+                      <label className="photo-field">
+                        <span>Shape</span>
+                        <select value={item.template} data-testid={`photo-template-${item.id}`} onChange={(e) => onItem(item.id, { template: e.target.value as PhotoTemplate })}>
+                          {TEMPLATE_KEYS.map((k) => (
+                            <option key={k} value={k}>
+                              {TEMPLATE_NAME[k]}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="photo-field">
+                        <span>Colour</span>
+                        <select value={item.material} onChange={(e) => onItem(item.id, { material: e.target.value as GeometryPart["material"] })}>
+                          {[...new Set([item.material, ...COLOURS])].map((m) => (
+                            <option key={m} value={m}>
+                              {m.replaceAll("_", " ")}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="photo-field">
+                        <span>Facing</span>
+                        <select
+                          value={item.facing}
+                          onChange={(e) => {
+                            const { yawDeg: _, ...entered } = item.entered;
+                            onItem(item.id, { facing: e.target.value as ReviewItem["facing"], entered });
+                          }}
+                        >
+                          <option value="toward_camera">towards the camera</option>
+                          <option value="left">to the left of the photo</option>
+                          <option value="right">to the right of the photo</option>
+                          <option value="away">away from the camera</option>
+                          <option value="unknown">not sure (towards the camera)</option>
+                        </select>
+                      </label>
+                      {isPlaced(p) ? (
+                        <div className="photo-dims">
+                          {(["width", "height", "depth"] as const).map((axis) => (
+                            <div key={axis} className="size-row">
+                              <span className="size-label">{axis[0]!.toUpperCase() + axis.slice(1)}</span>
+                              <SizeInput
+                                value={p[axis]}
+                                label={`${item.label} ${axis} in metres`}
+                                testId={`photo-${axis}-${item.id}`}
+                                onCommit={(v) => {
+                                  const { [axis]: _, ...rest } = item.entered;
+                                  onItem(item.id, { entered: v === null ? rest : { ...rest, [axis]: v } });
+                                }}
+                              />
+                              <span className={`size-tag${p.source[axis] === "entered" ? " size-tag-entered" : ""}`} data-testid={`photo-source-${axis}-${item.id}`}>
+                                {SOURCE_TAG[p.source[axis]]}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : p ? (
+                        <div className="photo-correct">
+                          <p className="status-warn small">{p.problem}</p>
+                          <span className="small">Stands at x</span>
+                          <SizeInput value={item.entered.x ?? null} range={[-200, 200]} label={`${item.label} position across in metres`} testId={`photo-place-x-${item.id}`} onCommit={(v) => onItem(item.id, { entered: withEntered(item.entered, "x", v) })} />
+                          <span className="small">z</span>
+                          <SizeInput value={item.entered.z ?? null} range={[-200, 200]} label={`${item.label} position front to back in metres`} testId={`photo-place-z-${item.id}`} onCommit={(v) => onItem(item.id, { entered: withEntered(item.entered, "z", v) })} />
+                        </div>
+                      ) : (
+                        <p className="muted small">Sizes appear once the scale is set (tab 2).</p>
+                      )}
+                      <div className="photo-correct">
+                        <span className="small">Several objects in one outline?</span>
+                        <select aria-label={`Split ${item.label} into`} value={pieces[item.id] ?? 2} data-testid={`photo-split-count-${item.id}`} onChange={(e) => setPieces({ ...pieces, [item.id]: Number(e.target.value) })}>
+                          {[2, 3, 4, 5, 6, 8].map((n) => (
+                            <option key={n} value={n}>
+                              {n} objects
+                            </option>
+                          ))}
+                        </select>
+                        <button type="button" className="button button-small" data-testid={`photo-split-${item.id}`} onClick={() => onSplit(item.id, pieces[item.id] ?? 2)}>
+                          Split
+                        </button>
+                      </div>
+                      {live.length > 1 && (
+                        <div className="photo-correct">
+                          <span className="small">Outlined twice?</span>
+                          <select aria-label={`Merge into ${item.label}`} value={mergeWith[item.id] ?? ""} data-testid={`photo-merge-target-${item.id}`} onChange={(e) => setMergeWith({ ...mergeWith, [item.id]: e.target.value })}>
+                            <option value="">choose the other outline…</option>
+                            {live
+                              .filter((o) => o.id !== item.id)
+                              .map((o) => (
+                                <option key={o.id} value={o.id}>
+                                  #{number.get(o.id)} {o.label}
+                                </option>
+                              ))}
+                          </select>
+                          <button type="button" className="button button-small" disabled={!mergeWith[item.id]} data-testid={`photo-merge-${item.id}`} onClick={() => onMerge(item.id, mergeWith[item.id]!)}>
+                            Merge into this one
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {[...item.notes, ...(isPlaced(p) ? p.notes : [])].length > 0 && (
+                    <ul className="create-checks">
+                      {[...new Set([...item.notes, ...(isPlaced(p) ? p.notes : [])])].map((n) => (
+                        <li key={n}>{n}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {item.corrections.length > 0 && (
+                    <ul className="create-checks photo-corrections" data-testid={`photo-corrections-${item.id}`}>
+                      {item.corrections.map((c) => (
+                        <li key={c}>{c}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }
+
+/** One typed value set, or cleared when the box is emptied. */
+function withEntered(entered: ReviewItem["entered"], key: keyof ReviewItem["entered"], value: number | null): ReviewItem["entered"] {
+  const { [key]: _, ...rest } = entered;
+  return value === null ? rest : { ...rest, [key]: value };
+}
+
+const OVERLAPS_SHOWN = 6;
+
+const VISIBILITY_SHORT: Record<Visibility, string> = { visible: "visible", partly_visible: "partly visible", added: "not seen" };
 
 function ScalePanel({ scale, calibration, suggestion, onScale }: { scale: ScaleInput; calibration: ReturnType<typeof calibrateFromRectangle> | null; suggestion: string | null; onScale: (s: ScaleInput) => void }) {
   const cal = calibration?.ok ? calibration.calibration : null;
@@ -915,44 +1094,200 @@ function ScalePanel({ scale, calibration, suggestion, onScale }: { scale: ScaleI
 const givenTag = (scale: ScaleInput) => (scale.sizeBasis === "measured" ? "measured by you" : scale.sizeBasis === "assumed" ? "assumed by you" : "entered by you");
 
 /** A top-down check of where everything will go before the world is created. */
-function LayoutPanel({ items, placed, calibration, scale, selected, onSelect }: { items: ReviewItem[]; placed: Map<string, PlacedItem | { problem: string }>; calibration: Calibration | null; scale: ScaleInput; selected: string | null; onSelect: (id: string) => void }) {
+function LayoutPanel({
+  items,
+  placed,
+  calibration,
+  selected,
+  onSelect,
+  onItem,
+}: {
+  items: ReviewItem[];
+  placed: Map<string, PlacedItem | { problem: string }>;
+  calibration: Calibration | null;
+  selected: string | null;
+  onSelect: (id: string) => void;
+  onItem: (id: string, patch: Partial<ReviewItem>) => void;
+}) {
+  // Recomputed from the placements on every change: nothing here is stored.
+  const ready = useMemo(() => items.map((i) => placed.get(i.id)).filter(isPlaced), [items, placed]);
+  const numbered = useMemo(() => {
+    const index = new Map(items.map((i, n) => [i.id, n + 1]));
+    return (p: PlacedItem) => `#${index.get(p.item.id)} “${p.item.label}”`;
+  }, [items]);
+  const overlaps = useMemo(() => photoOverlaps(ready, numbered), [ready, numbered]);
+  const allClashes = useMemo(() => footprintClashes(ready, numbered), [ready, numbered]);
+  const clashes = allClashes.filter((c) => !c.tucked);
+  const tucked = allClashes.filter((c) => c.tucked);
+  const [allOverlaps, setAllOverlaps] = useState(false);
   if (!calibration) return <p className="muted small">The layout appears once the scale is set.</p>;
   const shapes: ReactNode[] = [];
   const xs: number[] = [calibration.camera.x];
   const zs: number[] = [calibration.camera.z];
   const halfW = calibration.widthM / 2;
   const halfD = calibration.depthM / 2;
-  void scale;
-  items.forEach((item, index) => {
-    const p = placed.get(item.id);
-    if (!isPlaced(p)) return;
+  const number = new Map(items.map((i, n) => [i.id, n + 1]));
+  const clashing = new Set(clashes.flatMap((c) => [c.a, c.b]));
+  for (const p of ready) {
+    const item = p.item;
     xs.push(p.x - p.width, p.x + p.width);
     zs.push(p.z - p.depth, p.z + p.depth);
     const deg = (-p.yawRad * 180) / Math.PI;
     shapes.push(
-      <g key={item.id} transform={`translate(${p.x} ${p.z}) rotate(${deg})`} onClick={() => onSelect(item.id)} className={`plan-item${item.id === selected ? " selected" : ""}`}>
+      <g
+        key={item.id}
+        transform={`translate(${p.x} ${p.z}) rotate(${deg})`}
+        onClick={() => onSelect(item.id)}
+        className={`plan-item vis-${item.visibility}${item.id === selected ? " selected" : ""}${clashing.has(item.id) ? " clashing" : ""}`}
+        data-testid={`photo-plan-${item.id}`}
+      >
         <rect x={-p.width / 2} y={-p.depth / 2} width={p.width} height={p.depth} />
         <line x1={0} y1={0} x2={0} y2={p.depth / 2} className="plan-front" />
         <text x={0} y={0} fontSize={Math.max(0.18, Math.min(p.width, p.depth) * 0.45)} textAnchor="middle" dominantBaseline="middle" transform={`rotate(${-deg})`}>
-          {index + 1}
+          {number.get(item.id)}
         </text>
       </g>,
     );
-  });
+  }
   const minX = Math.min(...xs, -halfW) - 0.5;
   const maxX = Math.max(...xs, halfW) + 0.5;
   const minZ = Math.min(...zs, -halfD) - 0.5;
   const maxZ = Math.max(...zs, halfD) + 0.5;
+  const chosen = ready.find((p) => p.item.id === selected) ?? null;
+  const set = (patch: Partial<ReviewItem["entered"]>, clear: (keyof ReviewItem["entered"])[] = []) => {
+    if (!chosen) return;
+    const entered = { ...chosen.item.entered, ...patch };
+    for (const k of clear) delete entered[k];
+    onItem(chosen.item.id, { entered });
+  };
   return (
     <section data-testid="photo-layout">
-      <p className="small">From above: the camera is at the bottom (▲), the photo&apos;s left is on the left. The gold outline is your floor rectangle.</p>
+      <p className="small">From above: the camera is at the bottom (▲), the photo&apos;s left is on the left. The gold outline is your floor rectangle. Click an object to adjust it.</p>
       <svg className="photo-plan" viewBox={`${minX} ${minZ} ${maxX - minX} ${maxZ - minZ}`} preserveAspectRatio="xMidYMid meet">
         <rect x={minX} y={minZ} width={maxX - minX} height={maxZ - minZ} className="plan-floor" />
         {/* The rectangle's own orientation is shown approximately by its axis-aligned extent. */}
         <rect x={-halfW} y={-halfD} width={2 * halfW} height={2 * halfD} className="plan-reference" />
         {shapes}
+        {clashes.map((c) => (
+          <polygon key={`${c.a}-${c.b}`} points={c.polygon.map(([x, z]) => `${x},${z}`).join(" ")} className="plan-clash" />
+        ))}
         <path d={`M ${calibration.camera.x} ${calibration.camera.z - 0.3} l 0.25 0.45 l -0.5 0 z`} className="plan-camera" />
       </svg>
+
+      {chosen && (
+        <div className="photo-layout-edit" data-testid="photo-layout-edit">
+          <p className="small">
+            <strong>
+              #{number.get(chosen.item.id)} {chosen.item.label}
+            </strong>{" "}
+            <span className="muted">({VISIBILITY_NAME[chosen.item.visibility]})</span>
+          </p>
+          <div className="photo-layout-grid">
+            <span className="size-label">Across (x)</span>
+            <SizeInput value={chosen.x} range={[-200, 200]} label={`${chosen.item.label} position across in metres`} testId="photo-layout-x" onCommit={(v) => (v === null ? set({}, ["x", "z"]) : set({ x: v, z: chosen.z }))} />
+            <span className="size-label">Front–back (z)</span>
+            <SizeInput value={chosen.z} range={[-200, 200]} label={`${chosen.item.label} position front to back in metres`} testId="photo-layout-z" onCommit={(v) => (v === null ? set({}, ["x", "z"]) : set({ x: chosen.x, z: v }))} />
+            <span className="size-label">Width</span>
+            <SizeInput value={chosen.width} label={`${chosen.item.label} width in metres`} testId="photo-layout-width" onCommit={(v) => (v === null ? set({}, ["width"]) : set({ width: v }))} />
+            <span className="size-label">Depth</span>
+            <SizeInput value={chosen.depth} label={`${chosen.item.label} depth in metres`} testId="photo-layout-depth" onCommit={(v) => (v === null ? set({}, ["depth"]) : set({ depth: v }))} />
+            <span className="size-label">Facing</span>
+            <SizeInput
+              value={(chosen.yawRad * 180) / Math.PI}
+              range={[-180, 180]}
+              unit="°"
+              decimals={1}
+              label={`${chosen.item.label} facing in degrees`}
+              testId="photo-layout-yaw"
+              onCommit={(v) => (v === null ? set({}, ["yawDeg"]) : set({ yawDeg: v }))}
+            />
+          </div>
+          <p className="muted small">
+            {chosen.source.position === "entered"
+              ? chosen.photoPlaced
+                ? `Moved by you; the photo put it at x ${chosen.fromPhoto.x.toFixed(2)} m, z ${chosen.fromPhoto.z.toFixed(2)} m. Its sizes follow the new distance. Clear a box to go back.`
+                : "Placed by you: its base cannot be used in the photo. Its sizes follow from this distance."
+              : chosen.item.visibility === "visible"
+                ? "Position from where it meets the floor in the photo."
+                : "Position from where its base is drawn in the photo. Its base is hidden, so this can be metres off near the horizon: type where it stands if you know."}{" "}
+            Depth: {SOURCE_TAG[chosen.source.depth]}.
+          </p>
+        </div>
+      )}
+
+      <div className="photo-layout-checks" data-testid="photo-layout-checks">
+        <p className="muted small">
+          Two kinds of overlap. <strong>In the photo</strong>, outlines overlap when one object stands in front of another: that is how the camera saw them. <strong>In 3D</strong>, footprints that overlap on the
+          floor would stand in the same place: move, resize or turn one of them.
+        </p>
+        {clashes.length > 0 ? (
+          <ul className="create-checks status-warn" data-testid="photo-clashes">
+            {clashes.map((c) => (
+              <li key={`${c.a}-${c.b}`} data-pair={`${c.a} ${c.b}`}>
+                {c.text}{" "}
+                <button type="button" className="link-button" onClick={() => onSelect(c.b)}>
+                  Adjust #{number.get(c.b)}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="small" data-testid="photo-no-clashes">
+            No footprints overlap in 3D.
+          </p>
+        )}
+        {tucked.length > 0 && (
+          <details className="small" data-testid="photo-tucked">
+            <summary>
+              Probably fine: {tucked.length} seat{tucked.length > 1 ? "s" : ""} tucked under a table (footprints overlap)
+            </summary>
+            <ul className="create-checks">
+              {tucked.map((c) => (
+                <li key={`${c.a}-${c.b}`} data-pair={`${c.a} ${c.b}`}>
+                  {c.text}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+        {overlaps.length > 0 && (
+          <p className="small">
+            In the photo, {overlaps.length} pair{overlaps.length > 1 ? "s" : ""} of outlines overlap{overlaps.length > 1 ? "" : "s"}
+            {overlaps.length > OVERLAPS_SHOWN && !allOverlaps ? ` (the ${OVERLAPS_SHOWN} largest shown)` : ""}:
+          </p>
+        )}
+        {overlaps.length > 0 && (
+          <ul className="photo-overlap-list small" data-testid="photo-overlaps">
+            {(allOverlaps ? overlaps : overlaps.slice(0, OVERLAPS_SHOWN)).map((o) => {
+              const behind = items.find((i) => i.id === o.behind);
+              const front = items.find((i) => i.id === o.front);
+              return (
+                <li key={`${o.front}-${o.behind}`} data-pair={`${o.front} ${o.behind}`} title={o.text}>
+                  #{number.get(o.behind)} “{behind?.label}” is partly behind #{number.get(o.front)} “{front?.label}” ({Math.round(o.share * 100)} %).
+                  {behind && behind.visibility === "visible" && (
+                    <>
+                      {" "}
+                      <button
+                        type="button"
+                        className="link-button"
+                        data-testid={`photo-mark-partly-${behind.id}`}
+                        onClick={() => onItem(behind.id, { visibility: "partly_visible", corrections: [...behind.corrections, `Marked by you as ${VISIBILITY_NAME.partly_visible} (behind another object).`] })}
+                      >
+                        Mark #{number.get(behind.id)} partly visible
+                      </button>
+                    </>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {overlaps.length > OVERLAPS_SHOWN && (
+          <button type="button" className="link-button small" data-testid="photo-overlaps-all" onClick={() => setAllOverlaps(!allOverlaps)}>
+            {allOverlaps ? "Show the largest only" : `Show all ${overlaps.length}`}
+          </button>
+        )}
+      </div>
       <p className="muted small">Positions are approximate; you can move, turn and resize everything in the editor afterwards.</p>
     </section>
   );

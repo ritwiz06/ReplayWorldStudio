@@ -38,6 +38,10 @@ function item(id: string, label: string, template: ReviewItem["template"], box: 
     onFloor: true,
     notes: [],
     entered: {},
+    visibility: "visible",
+    derivedFrom: null,
+    replacedBy: null,
+    corrections: [],
   };
 }
 

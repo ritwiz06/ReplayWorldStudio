@@ -178,7 +178,14 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
         // Another contract version: the API upgrades it (or explains why it cannot) for review.
         const upgrade = await client.upgradeProjectDocument(text);
         if (!upgrade.ok) {
-          reject(upgrade.error);
+          // Refused only for a missing photo or missing generated models: offer the same recovery
+          // as for a current file (the API upgrades again once they are back).
+          const photo = missingPhoto(data, upgrade.error);
+          if (photo) {
+            setFileCheck({ status: "rejected", filename, error: upgrade.error, restorable: null, photoMissing: { text, ...photo, busy: false, message: null } });
+            return;
+          }
+          reject(upgrade.error, generatedModelProblem(data, upgrade.error) ? text : null);
           return;
         }
         setFileCheck({ status: "idle" });
