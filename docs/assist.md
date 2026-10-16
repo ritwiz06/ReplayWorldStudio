@@ -322,3 +322,82 @@ per second, so wait time follows answer length. A twelve-cubby request still tak
 
 - [Partial review](gen-04/improve-partial.jpg): a recorded development answer.
 - [Refusal](gen-04/improve-unsupported.jpg): a fixed test answer.
+
+## Visible, time-bounded revisions (GEN-05)
+
+[ADR-044](../prompts/DECISIONS.md)
+
+A revision can be schema-valid yet draw what was asked where nobody can see it. GEN-04 had
+examples of each:
+
+- a stop button inside its box;
+- cushions sunk into a seat of the same fabric;
+- a floating stack light;
+- "slatted" sides drawn as single boards;
+- a cable tray under a table top.
+
+Since GEN-05 the API checks every part a revision **adds** before the proposal reaches the
+dialog (`assist/visibility.py`):
+
+| Check | Rule | Approximation or exception |
+| --- | --- | --- |
+| Hidden | ≥ 95 % of the part lies inside other opaque parts | Glass and clear plastic never hide anything |
+| Buried | ≥ 40 % lies inside a part of the same material | Not applied to transparent parts |
+| Floating | No chain of touching parts reaches the floor or a part kept from the current model | "Touching" means within 0.5 cm + 0.3 % of the object's largest side. Parts the instruction says hang or are wall- or ceiling-mounted are exempt |
+| Too small | A requested part, with no size given, under 4 % of the object's largest side and under 12 pixels in the default view | A size the user gave is kept |
+| Unseen | Under 15 % of it shows in a 200 × 150 render of the generator's own meshes, from the dialog's default camera | Only parts the user's words name are judged, and copies with the same label are judged together. The object's structure (panels, posts, rails) only fails if the rear-left view does not show it either |
+| Solid slats | Slats or gaps were asked for, but a side is one board | Bottoms may be solid |
+
+The shapes are tested exactly (boxes, cylinders, frustums, spheres), except that rounded boxes
+are tested as boxes. Touching is sampled on a 12 × 12 × 12 grid in the overlap of two parts.
+
+**Colours.**
+
+- A colour the user names for a part is shown in that colour. The part is recoloured if the
+  model did not, and a listing that calls the colour "not available" is dropped.
+- If the generator lacks the texture ("red fabric"), the colour is drawn and only the texture is
+  listed as not shown.
+- An addition whose colour was not named, and that blends into a part that was already there,
+  gets an approved contrasting finish (white, anthracite, blue, black or light grey). The
+  change list says so.
+- Glass stays glass.
+
+**One retry, one budget.**
+
+- The model gets **at most one** corrected answer, shared by every problem: an unusable answer,
+  a solid block where something open was asked for, or additions that cannot be seen.
+- The whole request has **one 150 s budget**. Each provider call may only use what is left, and
+  the retry is asked for only if the time left covers at least as long as the first answer took
+  (and at least 20 s).
+- If the corrected answer cannot be had, the first answer is shown with its problems; an answer
+  is never accepted without its checks.
+- A part the user placed out of view ("under the top") is reported but not retried.
+
+**Before Apply.** Whatever is still wrong is listed under **Not clearly shown**, and Apply reads
+**Apply despite these problems**. If applied, the problems stay on the version's change list.
+Cancelling stops any further provider call; an answer that arrives afterwards changes nothing.
+
+**Frozen evaluation** ([report](assist-evaluation/gen-05/report.md)). 22 new cases were frozen
+in `7e7c473` before the run, which took 18.1 min with the host kept awake and no run faults.
+
+| Measure | Result | Gate |
+| --- | --- | --- |
+| Outcomes | 21/22 ✓ | ≥ 85 % |
+| Change present | 19/20 ✓ | ≥ 75 % |
+| Size | 20/20 ✓ | ≥ 90 % |
+| Open | 2/2 ✓ | ≥ 90 % |
+| Listed | 5/5 ✓ | ≥ 80 % |
+| Median wait | 39.6 s ✓ (p95 105.7 s, max 108.6 s) | ≤ 60 s |
+| Timeouts | 0/22 ✓ | ≤ 5 % |
+| Visual review mean | **1.10 ✗** | ≥ 1.2 |
+
+Why the visual review fails:
+
+- Transparent additions are practically invisible at the generator's 20–25 % opacity, and the
+  pixel-based check counts them as visible.
+- Requested small items stay small.
+- "make the legs black and the armrests dark blue fabric" missed the blue.
+- Parts placed behind or under something are warned about, but cannot be seen in the one
+  preview.
+
+M2 stays open; GEN-06 is next.

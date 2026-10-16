@@ -1,0 +1,1650 @@
+{
+ "model": "qwen3-235b-a22b-instruct-2507",
+ "missing": [],
+ "summary": {
+  "gates": {
+   "outcome_as_expected": {
+    "passed": 21,
+    "of": 22,
+    "share": 0.955,
+    "gate": ">= 85%",
+    "pass": true
+   },
+   "change_present": {
+    "passed": 19,
+    "of": 20,
+    "share": 0.95,
+    "gate": ">= 75%",
+    "pass": true
+   },
+   "size_as_asked": {
+    "passed": 20,
+    "of": 20,
+    "share": 1.0,
+    "gate": ">= 90%",
+    "pass": true
+   },
+   "open_below_half": {
+    "passed": 2,
+    "of": 2,
+    "share": 1.0,
+    "gate": ">= 90%",
+    "pass": true
+   },
+   "unrepresentable_listed": {
+    "passed": 5,
+    "of": 5,
+    "share": 1.0,
+    "gate": ">= 80%",
+    "pass": true
+   },
+   "waiting_median": {
+    "n": 22,
+    "median_s": 39.6,
+    "p95_s": 105.7,
+    "max_s": 108.6,
+    "gate": "<= 60 s",
+    "pass": true
+   },
+   "timeouts": {
+    "timeouts": 0,
+    "of": 22,
+    "gate": "<= 5%",
+    "pass": true
+   },
+   "visual_review": {
+    "n": 20,
+    "mean": 1.1,
+    "zero": 5,
+    "two": 7,
+    "gate": ">= 1.2",
+    "pass": false
+   }
+  },
+  "all_gates_pass": false,
+  "diagnostics": {
+   "proposals": 20,
+   "partial_proposals": 5,
+   "first_attempt_valid": {
+    "passed": 21,
+    "of": 22,
+    "share": 0.955
+   },
+   "retried": 7,
+   "other_parts_kept": {
+    "passed": 2,
+    "of": 6,
+    "share": 0.333
+   },
+   "unexpected_listings": [],
+   "with_hidden_parts": {
+    "passed": 0,
+    "of": 20,
+    "share": 0.0
+   },
+   "overlaps_separated": 0,
+   "answer_chars_max": 2994,
+   "leaks": 0,
+   "by_group": {
+    "visible-addition": {
+     "passed": 6,
+     "of": 6,
+     "share": 1.0
+    },
+    "open-structure": {
+     "passed": 4,
+     "of": 5,
+     "share": 0.8
+    },
+    "transparent": {
+     "passed": 3,
+     "of": 3,
+     "share": 1.0
+    },
+    "explicit-colour": {
+     "passed": 3,
+     "of": 3,
+     "share": 1.0
+    },
+    "partial": {
+     "passed": 4,
+     "of": 4,
+     "share": 1.0
+    },
+    "already-satisfied": {
+     "passed": 1,
+     "of": 1,
+     "share": 1.0
+    }
+   }
+  },
+  "failures": [
+   "o04 (open-structure): outcome error 502, expected proposal",
+   "e03 (explicit-colour): missing material:paint_blue|motor_blue"
+  ],
+  "run_conditions": {
+   "requests": 22,
+   "total_request_s": 1085.2,
+   "total_clock_s": 1085.1,
+   "retried": 7,
+   "budget_cut_retries": [],
+   "run_faults": {}
+  },
+  "visibility": {
+   "proposals_with_problems": {
+    "passed": 6,
+    "of": 20,
+    "share": 0.3
+   },
+   "visible_additions_clear": {
+    "passed": 7,
+    "of": 12,
+    "share": 0.583
+   },
+   "problems": {
+    "v01": [
+     "“emergency stop button” is only 9 cm across, too small to see from the usual view."
+    ],
+    "v03": [
+     "“status lamp” is only 6 cm across, too small to see from the usual view."
+    ],
+    "v04": [
+     "“lamp joint” is only 3 cm across, too small to see from the usual view.",
+     "“lamp arm” does not touch anything that holds it up; it floats.",
+     "“lamp head” does not touch anything that holds it up; it floats."
+    ],
+    "o05": [
+     "“top slat” does not touch anything that holds it up; it floats.",
+     "“middle slat” does not touch anything that holds it up; it floats.",
+     "“bottom slat” does not touch anything that holds it up; it floats."
+    ],
+    "p03": [
+     "“mounting plate” is sunk 50 % into a part of the same material (paint white), so it is hard to tell apart.",
+     "“wall bracket” where you asked for it cannot be seen from the usual front-right view (only 0 % of it shows); turn the model to see it."
+    ],
+    "p04": [
+     "“drain valve” cannot be seen from the usual front-right view (only 0 % of it shows); turn the model to see it."
+    ]
+   },
+   "colour_notes": {
+    "v06": [
+     "Coloured “throw pillow” paint white so it stands out from the “backrest” it sits on (no colour was asked for)."
+    ],
+    "p01": [
+     "Coloured “seat pad” green, as asked."
+    ]
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "v01",
+   "category": "visible-addition",
+   "expect": "proposal",
+   "target_origin": "photo",
+   "wall_s": 40.91,
+   "attempts": 2,
+   "answer_chars": [
+    694,
+    708
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size.",
+    "Parts were scaled ×0.979 in depth (Z) to fit the 0.876 m envelope."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 1,
+    "materials": 2,
+    "largest_part_share": 0.044,
+    "envelope_m": [
+     2.253,
+     1.166,
+     0.876
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 7,
+    "shapes": 2,
+    "materials": 3,
+    "largest_part_share": 0.043,
+    "envelope_m": [
+     2.253,
+     1.166,
+     0.876
+    ]
+   },
+   "summary": "Added a small red emergency stop button, 9 cm across, on the front edge of the table top.",
+   "change_checks": {
+    "part:stop|button": true,
+    "material:estop_red|paint_red|signal_red": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "other_parts_kept": false,
+   "overlaps_separated": 0,
+   "parts": [
+    "worktop (box, wood)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "lower shelf (box, steel_dark)",
+    "emergency stop button (cylinder, estop_red)"
+   ],
+   "clock_s": 40.91,
+   "problems": [
+    "“emergency stop button” is only 9 cm across, too small to see from the usual view."
+   ],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "additions_clear": false
+  },
+  {
+   "id": "v02",
+   "category": "visible-addition",
+   "expect": "proposal",
+   "target_origin": "photo",
+   "wall_s": 26.32,
+   "attempts": 1,
+   "answer_chars": [
+    728
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 2,
+    "materials": 2,
+    "largest_part_share": 0.071,
+    "envelope_m": [
+     0.725,
+     0.989,
+     0.725
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 7,
+    "shapes": 2,
+    "materials": 3,
+    "largest_part_share": 0.071,
+    "envelope_m": [
+     0.725,
+     0.989,
+     0.725
+    ]
+   },
+   "summary": "Added a fabric cushion on top of the seat, centered and slightly smaller than the seat, raising its height by 0.03 m.",
+   "change_checks": {
+    "part:cushion|pad": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "other_parts_kept": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "seat (rounded_box, paint_blue)",
+    "backrest (rounded_box, paint_blue)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "cushion (rounded_box, fabric_grey)"
+   ],
+   "clock_s": 26.32,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "additions_clear": true
+  },
+  {
+   "id": "v03",
+   "category": "visible-addition",
+   "expect": "proposal",
+   "target_origin": "builder",
+   "wall_s": 36.55,
+   "attempts": 2,
+   "answer_chars": [
+    482,
+    525
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 8,
+    "shapes": 1,
+    "materials": 2,
+    "largest_part_share": 0.04,
+    "envelope_m": [
+     1.8,
+     2.0,
+     0.6
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 9,
+    "shapes": 2,
+    "materials": 3,
+    "largest_part_share": 0.04,
+    "envelope_m": [
+     1.8,
+     2.0,
+     0.6
+    ]
+   },
+   "summary": "Added a green status lamp on top of the front-right post, positioned correctly on the outer surface.",
+   "change_checks": {
+    "part:lamp|light|beacon": true,
+    "material:paint_green|signal_green": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "other_parts_kept": false,
+   "overlaps_separated": 0,
+   "parts": [
+    "leg (box, paint_blue)",
+    "leg (box, paint_blue)",
+    "leg (box, paint_blue)",
+    "leg (box, paint_blue)",
+    "shelf (box, paint_orange)",
+    "shelf (box, paint_orange)",
+    "shelf (box, paint_orange)",
+    "shelf (box, paint_orange)",
+    "status lamp (cylinder, signal_green)"
+   ],
+   "clock_s": 36.55,
+   "problems": [
+    "“status lamp” is only 6 cm across, too small to see from the usual view."
+   ],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "additions_clear": false
+  },
+  {
+   "id": "v04",
+   "category": "visible-addition",
+   "expect": "proposal",
+   "target_origin": "described",
+   "wall_s": 94.57,
+   "attempts": 2,
+   "answer_chars": [
+    1316,
+    1624
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size.",
+    "Parts were scaled ×0.94 in depth (Z) to fit the 0.700 m envelope."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 7,
+    "shapes": 2,
+    "materials": 4,
+    "largest_part_share": 0.032,
+    "envelope_m": [
+     1.8,
+     1.2,
+     0.7
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 12,
+    "shapes": 3,
+    "materials": 5,
+    "largest_part_share": 0.03,
+    "envelope_m": [
+     1.8,
+     1.2,
+     0.7
+    ]
+   },
+   "summary": "Added a desk lamp at the back left corner of the worktop, with all parts connected: base on worktop, post on base, joint on post, arm on joint, and head on arm.",
+   "change_checks": {
+    "part:lamp|light": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "other_parts_kept": false,
+   "overlaps_separated": 0,
+   "parts": [
+    "front left leg (box, steel_dark)",
+    "front right leg (box, steel_dark)",
+    "back left leg (box, steel_dark)",
+    "back right leg (box, steel_dark)",
+    "worktop (box, wood)",
+    "drawer unit (rounded_box, paint_light_grey)",
+    "monitor (box, hmi_screen)",
+    "lamp base (box, paint_light_grey)",
+    "lamp post (cylinder, paint_light_grey)",
+    "lamp joint (cylinder, paint_light_grey)",
+    "lamp arm (cylinder, paint_light_grey)",
+    "lamp head (box, paint_white)"
+   ],
+   "clock_s": 94.54,
+   "problems": [
+    "“lamp joint” is only 3 cm across, too small to see from the usual view.",
+    "“lamp arm” does not touch anything that holds it up; it floats.",
+    "“lamp head” does not touch anything that holds it up; it floats."
+   ],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "additions_clear": false
+  },
+  {
+   "id": "v05",
+   "category": "visible-addition",
+   "expect": "proposal",
+   "target_origin": "photo",
+   "wall_s": 19.83,
+   "attempts": 1,
+   "answer_chars": [
+    655
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 4,
+    "shapes": 3,
+    "materials": 3,
+    "largest_part_share": 0.081,
+    "envelope_m": [
+     0.955,
+     1.357,
+     0.597
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 5,
+    "shapes": 3,
+    "materials": 4,
+    "largest_part_share": 0.08,
+    "envelope_m": [
+     0.955,
+     1.357,
+     0.597
+    ]
+   },
+   "summary": "Added a small grey webcam on top of the screen frame.",
+   "change_checks": {
+    "part:camera|webcam|cam": true,
+    "material:paint_light_grey|plastic_grey|paint_anthracite|fabric_grey|concrete": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "other_parts_kept": false,
+   "overlaps_separated": 0,
+   "parts": [
+    "stand base (box, paint_blue)",
+    "stand (cylinder, aluminium)",
+    "screen frame (rounded_box, paint_blue)",
+    "screen (box, hmi_screen)",
+    "webcam (box, paint_light_grey)"
+   ],
+   "clock_s": 19.83,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "additions_clear": true
+  },
+  {
+   "id": "v06",
+   "category": "visible-addition",
+   "expect": "proposal",
+   "target_origin": "builder",
+   "wall_s": 32.09,
+   "attempts": 1,
+   "answer_chars": [
+    856
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size.",
+    "Coloured “throw pillow” paint white so it stands out from the “backrest” it sits on (no colour was asked for)."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 8,
+    "shapes": 2,
+    "materials": 2,
+    "largest_part_share": 0.393,
+    "envelope_m": [
+     1.9,
+     0.84,
+     0.85
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 10,
+    "shapes": 2,
+    "materials": 3,
+    "largest_part_share": 0.393,
+    "envelope_m": [
+     1.9,
+     0.84,
+     0.85
+    ]
+   },
+   "summary": "Added two throw pillows against the backrest, each made of fabric_grey rounded_box, positioned slightly in front of the backrest and centered vertically on the seat back.",
+   "change_checks": {
+    "part:pillow|cushion": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "other_parts_kept": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "seat base (rounded_box, fabric_grey)",
+    "backrest (rounded_box, fabric_grey)",
+    "armrest (rounded_box, fabric_grey)",
+    "armrest (rounded_box, fabric_grey)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "throw pillow (rounded_box, paint_white)",
+    "throw pillow (rounded_box, paint_white)"
+   ],
+   "clock_s": 32.09,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": [
+    "Coloured “throw pillow” paint white so it stands out from the “backrest” it sits on (no colour was asked for)."
+   ],
+   "additions_clear": true
+  },
+  {
+   "id": "o01",
+   "category": "open-structure",
+   "expect": "proposal",
+   "target_origin": "photo",
+   "wall_s": 58.41,
+   "attempts": 1,
+   "answer_chars": [
+    2994
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 1,
+    "shapes": 1,
+    "materials": 1,
+    "largest_part_share": 1.0,
+    "envelope_m": [
+     0.5,
+     1.671,
+     0.5
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 7,
+    "shapes": 1,
+    "materials": 1,
+    "largest_part_share": 0.04,
+    "envelope_m": [
+     0.5,
+     1.671,
+     0.5
+    ]
+   },
+   "summary": "Replaced the solid body with an open cube shelf: two vertical posts on the sides, three back bars and two shelves forming three stacked open compartments, all in plastic_grey.",
+   "change_checks": {
+    "part:shelf|compartment|panel|divider": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "open_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "left vertical post (box, plastic_grey)",
+    "right vertical post (box, plastic_grey)",
+    "top back horizontal bar (box, plastic_grey)",
+    "middle back horizontal bar (box, plastic_grey)",
+    "bottom back horizontal bar (box, plastic_grey)",
+    "horizontal shelf (box, plastic_grey)",
+    "horizontal shelf (box, plastic_grey)"
+   ],
+   "clock_s": 58.41,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": []
+  },
+  {
+   "id": "o02",
+   "category": "open-structure",
+   "expect": "proposal",
+   "target_origin": "builder",
+   "wall_s": 38.34,
+   "attempts": 1,
+   "answer_chars": [
+    1650
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 1,
+    "shapes": 1,
+    "materials": 1,
+    "largest_part_share": 1.0,
+    "envelope_m": [
+     1.0,
+     0.8,
+     0.8
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 1,
+    "materials": 1,
+    "largest_part_share": 0.024,
+    "envelope_m": [
+     1.0,
+     0.8,
+     0.8
+    ]
+   },
+   "summary": "Replaced the solid body with an open shelf unit: two side panels, a back panel, a bottom panel, and two shelves, all in light grey paint.",
+   "change_checks": {
+    "part:shelf": true,
+    "part:back": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "open_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "left side panel (box, paint_light_grey)",
+    "right side panel (box, paint_light_grey)",
+    "back panel (box, paint_light_grey)",
+    "bottom panel (box, paint_light_grey)",
+    "shelf (box, paint_light_grey)",
+    "shelf (box, paint_light_grey)"
+   ],
+   "clock_s": 38.34,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": []
+  },
+  {
+   "id": "o03",
+   "category": "open-structure",
+   "expect": "proposal",
+   "target_origin": "described",
+   "wall_s": 30.5,
+   "attempts": 1,
+   "answer_chars": [
+    1089
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 7,
+    "shapes": 2,
+    "materials": 4,
+    "largest_part_share": 0.032,
+    "envelope_m": [
+     1.8,
+     1.2,
+     0.7
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 9,
+    "shapes": 1,
+    "materials": 4,
+    "largest_part_share": 0.032,
+    "envelope_m": [
+     1.8,
+     1.2,
+     0.7
+    ]
+   },
+   "summary": "Replaced the drawer unit with three open shelves at bottom, middle and top height, all in paint_light_grey.",
+   "change_checks": {
+    "part:shelf": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "front left leg (box, steel_dark)",
+    "front right leg (box, steel_dark)",
+    "back left leg (box, steel_dark)",
+    "back right leg (box, steel_dark)",
+    "worktop (box, wood)",
+    "monitor (box, hmi_screen)",
+    "bottom shelf (box, paint_light_grey)",
+    "middle shelf (box, paint_light_grey)",
+    "top shelf (box, paint_light_grey)"
+   ],
+   "clock_s": 30.5,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": []
+  },
+  {
+   "id": "o04",
+   "category": "open-structure",
+   "expect": "proposal",
+   "target_origin": "builder",
+   "wall_s": 108.59,
+   "attempts": 2,
+   "answer_chars": [
+    2573,
+    2949
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "error 502",
+   "partial": false,
+   "outcome_ok": false,
+   "error": "ASU Voyager (qwen3-235b-a22b-instruct-2507) did not return a usable revision after 2 attempts. Last problem: remove and change must name existing part ids; unknown: ['bar-left', 'bar-right', 'bar-back', 'bar-front', 'bar-inner']",
+   "clock_s": 108.59,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": []
+  },
+  {
+   "id": "o05",
+   "category": "open-structure",
+   "expect": "proposal",
+   "target_origin": "builder",
+   "wall_s": 105.71,
+   "attempts": 2,
+   "answer_chars": [
+    1552,
+    2353
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size.",
+    "Parts were scaled ×0.935 in width (X) to fit the 0.500 m envelope."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 2,
+    "materials": 2,
+    "largest_part_share": 0.071,
+    "envelope_m": [
+     0.5,
+     0.95,
+     0.5
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 10,
+    "shapes": 2,
+    "materials": 2,
+    "largest_part_share": 0.066,
+    "envelope_m": [
+     0.5,
+     0.95,
+     0.5
+    ]
+   },
+   "summary": "Replaced the solid backrest with three horizontal slats attached to two vertical steel posts that connect to the seat, ensuring all slats are structurally supported.",
+   "change_checks": {
+    "part:slat": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "seat (rounded_box, fabric_grey)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "left support post (box, steel_dark)",
+    "right support post (box, steel_dark)",
+    "top slat (rounded_box, fabric_grey)",
+    "middle slat (rounded_box, fabric_grey)",
+    "bottom slat (rounded_box, fabric_grey)"
+   ],
+   "clock_s": 105.71,
+   "problems": [
+    "“top slat” does not touch anything that holds it up; it floats.",
+    "“middle slat” does not touch anything that holds it up; it floats.",
+    "“bottom slat” does not touch anything that holds it up; it floats."
+   ],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "additions_clear": false
+  },
+  {
+   "id": "t01",
+   "category": "transparent",
+   "expect": "proposal",
+   "target_origin": "photo",
+   "wall_s": 59.52,
+   "attempts": 1,
+   "answer_chars": [
+    1793
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 1,
+    "materials": 2,
+    "largest_part_share": 0.044,
+    "envelope_m": [
+     2.253,
+     1.166,
+     0.876
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 1,
+    "materials": 2,
+    "largest_part_share": 0.044,
+    "envelope_m": [
+     2.253,
+     1.166,
+     0.876
+    ]
+   },
+   "summary": "Replaced the wooden worktop with a clear glass top on the same steel frame and shelf.",
+   "change_checks": {
+    "material:glass_clear|polycarbonate": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "lower shelf (box, steel_dark)",
+    "glass top (box, glass_clear)"
+   ],
+   "clock_s": 59.52,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": []
+  },
+  {
+   "id": "t02",
+   "category": "transparent",
+   "expect": "proposal",
+   "target_origin": "builder",
+   "wall_s": 67.56,
+   "attempts": 1,
+   "answer_chars": [
+    2633
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 8,
+    "shapes": 1,
+    "materials": 2,
+    "largest_part_share": 0.04,
+    "envelope_m": [
+     1.8,
+     2.0,
+     0.6
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 10,
+    "shapes": 1,
+    "materials": 3,
+    "largest_part_share": 0.04,
+    "envelope_m": [
+     1.8,
+     2.0,
+     0.6
+    ]
+   },
+   "summary": "Added clear plastic side panels on both ends, mounted just outside the left and right legs, and adjusted leg positions to ensure visibility; all other parts unchanged.",
+   "change_checks": {
+    "material:polycarbonate|glass_clear": true,
+    "part:panel|side": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "leg (box, paint_blue)",
+    "leg (box, paint_blue)",
+    "leg (box, paint_blue)",
+    "leg (box, paint_blue)",
+    "shelf (box, paint_orange)",
+    "shelf (box, paint_orange)",
+    "shelf (box, paint_orange)",
+    "shelf (box, paint_orange)",
+    "left side panel (box, polycarbonate)",
+    "right side panel (box, polycarbonate)"
+   ],
+   "clock_s": 67.56,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "additions_clear": true
+  },
+  {
+   "id": "t03",
+   "category": "transparent",
+   "expect": "proposal",
+   "target_origin": "photo",
+   "wall_s": 26.44,
+   "attempts": 1,
+   "answer_chars": [
+    723
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 8,
+    "shapes": 1,
+    "materials": 2,
+    "largest_part_share": 0.04,
+    "envelope_m": [
+     0.955,
+     1.234,
+     0.477
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 9,
+    "shapes": 1,
+    "materials": 3,
+    "largest_part_share": 0.04,
+    "envelope_m": [
+     0.955,
+     1.234,
+     0.477
+    ]
+   },
+   "summary": "Added a glass back panel behind the shelves at z = -0.2385 m, touching the rear edges of the beams and legs.",
+   "change_checks": {
+    "material:glass_clear|polycarbonate": true,
+    "part:back|panel": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "leg (box, paint_blue)",
+    "leg (box, paint_blue)",
+    "leg (box, paint_blue)",
+    "leg (box, paint_blue)",
+    "shelf (box, wood)",
+    "shelf (box, wood)",
+    "shelf (box, wood)",
+    "shelf (box, wood)",
+    "glass back panel (box, glass_clear)"
+   ],
+   "clock_s": 26.44,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "additions_clear": true
+  },
+  {
+   "id": "e01",
+   "category": "explicit-colour",
+   "expect": "proposal",
+   "target_origin": "photo",
+   "wall_s": 65.99,
+   "attempts": 1,
+   "answer_chars": [
+    2275
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 2,
+    "materials": 2,
+    "largest_part_share": 0.071,
+    "envelope_m": [
+     0.725,
+     0.989,
+     0.725
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 2,
+    "materials": 3,
+    "largest_part_share": 0.071,
+    "envelope_m": [
+     0.725,
+     0.989,
+     0.725
+    ]
+   },
+   "summary": "Changed the seat material to paint_orange and the four legs to safety_yellow.",
+   "change_checks": {
+    "material:safety_yellow|signal_amber": true,
+    "material:paint_orange": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "seat (rounded_box, paint_orange)",
+    "backrest (rounded_box, paint_blue)",
+    "leg (box, safety_yellow)",
+    "leg (box, safety_yellow)",
+    "leg (box, safety_yellow)",
+    "leg (box, safety_yellow)"
+   ],
+   "clock_s": 65.99,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": []
+  },
+  {
+   "id": "e02",
+   "category": "explicit-colour",
+   "expect": "proposal",
+   "target_origin": "described",
+   "wall_s": 53.57,
+   "attempts": 1,
+   "answer_chars": [
+    2615
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 2,
+    "materials": 2,
+    "largest_part_share": 1.0,
+    "envelope_m": [
+     1.0,
+     1.5,
+     1.0
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 2,
+    "materials": 2,
+    "largest_part_share": 1.0,
+    "envelope_m": [
+     1.0,
+     1.5,
+     1.0
+    ]
+   },
+   "summary": "Painted the tank shell (cylinder and cone) white and the legs safety yellow.",
+   "change_checks": {
+    "material:safety_yellow": true,
+    "material:paint_white|signal_white": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "cylindrical body (cylinder, paint_white)",
+    "conical bottom (frustum, paint_white)",
+    "leg front right (cylinder, safety_yellow)",
+    "leg front left (cylinder, safety_yellow)",
+    "leg back right (cylinder, safety_yellow)",
+    "leg back left (cylinder, safety_yellow)"
+   ],
+   "clock_s": 53.56,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": []
+  },
+  {
+   "id": "e03",
+   "category": "explicit-colour",
+   "expect": "partial",
+   "target_origin": "builder",
+   "wall_s": 51.76,
+   "attempts": 1,
+   "answer_chars": [
+    1774
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": true,
+   "outcome_ok": true,
+   "unrepresentable_listed": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [
+    "dark blue fabric"
+   ],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 8,
+    "shapes": 2,
+    "materials": 2,
+    "largest_part_share": 0.393,
+    "envelope_m": [
+     1.9,
+     0.84,
+     0.85
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 8,
+    "shapes": 2,
+    "materials": 2,
+    "largest_part_share": 0.393,
+    "envelope_m": [
+     1.9,
+     0.84,
+     0.85
+    ]
+   },
+   "summary": "Changed leg material to black (plastic_black) and armrests to grey fabric; 'dark blue fabric' cannot be represented.",
+   "change_checks": {
+    "material:plastic_black|rubber_black|label_black": true,
+    "material:paint_blue|motor_blue": false
+   },
+   "change_present": false,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "seat base (rounded_box, fabric_grey)",
+    "backrest (rounded_box, fabric_grey)",
+    "armrest (rounded_box, fabric_grey)",
+    "armrest (rounded_box, fabric_grey)",
+    "leg (box, plastic_black)",
+    "leg (box, plastic_black)",
+    "leg (box, plastic_black)",
+    "leg (box, plastic_black)"
+   ],
+   "clock_s": 51.76,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": []
+  },
+  {
+   "id": "p01",
+   "category": "partial",
+   "expect": "partial",
+   "target_origin": "photo",
+   "wall_s": 27.08,
+   "attempts": 1,
+   "answer_chars": [
+    736
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": true,
+   "outcome_ok": true,
+   "unrepresentable_listed": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [
+    "make the chair fold flat"
+   ],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size.",
+    "Coloured “seat pad” green, as asked."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 2,
+    "materials": 2,
+    "largest_part_share": 0.071,
+    "envelope_m": [
+     0.428,
+     1.188,
+     0.428
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 7,
+    "shapes": 2,
+    "materials": 3,
+    "largest_part_share": 0.071,
+    "envelope_m": [
+     0.428,
+     1.188,
+     0.428
+    ]
+   },
+   "summary": "Added a green seat pad on top of the seat; folding mechanism cannot be represented.",
+   "change_checks": {
+    "part:pad|cushion": true,
+    "material:paint_green|signal_green": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "seat (rounded_box, wood)",
+    "backrest (rounded_box, wood)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "seat pad (rounded_box, paint_green)"
+   ],
+   "clock_s": 27.08,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": [
+    "Coloured “seat pad” green, as asked."
+   ],
+   "additions_clear": true
+  },
+  {
+   "id": "p02",
+   "category": "partial",
+   "expect": "partial",
+   "target_origin": "builder",
+   "wall_s": 29.92,
+   "attempts": 1,
+   "answer_chars": [
+    1273
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": true,
+   "outcome_ok": true,
+   "unrepresentable_listed": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [
+    "print the bay numbers on them"
+   ],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size.",
+    "Parts were scaled ×0.968 in depth (Z) to fit the 0.600 m envelope.",
+    "Left out ““add a red label holder on each beam”: textures, printing, labels and patterns cannot be shown” from what cannot be shown: the colour is shown."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 8,
+    "shapes": 1,
+    "materials": 2,
+    "largest_part_share": 0.04,
+    "envelope_m": [
+     1.8,
+     2.0,
+     0.6
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 12,
+    "shapes": 1,
+    "materials": 3,
+    "largest_part_share": 0.039,
+    "envelope_m": [
+     1.8,
+     2.0,
+     0.6
+    ]
+   },
+   "summary": "Added a red label holder on each of the four beams; printing bay numbers cannot be shown.",
+   "change_checks": {
+    "part:label|holder": true,
+    "material:estop_red|paint_red|signal_red": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "leg (box, paint_blue)",
+    "leg (box, paint_blue)",
+    "leg (box, paint_blue)",
+    "leg (box, paint_blue)",
+    "shelf (box, paint_orange)",
+    "shelf (box, paint_orange)",
+    "shelf (box, paint_orange)",
+    "shelf (box, paint_orange)",
+    "label holder (box, paint_red)",
+    "label holder (box, paint_red)",
+    "label holder (box, paint_red)",
+    "label holder (box, paint_red)"
+   ],
+   "clock_s": 29.92,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "additions_clear": true
+  },
+  {
+   "id": "p03",
+   "category": "partial",
+   "expect": "partial",
+   "target_origin": "photo",
+   "wall_s": 64.33,
+   "attempts": 2,
+   "answer_chars": [
+    734,
+    1581
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": true,
+   "outcome_ok": true,
+   "unrepresentable_listed": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [
+    "make the screen touch-sensitive"
+   ],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 4,
+    "shapes": 3,
+    "materials": 3,
+    "largest_part_share": 0.081,
+    "envelope_m": [
+     0.955,
+     1.357,
+     0.597
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 7,
+    "shapes": 3,
+    "materials": 4,
+    "largest_part_share": 0.081,
+    "envelope_m": [
+     0.955,
+     1.357,
+     0.597
+    ]
+   },
+   "summary": "Added a white wall bracket with a mounting plate and post connecting it to the base, ensuring all parts are attached; touch sensitivity cannot be represented.",
+   "change_checks": {
+    "part:bracket|mount": true,
+    "material:paint_white|signal_white": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "stand base (box, paint_blue)",
+    "stand (cylinder, aluminium)",
+    "screen frame (rounded_box, paint_blue)",
+    "screen (box, hmi_screen)",
+    "mounting plate (box, paint_white)",
+    "wall mount post (box, paint_white)",
+    "wall bracket (box, paint_white)"
+   ],
+   "clock_s": 64.32,
+   "problems": [
+    "“mounting plate” is sunk 50 % into a part of the same material (paint white), so it is hard to tell apart.",
+    "“wall bracket” where you asked for it cannot be seen from the usual front-right view (only 0 % of it shows); turn the model to see it."
+   ],
+   "budget_cut_retry": false,
+   "colour_notes": []
+  },
+  {
+   "id": "p04",
+   "category": "partial",
+   "expect": "partial",
+   "target_origin": "described",
+   "wall_s": 34.24,
+   "attempts": 2,
+   "answer_chars": [
+    689,
+    722
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": true,
+   "outcome_ok": true,
+   "unrepresentable_listed": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [
+    "insulated"
+   ],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size.",
+    "Parts were scaled ×0.968 in height (Y) to fit the 1.500 m envelope."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 2,
+    "materials": 2,
+    "largest_part_share": 1.0,
+    "envelope_m": [
+     1.0,
+     1.5,
+     1.0
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 7,
+    "shapes": 2,
+    "materials": 3,
+    "largest_part_share": 0.968,
+    "envelope_m": [
+     1.0,
+     1.5,
+     1.0
+    ]
+   },
+   "summary": "Added a red drain valve at the bottom tip of the cone, sitting on the outer surface; insulation cannot be shown.",
+   "change_checks": {
+    "part:valve|drain": true,
+    "material:estop_red|paint_red|signal_red": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "cylindrical body (cylinder, stainless_steel)",
+    "conical bottom (frustum, stainless_steel)",
+    "leg front right (cylinder, steel_dark)",
+    "leg front left (cylinder, steel_dark)",
+    "leg back right (cylinder, steel_dark)",
+    "leg back left (cylinder, steel_dark)",
+    "drain valve (cylinder, estop_red)"
+   ],
+   "clock_s": 34.24,
+   "problems": [
+    "“drain valve” cannot be seen from the usual front-right view (only 0 % of it shows); turn the model to see it."
+   ],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "additions_clear": false
+  },
+  {
+   "id": "s01",
+   "category": "already-satisfied",
+   "expect": "already_satisfied",
+   "target_origin": "photo",
+   "wall_s": 12.96,
+   "attempts": 1,
+   "answer_chars": [
+    443
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "already_satisfied",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": "The current model already shows this.",
+   "not_represented": [],
+   "checks": [],
+   "clock_s": 12.96,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": []
+  }
+ ]
+}

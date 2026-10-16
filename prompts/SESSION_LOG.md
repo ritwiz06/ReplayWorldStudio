@@ -468,6 +468,47 @@ Append entries in chronological order. If a live repository session log already 
   - the host kept awake during evaluations;
   - a fresh frozen set.
 
+### 2026-10-16 - GEN-05 visible, time-bounded revisions
+
+- **Active milestone / issue:** M2; GEN-05.
+- **Starting commit:** `7f25716` (GEN-04 records).
+- **Goal.**
+  - Additions must be visible, with one shared retry, one 150 s budget, and cancellation that stops provider work.
+  - Run conditions are recorded.
+  - A fresh frozen set is run once on the default model, against the established gates. M2 closes only if every gate passes.
+- **Work completed.**
+  - **Feature `586eb71`:**
+    - visibility checks on additions (`assist/visibility.py`): hidden, buried, floating, too small, unseen (z-buffer of the generator's meshes from the dialog camera) and solid slats;
+    - colour honouring, texture listing and contrasting finishes;
+    - one shared retry within one budget, and cancellation through a client-disconnect watch;
+    - a `problems` field shown before Apply and kept on the version;
+    - prompt `gen-05.1`;
+    - tests, recorded regression replays, and a browser test.
+  - **Pilot, check fixes and frozen set `7e7c473`:** the pilot found the missing tiny-addition check and the tangent and starting-model support faults. The 22-case frozen set and criteria were committed before any frozen call.
+  - **Results commit:** the run, a numbered-sheet visual review scored before the key and the scores, the scores, report.md, renders, and the record updates.
+- **Commands and outcomes.**
+  - `pnpm check` exit 0 (pytest 653 at the feature commit); `e2e/improve.spec.ts` 4 passed.
+  - Development, in bounded live runs: `scripts/evaluate_model_revisions.py` (15 cases, then 3 recorded) and the pilot (3 cases, plus a 2-case diagnostic).
+  - Frozen: `uv run python scripts/evaluate_gen05.py` → 22 requests, 04:33:56–04:52:01 UTC, 1,085.2 s of request time = 1,085.1 s real, host kept awake (`caffeinate`), no run faults.
+  - `scripts/score_gen05.py`:
+    - outcomes 21/22, change 19/20, size 20/20, open 2/2, listed 5/5 ✓;
+    - median 39.6 s, p95 105.7 s, timeouts 0/22 ✓;
+    - **visual mean 1.10 ✗** (20 proposals: two 7, one 8, zero 5).
+- **Visual evidence:** docs/assist-evaluation/gen-05/renders/*.jpg; the pilot's results in docs/assist-evaluation/gen-05-pilot/.
+- **Decisions:** ADR-044.
+- **Known limitations.**
+  - Transparent additions are practically invisible (20–25 % opacity) and get no warning.
+  - Small requested items stay small.
+  - A colour phrase after "and" without its own verb is missed.
+  - Parts placed behind or under something cannot be seen in the one preview.
+  - One over-strict "floats" warning (a 1.65 cm gap).
+  - The retry rarely removes a problem (6 of 7).
+  - o04 failed with HTTP 502 (unknown part ids twice).
+- **Reproduction:** docs/assist-evaluation/gen-05/README.md.
+- **Effort:** the frozen run took 18.1 min, with development (docs) continuing meanwhile; the review and scoring were not timed.
+- **Milestone status after this session:** M2 in progress (GEN-01..03 done; GEN-04 and GEN-05 closed with their last criterion not met; GEN-06 open). M3 in progress.
+- **Next concrete task:** GEN-06, recognisable additions in the preview (see BACKLOG.md).
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

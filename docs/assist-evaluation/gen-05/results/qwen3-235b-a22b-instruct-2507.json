@@ -1,0 +1,4301 @@
+{
+ "model": "qwen3-235b-a22b-instruct-2507",
+ "kind": "frozen",
+ "service": "ASU Voyager",
+ "base_url": "https://openai.rc.asu.edu/v1",
+ "prompt_version": "gen-05.1",
+ "budget_s": 150.0,
+ "retry_policy": "at most one shared retry (invalid answer, not open, or added parts not visible), only while the whole-request budget can cover it",
+ "mode": "live, schema-guided, through the API endpoint, sequential (one request at a time)",
+ "keep_awake": "caffeinate -i -w <pid> (macOS idle and system sleep prevented)",
+ "runs": [
+  {
+   "started": "2026-10-16T04:33:56+00:00",
+   "commit": "7e7c473",
+   "keep_awake": "caffeinate -i -w <pid> (macOS idle and system sleep prevented)"
+  }
+ ],
+ "rows": {
+  "v01": {
+   "http_status": 200,
+   "wall_s": 40.91,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 25.01,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.114178,\n        \"z\": 0.41204\n      },\n      \"id\": \"estop\",\n      \"label\": \"emergency stop button\",\n      \"material\": \"estop_red\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.02,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 2.253,\n    \"y\": 1.166,\n    \"z\": 0.876\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a small red emergency stop button on the front edge of the table top.\"\n}"
+    },
+    {
+     "attempt": 1,
+     "seconds": 15.83,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.114178,\n        \"z\": 0.41204\n      },\n      \"id\": \"estop\",\n      \"label\": \"emergency stop button\",\n      \"material\": \"estop_red\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.09,\n        \"y\": 0.02,\n        \"z\": 0.09\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 2.253,\n    \"y\": 1.166,\n    \"z\": 0.876\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a small red emergency stop button, 9 cm across, on the front edge of the table top.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 2.253,
+      "y": 1.166,
+      "z": 0.876
+     },
+     "parts": [
+      {
+       "id": "top",
+       "label": "worktop",
+       "shape": "box",
+       "material": "wood",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.140089,
+        "z": -0.009317
+       },
+       "size_m": {
+        "x": 2.253,
+        "y": 0.051822,
+        "z": 0.857366
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -1.08895,
+        "y": 0.557089,
+        "z": -0.409421
+       },
+       "size_m": {
+        "x": 0.0751,
+        "y": 1.114178,
+        "z": 0.057158
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 1.08895,
+        "y": 0.557089,
+        "z": -0.409421
+       },
+       "size_m": {
+        "x": 0.0751,
+        "y": 1.114178,
+        "z": 0.057158
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -1.08895,
+        "y": 0.557089,
+        "z": 0.390787
+       },
+       "size_m": {
+        "x": 0.0751,
+        "y": 1.114178,
+        "z": 0.057158
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 1.08895,
+        "y": 0.557089,
+        "z": 0.390787
+       },
+       "size_m": {
+        "x": 0.0751,
+        "y": 1.114178,
+        "z": 0.057158
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "shelf",
+       "label": "lower shelf",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.259111,
+        "z": -0.009317
+       },
+       "size_m": {
+        "x": 2.1028,
+        "y": 0.02591,
+        "z": 0.74305
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "estop",
+       "label": "emergency stop button",
+       "shape": "cylinder",
+       "material": "estop_red",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.114178,
+        "z": 0.393957
+       },
+       "size_m": {
+        "x": 0.09,
+        "y": 0.02,
+        "z": 0.088086
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a small red emergency stop button, 9 cm across, on the front edge of the table top.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size.",
+     "Parts were scaled ×0.979 in depth (Z) to fit the 0.876 m envelope."
+    ],
+    "problems": [
+     "“emergency stop button” is only 9 cm across, too small to see from the usual view."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 2,
+     "first_attempt_valid": true,
+     "latency_ms": 40843
+    }
+   },
+   "error": null,
+   "clock_s": 40.91,
+   "started_at": "2026-10-16T04:33:56+00:00",
+   "at": "2026-10-16T04:34:37+00:00",
+   "model_sha256": "7e9a34aa94660543f0a7c27341d48d6b926d5e12a99707e93e14d08e18845f7e",
+   "triangles": 200
+  },
+  "v02": {
+   "http_status": 200,
+   "wall_s": 26.32,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 26.19,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.5049095,\n        \"z\": 0.0145\n      },\n      \"id\": \"cushion\",\n      \"label\": \"cushion\",\n      \"material\": \"fabric_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"rounded_box\",\n      \"size_m\": {\n        \"x\": 0.7,\n        \"y\": 0.03,\n        \"z\": 0.67\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.725,\n    \"y\": 0.989,\n    \"z\": 0.725\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a fabric cushion on top of the seat, centered and slightly smaller than the seat, raising its height by 0.03 m.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 0.725,
+      "y": 0.989,
+      "z": 0.725
+     },
+     "parts": [
+      {
+       "id": "seat",
+       "label": "seat",
+       "shape": "rounded_box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.468473,
+        "z": 0.0145
+       },
+       "size_m": {
+        "x": 0.725,
+        "y": 0.072874,
+        "z": 0.696
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "back",
+       "label": "backrest",
+       "shape": "rounded_box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.749558,
+        "z": -0.319
+       },
+       "size_m": {
+        "x": 0.725,
+        "y": 0.478884,
+        "z": 0.087
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.308125,
+        "y": 0.218621,
+        "z": -0.293625
+       },
+       "size_m": {
+        "x": 0.05075,
+        "y": 0.437242,
+        "z": 0.05075
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.308125,
+        "y": 0.218621,
+        "z": -0.293625
+       },
+       "size_m": {
+        "x": 0.05075,
+        "y": 0.437242,
+        "z": 0.05075
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.308125,
+        "y": 0.218621,
+        "z": 0.322625
+       },
+       "size_m": {
+        "x": 0.05075,
+        "y": 0.437242,
+        "z": 0.05075
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.308125,
+        "y": 0.218621,
+        "z": 0.322625
+       },
+       "size_m": {
+        "x": 0.05075,
+        "y": 0.437242,
+        "z": 0.05075
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "cushion",
+       "label": "cushion",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.50491,
+        "z": 0.0145
+       },
+       "size_m": {
+        "x": 0.7,
+        "y": 0.03,
+        "z": 0.67
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a fabric cushion on top of the seat, centered and slightly smaller than the seat, raising its height by 0.03 m.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 26191
+    }
+   },
+   "error": null,
+   "clock_s": 26.32,
+   "started_at": "2026-10-16T04:34:37+00:00",
+   "at": "2026-10-16T04:35:03+00:00",
+   "model_sha256": "5eb501584d4995599624691f0bd73a704c76eb6e439abc3af4a7f636c39625be",
+   "triangles": 948
+  },
+  "v03": {
+   "http_status": 200,
+   "wall_s": 36.55,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 22.74,
+     "answer": "{\"add\": [{\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": 0.87, \"y\": 1.97, \"z\": 0.27}, \"id\": \"lamp\", \"label\": \"status lamp\", \"material\": \"signal_green\", \"narrow_end\": null, \"shape\": \"cylinder\", \"size_m\": {\"x\": 0.04, \"y\": 0.06, \"z\": 0.04}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 1.8, \"y\": 2.0, \"z\": 0.6}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Added a green status lamp on top of the front-right post.\"}"
+    },
+    {
+     "attempt": 1,
+     "seconds": 13.72,
+     "answer": "{\"add\": [{\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": 0.87, \"y\": 1.99, \"z\": 0.27}, \"id\": \"lamp\", \"label\": \"status lamp\", \"material\": \"signal_green\", \"narrow_end\": null, \"shape\": \"cylinder\", \"size_m\": {\"x\": 0.04, \"y\": 0.06, \"z\": 0.04}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 1.8, \"y\": 2.0, \"z\": 0.6}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Added a green status lamp on top of the front-right post, positioned correctly on the outer surface.\"}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.8,
+      "y": 2.0,
+      "z": 0.6
+     },
+     "parts": [
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": -0.87,
+        "y": 0.990099,
+        "z": -0.27
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 1.980198,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.87,
+        "y": 0.990099,
+        "z": -0.27
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 1.980198,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": -0.87,
+        "y": 0.990099,
+        "z": 0.27
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 1.980198,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.87,
+        "y": 0.990099,
+        "z": 0.27
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 1.980198,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-1",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.148514,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.079208,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-2",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.742574,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.079208,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-3",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.336634,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.079208,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-4",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.930694,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.079208,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "lamp",
+       "label": "status lamp",
+       "shape": "cylinder",
+       "material": "signal_green",
+       "center_m": {
+        "x": 0.87,
+        "y": 1.970297,
+        "z": 0.27
+       },
+       "size_m": {
+        "x": 0.04,
+        "y": 0.059406,
+        "z": 0.04
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a green status lamp on top of the front-right post, positioned correctly on the outer surface.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [
+     "“status lamp” is only 6 cm across, too small to see from the usual view."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 2,
+     "first_attempt_valid": true,
+     "latency_ms": 36459
+    }
+   },
+   "error": null,
+   "clock_s": 36.55,
+   "started_at": "2026-10-16T04:35:03+00:00",
+   "at": "2026-10-16T04:35:40+00:00",
+   "model_sha256": "d0c3876881038248821694b49f8a3c880a8d4992e42997d68e6ac8aebdd89aca",
+   "triangles": 224
+  },
+  "v04": {
+   "http_status": 200,
+   "wall_s": 94.57,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 47.37,
+     "answer": "{\"add\": [{\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.686842, \"y\": 0.93, \"z\": -0.32}, \"id\": \"lamp-base\", \"label\": \"lamp base\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.15, \"y\": 0.02, \"z\": 0.15}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.686842, \"y\": 1.1, \"z\": -0.32}, \"id\": \"lamp-post\", \"label\": \"lamp post\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"cylinder\", \"size_m\": {\"x\": 0.02, \"y\": 0.17, \"z\": 0.02}, \"taper\": null}, {\"axis\": \"z\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.686842, \"y\": 1.1, \"z\": -0.12}, \"id\": \"lamp-arm\", \"label\": \"lamp arm\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"cylinder\", \"size_m\": {\"x\": 0.02, \"y\": 0.02, \"z\": 0.2}, \"taper\": null}, {\"axis\": \"z\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.686842, \"y\": 1.1, \"z\": -0.02}, \"id\": \"lamp-head\", \"label\": \"lamp head\", \"material\": \"paint_white\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.1, \"y\": 0.05, \"z\": 0.01}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 1.8, \"y\": 1.2, \"z\": 0.7}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Added a desk lamp at the back left corner of the worktop, consisting of base, post, arm and head, all fixed in place.\"}"
+    },
+    {
+     "attempt": 1,
+     "seconds": 47.07,
+     "answer": "{\"add\": [{\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.686842, \"y\": 0.93, \"z\": -0.32}, \"id\": \"lamp-base\", \"label\": \"lamp base\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.15, \"y\": 0.02, \"z\": 0.15}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.686842, \"y\": 0.94, \"z\": -0.32}, \"id\": \"lamp-post\", \"label\": \"lamp post\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"cylinder\", \"size_m\": {\"x\": 0.02, \"y\": 0.16, \"z\": 0.02}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.686842, \"y\": 1.02, \"z\": -0.32}, \"id\": \"lamp-joint\", \"label\": \"lamp joint\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"cylinder\", \"size_m\": {\"x\": 0.03, \"y\": 0.02, \"z\": 0.03}, \"taper\": null}, {\"axis\": \"z\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.686842, \"y\": 1.03, \"z\": -0.2}, \"id\": \"lamp-arm\", \"label\": \"lamp arm\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"cylinder\", \"size_m\": {\"x\": 0.02, \"y\": 0.02, \"z\": 0.1}, \"taper\": null}, {\"axis\": \"z\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.686842, \"y\": 1.03, \"z\": -0.15}, \"id\": \"lamp-head\", \"label\": \"lamp head\", \"material\": \"paint_white\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.1, \"y\": 0.05, \"z\": 0.01}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 1.8, \"y\": 1.2, \"z\": 0.7}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Added a desk lamp at the back left corner of the worktop, with all parts connected: base on worktop, post on base, joint on post, arm on joint, and head on arm.\"}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.8,
+      "y": 1.2,
+      "z": 0.7
+     },
+     "parts": [
+      {
+       "id": "leg-fll",
+       "label": "front left leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.686842,
+        "y": 0.43,
+        "z": 0.321812
+       },
+       "size_m": {
+        "x": 0.047368,
+        "y": 0.86,
+        "z": 0.04698
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "leg-frr",
+       "label": "front right leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.592106,
+        "y": 0.43,
+        "z": 0.321812
+       },
+       "size_m": {
+        "x": 0.047368,
+        "y": 0.86,
+        "z": 0.04698
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "leg-bll",
+       "label": "back left leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.686842,
+        "y": 0.43,
+        "z": -0.27953
+       },
+       "size_m": {
+        "x": 0.047368,
+        "y": 0.86,
+        "z": 0.04698
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "leg-brr",
+       "label": "back right leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.592106,
+        "y": 0.43,
+        "z": -0.27953
+       },
+       "size_m": {
+        "x": 0.047368,
+        "y": 0.86,
+        "z": 0.04698
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "top",
+       "label": "worktop",
+       "shape": "box",
+       "material": "wood",
+       "center_m": {
+        "x": -0.047368,
+        "y": 0.88,
+        "z": 0.021141
+       },
+       "size_m": {
+        "x": 1.705264,
+        "y": 0.04,
+        "z": 0.657718
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "drawer-unit",
+       "label": "drawer unit",
+       "shape": "rounded_box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": -0.568421,
+        "y": 0.78,
+        "z": 0.068121
+       },
+       "size_m": {
+        "x": 0.473686,
+        "y": 0.14,
+        "z": 0.563758
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "monitor",
+       "label": "monitor",
+       "shape": "box",
+       "material": "hmi_screen",
+       "center_m": {
+        "x": 0.615789,
+        "y": 1.05,
+        "z": 0.30302
+       },
+       "size_m": {
+        "x": 0.568422,
+        "y": 0.3,
+        "z": 0.04698
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "lamp-base",
+       "label": "lamp base",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": -0.686842,
+        "y": 0.93,
+        "z": -0.27953
+       },
+       "size_m": {
+        "x": 0.15,
+        "y": 0.02,
+        "z": 0.14094
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "lamp-post",
+       "label": "lamp post",
+       "shape": "cylinder",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": -0.686842,
+        "y": 0.94,
+        "z": -0.27953
+       },
+       "size_m": {
+        "x": 0.02,
+        "y": 0.16,
+        "z": 0.018792
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "lamp-joint",
+       "label": "lamp joint",
+       "shape": "cylinder",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": -0.686842,
+        "y": 1.02,
+        "z": -0.27953
+       },
+       "size_m": {
+        "x": 0.03,
+        "y": 0.02,
+        "z": 0.028188
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "lamp-arm",
+       "label": "lamp arm",
+       "shape": "cylinder",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": -0.686842,
+        "y": 1.03,
+        "z": -0.166778
+       },
+       "size_m": {
+        "x": 0.02,
+        "y": 0.02,
+        "z": 0.09396
+       },
+       "axis": "z",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "lamp-head",
+       "label": "lamp head",
+       "shape": "box",
+       "material": "paint_white",
+       "center_m": {
+        "x": -0.686842,
+        "y": 1.03,
+        "z": -0.119798
+       },
+       "size_m": {
+        "x": 0.1,
+        "y": 0.05,
+        "z": 0.009396
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a desk lamp at the back left corner of the worktop, with all parts connected: base on worktop, post on base, joint on post, arm on joint, and head on arm.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size.",
+     "Parts were scaled ×0.94 in depth (Z) to fit the 0.700 m envelope."
+    ],
+    "problems": [
+     "“lamp joint” is only 3 cm across, too small to see from the usual view.",
+     "“lamp arm” does not touch anything that holds it up; it floats.",
+     "“lamp head” does not touch anything that holds it up; it floats."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 2,
+     "first_attempt_valid": true,
+     "latency_ms": 94432
+    }
+   },
+   "error": null,
+   "clock_s": 94.54,
+   "started_at": "2026-10-16T04:35:40+00:00",
+   "at": "2026-10-16T04:37:14+00:00",
+   "model_sha256": "2fdb41141426ebae1683c31eb064f0b95efe92fb928eda3f2bbcab4532c13b6e",
+   "triangles": 780
+  },
+  "v05": {
+   "http_status": 200,
+   "wall_s": 19.83,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 19.78,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.367846,\n        \"z\": 0.0\n      },\n      \"id\": \"webcam\",\n      \"label\": \"webcam\",\n      \"material\": \"paint_light_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.1,\n        \"y\": 0.02,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.955,\n    \"y\": 1.357,\n    \"z\": 0.597\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a small grey webcam on top of the screen frame.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 0.955,
+      "y": 1.357,
+      "z": 0.597
+     },
+     "parts": [
+      {
+       "id": "base",
+       "label": "stand base",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.023365,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.520908,
+        "y": 0.04673,
+        "z": 0.597
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "pole",
+       "label": "stand",
+       "shape": "cylinder",
+       "material": "aluminium",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.514027,
+        "z": -0.074625
+       },
+       "size_m": {
+        "x": 0.052092,
+        "y": 0.934594,
+        "z": 0.08955
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "frame",
+       "label": "screen frame",
+       "shape": "rounded_box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.028054,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.955,
+        "y": 0.616832,
+        "z": 0.104476
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "face",
+       "label": "screen",
+       "shape": "box",
+       "material": "hmi_screen",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.028053,
+        "z": 0.053731
+       },
+       "size_m": {
+        "x": 0.885544,
+        "y": 0.542066,
+        "z": 0.00597
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "webcam",
+       "label": "webcam",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.347151,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.1,
+        "y": 0.019698,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a small grey webcam on top of the screen frame.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 19775
+    }
+   },
+   "error": null,
+   "clock_s": 19.83,
+   "started_at": "2026-10-16T04:37:14+00:00",
+   "at": "2026-10-16T04:37:34+00:00",
+   "model_sha256": "eca0007a893287fbf868a453a41a391a0b636e55e5ae37e33c6e9b95508b34a8",
+   "triangles": 464
+  },
+  "v06": {
+   "http_status": 200,
+   "wall_s": 32.09,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 31.98,
+     "answer": "{\"add\": [{\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": -0.3, \"y\": 0.55, \"z\": -0.18}, \"id\": \"pillow-1\", \"label\": \"throw pillow\", \"material\": \"fabric_grey\", \"narrow_end\": null, \"shape\": \"rounded_box\", \"size_m\": {\"x\": 0.3, \"y\": 0.15, \"z\": 0.3}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": 0.3, \"y\": 0.55, \"z\": -0.18}, \"id\": \"pillow-2\", \"label\": \"throw pillow\", \"material\": \"fabric_grey\", \"narrow_end\": null, \"shape\": \"rounded_box\", \"size_m\": {\"x\": 0.3, \"y\": 0.15, \"z\": 0.3}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 1.9, \"y\": 0.84, \"z\": 0.85}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Added two throw pillows against the backrest, each made of fabric_grey rounded_box, positioned slightly in front of the backrest and centered vertically on the seat back.\"}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.9,
+      "y": 0.84,
+      "z": 0.85
+     },
+     "parts": [
+      {
+       "id": "base",
+       "label": "seat base",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.26,
+        "z": 0.035
+       },
+       "size_m": {
+        "x": 1.9,
+        "y": 0.36,
+        "z": 0.78
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "back",
+       "label": "backrest",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.6,
+        "z": -0.305
+       },
+       "size_m": {
+        "x": 1.9,
+        "y": 0.48,
+        "z": 0.24
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "arm-l",
+       "label": "armrest",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": -0.86,
+        "y": 0.4,
+        "z": 0.035
+       },
+       "size_m": {
+        "x": 0.18,
+        "y": 0.6,
+        "z": 0.78
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "arm-r",
+       "label": "armrest",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": 0.86,
+        "y": 0.4,
+        "z": 0.035
+       },
+       "size_m": {
+        "x": 0.18,
+        "y": 0.6,
+        "z": 0.78
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.875,
+        "y": 0.04,
+        "z": -0.38
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.08,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.875,
+        "y": 0.04,
+        "z": -0.38
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.08,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.875,
+        "y": 0.04,
+        "z": 0.37
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.08,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.875,
+        "y": 0.04,
+        "z": 0.37
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.08,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "pillow-1",
+       "label": "throw pillow",
+       "shape": "rounded_box",
+       "material": "paint_white",
+       "center_m": {
+        "x": -0.3,
+        "y": 0.55,
+        "z": -0.18
+       },
+       "size_m": {
+        "x": 0.3,
+        "y": 0.15,
+        "z": 0.3
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "pillow-2",
+       "label": "throw pillow",
+       "shape": "rounded_box",
+       "material": "paint_white",
+       "center_m": {
+        "x": 0.3,
+        "y": 0.55,
+        "z": -0.18
+       },
+       "size_m": {
+        "x": 0.3,
+        "y": 0.15,
+        "z": 0.3
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added two throw pillows against the backrest, each made of fabric_grey rounded_box, positioned slightly in front of the backrest and centered vertically on the seat back.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size.",
+     "Coloured “throw pillow” paint white so it stands out from the “backrest” it sits on (no colour was asked for)."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 31976
+    }
+   },
+   "error": null,
+   "clock_s": 32.09,
+   "started_at": "2026-10-16T04:37:34+00:00",
+   "at": "2026-10-16T04:38:06+00:00",
+   "model_sha256": "e90db2d1064f9a6d83d379bdd5c06024dbf4afd0798e819055f4c1619d7d3fae",
+   "triangles": 1848
+  },
+  "o01": {
+   "http_status": 200,
+   "wall_s": 58.41,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 58.34,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.24,\n        \"y\": 0.8355,\n        \"z\": 0.0\n      },\n      \"id\": \"left-post\",\n      \"label\": \"left vertical post\",\n      \"material\": \"plastic_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.02,\n        \"y\": 1.671,\n        \"z\": 0.5\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.24,\n        \"y\": 0.8355,\n        \"z\": 0.0\n      },\n      \"id\": \"right-post\",\n      \"label\": \"right vertical post\",\n      \"material\": \"plastic_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.02,\n        \"y\": 1.671,\n        \"z\": 0.5\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.3855,\n        \"z\": -0.24\n      },\n      \"id\": \"top-back\",\n      \"label\": \"top back horizontal bar\",\n      \"material\": \"plastic_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.5,\n        \"y\": 0.02,\n        \"z\": 0.02\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.8355,\n        \"z\": -0.24\n      },\n      \"id\": \"middle-back\",\n      \"label\": \"middle back horizontal bar\",\n      \"material\": \"plastic_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.5,\n        \"y\": 0.02,\n        \"z\": 0.02\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.2855,\n        \"z\": -0.24\n      },\n      \"id\": \"bottom-back\",\n      \"label\": \"bottom back horizontal bar\",\n      \"material\": \"plastic_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.5,\n        \"y\": 0.02,\n        \"z\": 0.02\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.5,\n    \"y\": 1.671,\n    \"z\": 0.5\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [\n    \"body\"\n  ],\n  \"repeat\": [\n    {\n      \"counts\": {\n        \"x\": 1,\n        \"y\": 2,\n        \"z\": 1\n      },\n      \"part\": {\n        \"axis\": \"y\",\n        \"basis\": \"inferred\",\n        \"center_m\": {\n          \"x\": 0.0,\n          \"y\": 1.1105,\n          \"z\": 0.24\n        },\n        \"id\": \"shelf\",\n        \"label\": \"horizontal shelf\",\n        \"material\": \"plastic_grey\",\n        \"narrow_end\": null,\n        \"shape\": \"box\",\n        \"size_m\": {\n          \"x\": 0.5,\n          \"y\": 0.02,\n          \"z\": 0.02\n        },\n        \"taper\": null\n      },\n      \"step_m\": {\n        \"x\": 0,\n        \"y\": -0.55,\n        \"z\": 0\n      }\n    }\n  ],\n  \"summary\": \"Replaced the solid body with an open cube shelf: two vertical posts on the sides, three back bars and two shelves forming three stacked open compartments, all in plastic_grey.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 0.5,
+      "y": 1.671,
+      "z": 0.5
+     },
+     "parts": [
+      {
+       "id": "left-post",
+       "label": "left vertical post",
+       "shape": "box",
+       "material": "plastic_grey",
+       "center_m": {
+        "x": -0.24,
+        "y": 0.8355,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.02,
+        "y": 1.671,
+        "z": 0.5
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "right-post",
+       "label": "right vertical post",
+       "shape": "box",
+       "material": "plastic_grey",
+       "center_m": {
+        "x": 0.24,
+        "y": 0.8355,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.02,
+        "y": 1.671,
+        "z": 0.5
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "top-back",
+       "label": "top back horizontal bar",
+       "shape": "box",
+       "material": "plastic_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.3855,
+        "z": -0.24
+       },
+       "size_m": {
+        "x": 0.5,
+        "y": 0.02,
+        "z": 0.02
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "middle-back",
+       "label": "middle back horizontal bar",
+       "shape": "box",
+       "material": "plastic_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.8355,
+        "z": -0.24
+       },
+       "size_m": {
+        "x": 0.5,
+        "y": 0.02,
+        "z": 0.02
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "bottom-back",
+       "label": "bottom back horizontal bar",
+       "shape": "box",
+       "material": "plastic_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.2855,
+        "z": -0.24
+       },
+       "size_m": {
+        "x": 0.5,
+        "y": 0.02,
+        "z": 0.02
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "shelf-1",
+       "label": "horizontal shelf",
+       "shape": "box",
+       "material": "plastic_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.1105,
+        "z": 0.24
+       },
+       "size_m": {
+        "x": 0.5,
+        "y": 0.02,
+        "z": 0.02
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "shelf-2",
+       "label": "horizontal shelf",
+       "shape": "box",
+       "material": "plastic_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.5605,
+        "z": 0.24
+       },
+       "size_m": {
+        "x": 0.5,
+        "y": 0.02,
+        "z": 0.02
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      }
+     ]
+    },
+    "summary": "Replaced the solid body with an open cube shelf: two vertical posts on the sides, three back bars and two shelves forming three stacked open compartments, all in plastic_grey.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 58339
+    }
+   },
+   "error": null,
+   "clock_s": 58.41,
+   "started_at": "2026-10-16T04:38:06+00:00",
+   "at": "2026-10-16T04:39:04+00:00",
+   "model_sha256": "f9becc39d8f32cbbf00c9a5456bd59c03e4c7c0d37cc043b3619aefe59ac0c92",
+   "triangles": 84
+  },
+  "o02": {
+   "http_status": 200,
+   "wall_s": 38.34,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 38.22,
+     "answer": "{\"add\": [{\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.49, \"y\": 0.4, \"z\": 0.0}, \"id\": \"side-left\", \"label\": \"left side panel\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.02, \"y\": 0.8, \"z\": 0.8}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.49, \"y\": 0.4, \"z\": 0.0}, \"id\": \"side-right\", \"label\": \"right side panel\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.02, \"y\": 0.8, \"z\": 0.8}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 0.4, \"z\": -0.39}, \"id\": \"back\", \"label\": \"back panel\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.96, \"y\": 0.8, \"z\": 0.02}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 0.01, \"z\": 0.0}, \"id\": \"bottom\", \"label\": \"bottom panel\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.96, \"y\": 0.02, \"z\": 0.78}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 1.0, \"y\": 0.8, \"z\": 0.8}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [\"body\"], \"repeat\": [{\"counts\": {\"x\": 1, \"y\": 2, \"z\": 1}, \"part\": {\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": 0.0, \"y\": 0.27, \"z\": 0.0}, \"id\": \"shelf\", \"label\": \"shelf\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.96, \"y\": 0.02, \"z\": 0.78}, \"taper\": null}, \"step_m\": {\"x\": 0, \"y\": 0.26, \"z\": 0}}], \"summary\": \"Replaced the solid body with an open shelf unit: two side panels, a back panel, a bottom panel, and two shelves, all in light grey paint.\"}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.0,
+      "y": 0.8,
+      "z": 0.8
+     },
+     "parts": [
+      {
+       "id": "side-left",
+       "label": "left side panel",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": -0.49,
+        "y": 0.4,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.02,
+        "y": 0.8,
+        "z": 0.8
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "side-right",
+       "label": "right side panel",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": 0.49,
+        "y": 0.4,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.02,
+        "y": 0.8,
+        "z": 0.8
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "back",
+       "label": "back panel",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.4,
+        "z": -0.39
+       },
+       "size_m": {
+        "x": 0.96,
+        "y": 0.8,
+        "z": 0.02
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "bottom",
+       "label": "bottom panel",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.01,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.96,
+        "y": 0.02,
+        "z": 0.78
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "shelf-1",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.27,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.96,
+        "y": 0.02,
+        "z": 0.78
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "shelf-2",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.53,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.96,
+        "y": 0.02,
+        "z": 0.78
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Replaced the solid body with an open shelf unit: two side panels, a back panel, a bottom panel, and two shelves, all in light grey paint.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 38224
+    }
+   },
+   "error": null,
+   "clock_s": 38.34,
+   "started_at": "2026-10-16T04:39:04+00:00",
+   "at": "2026-10-16T04:39:43+00:00",
+   "model_sha256": "6cbf6d4ab7cbfba5e43ce27c34ca64823e3a82ca662faf29534bf1cc9d82f583",
+   "triangles": 72
+  },
+  "o03": {
+   "http_status": 200,
+   "wall_s": 30.5,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 30.45,
+     "answer": "{\"add\": [{\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.568421, \"y\": 0.71, \"z\": 0.05}, \"id\": \"shelf-bottom\", \"label\": \"bottom shelf\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.473686, \"y\": 0.02, \"z\": 0.6}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.568421, \"y\": 0.78, \"z\": 0.05}, \"id\": \"shelf-middle\", \"label\": \"middle shelf\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.473686, \"y\": 0.02, \"z\": 0.6}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.568421, \"y\": 0.85, \"z\": 0.05}, \"id\": \"shelf-top\", \"label\": \"top shelf\", \"material\": \"paint_light_grey\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.473686, \"y\": 0.02, \"z\": 0.6}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 1.8, \"y\": 1.2, \"z\": 0.7}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [\"drawer-unit\"], \"repeat\": [], \"summary\": \"Replaced the drawer unit with three open shelves at bottom, middle and top height, all in paint_light_grey.\"}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.8,
+      "y": 1.2,
+      "z": 0.7
+     },
+     "parts": [
+      {
+       "id": "leg-fll",
+       "label": "front left leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.686842,
+        "y": 0.43,
+        "z": 0.32
+       },
+       "size_m": {
+        "x": 0.047368,
+        "y": 0.86,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "leg-frr",
+       "label": "front right leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.592106,
+        "y": 0.43,
+        "z": 0.32
+       },
+       "size_m": {
+        "x": 0.047368,
+        "y": 0.86,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "leg-bll",
+       "label": "back left leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.686842,
+        "y": 0.43,
+        "z": -0.32
+       },
+       "size_m": {
+        "x": 0.047368,
+        "y": 0.86,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "leg-brr",
+       "label": "back right leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.592106,
+        "y": 0.43,
+        "z": -0.32
+       },
+       "size_m": {
+        "x": 0.047368,
+        "y": 0.86,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "top",
+       "label": "worktop",
+       "shape": "box",
+       "material": "wood",
+       "center_m": {
+        "x": -0.047368,
+        "y": 0.88,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.705264,
+        "y": 0.04,
+        "z": 0.7
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "monitor",
+       "label": "monitor",
+       "shape": "box",
+       "material": "hmi_screen",
+       "center_m": {
+        "x": 0.615789,
+        "y": 1.05,
+        "z": 0.3
+       },
+       "size_m": {
+        "x": 0.568422,
+        "y": 0.3,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "shelf-bottom",
+       "label": "bottom shelf",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": -0.568421,
+        "y": 0.71,
+        "z": 0.05
+       },
+       "size_m": {
+        "x": 0.473686,
+        "y": 0.02,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "shelf-middle",
+       "label": "middle shelf",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": -0.568421,
+        "y": 0.78,
+        "z": 0.05
+       },
+       "size_m": {
+        "x": 0.473686,
+        "y": 0.02,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "shelf-top",
+       "label": "top shelf",
+       "shape": "box",
+       "material": "paint_light_grey",
+       "center_m": {
+        "x": -0.568421,
+        "y": 0.85,
+        "z": 0.05
+       },
+       "size_m": {
+        "x": 0.473686,
+        "y": 0.02,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      }
+     ]
+    },
+    "summary": "Replaced the drawer unit with three open shelves at bottom, middle and top height, all in paint_light_grey.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 30450
+    }
+   },
+   "error": null,
+   "clock_s": 30.5,
+   "started_at": "2026-10-16T04:39:43+00:00",
+   "at": "2026-10-16T04:40:13+00:00",
+   "model_sha256": "a24865f62368ae78eddeba50d5177c6df297f8e381ecc6490e548efd27e83324",
+   "triangles": 108
+  },
+  "o04": {
+   "http_status": 502,
+   "wall_s": 108.59,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 48.99,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.22,\n        \"y\": 0.15,\n        \"z\": 0\n      },\n      \"id\": \"bar-left\",\n      \"label\": \"left vertical bar\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.01,\n        \"y\": 0.3,\n        \"z\": 0.35\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.22,\n        \"y\": 0.15,\n        \"z\": 0\n      },\n      \"id\": \"bar-right\",\n      \"label\": \"right vertical bar\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.01,\n        \"y\": 0.3,\n        \"z\": 0.35\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0,\n        \"y\": 0.15,\n        \"z\": -0.17\n      },\n      \"id\": \"bar-back\",\n      \"label\": \"back vertical bar\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.5,\n        \"y\": 0.3,\n        \"z\": 0.01\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0,\n        \"y\": 0.15,\n        \"z\": 0.17\n      },\n      \"id\": \"bar-front\",\n      \"label\": \"front vertical bar\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.5,\n        \"y\": 0.3,\n        \"z\": 0.01\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.5,\n    \"y\": 0.3,\n    \"z\": 0.35\n  },\n  \"message\": null,\n  \"not_representable\": [\n    \"thin vertical bars\"\n  ],\n  \"outcome\": \"revision\",\n  \"remove\": [\n    \"body\"\n  ],\n  \"repeat\": [\n    {\n      \"counts\": {\n        \"x\": 3,\n        \"y\": 1,\n        \"z\": 1\n      },\n      \"part\": {\n        \"axis\": \"y\",\n        \"basis\": \"inferred\",\n        \"center_m\": {\n          \"x\": -0.1,\n          \"y\": 0.15,\n          \"z\": 0\n        },\n        \"id\": \"bar-inner\",\n        \"label\": \"inner vertical bar\",\n        \"material\": \"steel_dark\",\n        \"narrow_end\": null,\n        \"shape\": \"box\",\n        \"size_m\": {\n          \"x\": 0.01,\n          \"y\": 0.3,\n          \"z\": 0.35\n        },\n        \"taper\": null\n      },\n      \"step_m\": {\n        \"x\": 0.1,\n        \"y\": 0,\n        \"z\": 0\n      }\n    }\n  ],\n  \"summary\": \"Replaced solid body with wire basket frame: left, right, front and back bars in steel_dark, plus three inner vertical bars spaced evenly, to represent an open-top basket with gaps.\"\n}"
+    },
+    {
+     "attempt": 1,
+     "seconds": 59.47,
+     "answer": "{\n  \"add\": [],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.5,\n    \"y\": 0.3,\n    \"z\": 0.35\n  },\n  \"message\": null,\n  \"not_representable\": [\n    \"thin vertical bars\"\n  ],\n  \"outcome\": \"revision\",\n  \"remove\": [\n    \"body\",\n    \"bar-left\",\n    \"bar-right\",\n    \"bar-back\",\n    \"bar-front\",\n    \"bar-inner\"\n  ],\n  \"repeat\": [\n    {\n      \"counts\": {\n        \"x\": 5,\n        \"y\": 1,\n        \"z\": 1\n      },\n      \"part\": {\n        \"axis\": \"y\",\n        \"basis\": \"inferred\",\n        \"center_m\": {\n          \"x\": -0.2,\n          \"y\": 0.15,\n          \"z\": 0\n        },\n        \"id\": \"slat-left\",\n        \"label\": \"left vertical slat\",\n        \"material\": \"steel_dark\",\n        \"narrow_end\": null,\n        \"shape\": \"box\",\n        \"size_m\": {\n          \"x\": 0.01,\n          \"y\": 0.3,\n          \"z\": 0.33\n        },\n        \"taper\": null\n      },\n      \"step_m\": {\n        \"x\": 0.1,\n        \"y\": 0,\n        \"z\": 0\n      }\n    },\n    {\n      \"counts\": {\n        \"x\": 5,\n        \"y\": 1,\n        \"z\": 1\n      },\n      \"part\": {\n        \"axis\": \"y\",\n        \"basis\": \"inferred\",\n        \"center_m\": {\n          \"x\": -0.2,\n          \"y\": 0.15,\n          \"z\": 0.17\n        },\n        \"id\": \"slat-front\",\n        \"label\": \"front vertical slat\",\n        \"material\": \"steel_dark\",\n        \"narrow_end\": null,\n        \"shape\": \"box\",\n        \"size_m\": {\n          \"x\": 0.01,\n          \"y\": 0.3,\n          \"z\": 0.01\n        },\n        \"taper\": null\n      },\n      \"step_m\": {\n        \"x\": 0.1,\n        \"y\": 0,\n        \"z\": 0\n      }\n    },\n    {\n      \"counts\": {\n        \"x\": 5,\n        \"y\": 1,\n        \"z\": 1\n      },\n      \"part\": {\n        \"axis\": \"y\",\n        \"basis\": \"inferred\",\n        \"center_m\": {\n          \"x\": -0.2,\n          \"y\": 0.15,\n          \"z\": -0.17\n        },\n        \"id\": \"slat-back\",\n        \"label\": \"back vertical slat\",\n        \"material\": \"steel_dark\",\n        \"narrow_end\": null,\n        \"shape\": \"box\",\n        \"size_m\": {\n          \"x\": 0.01,\n          \"y\": 0.3,\n          \"z\": 0.01\n        },\n        \"taper\": null\n      },\n      \"step_m\": {\n        \"x\": 0.1,\n        \"y\": 0,\n        \"z\": 0\n      }\n    },\n    {\n      \"counts\": {\n        \"x\": 3,\n        \"y\": 1,\n        \"z\": 1\n      },\n      \"part\": {\n        \"axis\": \"y\",\n        \"basis\": \"inferred\",\n        \"center_m\": {\n          \"x\": 0,\n          \"y\": 0.15,\n          \"z\": 0\n        },\n        \"id\": \"slat-inner\",\n        \"label\": \"inner vertical slat\",\n        \"material\": \"steel_dark\",\n        \"narrow_end\": null,\n        \"shape\": \"box\",\n        \"size_m\": {\n          \"x\": 0.01,\n          \"y\": 0.3,\n          \"z\": 0.33\n        },\n        \"taper\": null\n      },\n      \"step_m\": {\n        \"x\": 0.25,\n        \"y\": 0,\n        \"z\": 0\n      }\n    }\n  ],\n  \"summary\": \"Replaced solid body and removed hidden or solid-side parts; added left, right, front, back and inner slats as repeated steel_dark bars with gaps, ensuring all are visible and aligned to form an open wire basket frame.\"\n}"
+    }
+   ],
+   "result": null,
+   "error": "ASU Voyager (qwen3-235b-a22b-instruct-2507) did not return a usable revision after 2 attempts. Last problem: remove and change must name existing part ids; unknown: ['bar-left', 'bar-right', 'bar-back', 'bar-front', 'bar-inner']",
+   "clock_s": 108.59,
+   "started_at": "2026-10-16T04:40:13+00:00",
+   "at": "2026-10-16T04:42:02+00:00"
+  },
+  "o05": {
+   "http_status": 200,
+   "wall_s": 105.71,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 42.56,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.86,\n        \"z\": -0.22\n      },\n      \"id\": \"slat-top\",\n      \"label\": \"top slat\",\n      \"material\": \"fabric_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"rounded_box\",\n      \"size_m\": {\n        \"x\": 0.5,\n        \"y\": 0.06,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.72,\n        \"z\": -0.22\n      },\n      \"id\": \"slat-middle\",\n      \"label\": \"middle slat\",\n      \"material\": \"fabric_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"rounded_box\",\n      \"size_m\": {\n        \"x\": 0.5,\n        \"y\": 0.06,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.58,\n        \"z\": -0.22\n      },\n      \"id\": \"slat-bottom\",\n      \"label\": \"bottom slat\",\n      \"material\": \"fabric_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"rounded_box\",\n      \"size_m\": {\n        \"x\": 0.5,\n        \"y\": 0.06,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.5,\n    \"y\": 0.95,\n    \"z\": 0.5\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [\n    \"back\"\n  ],\n  \"repeat\": [],\n  \"summary\": \"Replaced the solid backrest with three horizontal fabric-covered slats at top, middle and bottom positions, maintaining the original height and depth.\"\n}"
+    },
+    {
+     "attempt": 1,
+     "seconds": 62.96,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.25,\n        \"y\": 0.72,\n        \"z\": -0.22\n      },\n      \"id\": \"post-left\",\n      \"label\": \"left support post\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.035,\n        \"y\": 0.46,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.25,\n        \"y\": 0.72,\n        \"z\": -0.22\n      },\n      \"id\": \"post-right\",\n      \"label\": \"right support post\",\n      \"material\": \"steel_dark\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.035,\n        \"y\": 0.46,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.86,\n        \"z\": -0.22\n      },\n      \"id\": \"slat-top\",\n      \"label\": \"top slat\",\n      \"material\": \"fabric_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"rounded_box\",\n      \"size_m\": {\n        \"x\": 0.43,\n        \"y\": 0.06,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.72,\n        \"z\": -0.22\n      },\n      \"id\": \"slat-middle\",\n      \"label\": \"middle slat\",\n      \"material\": \"fabric_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"rounded_box\",\n      \"size_m\": {\n        \"x\": 0.43,\n        \"y\": 0.06,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.58,\n        \"z\": -0.22\n      },\n      \"id\": \"slat-bottom\",\n      \"label\": \"bottom slat\",\n      \"material\": \"fabric_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"rounded_box\",\n      \"size_m\": {\n        \"x\": 0.43,\n        \"y\": 0.06,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.5,\n    \"y\": 0.95,\n    \"z\": 0.5\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [\n    \"back\"\n  ],\n  \"repeat\": [],\n  \"summary\": \"Replaced the solid backrest with three horizontal slats attached to two vertical steel posts that connect to the seat, ensuring all slats are structurally supported.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 0.5,
+      "y": 0.95,
+      "z": 0.5
+     },
+     "parts": [
+      {
+       "id": "seat",
+       "label": "seat",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.45,
+        "z": 0.01
+       },
+       "size_m": {
+        "x": 0.467288,
+        "y": 0.07,
+        "z": 0.48
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.198598,
+        "y": 0.21,
+        "z": -0.2025
+       },
+       "size_m": {
+        "x": 0.032712,
+        "y": 0.42,
+        "z": 0.035
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.198598,
+        "y": 0.21,
+        "z": -0.2025
+       },
+       "size_m": {
+        "x": 0.032712,
+        "y": 0.42,
+        "z": 0.035
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.198598,
+        "y": 0.21,
+        "z": 0.2225
+       },
+       "size_m": {
+        "x": 0.032712,
+        "y": 0.42,
+        "z": 0.035
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.198598,
+        "y": 0.21,
+        "z": 0.2225
+       },
+       "size_m": {
+        "x": 0.032712,
+        "y": 0.42,
+        "z": 0.035
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "post-left",
+       "label": "left support post",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.233645,
+        "y": 0.72,
+        "z": -0.22
+       },
+       "size_m": {
+        "x": 0.03271,
+        "y": 0.46,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "post-right",
+       "label": "right support post",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.233645,
+        "y": 0.72,
+        "z": -0.22
+       },
+       "size_m": {
+        "x": 0.03271,
+        "y": 0.46,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "slat-top",
+       "label": "top slat",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.86,
+        "z": -0.22
+       },
+       "size_m": {
+        "x": 0.401868,
+        "y": 0.06,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "slat-middle",
+       "label": "middle slat",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.72,
+        "z": -0.22
+       },
+       "size_m": {
+        "x": 0.401868,
+        "y": 0.06,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "slat-bottom",
+       "label": "bottom slat",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.58,
+        "z": -0.22
+       },
+       "size_m": {
+        "x": 0.401868,
+        "y": 0.06,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      }
+     ]
+    },
+    "summary": "Replaced the solid backrest with three horizontal slats attached to two vertical steel posts that connect to the seat, ensuring all slats are structurally supported.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size.",
+     "Parts were scaled ×0.935 in width (X) to fit the 0.500 m envelope."
+    ],
+    "problems": [
+     "“top slat” does not touch anything that holds it up; it floats.",
+     "“middle slat” does not touch anything that holds it up; it floats.",
+     "“bottom slat” does not touch anything that holds it up; it floats."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 2,
+     "first_attempt_valid": true,
+     "latency_ms": 105518
+    }
+   },
+   "error": null,
+   "clock_s": 105.71,
+   "started_at": "2026-10-16T04:42:02+00:00",
+   "at": "2026-10-16T04:43:48+00:00",
+   "model_sha256": "7e24180e9dd7d88ef05a49a3cb577a5f6fbe12657b67b2bd196fb9f4896976ff",
+   "triangles": 1272
+  },
+  "t01": {
+   "http_status": 200,
+   "wall_s": 59.52,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 59.49,
+     "answer": "{\"add\": [{\"axis\": \"y\", \"basis\": \"stated\", \"center_m\": {\"x\": 0.0, \"y\": 1.140089, \"z\": 0.0}, \"id\": \"glass-top\", \"label\": \"glass top\", \"material\": \"glass_clear\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 2.253, \"y\": 0.051822, \"z\": 0.876}, \"taper\": null}], \"change\": [{\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -1.08895, \"y\": 0.557089, \"z\": -0.4088}, \"id\": \"leg-1\", \"label\": \"leg\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.0751, \"y\": 1.114178, \"z\": 0.0584}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 1.08895, \"y\": 0.557089, \"z\": -0.4088}, \"id\": \"leg-2\", \"label\": \"leg\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.0751, \"y\": 1.114178, \"z\": 0.0584}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -1.08895, \"y\": 0.557089, \"z\": 0.4088}, \"id\": \"leg-3\", \"label\": \"leg\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.0751, \"y\": 1.114178, \"z\": 0.0584}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 1.08895, \"y\": 0.557089, \"z\": 0.4088}, \"id\": \"leg-4\", \"label\": \"leg\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.0751, \"y\": 1.114178, \"z\": 0.0584}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 0.259111, \"z\": 0.0}, \"id\": \"shelf\", \"label\": \"lower shelf\", \"material\": \"steel_dark\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 2.1028, \"y\": 0.02591, \"z\": 0.7592}, \"taper\": null}], \"envelope_m\": {\"x\": 2.253, \"y\": 1.166, \"z\": 0.876}, \"message\": null, \"not_representable\": [], \"outcome\": \"revision\", \"remove\": [\"top\"], \"repeat\": [], \"summary\": \"Replaced the wooden worktop with a clear glass top on the same steel frame and shelf.\"}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 2.253,
+      "y": 1.166,
+      "z": 0.876
+     },
+     "parts": [
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -1.08895,
+        "y": 0.557089,
+        "z": -0.4088
+       },
+       "size_m": {
+        "x": 0.0751,
+        "y": 1.114178,
+        "z": 0.0584
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 1.08895,
+        "y": 0.557089,
+        "z": -0.4088
+       },
+       "size_m": {
+        "x": 0.0751,
+        "y": 1.114178,
+        "z": 0.0584
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -1.08895,
+        "y": 0.557089,
+        "z": 0.4088
+       },
+       "size_m": {
+        "x": 0.0751,
+        "y": 1.114178,
+        "z": 0.0584
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 1.08895,
+        "y": 0.557089,
+        "z": 0.4088
+       },
+       "size_m": {
+        "x": 0.0751,
+        "y": 1.114178,
+        "z": 0.0584
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "shelf",
+       "label": "lower shelf",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.259111,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 2.1028,
+        "y": 0.02591,
+        "z": 0.7592
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "glass-top",
+       "label": "glass top",
+       "shape": "box",
+       "material": "glass_clear",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.140089,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 2.253,
+        "y": 0.051822,
+        "z": 0.876
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Replaced the wooden worktop with a clear glass top on the same steel frame and shelf.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 59491
+    }
+   },
+   "error": null,
+   "clock_s": 59.52,
+   "started_at": "2026-10-16T04:43:48+00:00",
+   "at": "2026-10-16T04:44:47+00:00",
+   "model_sha256": "10846416817d2ce948a2dcce940b6a0069a64b5b27a21ba5986d60415afb5cc6",
+   "triangles": 72
+  },
+  "t02": {
+   "http_status": 200,
+   "wall_s": 67.56,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 67.48,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": -0.87,\n        \"y\": 1.0,\n        \"z\": 0.0\n      },\n      \"id\": \"panel-left\",\n      \"label\": \"left side panel\",\n      \"material\": \"polycarbonate\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.02,\n        \"y\": 1.8,\n        \"z\": 0.6\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.87,\n        \"y\": 1.0,\n        \"z\": 0.0\n      },\n      \"id\": \"panel-right\",\n      \"label\": \"right side panel\",\n      \"material\": \"polycarbonate\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.02,\n        \"y\": 1.8,\n        \"z\": 0.6\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.87,\n        \"y\": 1.0,\n        \"z\": -0.27\n      },\n      \"id\": \"leg-1\",\n      \"label\": \"leg\",\n      \"material\": \"paint_blue\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 2.0,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.87,\n        \"y\": 1.0,\n        \"z\": -0.27\n      },\n      \"id\": \"leg-2\",\n      \"label\": \"leg\",\n      \"material\": \"paint_blue\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 2.0,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.87,\n        \"y\": 1.0,\n        \"z\": 0.27\n      },\n      \"id\": \"leg-3\",\n      \"label\": \"leg\",\n      \"material\": \"paint_blue\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 2.0,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.87,\n        \"y\": 1.0,\n        \"z\": 0.27\n      },\n      \"id\": \"leg-4\",\n      \"label\": \"leg\",\n      \"material\": \"paint_blue\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 2.0,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    }\n  ],\n  \"envelope_m\": {\n    \"x\": 1.8,\n    \"y\": 2.0,\n    \"z\": 0.6\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added clear plastic side panels on both ends, mounted just outside the left and right legs, and adjusted leg positions to ensure visibility; all other parts unchanged.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.8,
+      "y": 2.0,
+      "z": 0.6
+     },
+     "parts": [
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": -0.87,
+        "y": 1.0,
+        "z": -0.27
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 2.0,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.87,
+        "y": 1.0,
+        "z": -0.27
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 2.0,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": -0.87,
+        "y": 1.0,
+        "z": 0.27
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 2.0,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.87,
+        "y": 1.0,
+        "z": 0.27
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 2.0,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-1",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.15,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.08,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-2",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.75,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.08,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-3",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.35,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.08,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-4",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.95,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.08,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "panel-left",
+       "label": "left side panel",
+       "shape": "box",
+       "material": "polycarbonate",
+       "center_m": {
+        "x": -0.87,
+        "y": 1.0,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.02,
+        "y": 1.8,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "panel-right",
+       "label": "right side panel",
+       "shape": "box",
+       "material": "polycarbonate",
+       "center_m": {
+        "x": 0.87,
+        "y": 1.0,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.02,
+        "y": 1.8,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added clear plastic side panels on both ends, mounted just outside the left and right legs, and adjusted leg positions to ensure visibility; all other parts unchanged.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 67476
+    }
+   },
+   "error": null,
+   "clock_s": 67.56,
+   "started_at": "2026-10-16T04:44:47+00:00",
+   "at": "2026-10-16T04:45:55+00:00",
+   "model_sha256": "9412520ada2bb61d692c20b0d96cc0e90614d63798fd5cfaed689d1f7154c601",
+   "triangles": 120
+  },
+  "t03": {
+   "http_status": 200,
+   "wall_s": 26.44,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 26.35,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.617,\n        \"z\": -0.2385\n      },\n      \"id\": \"back-panel\",\n      \"label\": \"glass back panel\",\n      \"material\": \"glass_clear\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.955,\n        \"y\": 1.234,\n        \"z\": 0.01\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.955,\n    \"y\": 1.234,\n    \"z\": 0.477\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a glass back panel behind the shelves at z = -0.2385 m, touching the rear edges of the beams and legs.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 0.955,
+      "y": 1.234,
+      "z": 0.477
+     },
+     "parts": [
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": -0.461583,
+        "y": 0.617,
+        "z": -0.209949
+       },
+       "size_m": {
+        "x": 0.031834,
+        "y": 1.234,
+        "z": 0.047206
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.461583,
+        "y": 0.617,
+        "z": -0.209949
+       },
+       "size_m": {
+        "x": 0.031834,
+        "y": 1.234,
+        "z": 0.047206
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": -0.461583,
+        "y": 0.617,
+        "z": 0.214897
+       },
+       "size_m": {
+        "x": 0.031834,
+        "y": 1.234,
+        "z": 0.047206
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.461583,
+        "y": 0.617,
+        "z": 0.214897
+       },
+       "size_m": {
+        "x": 0.031834,
+        "y": 1.234,
+        "z": 0.047206
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-1",
+       "label": "shelf",
+       "shape": "box",
+       "material": "wood",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.09255,
+        "z": 0.002474
+       },
+       "size_m": {
+        "x": 0.955,
+        "y": 0.04936,
+        "z": 0.472052
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-2",
+       "label": "shelf",
+       "shape": "box",
+       "material": "wood",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.46275,
+        "z": 0.002474
+       },
+       "size_m": {
+        "x": 0.955,
+        "y": 0.04936,
+        "z": 0.472052
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-3",
+       "label": "shelf",
+       "shape": "box",
+       "material": "wood",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.83295,
+        "z": 0.002474
+       },
+       "size_m": {
+        "x": 0.955,
+        "y": 0.04936,
+        "z": 0.472052
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-4",
+       "label": "shelf",
+       "shape": "box",
+       "material": "wood",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.20315,
+        "z": 0.002474
+       },
+       "size_m": {
+        "x": 0.955,
+        "y": 0.04936,
+        "z": 0.472052
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "back-panel",
+       "label": "glass back panel",
+       "shape": "box",
+       "material": "glass_clear",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.617,
+        "z": -0.233552
+       },
+       "size_m": {
+        "x": 0.955,
+        "y": 1.234,
+        "z": 0.009896
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a glass back panel behind the shelves at z = -0.2385 m, touching the rear edges of the beams and legs.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 26353
+    }
+   },
+   "error": null,
+   "clock_s": 26.44,
+   "started_at": "2026-10-16T04:45:55+00:00",
+   "at": "2026-10-16T04:46:21+00:00",
+   "model_sha256": "a6f09bc4f23fb687cc76185d46e6f4c108c21fbafbca65bb4cd2158c99fcb03d",
+   "triangles": 108
+  },
+  "e01": {
+   "http_status": 200,
+   "wall_s": 65.99,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 65.94,
+     "answer": "{\n  \"add\": [],\n  \"change\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.308125,\n        \"y\": 0.218621,\n        \"z\": -0.293625\n      },\n      \"id\": \"leg-1\",\n      \"label\": \"leg\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.05075,\n        \"y\": 0.437242,\n        \"z\": 0.05075\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.308125,\n        \"y\": 0.218621,\n        \"z\": -0.293625\n      },\n      \"id\": \"leg-2\",\n      \"label\": \"leg\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.05075,\n        \"y\": 0.437242,\n        \"z\": 0.05075\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.308125,\n        \"y\": 0.218621,\n        \"z\": 0.322625\n      },\n      \"id\": \"leg-3\",\n      \"label\": \"leg\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.05075,\n        \"y\": 0.437242,\n        \"z\": 0.05075\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.308125,\n        \"y\": 0.218621,\n        \"z\": 0.322625\n      },\n      \"id\": \"leg-4\",\n      \"label\": \"leg\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.05075,\n        \"y\": 0.437242,\n        \"z\": 0.05075\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.468473,\n        \"z\": 0.0145\n      },\n      \"id\": \"seat\",\n      \"label\": \"seat\",\n      \"material\": \"paint_orange\",\n      \"narrow_end\": null,\n      \"shape\": \"rounded_box\",\n      \"size_m\": {\n        \"x\": 0.725,\n        \"y\": 0.072874,\n        \"z\": 0.696\n      },\n      \"taper\": null\n    }\n  ],\n  \"envelope_m\": {\n    \"x\": 0.725,\n    \"y\": 0.989,\n    \"z\": 0.725\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Changed the seat material to paint_orange and the four legs to safety_yellow.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 0.725,
+      "y": 0.989,
+      "z": 0.725
+     },
+     "parts": [
+      {
+       "id": "seat",
+       "label": "seat",
+       "shape": "rounded_box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.468473,
+        "z": 0.0145
+       },
+       "size_m": {
+        "x": 0.725,
+        "y": 0.072874,
+        "z": 0.696
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "back",
+       "label": "backrest",
+       "shape": "rounded_box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.749558,
+        "z": -0.319
+       },
+       "size_m": {
+        "x": 0.725,
+        "y": 0.478884,
+        "z": 0.087
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": -0.308125,
+        "y": 0.218621,
+        "z": -0.293625
+       },
+       "size_m": {
+        "x": 0.05075,
+        "y": 0.437242,
+        "z": 0.05075
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": 0.308125,
+        "y": 0.218621,
+        "z": -0.293625
+       },
+       "size_m": {
+        "x": 0.05075,
+        "y": 0.437242,
+        "z": 0.05075
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": -0.308125,
+        "y": 0.218621,
+        "z": 0.322625
+       },
+       "size_m": {
+        "x": 0.05075,
+        "y": 0.437242,
+        "z": 0.05075
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": 0.308125,
+        "y": 0.218621,
+        "z": 0.322625
+       },
+       "size_m": {
+        "x": 0.05075,
+        "y": 0.437242,
+        "z": 0.05075
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      }
+     ]
+    },
+    "summary": "Changed the seat material to paint_orange and the four legs to safety_yellow.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 65945
+    }
+   },
+   "error": null,
+   "clock_s": 65.99,
+   "started_at": "2026-10-16T04:46:21+00:00",
+   "at": "2026-10-16T04:47:27+00:00",
+   "model_sha256": "f68508895a9365da1dacffc387ec0a6b83876407d95a9dadabc294e0e1db86c4",
+   "triangles": 648
+  },
+  "e02": {
+   "http_status": 200,
+   "wall_s": 53.57,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 53.52,
+     "answer": "{\n  \"add\": [],\n  \"change\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.45,\n        \"y\": 0.45,\n        \"z\": 0.45\n      },\n      \"id\": \"leg1\",\n      \"label\": \"leg front right\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.9,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.45,\n        \"y\": 0.45,\n        \"z\": 0.45\n      },\n      \"id\": \"leg2\",\n      \"label\": \"leg front left\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.9,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.45,\n        \"y\": 0.45,\n        \"z\": -0.45\n      },\n      \"id\": \"leg3\",\n      \"label\": \"leg back right\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.9,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.45,\n        \"y\": 0.45,\n        \"z\": -0.45\n      },\n      \"id\": \"leg4\",\n      \"label\": \"leg back left\",\n      \"material\": \"safety_yellow\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.9,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.75,\n        \"z\": 0.0\n      },\n      \"id\": \"cylinder\",\n      \"label\": \"cylindrical body\",\n      \"material\": \"paint_white\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 1.0,\n        \"y\": 1.5,\n        \"z\": 1.0\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.15,\n        \"z\": 0.0\n      },\n      \"id\": \"cone\",\n      \"label\": \"conical bottom\",\n      \"material\": \"paint_white\",\n      \"narrow_end\": \"bottom\",\n      \"shape\": \"frustum\",\n      \"size_m\": {\n        \"x\": 1.0,\n        \"y\": 0.3,\n        \"z\": 1.0\n      },\n      \"taper\": 0.5\n    }\n  ],\n  \"envelope_m\": {\n    \"x\": 1.0,\n    \"y\": 1.5,\n    \"z\": 1.0\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Painted the tank shell (cylinder and cone) white and the legs safety yellow.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.0,
+      "y": 1.5,
+      "z": 1.0
+     },
+     "parts": [
+      {
+       "id": "cylinder",
+       "label": "cylindrical body",
+       "shape": "cylinder",
+       "material": "paint_white",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.75,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.0,
+        "y": 1.5,
+        "z": 1.0
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "cone",
+       "label": "conical bottom",
+       "shape": "frustum",
+       "material": "paint_white",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.15,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.0,
+        "y": 0.3,
+        "z": 1.0
+       },
+       "axis": null,
+       "taper": 0.5,
+       "narrow_end": "bottom",
+       "basis": "inferred"
+      },
+      {
+       "id": "leg1",
+       "label": "leg front right",
+       "shape": "cylinder",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": 0.45,
+        "y": 0.45,
+        "z": 0.45
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.9,
+        "z": 0.05
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "leg2",
+       "label": "leg front left",
+       "shape": "cylinder",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": -0.45,
+        "y": 0.45,
+        "z": 0.45
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.9,
+        "z": 0.05
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "leg3",
+       "label": "leg back right",
+       "shape": "cylinder",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": 0.45,
+        "y": 0.45,
+        "z": -0.45
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.9,
+        "z": 0.05
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "leg4",
+       "label": "leg back left",
+       "shape": "cylinder",
+       "material": "safety_yellow",
+       "center_m": {
+        "x": -0.45,
+        "y": 0.45,
+        "z": -0.45
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.9,
+        "z": 0.05
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      }
+     ]
+    },
+    "summary": "Painted the tank shell (cylinder and cone) white and the legs safety yellow.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 53516
+    }
+   },
+   "error": null,
+   "clock_s": 53.56,
+   "started_at": "2026-10-16T04:47:27+00:00",
+   "at": "2026-10-16T04:48:21+00:00",
+   "model_sha256": "6de640f9ce1028bdde9b97e21c2cacb954177e5795d577f846c9f48c7c9357aa",
+   "triangles": 768
+  },
+  "e03": {
+   "http_status": 200,
+   "wall_s": 51.76,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 51.7,
+     "answer": "{\"add\": [], \"change\": [{\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.875, \"y\": 0.04, \"z\": -0.38}, \"id\": \"leg-1\", \"label\": \"leg\", \"material\": \"plastic_black\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.05, \"y\": 0.08, \"z\": 0.05}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.875, \"y\": 0.04, \"z\": -0.38}, \"id\": \"leg-2\", \"label\": \"leg\", \"material\": \"plastic_black\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.05, \"y\": 0.08, \"z\": 0.05}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.875, \"y\": 0.04, \"z\": 0.37}, \"id\": \"leg-3\", \"label\": \"leg\", \"material\": \"plastic_black\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.05, \"y\": 0.08, \"z\": 0.05}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.875, \"y\": 0.04, \"z\": 0.37}, \"id\": \"leg-4\", \"label\": \"leg\", \"material\": \"plastic_black\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.05, \"y\": 0.08, \"z\": 0.05}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": -0.86, \"y\": 0.4, \"z\": 0.035}, \"id\": \"arm-l\", \"label\": \"armrest\", \"material\": \"fabric_grey\", \"narrow_end\": null, \"shape\": \"rounded_box\", \"size_m\": {\"x\": 0.18, \"y\": 0.6, \"z\": 0.78}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.86, \"y\": 0.4, \"z\": 0.035}, \"id\": \"arm-r\", \"label\": \"armrest\", \"material\": \"fabric_grey\", \"narrow_end\": null, \"shape\": \"rounded_box\", \"size_m\": {\"x\": 0.18, \"y\": 0.6, \"z\": 0.78}, \"taper\": null}], \"envelope_m\": {\"x\": 1.9, \"y\": 0.84, \"z\": 0.85}, \"message\": null, \"not_representable\": [\"dark blue fabric\"], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Changed leg material to black (plastic_black) and armrests to grey fabric; 'dark blue fabric' cannot be represented.\"}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.9,
+      "y": 0.84,
+      "z": 0.85
+     },
+     "parts": [
+      {
+       "id": "base",
+       "label": "seat base",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.26,
+        "z": 0.035
+       },
+       "size_m": {
+        "x": 1.9,
+        "y": 0.36,
+        "z": 0.78
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "back",
+       "label": "backrest",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.6,
+        "z": -0.305
+       },
+       "size_m": {
+        "x": 1.9,
+        "y": 0.48,
+        "z": 0.24
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "arm-l",
+       "label": "armrest",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": -0.86,
+        "y": 0.4,
+        "z": 0.035
+       },
+       "size_m": {
+        "x": 0.18,
+        "y": 0.6,
+        "z": 0.78
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "arm-r",
+       "label": "armrest",
+       "shape": "rounded_box",
+       "material": "fabric_grey",
+       "center_m": {
+        "x": 0.86,
+        "y": 0.4,
+        "z": 0.035
+       },
+       "size_m": {
+        "x": 0.18,
+        "y": 0.6,
+        "z": 0.78
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "plastic_black",
+       "center_m": {
+        "x": -0.875,
+        "y": 0.04,
+        "z": -0.38
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.08,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "plastic_black",
+       "center_m": {
+        "x": 0.875,
+        "y": 0.04,
+        "z": -0.38
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.08,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "plastic_black",
+       "center_m": {
+        "x": -0.875,
+        "y": 0.04,
+        "z": 0.37
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.08,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "plastic_black",
+       "center_m": {
+        "x": 0.875,
+        "y": 0.04,
+        "z": 0.37
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.08,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      }
+     ]
+    },
+    "summary": "Changed leg material to black (plastic_black) and armrests to grey fabric; 'dark blue fabric' cannot be represented.",
+    "partial": true,
+    "size_changed": false,
+    "not_represented": [
+     "dark blue fabric"
+    ],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 51700
+    }
+   },
+   "error": null,
+   "clock_s": 51.76,
+   "started_at": "2026-10-16T04:48:21+00:00",
+   "at": "2026-10-16T04:49:12+00:00",
+   "model_sha256": "fd24a506996b8cbb59deddea3f29ba93fb3d9e45807a47fe441e884c80da7867",
+   "triangles": 1248
+  },
+  "p01": {
+   "http_status": 200,
+   "wall_s": 27.08,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 27.02,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.606499,\n        \"z\": 0.00856\n      },\n      \"id\": \"seat-pad\",\n      \"label\": \"seat pad\",\n      \"material\": \"plastic_grey\",\n      \"narrow_end\": null,\n      \"shape\": \"rounded_box\",\n      \"size_m\": {\n        \"x\": 0.428,\n        \"y\": 0.02,\n        \"z\": 0.41088\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.428,\n    \"y\": 1.188,\n    \"z\": 0.428\n  },\n  \"message\": null,\n  \"not_representable\": [\n    \"make the chair fold flat\"\n  ],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a green seat pad on top of the seat; folding mechanism cannot be represented.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 0.428,
+      "y": 1.188,
+      "z": 0.428
+     },
+     "parts": [
+      {
+       "id": "seat",
+       "label": "seat",
+       "shape": "rounded_box",
+       "material": "wood",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.562737,
+        "z": 0.00856
+       },
+       "size_m": {
+        "x": 0.428,
+        "y": 0.087538,
+        "z": 0.41088
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "back",
+       "label": "backrest",
+       "shape": "rounded_box",
+       "material": "wood",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.900379,
+        "z": -0.18832
+       },
+       "size_m": {
+        "x": 0.428,
+        "y": 0.575242,
+        "z": 0.05136
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.1819,
+        "y": 0.262611,
+        "z": -0.17334
+       },
+       "size_m": {
+        "x": 0.02996,
+        "y": 0.525222,
+        "z": 0.02996
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.1819,
+        "y": 0.262611,
+        "z": -0.17334
+       },
+       "size_m": {
+        "x": 0.02996,
+        "y": 0.525222,
+        "z": 0.02996
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.1819,
+        "y": 0.262611,
+        "z": 0.19046
+       },
+       "size_m": {
+        "x": 0.02996,
+        "y": 0.525222,
+        "z": 0.02996
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.1819,
+        "y": 0.262611,
+        "z": 0.19046
+       },
+       "size_m": {
+        "x": 0.02996,
+        "y": 0.525222,
+        "z": 0.02996
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "seat-pad",
+       "label": "seat pad",
+       "shape": "rounded_box",
+       "material": "paint_green",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.606499,
+        "z": 0.00856
+       },
+       "size_m": {
+        "x": 0.428,
+        "y": 0.02,
+        "z": 0.41088
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a green seat pad on top of the seat; folding mechanism cannot be represented.",
+    "partial": true,
+    "size_changed": false,
+    "not_represented": [
+     "make the chair fold flat"
+    ],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size.",
+     "Coloured “seat pad” green, as asked."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 27021
+    }
+   },
+   "error": null,
+   "clock_s": 27.08,
+   "started_at": "2026-10-16T04:49:12+00:00",
+   "at": "2026-10-16T04:49:39+00:00",
+   "model_sha256": "841be9478b20f4228bd53a6f5b4063daebbd0377b9cc001b701ef9799b8f155e",
+   "triangles": 948
+  },
+  "p02": {
+   "http_status": 200,
+   "wall_s": 29.92,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 29.86,
+     "answer": "{\"add\": [{\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 0.15, \"z\": 0.31}, \"id\": \"label-1\", \"label\": \"label holder\", \"material\": \"paint_red\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.1, \"y\": 0.05, \"z\": 0.02}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 0.75, \"z\": 0.31}, \"id\": \"label-2\", \"label\": \"label holder\", \"material\": \"paint_red\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.1, \"y\": 0.05, \"z\": 0.02}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 1.35, \"z\": 0.31}, \"id\": \"label-3\", \"label\": \"label holder\", \"material\": \"paint_red\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.1, \"y\": 0.05, \"z\": 0.02}, \"taper\": null}, {\"axis\": \"y\", \"basis\": \"inferred\", \"center_m\": {\"x\": 0.0, \"y\": 1.95, \"z\": 0.31}, \"id\": \"label-4\", \"label\": \"label holder\", \"material\": \"paint_red\", \"narrow_end\": null, \"shape\": \"box\", \"size_m\": {\"x\": 0.1, \"y\": 0.05, \"z\": 0.02}, \"taper\": null}], \"change\": [], \"envelope_m\": {\"x\": 1.8, \"y\": 2.0, \"z\": 0.6}, \"message\": null, \"not_representable\": [\"print the bay numbers on them\"], \"outcome\": \"revision\", \"remove\": [], \"repeat\": [], \"summary\": \"Added a red label holder on each of the four beams; printing bay numbers cannot be shown.\"}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.8,
+      "y": 2.0,
+      "z": 0.6
+     },
+     "parts": [
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": -0.87,
+        "y": 1.0,
+        "z": -0.270968
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 2.0,
+        "z": 0.058064
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.87,
+        "y": 1.0,
+        "z": -0.270968
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 2.0,
+        "z": 0.058064
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": -0.87,
+        "y": 1.0,
+        "z": 0.251613
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 2.0,
+        "z": 0.058066
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.87,
+        "y": 1.0,
+        "z": 0.251613
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 2.0,
+        "z": 0.058066
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-1",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.15,
+        "z": -0.009677
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.08,
+        "z": 0.580646
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-2",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.75,
+        "z": -0.009677
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.08,
+        "z": 0.580646
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-3",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.35,
+        "z": -0.009677
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.08,
+        "z": 0.580646
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-4",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.95,
+        "z": -0.009677
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.08,
+        "z": 0.580646
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "label-1",
+       "label": "label holder",
+       "shape": "box",
+       "material": "paint_red",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.15,
+        "z": 0.290323
+       },
+       "size_m": {
+        "x": 0.1,
+        "y": 0.05,
+        "z": 0.019354
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "label-2",
+       "label": "label holder",
+       "shape": "box",
+       "material": "paint_red",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.75,
+        "z": 0.290323
+       },
+       "size_m": {
+        "x": 0.1,
+        "y": 0.05,
+        "z": 0.019354
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "label-3",
+       "label": "label holder",
+       "shape": "box",
+       "material": "paint_red",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.35,
+        "z": 0.290323
+       },
+       "size_m": {
+        "x": 0.1,
+        "y": 0.05,
+        "z": 0.019354
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "label-4",
+       "label": "label holder",
+       "shape": "box",
+       "material": "paint_red",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.95,
+        "z": 0.290323
+       },
+       "size_m": {
+        "x": 0.1,
+        "y": 0.05,
+        "z": 0.019354
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      }
+     ]
+    },
+    "summary": "Added a red label holder on each of the four beams; printing bay numbers cannot be shown.",
+    "partial": true,
+    "size_changed": false,
+    "not_represented": [
+     "print the bay numbers on them"
+    ],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size.",
+     "Parts were scaled ×0.968 in depth (Z) to fit the 0.600 m envelope.",
+     "Left out ““add a red label holder on each beam”: textures, printing, labels and patterns cannot be shown” from what cannot be shown: the colour is shown."
+    ],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 29862
+    }
+   },
+   "error": null,
+   "clock_s": 29.92,
+   "started_at": "2026-10-16T04:49:39+00:00",
+   "at": "2026-10-16T04:50:09+00:00",
+   "model_sha256": "fa44bf8525a9c61c0b5a160d4470b4f630ca96eaa51e058e73ef8edc6b4b23da",
+   "triangles": 144
+  },
+  "p03": {
+   "http_status": 200,
+   "wall_s": 64.33,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 15.7,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.043846,\n        \"z\": -0.1485\n      },\n      \"id\": \"bracket\",\n      \"label\": \"wall bracket\",\n      \"material\": \"paint_white\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.3,\n        \"y\": 0.4,\n        \"z\": 0.02\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.955,\n    \"y\": 1.357,\n    \"z\": 0.597\n  },\n  \"message\": null,\n  \"not_representable\": [\n    \"make the screen touch-sensitive\"\n  ],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a white wall bracket behind the screen; touch sensitivity cannot be represented.\"\n}"
+    },
+    {
+     "attempt": 1,
+     "seconds": 48.5,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.843846,\n        \"z\": -0.1485\n      },\n      \"id\": \"mount\",\n      \"label\": \"mounting plate\",\n      \"material\": \"paint_white\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.3,\n        \"y\": 0.02,\n        \"z\": 0.02\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.434373,\n        \"z\": -0.1485\n      },\n      \"id\": \"post\",\n      \"label\": \"wall mount post\",\n      \"material\": \"paint_white\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.02,\n        \"y\": 0.819746,\n        \"z\": 0.02\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.043846,\n        \"z\": -0.1485\n      },\n      \"id\": \"bracket\",\n      \"label\": \"wall bracket\",\n      \"material\": \"paint_white\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.3,\n        \"y\": 0.4,\n        \"z\": 0.02\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 0.955,\n    \"y\": 1.357,\n    \"z\": 0.597\n  },\n  \"message\": null,\n  \"not_representable\": [\n    \"make the screen touch-sensitive\"\n  ],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a white wall bracket with a mounting plate and post connecting it to the base, ensuring all parts are attached; touch sensitivity cannot be represented.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 0.955,
+      "y": 1.357,
+      "z": 0.597
+     },
+     "parts": [
+      {
+       "id": "base",
+       "label": "stand base",
+       "shape": "box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.023724,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.520908,
+        "y": 0.047448,
+        "z": 0.597
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "pole",
+       "label": "stand",
+       "shape": "cylinder",
+       "material": "aluminium",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.521923,
+        "z": -0.074625
+       },
+       "size_m": {
+        "x": 0.052092,
+        "y": 0.94895,
+        "z": 0.08955
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "frame",
+       "label": "screen frame",
+       "shape": "rounded_box",
+       "material": "paint_blue",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.043846,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.955,
+        "y": 0.626308,
+        "z": 0.104476
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "face",
+       "label": "screen",
+       "shape": "box",
+       "material": "hmi_screen",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.043846,
+        "z": 0.053731
+       },
+       "size_m": {
+        "x": 0.885544,
+        "y": 0.550392,
+        "z": 0.00597
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "mount",
+       "label": "mounting plate",
+       "shape": "box",
+       "material": "paint_white",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.843846,
+        "z": -0.1485
+       },
+       "size_m": {
+        "x": 0.3,
+        "y": 0.02,
+        "z": 0.02
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "post",
+       "label": "wall mount post",
+       "shape": "box",
+       "material": "paint_white",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.434373,
+        "z": -0.1485
+       },
+       "size_m": {
+        "x": 0.02,
+        "y": 0.819746,
+        "z": 0.02
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      },
+      {
+       "id": "bracket",
+       "label": "wall bracket",
+       "shape": "box",
+       "material": "paint_white",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.043846,
+        "z": -0.1485
+       },
+       "size_m": {
+        "x": 0.3,
+        "y": 0.4,
+        "z": 0.02
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a white wall bracket with a mounting plate and post connecting it to the base, ensuring all parts are attached; touch sensitivity cannot be represented.",
+    "partial": true,
+    "size_changed": false,
+    "not_represented": [
+     "make the screen touch-sensitive"
+    ],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [
+     "“mounting plate” is sunk 50 % into a part of the same material (paint white), so it is hard to tell apart.",
+     "“wall bracket” where you asked for it cannot be seen from the usual front-right view (only 0 % of it shows); turn the model to see it."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 2,
+     "first_attempt_valid": true,
+     "latency_ms": 64198
+    }
+   },
+   "error": null,
+   "clock_s": 64.32,
+   "started_at": "2026-10-16T04:50:09+00:00",
+   "at": "2026-10-16T04:51:14+00:00",
+   "model_sha256": "5247f07e47f44d8888efa048ce8eba5f7916031fc120c5e3c2b0926fcf9f4c83",
+   "triangles": 488
+  },
+  "p04": {
+   "http_status": 200,
+   "wall_s": 34.24,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 15.68,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.05,\n        \"z\": 0.0\n      },\n      \"id\": \"valve\",\n      \"label\": \"drain valve\",\n      \"material\": \"estop_red\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.1,\n        \"y\": 0.1,\n        \"z\": 0.1\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 1.0,\n    \"y\": 1.5,\n    \"z\": 1.0\n  },\n  \"message\": null,\n  \"not_representable\": [\n    \"insulated\"\n  ],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a red drain valve at the bottom of the cone; insulation cannot be shown.\"\n}"
+    },
+    {
+     "attempt": 1,
+     "seconds": 18.42,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.0,\n        \"z\": 0.0\n      },\n      \"id\": \"valve\",\n      \"label\": \"drain valve\",\n      \"material\": \"estop_red\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.1,\n        \"y\": 0.1,\n        \"z\": 0.1\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 1.0,\n    \"y\": 1.5,\n    \"z\": 1.0\n  },\n  \"message\": null,\n  \"not_representable\": [\n    \"insulated\"\n  ],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a red drain valve at the bottom tip of the cone, sitting on the outer surface; insulation cannot be shown.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.0,
+      "y": 1.5,
+      "z": 1.0
+     },
+     "parts": [
+      {
+       "id": "cylinder",
+       "label": "cylindrical body",
+       "shape": "cylinder",
+       "material": "stainless_steel",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.774194,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.0,
+        "y": 1.451612,
+        "z": 1.0
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "cone",
+       "label": "conical bottom",
+       "shape": "frustum",
+       "material": "stainless_steel",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.193549,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.0,
+        "y": 0.290322,
+        "z": 1.0
+       },
+       "axis": null,
+       "taper": 0.5,
+       "narrow_end": "bottom",
+       "basis": "inferred"
+      },
+      {
+       "id": "leg1",
+       "label": "leg front right",
+       "shape": "cylinder",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.45,
+        "y": 0.483871,
+        "z": 0.45
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.870966,
+        "z": 0.05
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "leg2",
+       "label": "leg front left",
+       "shape": "cylinder",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.45,
+        "y": 0.483871,
+        "z": 0.45
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.870966,
+        "z": 0.05
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "leg3",
+       "label": "leg back right",
+       "shape": "cylinder",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.45,
+        "y": 0.483871,
+        "z": -0.45
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.870966,
+        "z": 0.05
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "leg4",
+       "label": "leg back left",
+       "shape": "cylinder",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.45,
+        "y": 0.483871,
+        "z": -0.45
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.870966,
+        "z": 0.05
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "inferred"
+      },
+      {
+       "id": "valve",
+       "label": "drain valve",
+       "shape": "cylinder",
+       "material": "estop_red",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.048387,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.1,
+        "y": 0.096774,
+        "z": 0.1
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a red drain valve at the bottom tip of the cone, sitting on the outer surface; insulation cannot be shown.",
+    "partial": true,
+    "size_changed": false,
+    "not_represented": [
+     "insulated"
+    ],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size.",
+     "Parts were scaled ×0.968 in height (Y) to fit the 1.500 m envelope."
+    ],
+    "problems": [
+     "“drain valve” cannot be seen from the usual front-right view (only 0 % of it shows); turn the model to see it."
+    ],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 2,
+     "first_attempt_valid": true,
+     "latency_ms": 34099
+    }
+   },
+   "error": null,
+   "clock_s": 34.24,
+   "started_at": "2026-10-16T04:51:14+00:00",
+   "at": "2026-10-16T04:51:48+00:00",
+   "model_sha256": "d65a886b6f40c311b815554d44160c5eb9742349e55b96197d8423f2e6ea3035",
+   "triangles": 896
+  },
+  "s01": {
+   "http_status": 200,
+   "wall_s": 12.96,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 12.96,
+     "answer": "{\"add\":[],\"change\":[{\"axis\":\"y\",\"basis\":\"inferred\",\"center_m\":{\"x\":0.0,\"y\":1.140089,\"z\":0.0},\"id\":\"top\",\"label\":\"worktop\",\"material\":\"wood\",\"narrow_end\":null,\"shape\":\"box\",\"size_m\":{\"x\":2.253,\"y\":0.051822,\"z\":0.876},\"taper\":null}],\"envelope_m\":{\"x\":2.253,\"y\":1.166,\"z\":0.876},\"message\":null,\"not_representable\":[],\"outcome\":\"already_satisfied\",\"remove\":[],\"repeat\":[],\"summary\":\"The table already has a wooden top, so no changes were needed.\"}"
+    }
+   ],
+   "result": {
+    "outcome": "already_satisfied",
+    "message": "The current model already shows this.",
+    "spec": null,
+    "summary": null,
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [],
+    "problems": [],
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 12956
+    }
+   },
+   "error": null,
+   "clock_s": 12.96,
+   "started_at": "2026-10-16T04:51:48+00:00",
+   "at": "2026-10-16T04:52:01+00:00"
+  }
+ }
+}

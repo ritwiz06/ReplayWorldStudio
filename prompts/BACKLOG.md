@@ -267,14 +267,65 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P0
 - Dependencies: GEN-04
-- Baseline status: planned (added 2026-10-15 after GEN-04 as the M2 corrective task; M2 closes when it passes)
+- Status: **closed with its last criterion not met** (2026-10-16). Every other criterion is met, but the frozen visual review mean is 1.10, against the 1.2 gate. That failure is carried to GEN-06, and M2 is **not** complete. Commits: feature `586eb71` (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38850522476 green); pilot, check fixes and frozen set `7e7c473` (CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38851270841 green); results commit recorded in SESSION_LOG.md.
 - Done when:
-  - The evaluation host is kept awake, and real elapsed time is recorded beside monotonic time (the GEN-04 runner already records `clock_s`).
-  - The whole revision request, retries included, finishes within one 150 s budget. The openness retry runs only if it fits; otherwise the request is refused with the explicit "not open" message.
-  - Added parts that lie wholly inside another part, sink more than half into a part of the same material, or float are caught by a deterministic check. Each gets one feedback retry within the budget, or is reported in the dialog.
-  - A part the user names without a colour gets a material distinct from what it rests on. A requested colour is never called unavailable when an approved material matches it.
+  - Added parts are checked for being hidden, buried, floating, too small or out of view, and for colour. One shared retry, within one 150 s budget for the whole request; what remains is shown before Apply.
+  - Cancellation stops further provider work, and a late answer cannot change the project.
+  - Evaluation runs keep the host awake and record wall-clock and request-timer time; a pause is reported as a run fault.
   - A fresh frozen set (never the GEN-03 or GEN-04 sets) passes the same revision gates, including ≤ 5 % timeouts and a visual mean ≥ 1.2.
-- Note (2026-10-15): from the GEN-04 report. Timeouts 2/20 (both while the computer running the script was asleep; a diagnostic retry answered in time); visual mean 1.15 (m01 cushions invisible, c03 button hidden, c05 floating stack light, o03 no slat gaps).
+- Evidence (full report: docs/assist-evaluation/gen-05/report.md; ADR-044):
+  - **Checks** (`assist/visibility.py`), exact for every approved shape:
+    - hidden (≥ 95 % inside other opaque parts);
+    - buried (≥ 40 % in a part of the same material);
+    - floating (no touch chain to the floor or a kept part; hanging or mounted parts exempt);
+    - too small (a requested part, no size given, under 4 % of the object's largest side and under 12 px);
+    - unseen (under 15 % in a 200 × 150 z-buffer of the generator's meshes from the dialog's camera; requested parts only; same-label copies together; structure judged against the rear-left view too);
+    - solid slats.
+  - **Colours:**
+    - named colours are honoured, and a texture that cannot be shown is listed;
+    - an unnamed addition that blends into a kept part gets an approved contrasting finish;
+    - glass stays transparent.
+  - **Retry and budget.** One shared retry, within one budget (each call's timeout is what is left; a retry only if the remaining time covers the first attempt). After the budget, the first answer is shown with its problems; never an unchecked model.
+  - **Before Apply.** `problems` in the response; "Not clearly shown" and "Apply despite these problems" in the dialog; the problems are kept on the version's change list. Cancelling a request (a client disconnect) stops further calls.
+  - **Development** (bounded live runs; GEN-04 failures used as regressions, never as the new set), docs/assist-evaluation/gen-05.1.json:
+    - fixed by the retry: the stop button and the cable tray;
+    - recoloured: the cushions;
+    - still reported: the stack light (an 11 cm gap) and the crate's top slats.
+
+    Three regression answers are recorded for offline replay.
+  - **Pilot** (three new development examples through the whole path, docs/assist-evaluation/gen-05-pilot/). It found and fixed two gaps:
+    - tiny additions were not reported;
+    - a tangent touch on a round lid was missed (and parts of the starting model are now treated as supported).
+  - **Frozen set** (`7e7c473`, before any live call): 22 cases (6 visible additions, 5 open, 3 transparent, 3 explicit colours, 4 partial, 1 already satisfied; 10 on photo-made objects).
+  - **Run:** one sequential pass, 18.1 min, host kept awake, no run faults, no repeats.
+  - **Gates:**
+    - outcomes 21/22 ✓;
+    - change 19/20 ✓;
+    - size 20/20 ✓;
+    - open 2/2 ✓;
+    - listed 5/5 ✓;
+    - median 39.6 s ✓ (p95 105.7 s, max 108.6 s);
+    - timeouts 0/22 ✓;
+    - **visual mean 1.10 ✗**: two 7, one 8, zero 5. The zeros were the clear side panels and the glass back panel (invisible, with no warning), "armrests dark blue" (missed), and a bracket behind and a valve under (both warned).
+  - **Diagnostics:** retries 7/22, none cut by the budget; 6 of the 7 still ended with a problem listed; o04 failed with HTTP 502 (unusable answer twice).
+  - **Tests:**
+    - `services/api/tests/test_visibility.py` (19): every shape; hidden, buried, floating, framed and suspended parts; tiny, unseen and slats; requested vs unspecified colour; one shared retry; exhausted budget; retry timeout; cancellation; recorded replays;
+    - `tests/test_gen05_evaluation.py` (4);
+    - `e2e/improve.spec.ts` (4): problems shown before Apply and kept on the version; a late answer after Cancel changes nothing.
+
+### GEN-06 - Recognisable additions in the preview
+
+- Priority: P0
+- Dependencies: GEN-05
+- Baseline status: planned (added 2026-10-16 after GEN-05 as the M2 corrective task; M2 closes when it passes)
+- Done when:
+  - Glass and clear plastic are recognisable in the preview: a visible edge, or a minimum opacity. This is a versioned generator change, and existing models stay rebuildable. The visibility check counts perceptual contrast, not raw pixels.
+  - A requested small item with no size given is scaled deterministically up to a minimum visible size, and the change list says so.
+  - A colour phrase after "and" takes the clause's verb.
+  - A second preview angle is offered when an addition is placed behind or under something.
+  - The touch tolerance scales with part size.
+  - A fresh frozen set (never the GEN-03, GEN-04 or GEN-05 sets) passes the same revision gates, including a visual mean ≥ 1.2.
+- Note (2026-10-16): from the GEN-05 report. Every automatic gate passes; the visual mean is 1.10 (t02 and t03 invisible transparent panels, e03 colour missed, p03 and p04 out of view, several small items).
 - Evidence: not recorded
 
 ## M3 - Image to editable world

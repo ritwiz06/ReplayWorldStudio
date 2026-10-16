@@ -631,3 +631,51 @@ For a new decision, append: ID, date, status, context, options considered, decis
 - Evidence: docs/assist-evaluation/gen-04/{criteria.md (frozen in `1f8d31b`), results/, scores.json, review.json, report.md}; development runs docs/assist-evaluation/gen-04.1–3.json; `services/api/tests/test_revisions.py`, `tests/test_gen04_evaluation.py`, `apps/web/e2e/improve.spec.ts`.
 - Revisit when: GEN-05 bounds the wait and checks visibility; the generator gains openings, rotated parts or textures; or a faster model is offered.
 
+
+### ADR-044 - Visible, time-bounded revisions: checks on additions, one shared retry, one budget
+
+- Date: 2026-10-16. Status: adopted (GEN-05).
+- Context: GEN-04's frozen run failed the visual gate (1.15). Added parts were present in the specification but could not be seen: cushions sunk into a seat of the same fabric, a stop button inside its box, a floating stack light, "slatted" sides drawn as single boards, a cable tray hidden under a top. GEN-04's retries could also take a fresh 150 s each (o04 ran 181 s), and the evaluation host slept during two requests unnoticed.
+- Options considered:
+  - trust the model's own description of what it drew (the failures above were all described as done);
+  - a render-based check in the browser (the generator merges parts per material, so part identity is lost there);
+  - deterministic geometric and rendered checks in the API on the parts a revision adds, a single shared corrected answer, and one budget (chosen).
+- Decision:
+  - **Checks on additions** (`assist/visibility.py`, exact membership for every approved shape):
+    - hidden (≥ 95 % inside other opaque parts);
+    - buried (≥ 40 % inside a part of the same material);
+    - floating (no chain of touching parts to the floor or to a part kept from the current model; a part the instruction says hangs or is mounted is exempt);
+    - too small (a requested part with no size given, under 4 % of the object's largest side and under 12 pixels);
+    - unseen: under 15 % visible in a 200 × 150 z-buffer of the generator's own meshes from the review dialog's default camera. Only parts named by the user's words are judged; copies with the same label are judged together; the object's structure is judged against the rear-left view as well;
+    - solid slats, when the user asked for slats or gaps.
+  - **Colours.**
+    - A colour named for a part is honoured (recoloured if the model did not) and never called unavailable.
+    - A texture that cannot be shown ("red fabric") is listed, and the colour is drawn.
+    - An unnamed addition that blends into an existing part gets an approved contrasting finish.
+    - Glass stays transparent and never hides what is behind it.
+  - **One shared retry, one budget.**
+    - At most one corrected answer covers every problem: an unusable answer, not open, or additions that cannot be seen.
+    - The whole request has one 150 s budget (the provider timeout setting). Each attempt's timeout is what is left, and a retry runs only if the remaining time covers at least the first attempt's duration (and 20 s).
+    - If the corrected answer cannot be had, the first answer is shown with its problems. An answer is never accepted without its checks.
+    - A problem at a place the user chose ("under the top") is reported but not retried.
+  - **Problems before Apply.** The response gained `problems`. The dialog shows "Not clearly shown: …" and "Apply despite these problems". If the user applies anyway, the problems are kept on the version's change list. Project files are unchanged (schema 0.7.0).
+  - **Cancellation.** The endpoint watches for the client disconnecting. Cancelling stops further provider calls; a call in flight ends within the budget, and its answer is discarded. The browser ignores any late answer.
+  - **Run conditions in evaluations.**
+    - The runner keeps the host awake (`caffeinate -i -w <pid>`).
+    - It records the request timer and the real clock for every request.
+    - A difference over 5 s is a run fault, reported separately; results are never reclassified.
+- Rationale: GEN-04's invisible additions were all described by the model as done, so the check has to look at the geometry itself. The render uses the generator's own meshes and the dialog's own camera, so "seen" means what the user will see. One budget with one shared retry bounds the wait, and the dev and frozen runs stayed within it (longest 108.6 s).
+- Consequences:
+  - On the GEN-05 frozen set (docs/assist-evaluation/gen-05/report.md), every automatic revision gate passes: outcomes 21/22, change 19/20, size 20/20, open 2/2, listing 5/5, median 39.6 s, p95 105.7 s, timeouts 0/22, no run faults.
+  - The visual review mean is 1.10, against the 1.2 gate:
+    - transparent additions are practically invisible at the generator's 20–25 % opacity, and the pixel-based check does not see that;
+    - requested small items stay small;
+    - a colour phrase after "and" without its own verb was missed;
+    - parts placed behind or under something are warned about, but not visible in the one preview.
+  - The retry rarely removed a problem (6 of the 7 retried requests still listed one), so the before-Apply warnings carry most of the honesty. M2 stays open, and GEN-06 is the corrective task.
+- Evidence:
+  - docs/assist-evaluation/gen-05/{criteria.md (frozen in `7e7c473`), results/, scores.json, review.json, report.md, renders/};
+  - the pilot: docs/assist-evaluation/gen-05-pilot/;
+  - development: docs/assist-evaluation/gen-05.1.json;
+  - tests: `services/api/tests/test_visibility.py`, `tests/test_gen05_evaluation.py`, `apps/web/e2e/improve.spec.ts`.
+- Revisit when: GEN-06 makes transparent parts recognisable and enforces visible sizes, a second preview angle is added, or a faster model is offered.

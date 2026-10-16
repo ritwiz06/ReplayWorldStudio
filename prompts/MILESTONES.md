@@ -19,7 +19,7 @@ The earlier M2 ("Drawing import", 32-48 h) and the old total (208-312 h for M0-M
 | --- | --- | --- | --- |
 | M0 | Foundation | **Complete** (2026-10-09/10; SET-01..03) | Existing repo inspected; reproducible web/API baseline; docs, lockfiles and CI; no remote changes. |
 | M1 | World and assets | **Complete** (2026-10-10; WRL-01..04) | One coherent industrial scene; catalog metadata; reliable editing, save/reload and graphic benchmark. |
-| M2 | Guided creation and described objects | 48-72 h | A first-time user can describe a missing object in ordinary language, review a typed proposal that separates stated facts from inferences, confirm the dimensions that matter, see an original provisional model, place it through the command path, and change it with one bounded language request; a manual builder works without the AI provider; an evaluated description and edit set (GEN-01..03; GEN-04 and then GEN-05 added 2026-10-15 as corrective tasks). |
+| M2 | Guided creation and described objects | 48-72 h | A first-time user can describe a missing object in ordinary language, review a typed proposal that separates stated facts from inferences, confirm the dimensions that matter, see an original provisional model, place it through the command path, and change it with one bounded language request; a manual builder works without the AI provider; an evaluated description and edit set (GEN-01..03; GEN-04, GEN-05 and GEN-06 added 2026-10-15/16 as corrective tasks). |
 | M3 | Image to editable world | 60-100 h (feasibility first) | One image becomes a reviewed, editable scene: a vision model proposes objects, the user sets scale from a known dimension and accepts, corrects or rejects each object; held-out precision, scale error and correction time are reported (IMG-01..03). |
 | M4 | Drawing import | 32-48 h | Supported DXF ingestion, scale review, layer/block mapping and correction workflow; PDF/PNG reference; imported equipment lands in the same world model and review flow as described and image objects (IMP-01..03). |
 | M5 | Spatial checks | 28-40 h | Footprint, service-envelope and defined route checks with seeded fixtures and highlighted evidence (GEO-01..02). |
@@ -44,6 +44,13 @@ Remaining estimate (M2-M9): 296-468 focused hours. Add 20 % contingency: about 3
 - Results: outcomes 18/20 and unrepresentable features listed 8/8, with change, size, openness and median wait all passing.
 - Two gates fail: timeouts 2/20 (gate 5 %; both while the computer running the script was asleep, and a diagnostic retry answered in time) and the visual review mean 1.15 (gate 1.2). GEN-04 is therefore closed with its last criterion not met.
 - **M2 stays open.** **GEN-05** (visible and time-bounded revisions, P0) is added. It bounds the whole revision wait, retries included, to 150 s; checks that added parts are visible (not hidden, sunk into a part of the same material, or floating); and is re-tested on a fresh frozen set.
+
+**Scope note (2026-10-16, GEN-05).** GEN-05 delivered checks that added parts can be seen, one shared retry and one 150 s budget per request, cancellation, and before-Apply warnings. Its fresh frozen set was run once on the default model ([report](../docs/assist-evaluation/gen-05/report.md)).
+
+- The set had 22 cases and was committed in `7e7c473` before the run.
+- Every automatic revision gate passes: outcomes 21/22, timeouts 0/22, median 39.6 s, p95 105.7 s, and no run faults with the host kept awake.
+- The visual review mean is 1.10, against 1.2. Transparent additions are not recognisable, small items stay small, one colour phrase was missed, and parts behind or under something cannot be seen in the one preview.
+- **M2 stays open.** **GEN-06** (recognisable additions in the preview, P0) is added: recognisable transparent parts, a deterministic visible minimum size, colour-phrase parsing, a second preview angle, a size-scaled touch tolerance, and a fresh frozen set.
 
 ### Original baseline (superseded 2026-10-10)
 
