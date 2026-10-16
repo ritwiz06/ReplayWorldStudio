@@ -1,0 +1,382 @@
+{
+ "model": "qwen3-235b-a22b-instruct-2507",
+ "missing": [],
+ "summary": {
+  "gates": {
+   "outcome_as_expected": {
+    "passed": 3,
+    "of": 3,
+    "share": 1.0,
+    "gate": ">= 85%",
+    "pass": true
+   },
+   "change_present": {
+    "passed": 3,
+    "of": 3,
+    "share": 1.0,
+    "gate": ">= 75%",
+    "pass": true
+   },
+   "size_as_asked": {
+    "passed": 3,
+    "of": 3,
+    "share": 1.0,
+    "gate": ">= 90%",
+    "pass": true
+   },
+   "open_below_half": {
+    "passed": 0,
+    "of": 0,
+    "share": null,
+    "gate": ">= 90%",
+    "pass": false
+   },
+   "unrepresentable_listed": {
+    "passed": 0,
+    "of": 0,
+    "share": null,
+    "gate": ">= 80%",
+    "pass": false
+   },
+   "waiting_median": {
+    "n": 3,
+    "median_s": 22.0,
+    "p95_s": 55.0,
+    "max_s": 55.0,
+    "gate": "<= 60 s",
+    "pass": true
+   },
+   "timeouts": {
+    "timeouts": 0,
+    "of": 3,
+    "gate": "<= 5%",
+    "pass": true
+   },
+   "visual_review": {
+    "n": 3,
+    "mean": 1.67,
+    "distribution": {
+     "0": 0,
+     "1": 1,
+     "2": 2
+    },
+    "counted_as_zero": [],
+    "rendered_only_mean": 1.67,
+    "gate": ">= 1.2",
+    "pass": true
+   }
+  },
+  "all_gates_pass": false,
+  "diagnostics": {
+   "proposals": 3,
+   "partial_proposals": 0,
+   "first_attempt_valid": {
+    "passed": 3,
+    "of": 3,
+    "share": 1.0
+   },
+   "retried": 0,
+   "other_parts_kept": {
+    "passed": 0,
+    "of": 0,
+    "share": null
+   },
+   "unexpected_listings": [],
+   "with_hidden_parts": {
+    "passed": 0,
+    "of": 3,
+    "share": 0.0
+   },
+   "overlaps_separated": 0,
+   "answer_chars_max": 2123,
+   "leaks": 0,
+   "by_group": {
+    "transparent": {
+     "passed": 1,
+     "of": 1,
+     "share": 1.0
+    },
+    "explicit-colour": {
+     "passed": 1,
+     "of": 1,
+     "share": 1.0
+    },
+    "stated-size": {
+     "passed": 1,
+     "of": 1,
+     "share": 1.0
+    }
+   }
+  },
+  "failures": [],
+  "run_conditions": {
+   "requests": 3,
+   "total_request_s": 96.9,
+   "total_clock_s": 96.9,
+   "retried": 0,
+   "budget_cut_retries": [],
+   "run_faults": {},
+   "provider_calls": 3
+  },
+  "visibility": {
+   "proposals_with_problems": {
+    "passed": 0,
+    "of": 3,
+    "share": 0.0
+   },
+   "visible_additions_clear": {
+    "passed": 2,
+    "of": 2,
+    "share": 1.0
+   },
+   "problems": {},
+   "colour_notes": {}
+  },
+  "visual_context": {
+   "fixed_gen05_camera": {
+    "n": 3,
+    "mean": 1,
+    "distribution": {
+     "0": 1,
+     "1": 1,
+     "2": 1
+    },
+    "note": "GEN-05's light-background front-right camera, no edges; a different viewing method"
+   },
+   "dialog_rendered_only_mean": 1.67
+  },
+  "honesty": {
+   "low_scores_warned": {
+    "passed": 0,
+    "of": 1,
+    "share": 0.0
+   },
+   "low_scores_without_warning": [
+    "pp3"
+   ]
+  },
+  "stated_sizes_kept": {
+   "passed": 1,
+   "of": 1,
+   "share": 1.0
+  },
+  "adjustments": {},
+  "views": {
+   "front-right": 3,
+   "rear-left": 0,
+   "low-front": 0
+  }
+ },
+ "cases": [
+  {
+   "id": "pp1",
+   "category": "transparent",
+   "expect": "proposal",
+   "target_origin": "builder",
+   "wall_s": 22.04,
+   "attempts": 1,
+   "answer_chars": [
+    693
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 6,
+    "shapes": 1,
+    "materials": 2,
+    "largest_part_share": 0.044,
+    "envelope_m": [
+     1.5,
+     0.9,
+     0.75
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 7,
+    "shapes": 1,
+    "materials": 3,
+    "largest_part_share": 0.044,
+    "envelope_m": [
+     1.5,
+     0.9,
+     0.75
+    ]
+   },
+   "summary": "Added a clear glass shelf under the top at y=0.7 m, centered, sized to fit within the leg frame.",
+   "change_checks": {
+    "material:glass_clear|polycarbonate": true,
+    "part:shelf": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "worktop (box, wood)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "leg (box, steel_dark)",
+    "lower shelf (box, steel_dark)",
+    "glass shelf (box, glass_clear)"
+   ],
+   "clock_s": 22.04,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "additions_clear": true,
+   "provider_calls": 1,
+   "view": "front-right",
+   "adjustments": []
+  },
+  {
+   "id": "pp2",
+   "category": "explicit-colour",
+   "expect": "proposal",
+   "target_origin": "builder",
+   "wall_s": 55.02,
+   "attempts": 1,
+   "answer_chars": [
+    2123
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [
+    "Size kept: the instruction did not ask for a different size."
+   ],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 8,
+    "shapes": 1,
+    "materials": 2,
+    "largest_part_share": 0.04,
+    "envelope_m": [
+     1.8,
+     2.0,
+     0.6
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 8,
+    "shapes": 1,
+    "materials": 3,
+    "largest_part_share": 0.04,
+    "envelope_m": [
+     1.8,
+     2.0,
+     0.6
+    ]
+   },
+   "summary": "Painted the four legs white and the top beam (beam-4) red.",
+   "change_checks": {
+    "material:paint_white|signal_white": true,
+    "material:estop_red|paint_red|signal_red": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "leg (box, paint_white)",
+    "leg (box, paint_white)",
+    "leg (box, paint_white)",
+    "leg (box, paint_white)",
+    "shelf (box, paint_orange)",
+    "shelf (box, paint_orange)",
+    "shelf (box, paint_orange)",
+    "shelf (box, paint_red)"
+   ],
+   "clock_s": 55.02,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "provider_calls": 1,
+   "view": "front-right",
+   "adjustments": []
+  },
+  {
+   "id": "pp3",
+   "category": "stated-size",
+   "expect": "proposal",
+   "target_origin": "builder",
+   "wall_s": 19.87,
+   "attempts": 1,
+   "answer_chars": [
+    658
+   ],
+   "timeout": false,
+   "leak": false,
+   "outcome": "proposal",
+   "partial": false,
+   "outcome_ok": true,
+   "first_attempt_valid": true,
+   "message": null,
+   "not_represented": [],
+   "checks": [],
+   "geometry_before": {
+    "hidden_parts": [],
+    "parts": 4,
+    "shapes": 3,
+    "materials": 3,
+    "largest_part_share": 0.081,
+    "envelope_m": [
+     1.1,
+     1.43,
+     0.4
+    ]
+   },
+   "geometry": {
+    "hidden_parts": [],
+    "parts": 5,
+    "shapes": 3,
+    "materials": 4,
+    "largest_part_share": 0.079,
+    "envelope_m": [
+     1.1,
+     1.43,
+     0.4
+    ]
+   },
+   "summary": "Added a 5 cm red indicator light on top of the frame.",
+   "change_checks": {
+    "part:light|indicator": true,
+    "material:estop_red|paint_red|signal_red": true
+   },
+   "change_present": true,
+   "size_ok": true,
+   "overlaps_separated": 0,
+   "parts": [
+    "stand base (box, plastic_black)",
+    "stand (cylinder, aluminium)",
+    "screen frame (rounded_box, plastic_black)",
+    "screen (box, hmi_screen)",
+    "red indicator light (cylinder, signal_red)"
+   ],
+   "clock_s": 19.87,
+   "problems": [],
+   "budget_cut_retry": false,
+   "colour_notes": [],
+   "additions_clear": true,
+   "provider_calls": 1,
+   "stated_sizes_kept": true,
+   "view": "front-right",
+   "adjustments": []
+  }
+ ]
+}

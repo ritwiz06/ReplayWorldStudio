@@ -1,0 +1,471 @@
+{
+ "set": "gen-08 pilot (development examples, not held out)",
+ "targets": {
+  "builder-table": {
+   "origin": "builder",
+   "name": "Workbench",
+   "described_as": null,
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 1.5,
+     "y": 0.9,
+     "z": 0.75
+    },
+    "parts": [
+     {
+      "id": "top",
+      "label": "worktop",
+      "shape": "box",
+      "material": "wood",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.88,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.5,
+       "y": 0.04,
+       "z": 0.75
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-1",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.725,
+       "y": 0.43,
+       "z": -0.35
+      },
+      "size_m": {
+       "x": 0.05,
+       "y": 0.86,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-2",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.725,
+       "y": 0.43,
+       "z": -0.35
+      },
+      "size_m": {
+       "x": 0.05,
+       "y": 0.86,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-3",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": -0.725,
+       "y": 0.43,
+       "z": 0.35
+      },
+      "size_m": {
+       "x": 0.05,
+       "y": 0.86,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-4",
+      "label": "leg",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.725,
+       "y": 0.43,
+       "z": 0.35
+      },
+      "size_m": {
+       "x": 0.05,
+       "y": 0.86,
+       "z": 0.05
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "shelf",
+      "label": "lower shelf",
+      "shape": "box",
+      "material": "steel_dark",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.2,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.4,
+       "y": 0.02,
+       "z": 0.65
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "builder-rack": {
+   "origin": "builder",
+   "name": "Shelving rack",
+   "described_as": null,
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 1.8,
+     "y": 2.0,
+     "z": 0.6
+    },
+    "parts": [
+     {
+      "id": "leg-1",
+      "label": "leg",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": -0.87,
+       "y": 1.0,
+       "z": -0.27
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 2.0,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-2",
+      "label": "leg",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": 0.87,
+       "y": 1.0,
+       "z": -0.27
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 2.0,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-3",
+      "label": "leg",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": -0.87,
+       "y": 1.0,
+       "z": 0.27
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 2.0,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "leg-4",
+      "label": "leg",
+      "shape": "box",
+      "material": "paint_blue",
+      "center_m": {
+       "x": 0.87,
+       "y": 1.0,
+       "z": 0.27
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 2.0,
+       "z": 0.06
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "beam-1",
+      "label": "shelf",
+      "shape": "box",
+      "material": "paint_orange",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.15,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.8,
+       "y": 0.08,
+       "z": 0.6
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "beam-2",
+      "label": "shelf",
+      "shape": "box",
+      "material": "paint_orange",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.75,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.8,
+       "y": 0.08,
+       "z": 0.6
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "beam-3",
+      "label": "shelf",
+      "shape": "box",
+      "material": "paint_orange",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.35,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.8,
+       "y": 0.08,
+       "z": 0.6
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "beam-4",
+      "label": "shelf",
+      "shape": "box",
+      "material": "paint_orange",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.95,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.8,
+       "y": 0.08,
+       "z": 0.6
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  },
+  "builder-screen": {
+   "origin": "builder",
+   "name": "Screen on a stand",
+   "described_as": null,
+   "spec": {
+    "format": "rws-geometry/1",
+    "envelope_m": {
+     "x": 1.1,
+     "y": 1.43,
+     "z": 0.4
+    },
+    "parts": [
+     {
+      "id": "base",
+      "label": "stand base",
+      "shape": "box",
+      "material": "plastic_black",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.025,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 0.6,
+       "y": 0.05,
+       "z": 0.4
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "pole",
+      "label": "stand",
+      "shape": "cylinder",
+      "material": "aluminium",
+      "center_m": {
+       "x": 0.0,
+       "y": 0.55,
+       "z": -0.05
+      },
+      "size_m": {
+       "x": 0.06,
+       "y": 1.0,
+       "z": 0.06
+      },
+      "axis": "y",
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "frame",
+      "label": "screen frame",
+      "shape": "rounded_box",
+      "material": "plastic_black",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.1,
+       "z": 0.0
+      },
+      "size_m": {
+       "x": 1.1,
+       "y": 0.66,
+       "z": 0.07
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     },
+     {
+      "id": "face",
+      "label": "screen",
+      "shape": "box",
+      "material": "hmi_screen",
+      "center_m": {
+       "x": 0.0,
+       "y": 1.1,
+       "z": 0.036
+      },
+      "size_m": {
+       "x": 1.02,
+       "y": 0.58,
+       "z": 0.004
+      },
+      "axis": null,
+      "taper": null,
+      "narrow_end": null,
+      "basis": "entered"
+     }
+    ]
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "pp1",
+   "category": "transparent",
+   "target": "builder-table",
+   "instruction": "add a clear glass shelf under the top",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "material:glass_clear|polycarbonate",
+    "part:shelf"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "stated_parts": [],
+   "keep_other_parts": false,
+   "visible_additions": true,
+   "notes": ""
+  },
+  {
+   "id": "pp2",
+   "category": "explicit-colour",
+   "target": "builder-rack",
+   "instruction": "paint the posts white and the top beam red",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "material:paint_white|signal_white",
+    "material:estop_red|paint_red|signal_red"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "stated_parts": [],
+   "keep_other_parts": false,
+   "visible_additions": false,
+   "notes": ""
+  },
+  {
+   "id": "pp3",
+   "category": "stated-size",
+   "target": "builder-screen",
+   "instruction": "add a 5 cm red indicator light on top of the frame",
+   "expect": "proposal",
+   "size": "keep",
+   "visible_change": [
+    "part:light|indicator",
+    "material:estop_red|paint_red|signal_red"
+   ],
+   "open": false,
+   "unrepresentable": [],
+   "stated_parts": [
+    {
+     "label": "light|indicator",
+     "size_m": 0.05
+    }
+   ],
+   "keep_other_parts": false,
+   "visible_additions": true,
+   "notes": ""
+  }
+ ]
+}

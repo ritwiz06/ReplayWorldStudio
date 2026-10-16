@@ -1,0 +1,48 @@
+{
+ "reviewer": "Claude (the assistant running this evaluation), not a study participant",
+ "method": "GEN-08 pilot: numbered sheets scored from the pictures before the key or any score was opened.",
+ "viewing_method": "fixed",
+ "sheets": {
+  "Sheet 01": {
+   "score": 1,
+   "corrections": 1,
+   "note": "A small red light on the frame; small."
+  },
+  "Sheet 02": {
+   "score": 0,
+   "corrections": 1,
+   "note": "No glass shelf can be seen on the light background."
+  },
+  "Sheet 03": {
+   "score": 2,
+   "corrections": 0,
+   "note": "Posts white, top beam red."
+  }
+ },
+ "model": "qwen3-235b-a22b-instruct-2507",
+ "key": {
+  "Sheet 01": "pp3",
+  "Sheet 02": "pp1",
+  "Sheet 03": "pp2"
+ },
+ "cases": {
+  "pp3": {
+   "sheet": "Sheet 01",
+   "score": 1,
+   "corrections": 1,
+   "note": "A small red light on the frame; small."
+  },
+  "pp1": {
+   "sheet": "Sheet 02",
+   "score": 0,
+   "corrections": 1,
+   "note": "No glass shelf can be seen on the light background."
+  },
+  "pp2": {
+   "sheet": "Sheet 03",
+   "score": 2,
+   "corrections": 0,
+   "note": "Posts white, top beam red."
+  }
+ }
+}

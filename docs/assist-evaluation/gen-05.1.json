@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-16T04:22:18+00:00",
+  "date": "2026-10-16T06:46:59+00:00",
   "service": "ASU Voyager",
   "base_url": "https://openai.rc.asu.edu/v1",
   "model": "qwen3-235b-a22b-instruct-2507",
@@ -323,47 +323,6 @@
       "clock_s": 123.6
     },
     {
-      "label": "gen04-cushions",
-      "instruction": "add two square cushions on the seat and make the backrest recline when I press a button",
-      "outcome": "proposal",
-      "message": null,
-      "attempts": 1,
-      "first_attempt_valid": true,
-      "latency_s": 23.3,
-      "wall_s": 23.4,
-      "clock_s": 23.4,
-      "problems": [],
-      "answer_chars": [
-        824
-      ],
-      "partial": true,
-      "summary": "Added two square cushions on the seat; the reclining backrest with a button is not representable.",
-      "size_changed": false,
-      "checks": [
-        "Size kept: the instruction did not ask for a different size.",
-        "Coloured “cushion” paint white so it stands out from the “seat base” it sits on (no colour was asked for)."
-      ],
-      "not_represented": [
-        "recline when I press a button"
-      ],
-      "parts_before": 8,
-      "parts_after": 10,
-      "largest_part_share_before": 0.393,
-      "largest_part_share_after": 0.393,
-      "parts": [
-        "seat base (rounded_box, fabric_grey, 1.558 x 0.297 x 0.635 m)",
-        "backrest (rounded_box, fabric_grey, 1.558 x 0.395 x 0.195 m)",
-        "armrest (rounded_box, fabric_grey, 0.148 x 0.494 x 0.635 m)",
-        "armrest (rounded_box, fabric_grey, 0.148 x 0.494 x 0.635 m)",
-        "leg (box, steel_dark, 0.041 x 0.066 x 0.041 m)",
-        "leg (box, steel_dark, 0.041 x 0.066 x 0.041 m)",
-        "leg (box, steel_dark, 0.041 x 0.066 x 0.041 m)",
-        "leg (box, steel_dark, 0.041 x 0.066 x 0.041 m)",
-        "cushion (box, paint_white, 0.312 x 0.100 x 0.312 m)",
-        "cushion (box, paint_white, 0.312 x 0.100 x 0.312 m)"
-      ]
-    },
-    {
       "label": "gen04-slatted-crate",
       "instruction": "make it an open-top wooden crate made of slats with gaps between them",
       "outcome": "proposal",
@@ -409,41 +368,263 @@
       ]
     },
     {
-      "label": "gen04-glass-top",
-      "instruction": "give it a glass top and make the top lift up on a gas spring for storage",
+      "label": "gen04-cushions",
+      "instruction": "add two square cushions on the seat and make the backrest recline when I press a button",
       "outcome": "proposal",
       "message": null,
       "attempts": 1,
       "first_attempt_valid": true,
-      "latency_s": 35.1,
-      "wall_s": 35.1,
-      "clock_s": 35.1,
+      "latency_s": 21.1,
+      "wall_s": 21.4,
+      "clock_s": 21.4,
       "problems": [],
+      "adjustments": [
+        {
+          "kind": "contrast",
+          "part_ids": [
+            "cushion-1"
+          ],
+          "text": "Coloured “cushion” paint white so it stands out from the “seat base” it sits on (no colour was asked for)."
+        }
+      ],
+      "view": "front-right",
       "answer_chars": [
-        870
+        818
       ],
       "partial": true,
-      "summary": "Added a glass top and repositioned the wooden top below it to allow for lifting mechanism; gas spring and storage function noted as not representable.",
+      "summary": "Added two square cushions on the seat; reclining backrest with button is not representable.",
       "size_changed": false,
       "checks": [
         "Size kept: the instruction did not ask for a different size."
       ],
       "not_represented": [
-        "lift up on a gas spring",
-        "storage"
+        "recline when I press a button"
       ],
-      "parts_before": 6,
-      "parts_after": 7,
-      "largest_part_share_before": 0.044,
-      "largest_part_share_after": 0.044,
+      "parts_before": 8,
+      "parts_after": 10,
+      "largest_part_share_before": 0.393,
+      "spec": {
+        "format": "rws-geometry/1",
+        "envelope_m": {
+          "x": 1.558,
+          "y": 0.692,
+          "z": 0.692
+        },
+        "parts": [
+          {
+            "id": "base",
+            "label": "seat base",
+            "shape": "rounded_box",
+            "material": "fabric_grey",
+            "center_m": {
+              "x": 0.0,
+              "y": 0.21419,
+              "z": 0.028494
+            },
+            "size_m": {
+              "x": 1.558,
+              "y": 0.296572,
+              "z": 0.635012
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "back",
+            "label": "backrest",
+            "shape": "rounded_box",
+            "material": "fabric_grey",
+            "center_m": {
+              "x": 0.0,
+              "y": 0.494286,
+              "z": -0.248306
+            },
+            "size_m": {
+              "x": 1.558,
+              "y": 0.395428,
+              "z": 0.195388
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "arm-l",
+            "label": "armrest",
+            "shape": "rounded_box",
+            "material": "fabric_grey",
+            "center_m": {
+              "x": -0.7052,
+              "y": 0.329523,
+              "z": 0.028494
+            },
+            "size_m": {
+              "x": 0.1476,
+              "y": 0.494286,
+              "z": 0.635012
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "arm-r",
+            "label": "armrest",
+            "shape": "rounded_box",
+            "material": "fabric_grey",
+            "center_m": {
+              "x": 0.7052,
+              "y": 0.329523,
+              "z": 0.028494
+            },
+            "size_m": {
+              "x": 0.1476,
+              "y": 0.494286,
+              "z": 0.635012
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "leg-1",
+            "label": "leg",
+            "shape": "box",
+            "material": "steel_dark",
+            "center_m": {
+              "x": -0.7175,
+              "y": 0.032952,
+              "z": -0.309365
+            },
+            "size_m": {
+              "x": 0.041,
+              "y": 0.065904,
+              "z": 0.040706
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "leg-2",
+            "label": "leg",
+            "shape": "box",
+            "material": "steel_dark",
+            "center_m": {
+              "x": 0.7175,
+              "y": 0.032952,
+              "z": -0.309365
+            },
+            "size_m": {
+              "x": 0.041,
+              "y": 0.065904,
+              "z": 0.040706
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "leg-3",
+            "label": "leg",
+            "shape": "box",
+            "material": "steel_dark",
+            "center_m": {
+              "x": -0.7175,
+              "y": 0.032952,
+              "z": 0.301223
+            },
+            "size_m": {
+              "x": 0.041,
+              "y": 0.065904,
+              "z": 0.040706
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "leg-4",
+            "label": "leg",
+            "shape": "box",
+            "material": "steel_dark",
+            "center_m": {
+              "x": 0.7175,
+              "y": 0.032952,
+              "z": 0.301223
+            },
+            "size_m": {
+              "x": 0.041,
+              "y": 0.065904,
+              "z": 0.040706
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "cushion-1",
+            "label": "cushion",
+            "shape": "box",
+            "material": "paint_white",
+            "center_m": {
+              "x": -0.3895,
+              "y": 0.362486,
+              "z": 0.028494
+            },
+            "size_m": {
+              "x": 0.3116,
+              "y": 0.1,
+              "z": 0.3116
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "stated"
+          },
+          {
+            "id": "cushion-2",
+            "label": "cushion",
+            "shape": "box",
+            "material": "paint_white",
+            "center_m": {
+              "x": 0.3895,
+              "y": 0.362486,
+              "z": 0.028494
+            },
+            "size_m": {
+              "x": 0.3116,
+              "y": 0.1,
+              "z": 0.3116
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "stated"
+          }
+        ]
+      },
+      "largest_part_share_after": 0.393,
       "parts": [
-        "wooden lifting top (box, wood, 1.010 x 0.018 x 0.505 m)",
-        "leg (box, steel_dark, 0.034 x 0.386 x 0.034 m)",
-        "leg (box, steel_dark, 0.034 x 0.386 x 0.034 m)",
-        "leg (box, steel_dark, 0.034 x 0.386 x 0.034 m)",
-        "leg (box, steel_dark, 0.034 x 0.386 x 0.034 m)",
-        "lower shelf (box, steel_dark, 0.943 x 0.009 x 0.438 m)",
-        "glass top (box, glass_clear, 1.010 x 0.018 x 0.505 m)"
+        "seat base (rounded_box, fabric_grey, 1.558 x 0.297 x 0.635 m)",
+        "backrest (rounded_box, fabric_grey, 1.558 x 0.395 x 0.195 m)",
+        "armrest (rounded_box, fabric_grey, 0.148 x 0.494 x 0.635 m)",
+        "armrest (rounded_box, fabric_grey, 0.148 x 0.494 x 0.635 m)",
+        "leg (box, steel_dark, 0.041 x 0.066 x 0.041 m)",
+        "leg (box, steel_dark, 0.041 x 0.066 x 0.041 m)",
+        "leg (box, steel_dark, 0.041 x 0.066 x 0.041 m)",
+        "leg (box, steel_dark, 0.041 x 0.066 x 0.041 m)",
+        "cushion (box, paint_white, 0.312 x 0.100 x 0.312 m)",
+        "cushion (box, paint_white, 0.312 x 0.100 x 0.312 m)"
       ]
     },
     {
@@ -453,22 +634,23 @@
       "message": null,
       "attempts": 2,
       "first_attempt_valid": true,
-      "latency_s": 43.9,
-      "wall_s": 44.0,
-      "clock_s": 44.0,
-      "problems": [
-        "“mounting post” cannot be seen from the usual front-right view (only 0 % of it shows)."
-      ],
+      "latency_s": 62.7,
+      "wall_s": 62.9,
+      "clock_s": 62.9,
+      "problems": [],
+      "adjustments": [],
+      "view": "front-right",
       "answer_chars": [
-        772,
-        1066
+        771,
+        1071
       ],
       "partial": false,
-      "summary": "Added a red emergency stop button with a black box mounted on a steel post attached to the conveyor frame at the front-left end.",
+      "summary": "Added a red emergency stop button on a black box, mounted on a steel post attached to the conveyor's end frame at the front-right corner.",
       "size_changed": false,
       "checks": [
         "Size kept: the instruction did not ask for a different size.",
-        "Parts were scaled ×0.921 in height (Y) to fit the 0.870 m envelope."
+        "Parts were scaled ×0.773 in height (Y) to fit the 0.870 m envelope.",
+        "Parts were scaled ×0.934 in depth (Z) to fit the 0.710 m envelope."
       ],
       "not_represented": [],
       "parts_before": 9,
@@ -489,13 +671,13 @@
             "material": "rubber_black",
             "center_m": {
               "x": 0.012346,
-              "y": 0.791746,
-              "z": 0.0
+              "y": 0.665067,
+              "z": -0.023355
             },
             "size_m": {
               "x": 1.975308,
-              "y": 0.018412,
-              "z": 0.6
+              "y": 0.015466,
+              "z": 0.560526
             },
             "axis": null,
             "taper": null,
@@ -509,13 +691,13 @@
             "material": "aluminium",
             "center_m": {
               "x": 0.012346,
-              "y": 0.736508,
-              "z": -0.33
+              "y": 0.618666,
+              "z": -0.331645
             },
             "size_m": {
               "x": 1.975308,
-              "y": 0.110476,
-              "z": 0.05
+              "y": 0.0928,
+              "z": 0.04671
             },
             "axis": null,
             "taper": null,
@@ -529,13 +711,13 @@
             "material": "aluminium",
             "center_m": {
               "x": 0.012346,
-              "y": 0.736508,
-              "z": 0.33
+              "y": 0.618666,
+              "z": 0.284934
             },
             "size_m": {
               "x": 1.975308,
-              "y": 0.110476,
-              "z": 0.05
+              "y": 0.0928,
+              "z": 0.046712
             },
             "axis": null,
             "taper": null,
@@ -549,13 +731,13 @@
             "material": "aluminium",
             "center_m": {
               "x": -0.925926,
-              "y": 0.745714,
-              "z": 0.0
+              "y": 0.6264,
+              "z": -0.023355
             },
             "size_m": {
               "x": 0.098764,
-              "y": 0.092064,
-              "z": 0.62
+              "y": 0.077332,
+              "z": 0.57921
             },
             "axis": "z",
             "taper": null,
@@ -569,13 +751,13 @@
             "material": "aluminium",
             "center_m": {
               "x": 0.950617,
-              "y": 0.745714,
-              "z": 0.0
+              "y": 0.6264,
+              "z": -0.023355
             },
             "size_m": {
               "x": 0.098766,
-              "y": 0.092064,
-              "z": 0.62
+              "y": 0.077332,
+              "z": 0.57921
             },
             "axis": "z",
             "taper": null,
@@ -589,13 +771,13 @@
             "material": "steel_dark",
             "center_m": {
               "x": -0.903704,
-              "y": 0.340635,
-              "z": -0.2775
+              "y": 0.286133,
+              "z": -0.282598
             },
             "size_m": {
               "x": 0.044444,
-              "y": 0.68127,
-              "z": 0.045
+              "y": 0.572266,
+              "z": 0.04204
             },
             "axis": null,
             "taper": null,
@@ -609,13 +791,13 @@
             "material": "steel_dark",
             "center_m": {
               "x": 0.928395,
-              "y": 0.340635,
-              "z": -0.2775
+              "y": 0.286133,
+              "z": -0.282598
             },
             "size_m": {
               "x": 0.044446,
-              "y": 0.68127,
-              "z": 0.045
+              "y": 0.572266,
+              "z": 0.04204
             },
             "axis": null,
             "taper": null,
@@ -629,13 +811,13 @@
             "material": "steel_dark",
             "center_m": {
               "x": -0.903704,
-              "y": 0.340635,
-              "z": 0.2775
+              "y": 0.286133,
+              "z": 0.235888
             },
             "size_m": {
               "x": 0.044444,
-              "y": 0.68127,
-              "z": 0.045
+              "y": 0.572266,
+              "z": 0.04204
             },
             "axis": null,
             "taper": null,
@@ -649,13 +831,13 @@
             "material": "steel_dark",
             "center_m": {
               "x": 0.928395,
-              "y": 0.340635,
-              "z": 0.2775
+              "y": 0.286133,
+              "z": 0.235888
             },
             "size_m": {
               "x": 0.044446,
-              "y": 0.68127,
-              "z": 0.045
+              "y": 0.572266,
+              "z": 0.04204
             },
             "axis": null,
             "taper": null,
@@ -664,20 +846,20 @@
           },
           {
             "id": "estop-post",
-            "label": "mounting post",
-            "shape": "cylinder",
+            "label": "e-stop post",
+            "shape": "box",
             "material": "steel_dark",
             "center_m": {
               "x": -0.925926,
-              "y": 0.745714,
-              "z": 0.2
+              "y": 0.6264,
+              "z": 0.284934
             },
             "size_m": {
               "x": 0.039508,
-              "y": 0.184128,
-              "z": 0.04
+              "y": 0.309332,
+              "z": 0.037368
             },
-            "axis": "y",
+            "axis": null,
             "taper": null,
             "narrow_end": null,
             "basis": "inferred"
@@ -689,13 +871,13 @@
             "material": "plastic_black",
             "center_m": {
               "x": -0.925926,
-              "y": 0.837778,
-              "z": 0.2
+              "y": 0.781066,
+              "z": 0.284934
             },
             "size_m": {
               "x": 0.148148,
-              "y": 0.046032,
-              "z": 0.15
+              "y": 0.116,
+              "z": 0.140132
             },
             "axis": null,
             "taper": null,
@@ -709,13 +891,13 @@
             "material": "estop_red",
             "center_m": {
               "x": -0.925926,
-              "y": 0.860794,
-              "z": 0.2
+              "y": 0.854533,
+              "z": 0.284934
             },
             "size_m": {
-              "x": 0.009876,
-              "y": 0.018412,
-              "z": 0.01
+              "x": 0.079012,
+              "y": 0.030934,
+              "z": 0.074736
             },
             "axis": "y",
             "taper": null,
@@ -724,20 +906,20 @@
           }
         ]
       },
-      "largest_part_share_after": 0.018,
+      "largest_part_share_after": 0.014,
       "parts": [
-        "belt (box, rubber_black, 1.975 x 0.018 x 0.600 m)",
-        "side frame (box, aluminium, 1.975 x 0.110 x 0.050 m)",
-        "side frame (box, aluminium, 1.975 x 0.110 x 0.050 m)",
-        "end drum (cylinder, aluminium, 0.099 x 0.092 x 0.620 m)",
-        "end drum (cylinder, aluminium, 0.099 x 0.092 x 0.620 m)",
-        "leg (box, steel_dark, 0.044 x 0.681 x 0.045 m)",
-        "leg (box, steel_dark, 0.044 x 0.681 x 0.045 m)",
-        "leg (box, steel_dark, 0.044 x 0.681 x 0.045 m)",
-        "leg (box, steel_dark, 0.044 x 0.681 x 0.045 m)",
-        "mounting post (cylinder, steel_dark, 0.040 x 0.184 x 0.040 m)",
-        "e-stop box (box, plastic_black, 0.148 x 0.046 x 0.150 m)",
-        "e-stop button (cylinder, estop_red, 0.010 x 0.018 x 0.010 m)"
+        "belt (box, rubber_black, 1.975 x 0.015 x 0.561 m)",
+        "side frame (box, aluminium, 1.975 x 0.093 x 0.047 m)",
+        "side frame (box, aluminium, 1.975 x 0.093 x 0.047 m)",
+        "end drum (cylinder, aluminium, 0.099 x 0.077 x 0.579 m)",
+        "end drum (cylinder, aluminium, 0.099 x 0.077 x 0.579 m)",
+        "leg (box, steel_dark, 0.044 x 0.572 x 0.042 m)",
+        "leg (box, steel_dark, 0.044 x 0.572 x 0.042 m)",
+        "leg (box, steel_dark, 0.044 x 0.572 x 0.042 m)",
+        "leg (box, steel_dark, 0.044 x 0.572 x 0.042 m)",
+        "e-stop post (box, steel_dark, 0.040 x 0.309 x 0.037 m)",
+        "e-stop box (box, plastic_black, 0.148 x 0.116 x 0.140 m)",
+        "e-stop button (cylinder, estop_red, 0.079 x 0.031 x 0.075 m)"
       ]
     },
     {
@@ -747,30 +929,25 @@
       "message": null,
       "attempts": 2,
       "first_attempt_valid": true,
-      "latency_s": 106.7,
-      "wall_s": 106.8,
-      "clock_s": 106.8,
-      "problems": [
-        "“light post” does not touch anything that holds it up; it floats.",
-        "“stack light” does not touch anything that holds it up; it floats.",
-        "“red light” does not touch anything that holds it up; it floats.",
-        "“amber light” does not touch anything that holds it up; it floats.",
-        "“green light” does not touch anything that holds it up; it floats."
-      ],
+      "latency_s": 70.3,
+      "wall_s": 70.5,
+      "clock_s": 70.5,
+      "problems": [],
+      "adjustments": [],
+      "view": "rear-left",
       "answer_chars": [
-        1836,
-        2073
+        1472,
+        1877
       ],
       "partial": false,
-      "summary": "Painted both guards safety yellow and added a stack light mounted on a steel post at the end near the conveyor's right side.",
+      "summary": "Painted both guards safety yellow and added a stack light on a post at the left end of the conveyor.",
       "size_changed": false,
       "checks": [
-        "Size kept: the instruction did not ask for a different size.",
-        "Parts were scaled ×0.83 in height (Y) to fit the 1.100 m envelope."
+        "Size kept: the instruction did not ask for a different size."
       ],
       "not_represented": [],
       "parts_before": 7,
-      "parts_after": 12,
+      "parts_after": 9,
       "largest_part_share_before": 0.03,
       "spec": {
         "format": "rws-geometry/1",
@@ -787,12 +964,12 @@
             "material": "steel_dark",
             "center_m": {
               "x": 0.0,
-              "y": 0.373585,
+              "y": 0.45,
               "z": 0.3075
             },
             "size_m": {
               "x": 0.05,
-              "y": 0.74717,
+              "y": 0.9,
               "z": 0.05
             },
             "axis": null,
@@ -807,12 +984,12 @@
             "material": "steel_dark",
             "center_m": {
               "x": 0.0,
-              "y": 0.373585,
+              "y": 0.45,
               "z": -0.1925
             },
             "size_m": {
               "x": 0.05,
-              "y": 0.74717,
+              "y": 0.9,
               "z": 0.05
             },
             "axis": null,
@@ -827,12 +1004,12 @@
             "material": "rubber_black",
             "center_m": {
               "x": 0.0,
-              "y": 0.730566,
+              "y": 0.88,
               "z": 0.0575
             },
             "size_m": {
               "x": 2.2,
-              "y": 0.016604,
+              "y": 0.02,
               "z": 0.5
             },
             "axis": null,
@@ -847,12 +1024,12 @@
             "material": "stainless_steel",
             "center_m": {
               "x": 0.0,
-              "y": 0.74717,
+              "y": 0.9,
               "z": 0.0575
             },
             "size_m": {
               "x": 2.2,
-              "y": 0.033208,
+              "y": 0.04,
               "z": 0.6
             },
             "axis": null,
@@ -867,12 +1044,12 @@
             "material": "safety_yellow",
             "center_m": {
               "x": 0.0,
-              "y": 0.747169,
+              "y": 0.9,
               "z": 0.3575
             },
             "size_m": {
               "x": 2.2,
-              "y": 0.166038,
+              "y": 0.2,
               "z": 0.02
             },
             "axis": null,
@@ -887,12 +1064,12 @@
             "material": "safety_yellow",
             "center_m": {
               "x": 0.0,
-              "y": 0.747169,
+              "y": 0.9,
               "z": -0.2425
             },
             "size_m": {
               "x": 2.2,
-              "y": 0.166038,
+              "y": 0.2,
               "z": 0.02
             },
             "axis": null,
@@ -907,12 +1084,12 @@
             "material": "hmi_screen",
             "center_m": {
               "x": 0.8,
-              "y": 0.830189,
+              "y": 1.0,
               "z": -0.2925
             },
             "size_m": {
               "x": 0.02,
-              "y": 0.166038,
+              "y": 0.2,
               "z": 0.15
             },
             "axis": null,
@@ -921,21 +1098,21 @@
             "basis": "stated"
           },
           {
-            "id": "post",
-            "label": "light post",
-            "shape": "cylinder",
+            "id": "post-stack-light",
+            "label": "stack light post",
+            "shape": "box",
             "material": "steel_dark",
             "center_m": {
-              "x": 1.05,
-              "y": 0.913207,
+              "x": -1.0,
+              "y": 0.45,
               "z": 0.0575
             },
             "size_m": {
-              "x": 0.04,
-              "y": 0.083018,
-              "z": 0.04
+              "x": 0.05,
+              "y": 0.9,
+              "z": 0.05
             },
-            "axis": "y",
+            "axis": null,
             "taper": null,
             "narrow_end": null,
             "basis": "inferred"
@@ -946,73 +1123,13 @@
             "shape": "cylinder",
             "material": "plastic_black",
             "center_m": {
-              "x": 1.05,
-              "y": 0.954717,
-              "z": 0.0575
-            },
-            "size_m": {
-              "x": 0.08,
-              "y": 0.083018,
-              "z": 0.08
-            },
-            "axis": "y",
-            "taper": null,
-            "narrow_end": null,
-            "basis": "inferred"
-          },
-          {
-            "id": "light-red",
-            "label": "red light",
-            "shape": "cylinder",
-            "material": "signal_red",
-            "center_m": {
-              "x": 1.05,
-              "y": 0.996227,
+              "x": -1.0,
+              "y": 0.9,
               "z": 0.0575
             },
             "size_m": {
               "x": 0.06,
-              "y": 0.04151,
-              "z": 0.06
-            },
-            "axis": "y",
-            "taper": null,
-            "narrow_end": null,
-            "basis": "inferred"
-          },
-          {
-            "id": "light-amber",
-            "label": "amber light",
-            "shape": "cylinder",
-            "material": "signal_amber",
-            "center_m": {
-              "x": 1.05,
-              "y": 1.037736,
-              "z": 0.0575
-            },
-            "size_m": {
-              "x": 0.06,
-              "y": 0.041508,
-              "z": 0.06
-            },
-            "axis": "y",
-            "taper": null,
-            "narrow_end": null,
-            "basis": "inferred"
-          },
-          {
-            "id": "light-green",
-            "label": "green light",
-            "shape": "cylinder",
-            "material": "signal_green",
-            "center_m": {
-              "x": 1.05,
-              "y": 1.079245,
-              "z": 0.0575
-            },
-            "size_m": {
-              "x": 0.06,
-              "y": 0.04151,
+              "y": 0.3,
               "z": 0.06
             },
             "axis": "y",
@@ -1022,20 +1139,17 @@
           }
         ]
       },
-      "largest_part_share_after": 0.025,
+      "largest_part_share_after": 0.03,
       "parts": [
-        "left support leg (box, steel_dark, 0.050 x 0.747 x 0.050 m)",
-        "right support leg (box, steel_dark, 0.050 x 0.747 x 0.050 m)",
-        "conveyor belt (box, rubber_black, 2.200 x 0.017 x 0.500 m)",
-        "conveyor frame (box, stainless_steel, 2.200 x 0.033 x 0.600 m)",
-        "left guard (box, safety_yellow, 2.200 x 0.166 x 0.020 m)",
-        "right guard (box, safety_yellow, 2.200 x 0.166 x 0.020 m)",
-        "control screen (rounded_box, hmi_screen, 0.020 x 0.166 x 0.150 m)",
-        "light post (cylinder, steel_dark, 0.040 x 0.083 x 0.040 m)",
-        "stack light (cylinder, plastic_black, 0.080 x 0.083 x 0.080 m)",
-        "red light (cylinder, signal_red, 0.060 x 0.042 x 0.060 m)",
-        "amber light (cylinder, signal_amber, 0.060 x 0.042 x 0.060 m)",
-        "green light (cylinder, signal_green, 0.060 x 0.042 x 0.060 m)"
+        "left support leg (box, steel_dark, 0.050 x 0.900 x 0.050 m)",
+        "right support leg (box, steel_dark, 0.050 x 0.900 x 0.050 m)",
+        "conveyor belt (box, rubber_black, 2.200 x 0.020 x 0.500 m)",
+        "conveyor frame (box, stainless_steel, 2.200 x 0.040 x 0.600 m)",
+        "left guard (box, safety_yellow, 2.200 x 0.200 x 0.020 m)",
+        "right guard (box, safety_yellow, 2.200 x 0.200 x 0.020 m)",
+        "control screen (rounded_box, hmi_screen, 0.020 x 0.200 x 0.150 m)",
+        "stack light post (box, steel_dark, 0.050 x 0.900 x 0.050 m)",
+        "stack light (cylinder, plastic_black, 0.060 x 0.300 x 0.060 m)"
       ]
     },
     {
@@ -1045,18 +1159,26 @@
       "message": null,
       "attempts": 2,
       "first_attempt_valid": true,
-      "latency_s": 66.7,
-      "wall_s": 66.8,
-      "clock_s": 66.8,
+      "latency_s": 49.9,
+      "wall_s": 50.0,
+      "clock_s": 50.0,
       "problems": [
-        "“cable tray” cannot be seen from the usual front-right view (only 0 % of it shows)."
+        {
+          "kind": "unseen",
+          "part_ids": [
+            "cable-tray"
+          ],
+          "text": "“cable tray” where you asked for it cannot be seen from the usual front-right view (only 0 % of it shows); the low view from the front shows it."
+        }
       ],
+      "adjustments": [],
+      "view": "low-front",
       "answer_chars": [
-        1128,
-        1139
+        1060,
+        1127
       ],
       "partial": false,
-      "summary": "Changed table top material to white paint and added a black plastic cable tray mounted under the top, touching its lower surface and staying visible.",
+      "summary": "Changed table top material to white and added a black cable tray mounted under the top, resting on its lower surface and staying visible.",
       "size_changed": false,
       "checks": [
         "Size kept: the instruction did not ask for a different size."
@@ -1225,10 +1347,179 @@
         "lower shelf (box, steel_dark, 1.273 x 0.033 x 0.460 m)",
         "cable tray (box, plastic_black, 1.300 x 0.020 x 0.450 m)"
       ]
+    },
+    {
+      "label": "gen04-glass-top",
+      "instruction": "give it a glass top and make the top lift up on a gas spring for storage",
+      "outcome": "proposal",
+      "message": null,
+      "attempts": 1,
+      "first_attempt_valid": true,
+      "latency_s": 28.0,
+      "wall_s": 28.0,
+      "clock_s": 28.0,
+      "problems": [],
+      "adjustments": [],
+      "view": "front-right",
+      "answer_chars": [
+        776
+      ],
+      "partial": true,
+      "summary": "Replaced the wooden top with a glass top; the lifting mechanism with gas spring for storage cannot be shown.",
+      "size_changed": false,
+      "checks": [
+        "Size kept: the instruction did not ask for a different size."
+      ],
+      "not_represented": [
+        "lift up on a gas spring for storage"
+      ],
+      "parts_before": 6,
+      "parts_after": 6,
+      "largest_part_share_before": 0.044,
+      "spec": {
+        "format": "rws-geometry/1",
+        "envelope_m": {
+          "x": 1.01,
+          "y": 0.404,
+          "z": 0.505
+        },
+        "parts": [
+          {
+            "id": "leg-1",
+            "label": "leg",
+            "shape": "box",
+            "material": "steel_dark",
+            "center_m": {
+              "x": -0.488167,
+              "y": 0.193022,
+              "z": -0.235667
+            },
+            "size_m": {
+              "x": 0.033666,
+              "y": 0.386044,
+              "z": 0.033666
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "leg-2",
+            "label": "leg",
+            "shape": "box",
+            "material": "steel_dark",
+            "center_m": {
+              "x": 0.488167,
+              "y": 0.193022,
+              "z": -0.235667
+            },
+            "size_m": {
+              "x": 0.033666,
+              "y": 0.386044,
+              "z": 0.033666
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "leg-3",
+            "label": "leg",
+            "shape": "box",
+            "material": "steel_dark",
+            "center_m": {
+              "x": -0.488167,
+              "y": 0.193022,
+              "z": 0.235667
+            },
+            "size_m": {
+              "x": 0.033666,
+              "y": 0.386044,
+              "z": 0.033666
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "leg-4",
+            "label": "leg",
+            "shape": "box",
+            "material": "steel_dark",
+            "center_m": {
+              "x": 0.488167,
+              "y": 0.193022,
+              "z": 0.235667
+            },
+            "size_m": {
+              "x": 0.033666,
+              "y": 0.386044,
+              "z": 0.033666
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "shelf",
+            "label": "lower shelf",
+            "shape": "box",
+            "material": "steel_dark",
+            "center_m": {
+              "x": 0.0,
+              "y": 0.089777,
+              "z": 0.0
+            },
+            "size_m": {
+              "x": 0.942668,
+              "y": 0.008978,
+              "z": 0.437668
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "entered"
+          },
+          {
+            "id": "glass-top",
+            "label": "glass top",
+            "shape": "box",
+            "material": "glass_clear",
+            "center_m": {
+              "x": 0.0,
+              "y": 0.395022,
+              "z": 0.0
+            },
+            "size_m": {
+              "x": 1.01,
+              "y": 0.017956,
+              "z": 0.505
+            },
+            "axis": null,
+            "taper": null,
+            "narrow_end": null,
+            "basis": "inferred"
+          }
+        ]
+      },
+      "largest_part_share_after": 0.044,
+      "parts": [
+        "leg (box, steel_dark, 0.034 x 0.386 x 0.034 m)",
+        "leg (box, steel_dark, 0.034 x 0.386 x 0.034 m)",
+        "leg (box, steel_dark, 0.034 x 0.386 x 0.034 m)",
+        "leg (box, steel_dark, 0.034 x 0.386 x 0.034 m)",
+        "lower shelf (box, steel_dark, 0.943 x 0.009 x 0.438 m)",
+        "glass top (box, glass_clear, 1.010 x 0.018 x 0.505 m)"
+      ]
     }
   ],
   "runs": [
     "2026-10-16T04:17:55+00:00",
-    "2026-10-16T04:22:18+00:00"
+    "2026-10-16T04:22:18+00:00",
+    "2026-10-16T06:46:59+00:00"
   ]
 }

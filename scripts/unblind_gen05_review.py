@@ -39,8 +39,9 @@ def main(argv: list[str]) -> int:
     parser.add_argument("review", type=Path)
     parser.add_argument("key", type=Path)
     parser.add_argument("--set", type=Path, default=DEFAULT_SET)
+    parser.add_argument("--out-name", default="review.json", help="file name inside the set")
     args = parser.parse_args(argv)
-    out = args.set / "review.json"
+    out = args.set / args.out_name
     review = json.loads(args.review.read_text())
     key = json.loads(args.key.read_text())
     out.write_text(json.dumps(unblind(review, key), indent=1, ensure_ascii=False) + "\n")

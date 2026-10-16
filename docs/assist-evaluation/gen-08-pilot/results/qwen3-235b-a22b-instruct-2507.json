@@ -1,0 +1,568 @@
+{
+ "model": "qwen3-235b-a22b-instruct-2507",
+ "kind": "frozen",
+ "service": "ASU Voyager",
+ "base_url": "https://openai.rc.asu.edu/v1",
+ "prompt_version": "gen-05.1",
+ "budget_s": 150.0,
+ "retry_policy": "at most one shared retry (invalid answer, not open, or added parts not visible), only while the whole-request budget can cover it",
+ "mode": "live, schema-guided, through the API endpoint, sequential (one request at a time)",
+ "keep_awake": "caffeinate -i -w <pid> (macOS idle and system sleep prevented)",
+ "runs": [
+  {
+   "started": "2026-10-16T06:50:22+00:00",
+   "commit": "03448ed",
+   "keep_awake": "caffeinate -i -w <pid> (macOS idle and system sleep prevented)"
+  }
+ ],
+ "rows": {
+  "pp1": {
+   "http_status": 200,
+   "wall_s": 22.04,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 21.95,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 0.7,\n        \"z\": 0.0\n      },\n      \"id\": \"glass-shelf\",\n      \"label\": \"glass shelf\",\n      \"material\": \"glass_clear\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 1.4,\n        \"y\": 0.01,\n        \"z\": 0.65\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 1.5,\n    \"y\": 0.9,\n    \"z\": 0.75\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a clear glass shelf under the top at y=0.7 m, centered, sized to fit within the leg frame.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.5,
+      "y": 0.9,
+      "z": 0.75
+     },
+     "parts": [
+      {
+       "id": "top",
+       "label": "worktop",
+       "shape": "box",
+       "material": "wood",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.88,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.5,
+        "y": 0.04,
+        "z": 0.75
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.725,
+        "y": 0.43,
+        "z": -0.35
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.86,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.725,
+        "y": 0.43,
+        "z": -0.35
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.86,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": -0.725,
+        "y": 0.43,
+        "z": 0.35
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.86,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.725,
+        "y": 0.43,
+        "z": 0.35
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.86,
+        "z": 0.05
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "shelf",
+       "label": "lower shelf",
+       "shape": "box",
+       "material": "steel_dark",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.2,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.4,
+        "y": 0.02,
+        "z": 0.65
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "glass-shelf",
+       "label": "glass shelf",
+       "shape": "box",
+       "material": "glass_clear",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.7,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.4,
+        "y": 0.01,
+        "z": 0.65
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a clear glass shelf under the top at y=0.7 m, centered, sized to fit within the leg frame.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "adjustments": [],
+    "view": "front-right",
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 21946
+    }
+   },
+   "error": null,
+   "clock_s": 22.04,
+   "started_at": "2026-10-16T06:50:22+00:00",
+   "at": "2026-10-16T06:50:44+00:00",
+   "model_sha256": "f20f7f1ef3f2ef38a1a94b294736987ef73064fd2b771dbe46de30ce79f1d49b",
+   "triangles": 84
+  },
+  "pp2": {
+   "http_status": 200,
+   "wall_s": 55.02,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 54.99,
+     "answer": "{\n  \"add\": [],\n  \"change\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.87,\n        \"y\": 1.0,\n        \"z\": -0.27\n      },\n      \"id\": \"leg-1\",\n      \"label\": \"leg\",\n      \"material\": \"paint_white\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 2.0,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.87,\n        \"y\": 1.0,\n        \"z\": -0.27\n      },\n      \"id\": \"leg-2\",\n      \"label\": \"leg\",\n      \"material\": \"paint_white\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 2.0,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": -0.87,\n        \"y\": 1.0,\n        \"z\": 0.27\n      },\n      \"id\": \"leg-3\",\n      \"label\": \"leg\",\n      \"material\": \"paint_white\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 2.0,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.87,\n        \"y\": 1.0,\n        \"z\": 0.27\n      },\n      \"id\": \"leg-4\",\n      \"label\": \"leg\",\n      \"material\": \"paint_white\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 0.06,\n        \"y\": 2.0,\n        \"z\": 0.06\n      },\n      \"taper\": null\n    },\n    {\n      \"axis\": \"y\",\n      \"basis\": \"inferred\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.95,\n        \"z\": 0.0\n      },\n      \"id\": \"beam-4\",\n      \"label\": \"shelf\",\n      \"material\": \"paint_red\",\n      \"narrow_end\": null,\n      \"shape\": \"box\",\n      \"size_m\": {\n        \"x\": 1.8,\n        \"y\": 0.08,\n        \"z\": 0.6\n      },\n      \"taper\": null\n    }\n  ],\n  \"envelope_m\": {\n    \"x\": 1.8,\n    \"y\": 2.0,\n    \"z\": 0.6\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Painted the four legs white and the top beam (beam-4) red.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.8,
+      "y": 2.0,
+      "z": 0.6
+     },
+     "parts": [
+      {
+       "id": "leg-1",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_white",
+       "center_m": {
+        "x": -0.87,
+        "y": 1.0,
+        "z": -0.27
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 2.0,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-2",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_white",
+       "center_m": {
+        "x": 0.87,
+        "y": 1.0,
+        "z": -0.27
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 2.0,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-3",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_white",
+       "center_m": {
+        "x": -0.87,
+        "y": 1.0,
+        "z": 0.27
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 2.0,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "leg-4",
+       "label": "leg",
+       "shape": "box",
+       "material": "paint_white",
+       "center_m": {
+        "x": 0.87,
+        "y": 1.0,
+        "z": 0.27
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 2.0,
+        "z": 0.06
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-1",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.15,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.08,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-2",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.75,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.08,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-3",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_orange",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.35,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.08,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "beam-4",
+       "label": "shelf",
+       "shape": "box",
+       "material": "paint_red",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.95,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.8,
+        "y": 0.08,
+        "z": 0.6
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      }
+     ]
+    },
+    "summary": "Painted the four legs white and the top beam (beam-4) red.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [
+     "Size kept: the instruction did not ask for a different size."
+    ],
+    "problems": [],
+    "adjustments": [],
+    "view": "front-right",
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 54991
+    }
+   },
+   "error": null,
+   "clock_s": 55.02,
+   "started_at": "2026-10-16T06:50:44+00:00",
+   "at": "2026-10-16T06:51:39+00:00",
+   "model_sha256": "de7313436a3f81b34080241e9f49176cf7bb19ffec3b3a403856f3a452efa2eb",
+   "triangles": 96
+  },
+  "pp3": {
+   "http_status": 200,
+   "wall_s": 19.87,
+   "calls": [
+    {
+     "attempt": 0,
+     "seconds": 19.77,
+     "answer": "{\n  \"add\": [\n    {\n      \"axis\": \"y\",\n      \"basis\": \"stated\",\n      \"center_m\": {\n        \"x\": 0.0,\n        \"y\": 1.43,\n        \"z\": 0.0\n      },\n      \"id\": \"light\",\n      \"label\": \"red indicator light\",\n      \"material\": \"signal_red\",\n      \"narrow_end\": null,\n      \"shape\": \"cylinder\",\n      \"size_m\": {\n        \"x\": 0.05,\n        \"y\": 0.05,\n        \"z\": 0.05\n      },\n      \"taper\": null\n    }\n  ],\n  \"change\": [],\n  \"envelope_m\": {\n    \"x\": 1.1,\n    \"y\": 1.43,\n    \"z\": 0.4\n  },\n  \"message\": null,\n  \"not_representable\": [],\n  \"outcome\": \"revision\",\n  \"remove\": [],\n  \"repeat\": [],\n  \"summary\": \"Added a 5 cm red indicator light on top of the frame.\"\n}"
+    }
+   ],
+   "result": {
+    "outcome": "proposal",
+    "message": null,
+    "spec": {
+     "format": "rws-geometry/1",
+     "envelope_m": {
+      "x": 1.1,
+      "y": 1.43,
+      "z": 0.4
+     },
+     "parts": [
+      {
+       "id": "base",
+       "label": "stand base",
+       "shape": "box",
+       "material": "plastic_black",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.02457,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.6,
+        "y": 0.04914,
+        "z": 0.4
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "pole",
+       "label": "stand",
+       "shape": "cylinder",
+       "material": "aluminium",
+       "center_m": {
+        "x": 0.0,
+        "y": 0.540549,
+        "z": -0.05
+       },
+       "size_m": {
+        "x": 0.06,
+        "y": 0.982818,
+        "z": 0.06
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "frame",
+       "label": "screen frame",
+       "shape": "rounded_box",
+       "material": "plastic_black",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.0811,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 1.1,
+        "y": 0.64866,
+        "z": 0.07
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "face",
+       "label": "screen",
+       "shape": "box",
+       "material": "hmi_screen",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.081099,
+        "z": 0.036
+       },
+       "size_m": {
+        "x": 1.02,
+        "y": 0.570034,
+        "z": 0.004
+       },
+       "axis": null,
+       "taper": null,
+       "narrow_end": null,
+       "basis": "entered"
+      },
+      {
+       "id": "light",
+       "label": "red indicator light",
+       "shape": "cylinder",
+       "material": "signal_red",
+       "center_m": {
+        "x": 0.0,
+        "y": 1.40543,
+        "z": 0.0
+       },
+       "size_m": {
+        "x": 0.05,
+        "y": 0.04914,
+        "z": 0.05
+       },
+       "axis": "y",
+       "taper": null,
+       "narrow_end": null,
+       "basis": "stated"
+      }
+     ]
+    },
+    "summary": "Added a 5 cm red indicator light on top of the frame.",
+    "partial": false,
+    "size_changed": false,
+    "not_represented": [],
+    "checks": [],
+    "problems": [],
+    "adjustments": [],
+    "view": "front-right",
+    "provider": {
+     "service": "ASU Voyager",
+     "base_url": "https://openai.rc.asu.edu/v1",
+     "model": "qwen3-235b-a22b-instruct-2507",
+     "mode": "live",
+     "attempts": 1,
+     "first_attempt_valid": true,
+     "latency_ms": 19771
+    }
+   },
+   "error": null,
+   "clock_s": 19.87,
+   "started_at": "2026-10-16T06:51:39+00:00",
+   "at": "2026-10-16T06:51:59+00:00",
+   "model_sha256": "57baaa3b2782bfe5cc13bf108cacd13e29793a8397c3aba201be826c9f2650ed",
+   "triangles": 580
+  }
+ }
+}
