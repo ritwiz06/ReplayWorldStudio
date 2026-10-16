@@ -781,3 +781,32 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - Saved photo projects are larger (pieces and kept observations), and the observation limit rises to 80.
   - The classroom's tables still come as group outlines from the model; the user splits them.
   - Hidden depths are still estimates; IMG-03 measures accuracy on held-out photos.
+
+### ADR-048 - Image-import accuracy: real measured photos are the only evidence; synthetic renders verify the method
+
+- Date: 2026-10-16. Status: adopted (IMG-03).
+- Context:
+  - IMG-03 must report precision, recall, scale error and correction effort on held-out, permissioned photos.
+  - The permitted photos have no independent measurements: assumed rug and table sizes; unknown positions.
+  - The factory render was used in development.
+  - No real site has been photographed and measured.
+- Options considered:
+  - score the existing photos against sizes inferred from them (circular);
+  - wait for real photos (idle);
+  - build the evaluation now and verify it on known-geometry renders kept as a separate stratum, with a capture protocol for real sites (chosen).
+- Decision:
+  - **Two strata, never pooled.**
+    - Real photos are measured on site, each measurement with a method and tolerance.
+    - Renders are exact.
+    - The validator refuses typical or photo-derived values. An unpublishable real photo stays local (outside the repository); only its sha256 and anonymised measurements are kept.
+  - **Rules frozen before any held-out call.** Detection is matched by outline (IoU ≥ 0.5), with group, duplicate and ignored rules. Three worlds are reported apart: the initial proposal, an idealised photo-only review, and a manual baseline. Errors are in metres in the rectangle's own frame, through the app's code, and a browser cross-check confirms the scored world is the dialog's.
+  - **Effort is counted and estimated, never timed** without participants: action counts, and a keystroke-level estimate with declared constants.
+  - **IMG-03 and M3 close only on real measured photos** (≥ 6 photos, ≥ 3 scene types, ≥ 40 counted objects) meeting the thresholds.
+  - **The default vision model stays `qwen3-vl-32b-instruct`.**
+    - `llama4-scout-17b` accepts the same input and schema but localises poorly (3/34).
+    - `glm-4-5v` gave no usable answer.
+- Consequences:
+  - The synthetic result shows the method's limits on exact geometry: recall 0.66, hidden bases, camera-facing orientation, and the split-piece size guess.
+  - Product fixes are named, not made, because the held-out set is now used. A fix needs new photos to be judged.
+  - The next evidence must come from a real, permissioned, measured site.
+

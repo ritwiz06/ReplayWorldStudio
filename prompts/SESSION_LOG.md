@@ -625,6 +625,64 @@ Append entries in chronological order. If a live repository session log already 
 - **Milestone status after this session:** M3 in progress (IMG-01 and IMG-02 done; IMG-03 open). GEN-09 open on independent review only.
 - **Next concrete task:** IMG-03 (held-out, permissioned photos with measured references), when such photos exist; until then, the GEN-09 independent review if a reviewer is available.
 
+### 2026-10-16 - IMG-03 accuracy evaluation of one-photo import (infrastructure and synthetic stratum; open)
+
+- **Active milestone / issue:** M3; IMG-03.
+- **Starting commit:** `122eade`. Start 22:32:50 UTC.
+- **Goal:** an honest, reproducible accuracy evaluation:
+  - ground truth;
+  - pre-registered metrics;
+  - a runner and a scorer;
+  - a held-out run kept apart from development;
+  - report and decision.
+
+  Close IMG-03 and M3 only on real measured evidence.
+- **Work completed.**
+  - **Inventory:** no permitted photo has independent measurements. The factory render is development-only.
+  - **Real sites:** capture protocol; annotation format and validator (`scripts/img03_annotations.py`).
+  - **Synthetic stratum:** scenes built at exact sizes, rendered with flat-colour ground truth (`apps/web/scripts/img03/render.ts`); 2 development and 8 held-out views.
+  - **Runner:** `scripts/evaluate_img03.py`.
+  - **Scorer:** `src/photo/evaluation.ts`, `scripts/img03/score.ts`, with known-answer tests.
+  - **Review sheets** (`scripts/img03/sheets.ts`).
+  - **Browser cross-check:** `e2e/img03-browser-path.spec.ts`.
+  - **Product fix:** the analysis's notes on a corrected photo object are marked "Before your corrections, the analysis said: …", on screen and in the saved observation.
+  - **Freeze** `f44536c`, then one held-out run, then results `7777b75` and this record.
+- **Found and fixed:**
+  - Three mats outside the frame: the validator's rule, so the mats were moved.
+  - A group count inflated by a chair in front of a desk.
+  - The review-protocol index shift after a split, with a regression test.
+  - The manual baseline skipped on a timed-out photo.
+  - The runner losing a row when its progress print crashed: one `llama4-scout` answer was lost and is scored as the failure it was.
+- **Provider calls** (no live call in CI):
+  - **development probes:** `qwen3-vl-32b-instruct` × 2; `glm-4-5v` × 1 (invalid, then empty, 245 s); `llama4-scout-17b` × 2;
+  - **held-out:** 8 calls; `llama4-scout-17b` on 4;
+  - **diagnostics:** 2 (unscored).
+  - Recorded wait: 16.8 min (6.1 min development, 9.2 min held-out, 1.5 min diagnostics).
+- **Results** (synthetic; docs/assist-evaluation/img-03/report.md):
+  - **detection:** precision 0.978, recall 0.662;
+  - **reviewed world:** centre median 0.17 m and p90 0.65 m (not near the horizon); near-horizon median 0.69 m, flagged 10/10;
+  - **effort:** about 9 corrections per photo against 21.5 by hand;
+  - `llama4-scout-17b` 3/34.
+  - **Worst failures:** a hidden base (4.31 m); objects facing the camera (18.7° median, post hoc); split-piece size guess (+386 %).
+- **Browser inspection** (`e2e/img03-inspect.spec.ts`, 1440 × 900; held-out answers replayed only to view them):
+  - office-a: the hidden-base cabinets look right from the photo's camera, are far behind the desks on the plan, and get no warning;
+  - store-a: twin racks and twin pallets in single outlines, with no split suggestion.
+- **Commands and outcomes:**
+  - `pnpm check` exit 0 (pytest 755, Vitest 175, contracts 10);
+  - `e2e/photo-review.spec.ts` 3 passed and `e2e/img03-browser-path.spec.ts` 1 passed;
+  - freeze CI 38979438108 green.
+- **Decisions:** ADR-048.
+- **Known limitations:**
+  - no real photo;
+  - clean renders of the project's own models;
+  - idealised reviewer and manual operator;
+  - one run per photo;
+  - yaw is post hoc.
+- **Milestone status after this session:**
+  - M3 open (IMG-01 and IMG-02 done; IMG-03 in progress, blocked on real measured photos);
+  - GEN-09 open on independent review only (fresh material and a real reviewer needed).
+- **Next concrete task:** photograph and measure permissioned sites by protocol.md, and run the frozen evaluation on them. Separately, the shape-family proportions fix, judged on new photos.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

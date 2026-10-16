@@ -424,6 +424,7 @@ After M1 the user approved guided creation and described custom objects as the n
   - **Part actions:** browser tests on a described conveyor and a photo-made pallet (`e2e/review.spec.ts`): pick → resize → move or remove → confirm → apply → undo → redo → save → reopen → rebuild a missing model.
   - **Screenshots:** docs/gen-09/inspect/ (the dialog, Show it, the fixed dialog, and the placed glass on the light floor; part-action confirmation).
   - **Independent review packet:** docs/assist-evaluation/gen-09-review-packet/. It holds the 25 GEN-08 dialog sheets reshuffled with old numbers cropped, instructions, a rubric and an answers template. The key is kept apart; `scripts/score_gen09_review.py` scores a returned file. **Pending.**
+  - Note (2026-10-16, IMG-03): the reshuffled GEN-08 packet can introduce the rubric to a reviewer, but it is not fresh material. A claimed fresh independent review needs new sheets (for example GEN-09 dialog renders made for the purpose) and a real reviewer. Nobody has been contacted and no review exists; the criterion stays open.
   - **Checks:** `pnpm check` exit 0 (pytest 721 + tooling tests; Vitest 158; contracts 10).
 
 ## M3 - Image to editable world
@@ -474,10 +475,42 @@ After M1 the user approved guided creation and described custom objects as the n
 
 - Priority: P0
 - Dependencies: IMG-01
-- Baseline status: planned
+- Baseline status: planned → in progress (2026-10-16; infrastructure and synthetic stratum done; real stratum missing)
 - Done when: Object precision and recall, scale error against measured references, and manual correction time are reported on held-out, permissioned images, split by scene type; failure cases are kept.
 - Note (2026-10-14, after IMG-01): IMG-01 measured placement only against one render with known ground truth and five development photos (docs/assist-evaluation/img-01.*.json). No real photo of a measured site exists yet, so scale error against a measured reference is still unmeasured; held-out photos and a second vision model are needed.
-- Evidence: not recorded
+- Status (2026-10-16): **open: the real, measured stratum is missing.**
+  - The evaluation path is built, and a synthetic held-out stratum has been run once.
+  - **Missing input:** at least 6 permissioned photos of real indoor sites, from at least 3 scene types, with 40 or more counted objects. Each needs a measured floor rectangle and check length, and measured object positions and sizes (docs/assist-evaluation/img-03/protocol.md).
+  - Synthetic results never close IMG-03 (criteria.md).
+- Evidence (docs/assist-evaluation/img-03/; ADR-048):
+  - **Infrastructure** (`7807e9c`):
+    - annotation format `rws-img03-annotation/1` and validator: real versus synthetic; method and tolerance per measurement; typical or photo-derived values refused; unpublishable photos kept local, outside the repository;
+    - synthetic scenes built and rendered with exact ground truth;
+    - live runner;
+    - scorer with known-answer tests: units, similar cabinets, a group outline, a partly hidden object, a near-horizon floor point;
+    - review sheets;
+    - a browser cross-check that the scored world is the dialog's world;
+    - the analysis's notes on a corrected object marked as pre-edit findings.
+  - **Freeze** (`f44536c`, before any held-out call; CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38979438108 green):
+    - 8 held-out renders in 4 scene types: 68 counted objects, 31 partly visible, 10 near the horizon;
+    - criteria (matching, three worlds, metres, strata, effort, thresholds), capture protocol, inventory;
+    - development probes: `glm-4-5v` failed; `llama4-scout-17b` passed.
+  - **Scorer and runner fixes** found on the first scores, before reporting (`99400d7`): a review index shift, manual-baseline scope, a runner crash.
+  - **Results** (`7777b75`, synthetic only), `qwen3-vl-32b-instruct`:
+    - **detection:** precision 0.978 (45/46); recall 0.662 (45/68: 10 lost to a 150 s timeout, 11 inside another outline, 2 poor outlines);
+    - **reviewed world, not near the horizon:** centre error median 0.17 m, p90 0.65 m; visible width 6 %; near-horizon median 0.69 m, flagged 10/10;
+    - **effort:** about 9 corrections per photo against 21.5 by hand (keystroke-level estimate 36 s against 110 s; not measured);
+    - **recall would fail** the pre-registered threshold even on exact geometry.
+  - **Paired model:** `llama4-scout-17b` found 3/34. The default stays.
+  - **Worst failures:**
+    - hidden base, 4.31 m (initial proposal);
+    - objects set facing the camera, median 18.7° (post hoc);
+    - split pieces keeping a group's size guess, +314 to +386 % depth.
+  - **The 5.1 m cabinet** is reported as a development example in the hidden-base category.
+  - **Smallest fix named, not made:** take the chosen shape family's proportions for hand-drawn objects and split pieces.
+  - **Browser inspection** (docs/assist-evaluation/img-03/browser/; held-out answers replayed only to view them):
+    - the hidden-base cabinets look right from the photo's camera, and nothing warns about them;
+    - one outline around two twin racks, or two twin pallets, gets no split suggestion.
 
 ## M4 - Drawing import
 

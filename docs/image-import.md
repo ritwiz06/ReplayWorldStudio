@@ -307,6 +307,39 @@ Footprints are rectangles; nothing here checks clearance, collisions or real-wor
 **Not in IMG-02:** walls, windows and the room boundary; several photos of one place; automatic
 fixes for clashes. Held-out accuracy (precision, recall, scale and correction time) is IMG-03.
 
+## How accurate is it? (IMG-03)
+
+[Report](assist-evaluation/img-03/report.md) · [criteria](assist-evaluation/img-03/criteria.md) ·
+[capture protocol](assist-evaluation/img-03/protocol.md) · ADR-048.
+
+**Real-world accuracy is not yet measured.** No permitted photo comes with independently measured
+positions and sizes. The sizes used in earlier demonstrations (the classroom table, the
+living-room rug) are assumptions. IMG-03 stays open until at least 6 real, permissioned, measured
+photos from 3 scene types exist.
+
+**Known-geometry renders** check the method. Synthetic results, run once on 8 held-out renders
+with `qwen3-vl-32b-instruct`; they are not real-world accuracy:
+
+- the model finds about two thirds of the counted objects (precision 0.98, recall 0.66);
+- after review, an object's floor centre is typically 0.17 m off (90th percentile 0.65 m), and
+  its visible width about 6 %;
+- the hidden depth is a guess (median 23 % off);
+- objects near the horizon are typically 0.69 m off. The app flags all of them;
+- a careful reviewer needed about 9 corrections per photo, against about 21 actions to outline
+  everything by hand.
+
+**What goes most wrong:**
+
+- An object whose base is hidden behind another one lands metres too far back, and nothing
+  warns. It looks right from the photo's camera; check the plan.
+- Objects are set facing the camera, not square to the room (about 19° typically).
+- An outline around two similar objects finds only one until it is split.
+- A piece split from a group, or an object drawn by hand, keeps a box-like depth guess. Type its
+  depth if you know it.
+
+**After a correction, the analysis's own notes about an object** are kept, marked "Before your
+corrections, the analysis said: …", because they may no longer hold.
+
 ## Known failures and crude geometry (stated plainly)
 
 - **Shapes are generic families**, not the objects in the photo (since GEN-02 they can be improved after creation, within the generator's limits):
