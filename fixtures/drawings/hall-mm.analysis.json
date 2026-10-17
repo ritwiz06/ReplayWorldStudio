@@ -514,6 +514,7 @@
             "y": 16000.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 12000.0,
           "y": 8000.0
@@ -558,6 +559,7 @@
             "y": 8200.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 10000.0,
           "y": 8000.0
@@ -600,6 +602,7 @@
             "y": 8200.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 18000.0,
           "y": 8000.0
@@ -642,6 +645,7 @@
             "y": 4000.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 3500.0,
           "y": 3000.0
@@ -684,6 +688,7 @@
             "y": 7500.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 3500.0,
           "y": 6500.0
@@ -726,6 +731,7 @@
             "y": 14600.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 13000.0,
           "y": 14050.0
@@ -768,6 +774,7 @@
             "y": 7400.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 23200.0,
           "y": 7200.0
@@ -810,6 +817,7 @@
             "y": 4268.973
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 11999.999999999998,
           "y": 3999.9999999999995
@@ -860,6 +868,7 @@
             "y": 4500.0
           }
         ],
+        "footprint_fit": "enclosing",
         "centre": {
           "x": 19500.0,
           "y": 3250.0
@@ -904,6 +913,7 @@
             "y": 11000.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 14000.0,
           "y": 10250.0
@@ -946,6 +956,7 @@
             "y": 15500.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 7400.0,
           "y": 8000.0
@@ -988,6 +999,7 @@
             "y": 7600.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 22200.0,
           "y": 7200.0
@@ -1009,7 +1021,8 @@
         "layout": false,
         "reason": "Dimensions are annotation; the geometry itself is read."
       }
-    ]
+    ],
+    "review": null
   },
   "warnings": [
     "1 open line (1 on CONVEYOR) is shown on the plan but not built as objects: only closed outlines and blocks become objects."

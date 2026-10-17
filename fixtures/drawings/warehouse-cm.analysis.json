@@ -1,0 +1,1350 @@
+{
+  "filename": "warehouse-cm.dxf",
+  "sha256": "f3df8d0b614e73afad4675b9ea5960a03d9a1d53cacbab8057aa3415624a79a1",
+  "drawing": {
+    "reader": "rws-dxf/1",
+    "file": {
+      "uri": "drawings/f3df8d0b614e73afad4675b9ea5960a03d9a1d53cacbab8057aa3415624a79a1.dxf",
+      "bytes": 4617
+    },
+    "dxf_version": "AC1015",
+    "units": {
+      "insunits": 4,
+      "declared": "mm",
+      "measurement": "metric",
+      "question": null,
+      "basis": null
+    },
+    "layers": [
+      "0",
+      "A-DOOR",
+      "A-WALL",
+      "BORDER",
+      "EQUIPMENT",
+      "NOTES",
+      "RACKS",
+      "S-COLS",
+      "SITE-BOUNDARY",
+      "TANKS",
+      "WALKWAY"
+    ],
+    "extent_min": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "extent_max": {
+      "x": 6000.0,
+      "y": 4000.0
+    },
+    "lines": [
+      {
+        "ref": {
+          "handle": "101",
+          "layer": "SITE-BOUNDARY",
+          "entity": "LWPOLYLINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 6000.0,
+            "y": 0.0
+          },
+          {
+            "x": 6000.0,
+            "y": 4000.0
+          },
+          {
+            "x": 0.0,
+            "y": 4000.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "ref": {
+          "handle": "102",
+          "layer": "A-WALL",
+          "entity": "LWPOLYLINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 1000.0,
+            "y": 1000.0
+          },
+          {
+            "x": 4000.0,
+            "y": 1000.0
+          },
+          {
+            "x": 4000.0,
+            "y": 3000.0
+          },
+          {
+            "x": 1000.0,
+            "y": 3000.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "ref": {
+          "handle": "103",
+          "layer": "S-COLS",
+          "entity": "LWPOLYLINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 1580.0,
+            "y": 1980.0
+          },
+          {
+            "x": 1620.0,
+            "y": 1980.0
+          },
+          {
+            "x": 1620.0,
+            "y": 2020.0
+          },
+          {
+            "x": 1580.0,
+            "y": 2020.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "ref": {
+          "handle": "104",
+          "layer": "S-COLS",
+          "entity": "LWPOLYLINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 2180.0,
+            "y": 1980.0
+          },
+          {
+            "x": 2220.0,
+            "y": 1980.0
+          },
+          {
+            "x": 2220.0,
+            "y": 2020.0
+          },
+          {
+            "x": 2180.0,
+            "y": 2020.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "ref": {
+          "handle": "105",
+          "layer": "S-COLS",
+          "entity": "LWPOLYLINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 2780.0,
+            "y": 1980.0
+          },
+          {
+            "x": 2820.0,
+            "y": 1980.0
+          },
+          {
+            "x": 2820.0,
+            "y": 2020.0
+          },
+          {
+            "x": 2780.0,
+            "y": 2020.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "ref": {
+          "handle": "106",
+          "layer": "S-COLS",
+          "entity": "LWPOLYLINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 3380.0,
+            "y": 1980.0
+          },
+          {
+            "x": 3420.0,
+            "y": 1980.0
+          },
+          {
+            "x": 3420.0,
+            "y": 2020.0
+          },
+          {
+            "x": 3380.0,
+            "y": 2020.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "ref": {
+          "handle": "108",
+          "layer": "RACKS",
+          "entity": "LWPOLYLINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 1200.0,
+            "y": 2500.0
+          },
+          {
+            "x": 2800.0,
+            "y": 2500.0
+          },
+          {
+            "x": 2800.0,
+            "y": 2620.0
+          },
+          {
+            "x": 1200.0,
+            "y": 2620.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "ref": {
+          "handle": "10A",
+          "layer": "RACKS",
+          "entity": "LWPOLYLINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 1200.0,
+            "y": 2800.0
+          },
+          {
+            "x": 2800.0,
+            "y": 2800.0
+          },
+          {
+            "x": 2800.0,
+            "y": 2920.0
+          },
+          {
+            "x": 1200.0,
+            "y": 2920.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "ref": {
+          "handle": "10C",
+          "layer": "WALKWAY",
+          "entity": "LWPOLYLINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 1100.0,
+            "y": 2200.0
+          },
+          {
+            "x": 3900.0,
+            "y": 2200.0
+          },
+          {
+            "x": 3900.0,
+            "y": 2400.0
+          },
+          {
+            "x": 1100.0,
+            "y": 2400.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "ref": {
+          "handle": "10D",
+          "layer": "EQUIPMENT",
+          "entity": "LWPOLYLINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 3200.0,
+            "y": 1200.0
+          },
+          {
+            "x": 3700.0,
+            "y": 1200.0
+          },
+          {
+            "x": 3700.0,
+            "y": 1600.0
+          },
+          {
+            "x": 3200.0,
+            "y": 1600.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "ref": {
+          "handle": "10F",
+          "layer": "EQUIPMENT",
+          "entity": "LWPOLYLINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 1200.0,
+            "y": 1100.0
+          },
+          {
+            "x": 1350.0,
+            "y": 1100.0
+          },
+          {
+            "x": 1350.0,
+            "y": 1200.0
+          },
+          {
+            "x": 1200.0,
+            "y": 1200.0
+          }
+        ],
+        "closed": true
+      },
+      {
+        "ref": {
+          "handle": "111",
+          "layer": "TANKS",
+          "entity": "CIRCLE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 3660.0,
+            "y": 2600.0
+          },
+          {
+            "x": 3658.847116824194,
+            "y": 2611.705419320968
+          },
+          {
+            "x": 3655.4327719506773,
+            "y": 2622.9610059419056
+          },
+          {
+            "x": 3649.8881767381527,
+            "y": 2633.334213981176
+          },
+          {
+            "x": 3642.4264068711927,
+            "y": 2642.4264068711927
+          },
+          {
+            "x": 3633.334213981176,
+            "y": 2649.8881767381527
+          },
+          {
+            "x": 3622.9610059419056,
+            "y": 2655.4327719506773
+          },
+          {
+            "x": 3611.705419320968,
+            "y": 2658.847116824194
+          },
+          {
+            "x": 3600.0,
+            "y": 2660.0
+          },
+          {
+            "x": 3588.294580679032,
+            "y": 2658.847116824194
+          },
+          {
+            "x": 3577.0389940580944,
+            "y": 2655.4327719506773
+          },
+          {
+            "x": 3566.665786018824,
+            "y": 2649.8881767381527
+          },
+          {
+            "x": 3557.5735931288073,
+            "y": 2642.4264068711927
+          },
+          {
+            "x": 3550.1118232618473,
+            "y": 2633.334213981176
+          },
+          {
+            "x": 3544.5672280493227,
+            "y": 2622.9610059419056
+          },
+          {
+            "x": 3541.152883175806,
+            "y": 2611.705419320968
+          },
+          {
+            "x": 3540.0,
+            "y": 2600.0
+          },
+          {
+            "x": 3541.152883175806,
+            "y": 2588.294580679032
+          },
+          {
+            "x": 3544.5672280493227,
+            "y": 2577.0389940580944
+          },
+          {
+            "x": 3550.1118232618473,
+            "y": 2566.665786018824
+          },
+          {
+            "x": 3557.5735931288073,
+            "y": 2557.5735931288073
+          },
+          {
+            "x": 3566.665786018824,
+            "y": 2550.1118232618473
+          },
+          {
+            "x": 3577.0389940580944,
+            "y": 2544.5672280493227
+          },
+          {
+            "x": 3588.294580679032,
+            "y": 2541.152883175806
+          },
+          {
+            "x": 3600.0,
+            "y": 2540.0
+          },
+          {
+            "x": 3611.705419320968,
+            "y": 2541.152883175806
+          },
+          {
+            "x": 3622.9610059419056,
+            "y": 2544.5672280493227
+          },
+          {
+            "x": 3633.334213981176,
+            "y": 2550.1118232618473
+          },
+          {
+            "x": 3642.4264068711927,
+            "y": 2557.5735931288073
+          },
+          {
+            "x": 3649.8881767381527,
+            "y": 2566.665786018824
+          },
+          {
+            "x": 3655.4327719506773,
+            "y": 2577.0389940580944
+          },
+          {
+            "x": 3658.847116824194,
+            "y": 2588.294580679032
+          }
+        ],
+        "closed": true
+      },
+      {
+        "ref": {
+          "handle": "113",
+          "layer": "A-DOOR",
+          "entity": "ARC",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 1100.0,
+            "y": 1500.0
+          },
+          {
+            "x": 1098.4807753012208,
+            "y": 1517.364817766693
+          },
+          {
+            "x": 1093.9692620785909,
+            "y": 1534.202014332567
+          },
+          {
+            "x": 1086.6025403784438,
+            "y": 1550.0
+          },
+          {
+            "x": 1076.6044443118979,
+            "y": 1564.2787609686538
+          },
+          {
+            "x": 1064.2787609686538,
+            "y": 1576.6044443118979
+          },
+          {
+            "x": 1050.0,
+            "y": 1586.6025403784438
+          },
+          {
+            "x": 1034.202014332567,
+            "y": 1593.9692620785909
+          },
+          {
+            "x": 1017.364817766693,
+            "y": 1598.4807753012208
+          },
+          {
+            "x": 1000.0,
+            "y": 1600.0
+          }
+        ],
+        "closed": false
+      },
+      {
+        "ref": {
+          "handle": "114",
+          "layer": "A-DOOR",
+          "entity": "LINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 1000.0,
+            "y": 1500.0
+          },
+          {
+            "x": 1100.0,
+            "y": 1500.0
+          }
+        ],
+        "closed": false
+      },
+      {
+        "ref": {
+          "handle": "115",
+          "layer": "BORDER",
+          "entity": "LWPOLYLINE",
+          "block": null
+        },
+        "points": [
+          {
+            "x": 4600.0,
+            "y": 100.0
+          },
+          {
+            "x": 5900.0,
+            "y": 100.0
+          },
+          {
+            "x": 5900.0,
+            "y": 700.0
+          },
+          {
+            "x": 4600.0,
+            "y": 700.0
+          }
+        ],
+        "closed": true
+      }
+    ],
+    "labels": [
+      {
+        "ref": {
+          "handle": "107",
+          "layer": "NOTES",
+          "entity": "TEXT",
+          "block": null
+        },
+        "text": "Column bays are 6.00 m",
+        "at": {
+          "x": 1900.0,
+          "y": 2080.0
+        }
+      },
+      {
+        "ref": {
+          "handle": "109",
+          "layer": "RACKS",
+          "entity": "TEXT",
+          "block": null
+        },
+        "text": "Rack A",
+        "at": {
+          "x": 2000.0,
+          "y": 2560.0
+        }
+      },
+      {
+        "ref": {
+          "handle": "10B",
+          "layer": "RACKS",
+          "entity": "TEXT",
+          "block": null
+        },
+        "text": "Rack B",
+        "at": {
+          "x": 2000.0,
+          "y": 2860.0
+        }
+      },
+      {
+        "ref": {
+          "handle": "10E",
+          "layer": "EQUIPMENT",
+          "entity": "TEXT",
+          "block": null
+        },
+        "text": "Pallet drop zone",
+        "at": {
+          "x": 3450.0,
+          "y": 1400.0
+        }
+      },
+      {
+        "ref": {
+          "handle": "110",
+          "layer": "EQUIPMENT",
+          "entity": "TEXT",
+          "block": null
+        },
+        "text": "Forklift charger",
+        "at": {
+          "x": 1275.0,
+          "y": 1150.0
+        }
+      },
+      {
+        "ref": {
+          "handle": "112",
+          "layer": "TANKS",
+          "entity": "TEXT",
+          "block": null
+        },
+        "text": "Water tank",
+        "at": {
+          "x": 3600.0,
+          "y": 2600.0
+        }
+      },
+      {
+        "ref": {
+          "handle": "116",
+          "layer": "BORDER",
+          "entity": "TEXT",
+          "block": null
+        },
+        "text": "Warehouse W2 (synthetic)",
+        "at": {
+          "x": 5250.0,
+          "y": 400.0
+        }
+      }
+    ],
+    "objects": [
+      {
+        "id": "dxf-101",
+        "object_id": "obj-dxf-101",
+        "role": "floor",
+        "label": "Floor",
+        "label_from": "generic",
+        "kind": "structure",
+        "refs": [
+          {
+            "handle": "101",
+            "layer": "SITE-BOUNDARY",
+            "entity": "LWPOLYLINE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 6000.0,
+            "y": 0.0
+          },
+          {
+            "x": 6000.0,
+            "y": 4000.0
+          },
+          {
+            "x": 0.0,
+            "y": 4000.0
+          }
+        ],
+        "footprint_fit": "exact",
+        "centre": {
+          "x": 3000.0,
+          "y": 2000.0
+        },
+        "width": 6000.0,
+        "depth": 4000.0,
+        "rotation_rad": 0.0,
+        "notes": [
+          "The largest closed outline, built as the floor."
+        ]
+      },
+      {
+        "id": "dxf-102",
+        "object_id": "obj-dxf-102",
+        "role": "footprint",
+        "label": "Wall outline 1",
+        "label_from": "layer",
+        "kind": "structure",
+        "refs": [
+          {
+            "handle": "102",
+            "layer": "A-WALL",
+            "entity": "LWPOLYLINE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 1000.0,
+            "y": 1000.0
+          },
+          {
+            "x": 4000.0,
+            "y": 1000.0
+          },
+          {
+            "x": 4000.0,
+            "y": 3000.0
+          },
+          {
+            "x": 1000.0,
+            "y": 3000.0
+          }
+        ],
+        "footprint_fit": "exact",
+        "centre": {
+          "x": 2500.0,
+          "y": 2000.0
+        },
+        "width": 3000.0,
+        "depth": 2000.0,
+        "rotation_rad": 0.0,
+        "notes": []
+      },
+      {
+        "id": "dxf-103",
+        "object_id": "obj-dxf-103",
+        "role": "footprint",
+        "label": "Column 1",
+        "label_from": "layer",
+        "kind": "structure",
+        "refs": [
+          {
+            "handle": "103",
+            "layer": "S-COLS",
+            "entity": "LWPOLYLINE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 1580.0,
+            "y": 1980.0
+          },
+          {
+            "x": 1620.0,
+            "y": 1980.0
+          },
+          {
+            "x": 1620.0,
+            "y": 2020.0
+          },
+          {
+            "x": 1580.0,
+            "y": 2020.0
+          }
+        ],
+        "footprint_fit": "exact",
+        "centre": {
+          "x": 1600.0,
+          "y": 2000.0
+        },
+        "width": 40.0,
+        "depth": 40.0,
+        "rotation_rad": 0.0,
+        "notes": []
+      },
+      {
+        "id": "dxf-104",
+        "object_id": "obj-dxf-104",
+        "role": "footprint",
+        "label": "Column 2",
+        "label_from": "layer",
+        "kind": "structure",
+        "refs": [
+          {
+            "handle": "104",
+            "layer": "S-COLS",
+            "entity": "LWPOLYLINE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 2180.0,
+            "y": 1980.0
+          },
+          {
+            "x": 2220.0,
+            "y": 1980.0
+          },
+          {
+            "x": 2220.0,
+            "y": 2020.0
+          },
+          {
+            "x": 2180.0,
+            "y": 2020.0
+          }
+        ],
+        "footprint_fit": "exact",
+        "centre": {
+          "x": 2200.0,
+          "y": 2000.0
+        },
+        "width": 40.0,
+        "depth": 40.0,
+        "rotation_rad": 0.0,
+        "notes": []
+      },
+      {
+        "id": "dxf-105",
+        "object_id": "obj-dxf-105",
+        "role": "footprint",
+        "label": "Column 3",
+        "label_from": "layer",
+        "kind": "structure",
+        "refs": [
+          {
+            "handle": "105",
+            "layer": "S-COLS",
+            "entity": "LWPOLYLINE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 2780.0,
+            "y": 1980.0
+          },
+          {
+            "x": 2820.0,
+            "y": 1980.0
+          },
+          {
+            "x": 2820.0,
+            "y": 2020.0
+          },
+          {
+            "x": 2780.0,
+            "y": 2020.0
+          }
+        ],
+        "footprint_fit": "exact",
+        "centre": {
+          "x": 2800.0,
+          "y": 2000.0
+        },
+        "width": 40.0,
+        "depth": 40.0,
+        "rotation_rad": 0.0,
+        "notes": []
+      },
+      {
+        "id": "dxf-106",
+        "object_id": "obj-dxf-106",
+        "role": "footprint",
+        "label": "Column 4",
+        "label_from": "layer",
+        "kind": "structure",
+        "refs": [
+          {
+            "handle": "106",
+            "layer": "S-COLS",
+            "entity": "LWPOLYLINE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 3380.0,
+            "y": 1980.0
+          },
+          {
+            "x": 3420.0,
+            "y": 1980.0
+          },
+          {
+            "x": 3420.0,
+            "y": 2020.0
+          },
+          {
+            "x": 3380.0,
+            "y": 2020.0
+          }
+        ],
+        "footprint_fit": "exact",
+        "centre": {
+          "x": 3400.0,
+          "y": 2000.0
+        },
+        "width": 40.0,
+        "depth": 40.0,
+        "rotation_rad": 0.0,
+        "notes": []
+      },
+      {
+        "id": "dxf-108",
+        "object_id": "obj-dxf-108",
+        "role": "footprint",
+        "label": "Rack A",
+        "label_from": "text",
+        "kind": "equipment",
+        "refs": [
+          {
+            "handle": "108",
+            "layer": "RACKS",
+            "entity": "LWPOLYLINE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 1200.0,
+            "y": 2500.0
+          },
+          {
+            "x": 2800.0,
+            "y": 2500.0
+          },
+          {
+            "x": 2800.0,
+            "y": 2620.0
+          },
+          {
+            "x": 1200.0,
+            "y": 2620.0
+          }
+        ],
+        "footprint_fit": "exact",
+        "centre": {
+          "x": 2000.0,
+          "y": 2560.0
+        },
+        "width": 1600.0,
+        "depth": 120.0,
+        "rotation_rad": 0.0,
+        "notes": []
+      },
+      {
+        "id": "dxf-10a",
+        "object_id": "obj-dxf-10a",
+        "role": "footprint",
+        "label": "Rack B",
+        "label_from": "text",
+        "kind": "equipment",
+        "refs": [
+          {
+            "handle": "10A",
+            "layer": "RACKS",
+            "entity": "LWPOLYLINE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 1200.0,
+            "y": 2800.0
+          },
+          {
+            "x": 2800.0,
+            "y": 2800.0
+          },
+          {
+            "x": 2800.0,
+            "y": 2920.0
+          },
+          {
+            "x": 1200.0,
+            "y": 2920.0
+          }
+        ],
+        "footprint_fit": "exact",
+        "centre": {
+          "x": 2000.0,
+          "y": 2860.0
+        },
+        "width": 1600.0,
+        "depth": 120.0,
+        "rotation_rad": 0.0,
+        "notes": []
+      },
+      {
+        "id": "dxf-10c",
+        "object_id": "obj-dxf-10c",
+        "role": "footprint",
+        "label": "Walkway 1",
+        "label_from": "layer",
+        "kind": "walkway",
+        "refs": [
+          {
+            "handle": "10C",
+            "layer": "WALKWAY",
+            "entity": "LWPOLYLINE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 1100.0,
+            "y": 2200.0
+          },
+          {
+            "x": 3900.0,
+            "y": 2200.0
+          },
+          {
+            "x": 3900.0,
+            "y": 2400.0
+          },
+          {
+            "x": 1100.0,
+            "y": 2400.0
+          }
+        ],
+        "footprint_fit": "exact",
+        "centre": {
+          "x": 2500.0,
+          "y": 2300.0
+        },
+        "width": 2800.0,
+        "depth": 200.0,
+        "rotation_rad": 0.0,
+        "notes": []
+      },
+      {
+        "id": "dxf-10d",
+        "object_id": "obj-dxf-10d",
+        "role": "footprint",
+        "label": "Pallet drop zone",
+        "label_from": "text",
+        "kind": "equipment",
+        "refs": [
+          {
+            "handle": "10D",
+            "layer": "EQUIPMENT",
+            "entity": "LWPOLYLINE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 3200.0,
+            "y": 1200.0
+          },
+          {
+            "x": 3700.0,
+            "y": 1200.0
+          },
+          {
+            "x": 3700.0,
+            "y": 1600.0
+          },
+          {
+            "x": 3200.0,
+            "y": 1600.0
+          }
+        ],
+        "footprint_fit": "exact",
+        "centre": {
+          "x": 3450.0,
+          "y": 1400.0
+        },
+        "width": 500.0,
+        "depth": 400.0,
+        "rotation_rad": 0.0,
+        "notes": []
+      },
+      {
+        "id": "dxf-10f",
+        "object_id": "obj-dxf-10f",
+        "role": "footprint",
+        "label": "Forklift charger",
+        "label_from": "text",
+        "kind": "equipment",
+        "refs": [
+          {
+            "handle": "10F",
+            "layer": "EQUIPMENT",
+            "entity": "LWPOLYLINE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 1200.0,
+            "y": 1100.0
+          },
+          {
+            "x": 1350.0,
+            "y": 1100.0
+          },
+          {
+            "x": 1350.0,
+            "y": 1200.0
+          },
+          {
+            "x": 1200.0,
+            "y": 1200.0
+          }
+        ],
+        "footprint_fit": "exact",
+        "centre": {
+          "x": 1275.0,
+          "y": 1150.0
+        },
+        "width": 150.0,
+        "depth": 100.0,
+        "rotation_rad": 0.0,
+        "notes": []
+      },
+      {
+        "id": "dxf-111",
+        "object_id": "obj-dxf-111",
+        "role": "footprint",
+        "label": "Water tank",
+        "label_from": "text",
+        "kind": "equipment",
+        "refs": [
+          {
+            "handle": "111",
+            "layer": "TANKS",
+            "entity": "CIRCLE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 3660.0,
+            "y": 2600.0
+          },
+          {
+            "x": 3658.847116824194,
+            "y": 2611.705419320968
+          },
+          {
+            "x": 3655.4327719506773,
+            "y": 2622.9610059419056
+          },
+          {
+            "x": 3649.8881767381527,
+            "y": 2633.334213981176
+          },
+          {
+            "x": 3642.4264068711927,
+            "y": 2642.4264068711927
+          },
+          {
+            "x": 3633.334213981176,
+            "y": 2649.8881767381527
+          },
+          {
+            "x": 3622.9610059419056,
+            "y": 2655.4327719506773
+          },
+          {
+            "x": 3611.705419320968,
+            "y": 2658.847116824194
+          },
+          {
+            "x": 3600.0,
+            "y": 2660.0
+          },
+          {
+            "x": 3588.294580679032,
+            "y": 2658.847116824194
+          },
+          {
+            "x": 3577.0389940580944,
+            "y": 2655.4327719506773
+          },
+          {
+            "x": 3566.665786018824,
+            "y": 2649.8881767381527
+          },
+          {
+            "x": 3557.5735931288073,
+            "y": 2642.4264068711927
+          },
+          {
+            "x": 3550.1118232618473,
+            "y": 2633.334213981176
+          },
+          {
+            "x": 3544.5672280493227,
+            "y": 2622.9610059419056
+          },
+          {
+            "x": 3541.152883175806,
+            "y": 2611.705419320968
+          },
+          {
+            "x": 3540.0,
+            "y": 2600.0
+          },
+          {
+            "x": 3541.152883175806,
+            "y": 2588.294580679032
+          },
+          {
+            "x": 3544.5672280493227,
+            "y": 2577.0389940580944
+          },
+          {
+            "x": 3550.1118232618473,
+            "y": 2566.665786018824
+          },
+          {
+            "x": 3557.5735931288073,
+            "y": 2557.5735931288073
+          },
+          {
+            "x": 3566.665786018824,
+            "y": 2550.1118232618473
+          },
+          {
+            "x": 3577.0389940580944,
+            "y": 2544.5672280493227
+          },
+          {
+            "x": 3588.294580679032,
+            "y": 2541.152883175806
+          },
+          {
+            "x": 3600.0,
+            "y": 2540.0
+          },
+          {
+            "x": 3611.705419320968,
+            "y": 2541.152883175806
+          },
+          {
+            "x": 3622.9610059419056,
+            "y": 2544.5672280493227
+          },
+          {
+            "x": 3633.334213981176,
+            "y": 2550.1118232618473
+          },
+          {
+            "x": 3642.4264068711927,
+            "y": 2557.5735931288073
+          },
+          {
+            "x": 3649.8881767381527,
+            "y": 2566.665786018824
+          },
+          {
+            "x": 3655.4327719506773,
+            "y": 2577.0389940580944
+          },
+          {
+            "x": 3658.847116824194,
+            "y": 2588.294580679032
+          }
+        ],
+        "footprint_fit": "enclosing",
+        "centre": {
+          "x": 3600.0,
+          "y": 2600.0
+        },
+        "width": 120.0,
+        "depth": 120.0,
+        "rotation_rad": 0.0,
+        "notes": [
+          "A circle (radius 60 drawing units), drawn as a 32-sided outline; the box is the square around it."
+        ]
+      },
+      {
+        "id": "dxf-115",
+        "object_id": "obj-dxf-115",
+        "role": "footprint",
+        "label": "Warehouse W2 (synthetic)",
+        "label_from": "text",
+        "kind": "equipment",
+        "refs": [
+          {
+            "handle": "115",
+            "layer": "BORDER",
+            "entity": "LWPOLYLINE",
+            "block": null
+          }
+        ],
+        "outline": [
+          {
+            "x": 4600.0,
+            "y": 100.0
+          },
+          {
+            "x": 5900.0,
+            "y": 100.0
+          },
+          {
+            "x": 5900.0,
+            "y": 700.0
+          },
+          {
+            "x": 4600.0,
+            "y": 700.0
+          }
+        ],
+        "footprint_fit": "exact",
+        "centre": {
+          "x": 5250.0,
+          "y": 400.0
+        },
+        "width": 1300.0,
+        "depth": 600.0,
+        "rotation_rad": 0.0,
+        "notes": []
+      }
+    ],
+    "skipped": [],
+    "review": null
+  },
+  "warnings": [
+    "2 open lines (2 on A-DOOR) are shown on the plan but not built as objects: only closed outlines and blocks become objects."
+  ]
+}

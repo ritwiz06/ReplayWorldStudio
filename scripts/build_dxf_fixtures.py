@@ -14,6 +14,11 @@ is involved. Run ``uv run python scripts/build_dxf_fixtures.py`` to (re)write th
 * ``unsupported-mm.dxf`` - a small layout with geometry outside the subset: a circle, an arc,
   a spline, a hatch, a polyline with an arc segment, an array insert, an undefined block, a
   tilted polyline, a 3D face, a dimension and a paper-space line.
+* ``warehouse-cm.dxf`` - made to fool the first reading (IMP-02): the site boundary is the largest
+  outline, so it is proposed as the floor instead of the building; the header says millimetres
+  but the geometry is in centimetres, which still reads as a plausible 6 m x 4 m, so no question
+  is asked. A note gives a known length (column bays of 6.00 m). Also a round tank (circle), a
+  door swing (arc), a title block and a drop zone drawn on the equipment layer.
 * ``layout.dwg`` - not a drawing: a DWG signature and filler bytes, to check the DWG message.
 
 ``hall-mm.analysis.json`` and ``room-unitless.analysis.json`` are what the API's reader returns
@@ -333,6 +338,46 @@ def unsupported_mm() -> bytes:
     return d.render()
 
 
+def warehouse_cm() -> bytes:
+    layers = ["0", "SITE-BOUNDARY", "A-WALL", "S-COLS", "RACKS", "EQUIPMENT", "WALKWAY"]
+    layers += ["A-DOOR", "TANKS", "NOTES", "BORDER"]
+    d = Dxf(insunits=4, measurement=1, layers=layers)  # says mm; drawn in cm
+    e = d.entities
+    e.append(d.rect("SITE-BOUNDARY", 0, 0, 6000, 4000))
+    e.append(d.rect("A-WALL", 1000, 1000, 4000, 3000))
+    for x in (1600, 2200, 2800, 3400):
+        e.append(d.rect("S-COLS", x - 20, 1980, x + 20, 2020))
+    e.append(d.text("NOTES", (1900, 2080), "Column bays are 6.00 m", 30.0))
+    for name, y in (("Rack A", 2500), ("Rack B", 2800)):
+        e.append(d.rect("RACKS", 1200, y, 2800, y + 120))
+        e.append(d.text("RACKS", (2000, y + 60), name, 40.0))
+    e.append(d.rect("WALKWAY", 1100, 2200, 3900, 2400))
+    e.append(d.rect("EQUIPMENT", 3200, 1200, 3700, 1600))
+    e.append(d.text("EQUIPMENT", (3450, 1400), "Pallet drop zone", 30.0))
+    e.append(d.rect("EQUIPMENT", 1200, 1100, 1350, 1200))
+    e.append(d.text("EQUIPMENT", (1275, 1150), "Forklift charger", 10.0))
+    e.append(
+        d.raw(
+            "CIRCLE",
+            "TANKS",
+            (100, "AcDbCircle"),
+            (10, 3600.0),
+            (20, 2600.0),
+            (30, 0.0),
+            (40, 60.0),
+        )
+    )
+    e.append(d.text("TANKS", (3600, 2600), "Water tank", 15.0))
+    e.append(
+        d.raw("ARC", "A-DOOR", (100, "AcDbCircle"), (10, 1000.0), (20, 1500.0), (30, 0.0),
+              (40, 100.0), (100, "AcDbArc"), (50, 0.0), (51, 90.0))
+    )  # fmt: skip
+    e.append(d.line("A-DOOR", (1000, 1500), (1100, 1500)))
+    e.append(d.rect("BORDER", 4600, 100, 5900, 700))
+    e.append(d.text("BORDER", (5250, 400), "Warehouse W2 (synthetic)", 60.0))
+    return d.render()
+
+
 def dwg_stub() -> bytes:
     return b"AC1032" + bytes((i * 37) % 251 for i in range(250))
 
@@ -342,6 +387,7 @@ FILES = {
     "room-unitless.dxf": room_unitless,
     "cell-blocks-m.dxf": cell_blocks_m,
     "unsupported-mm.dxf": unsupported_mm,
+    "warehouse-cm.dxf": warehouse_cm,
     "layout.dwg": dwg_stub,
 }
 
@@ -386,7 +432,10 @@ def same(name: str, committed: bytes, built: bytes) -> bool:
     return close(json.loads(committed), json.loads(built))
 
 
-ANALYSES = {f"{name[:-4]}.analysis.json": name for name in ("hall-mm.dxf", "room-unitless.dxf")}
+ANALYSES = {
+    f"{name[:-4]}.analysis.json": name
+    for name in ("hall-mm.dxf", "room-unitless.dxf", "warehouse-cm.dxf")
+}
 
 
 def main(argv: list[str]) -> int:

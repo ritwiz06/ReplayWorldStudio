@@ -43,6 +43,17 @@ each change, and the result is then validated like any other document.
       ``confirmed``; no earlier editor could produce one, and such a document is reported, not
       silently changed.
 
+0.9.0 -> 0.10.0
+    * every drawing reading gains a ``review`` in which nothing has been checked yet: the floor
+      is the reader's proposal (or none), the scale is the unit as settled at import (unchecked
+      from the header, confirmed when the person chose it), every object is proposed, and the
+      omissions are not yet accepted;
+    * every drawn object gains ``footprint_fit``: 'enclosing' for a block's extent or an outline
+      that is not a rectangle (the conservative reading), 'exact' otherwise;
+    * a drawn object's footprint width and depth recorded as ``measured`` with a "Drawn in ..."
+      source become ``drawn``: they were read from a design drawing, not measured on site. This
+      only weakens evidence; nothing else changes.
+
 Steps run in sequence, so a 0.1.0 document passes through 0.2.0 on its way to the current
 version and its notes describe every step.
 """
@@ -290,6 +301,70 @@ def _from_0_8_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     return upgraded, [note]
 
 
+def _from_0_9_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    upgraded = copy.deepcopy(dict(old))
+    objects = {o["id"]: o for o in upgraded["scene"]["objects"]}
+    reviews = fits = weakened = 0
+    for source in upgraded["sources"]:
+        drawing = source.get("drawing")
+        if drawing is None:
+            continue
+        if "review" in drawing or any("footprint_fit" in d for d in drawing["objects"]):
+            raise MigrationError("malformed 0.9.0 document: drawing reviews only exist from 0.10.0")
+        floor = next((d for d in drawing["objects"] if d["role"] == "floor"), None)
+        for drawn in drawing["objects"]:
+            approximate = drawn["refs"][0]["entity"] == "INSERT" or any(
+                "not a rectangle" in note for note in drawn["notes"]
+            )
+            drawn["footprint_fit"] = "enclosing" if approximate else "exact"
+            fits += 1
+            scene_object = objects.get(drawn["object_id"])
+            if scene_object is None:
+                continue
+            for axis in ("width", "depth"):
+                length = scene_object["dimensions"][axis]
+                if length["origin"] == "measured" and str(length["source_ref"] or "").startswith(
+                    "Drawn in "
+                ):
+                    length["origin"] = "drawn"
+                    weakened += 1
+        transform = source["source_to_world"]
+        header = drawing["units"]["basis"] == "drawing_header"
+        drawing["review"] = {
+            "floor": {
+                "choice": "outline" if floor else "none",
+                "drawn_id": floor["id"] if floor else None,
+                "object_id": floor["object_id"] if floor else None,
+                "status": "proposed",
+            },
+            "scale": {
+                "basis": "drawing_unit" if header else "chosen_unit",
+                "unit": transform["source_unit"],
+                "metres_per_unit": transform["metres_per_source_unit"],
+                "status": "unchecked" if header else "confirmed",
+                "reference": None,
+            },
+            "objects": [
+                {
+                    "drawn_id": d["id"],
+                    "status": "used_as_floor" if d is floor else "proposed",
+                }
+                for d in drawing["objects"]
+            ],
+            "omissions": "proposed",
+        }
+        reviews += 1
+    upgraded["schema_version"] = "0.10.0"
+    note = (
+        f"schema_version 0.9.0 -> 0.10.0 (adds an unchecked review to {reviews} drawing "
+        f"source{'' if reviews == 1 else 's'} and footprint_fit to {fits} drawn "
+        f"object{'' if fits == 1 else 's'}; {weakened} drawn footprint "
+        f"value{'' if weakened == 1 else 's'} recorded as measured become drawn (a design "
+        "drawing, not a site measurement); nothing is strengthened)"
+    )
+    return upgraded, [note]
+
+
 _STEPS: Final[dict[str, Step]] = {
     "0.1.0": _from_0_1_0,
     "0.2.0": _from_0_2_0,
@@ -299,5 +374,6 @@ _STEPS: Final[dict[str, Step]] = {
     "0.6.0": _from_0_6_0,
     "0.7.0": _from_0_7_0,
     "0.8.0": _from_0_8_0,
+    "0.9.0": _from_0_9_0,
 }
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)

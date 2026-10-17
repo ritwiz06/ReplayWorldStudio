@@ -1,0 +1,750 @@
+999
+Synthetic test drawing - Replay World Studio fixtures
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1015
+  9
+$INSUNITS
+ 70
+4
+  9
+$MEASUREMENT
+ 70
+1
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LAYER
+ 70
+11
+  0
+LAYER
+  5
+117
+  2
+0
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+118
+  2
+SITE-BOUNDARY
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+119
+  2
+A-WALL
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11A
+  2
+S-COLS
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11B
+  2
+RACKS
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11C
+  2
+EQUIPMENT
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11D
+  2
+WALKWAY
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11E
+  2
+A-DOOR
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11F
+  2
+TANKS
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+120
+  2
+NOTES
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+121
+  2
+BORDER
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+ENDTAB
+  0
+TABLE
+  2
+BLOCK_RECORD
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+BLOCKS
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+LWPOLYLINE
+  5
+101
+100
+AcDbEntity
+  8
+SITE-BOUNDARY
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+0
+ 20
+0
+ 10
+6000
+ 20
+0
+ 10
+6000
+ 20
+4000
+ 10
+0
+ 20
+4000
+  0
+LWPOLYLINE
+  5
+102
+100
+AcDbEntity
+  8
+A-WALL
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+1000
+ 20
+1000
+ 10
+4000
+ 20
+1000
+ 10
+4000
+ 20
+3000
+ 10
+1000
+ 20
+3000
+  0
+LWPOLYLINE
+  5
+103
+100
+AcDbEntity
+  8
+S-COLS
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+1580
+ 20
+1980
+ 10
+1620
+ 20
+1980
+ 10
+1620
+ 20
+2020
+ 10
+1580
+ 20
+2020
+  0
+LWPOLYLINE
+  5
+104
+100
+AcDbEntity
+  8
+S-COLS
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+2180
+ 20
+1980
+ 10
+2220
+ 20
+1980
+ 10
+2220
+ 20
+2020
+ 10
+2180
+ 20
+2020
+  0
+LWPOLYLINE
+  5
+105
+100
+AcDbEntity
+  8
+S-COLS
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+2780
+ 20
+1980
+ 10
+2820
+ 20
+1980
+ 10
+2820
+ 20
+2020
+ 10
+2780
+ 20
+2020
+  0
+LWPOLYLINE
+  5
+106
+100
+AcDbEntity
+  8
+S-COLS
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+3380
+ 20
+1980
+ 10
+3420
+ 20
+1980
+ 10
+3420
+ 20
+2020
+ 10
+3380
+ 20
+2020
+  0
+TEXT
+  5
+107
+100
+AcDbEntity
+  8
+NOTES
+100
+AcDbText
+ 10
+1900
+ 20
+2080
+ 30
+0.0
+ 40
+30.0
+  1
+Column bays are 6.00 m
+  0
+LWPOLYLINE
+  5
+108
+100
+AcDbEntity
+  8
+RACKS
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+1200
+ 20
+2500
+ 10
+2800
+ 20
+2500
+ 10
+2800
+ 20
+2620
+ 10
+1200
+ 20
+2620
+  0
+TEXT
+  5
+109
+100
+AcDbEntity
+  8
+RACKS
+100
+AcDbText
+ 10
+2000
+ 20
+2560
+ 30
+0.0
+ 40
+40.0
+  1
+Rack A
+  0
+LWPOLYLINE
+  5
+10A
+100
+AcDbEntity
+  8
+RACKS
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+1200
+ 20
+2800
+ 10
+2800
+ 20
+2800
+ 10
+2800
+ 20
+2920
+ 10
+1200
+ 20
+2920
+  0
+TEXT
+  5
+10B
+100
+AcDbEntity
+  8
+RACKS
+100
+AcDbText
+ 10
+2000
+ 20
+2860
+ 30
+0.0
+ 40
+40.0
+  1
+Rack B
+  0
+LWPOLYLINE
+  5
+10C
+100
+AcDbEntity
+  8
+WALKWAY
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+1100
+ 20
+2200
+ 10
+3900
+ 20
+2200
+ 10
+3900
+ 20
+2400
+ 10
+1100
+ 20
+2400
+  0
+LWPOLYLINE
+  5
+10D
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+3200
+ 20
+1200
+ 10
+3700
+ 20
+1200
+ 10
+3700
+ 20
+1600
+ 10
+3200
+ 20
+1600
+  0
+TEXT
+  5
+10E
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbText
+ 10
+3450
+ 20
+1400
+ 30
+0.0
+ 40
+30.0
+  1
+Pallet drop zone
+  0
+LWPOLYLINE
+  5
+10F
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+1200
+ 20
+1100
+ 10
+1350
+ 20
+1100
+ 10
+1350
+ 20
+1200
+ 10
+1200
+ 20
+1200
+  0
+TEXT
+  5
+110
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbText
+ 10
+1275
+ 20
+1150
+ 30
+0.0
+ 40
+10.0
+  1
+Forklift charger
+  0
+CIRCLE
+  5
+111
+100
+AcDbEntity
+  8
+TANKS
+100
+AcDbCircle
+ 10
+3600.0
+ 20
+2600.0
+ 30
+0.0
+ 40
+60.0
+  0
+TEXT
+  5
+112
+100
+AcDbEntity
+  8
+TANKS
+100
+AcDbText
+ 10
+3600
+ 20
+2600
+ 30
+0.0
+ 40
+15.0
+  1
+Water tank
+  0
+ARC
+  5
+113
+100
+AcDbEntity
+  8
+A-DOOR
+100
+AcDbCircle
+ 10
+1000.0
+ 20
+1500.0
+ 30
+0.0
+ 40
+100.0
+100
+AcDbArc
+ 50
+0.0
+ 51
+90.0
+  0
+LINE
+  5
+114
+100
+AcDbEntity
+  8
+A-DOOR
+100
+AcDbLine
+ 10
+1000
+ 20
+1500
+ 30
+0.0
+ 11
+1100
+ 21
+1500
+ 31
+0.0
+  0
+LWPOLYLINE
+  5
+115
+100
+AcDbEntity
+  8
+BORDER
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+4600
+ 20
+100
+ 10
+5900
+ 20
+100
+ 10
+5900
+ 20
+700
+ 10
+4600
+ 20
+700
+  0
+TEXT
+  5
+116
+100
+AcDbEntity
+  8
+BORDER
+100
+AcDbText
+ 10
+5250
+ 20
+400
+ 30
+0.0
+ 40
+60.0
+  1
+Warehouse W2 (synthetic)
+  0
+ENDSEC
+  0
+EOF

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.9.0",
+  "$id": "urn:replay-world:contracts:0.10.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.9.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.10.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -746,6 +746,17 @@
             "$ref": "#/$defs/SkippedEntities"
           },
           "type": "array"
+        },
+        "review": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DrawingReview"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The review of the draft (0.10.0); null only in an analysis."
         }
       },
       "required": [
@@ -759,7 +770,8 @@
         "lines",
         "labels",
         "objects",
-        "skipped"
+        "skipped",
+        "review"
       ],
       "title": "DrawingImport",
       "type": "object"
@@ -828,6 +840,14 @@
           "minItems": 3,
           "type": "array"
         },
+        "footprint_fit": {
+          "description": "'exact': the footprint rectangle is the drawn shape; 'enclosing': the rectangle encloses a shape that is not one (or a block's extent), so it is approximate.",
+          "enum": [
+            "exact",
+            "enclosing"
+          ],
+          "type": "string"
+        },
         "centre": {
           "$ref": "#/$defs/PlanPoint"
         },
@@ -862,6 +882,7 @@
         "kind",
         "refs",
         "outline",
+        "footprint_fit",
         "centre",
         "width",
         "depth",
@@ -899,7 +920,9 @@
             "POLYLINE",
             "INSERT",
             "TEXT",
-            "MTEXT"
+            "MTEXT",
+            "CIRCLE",
+            "ARC"
           ],
           "type": "string"
         },
@@ -924,6 +947,81 @@
         "block"
       ],
       "title": "DrawingRef",
+      "type": "object"
+    },
+    "DrawingReview": {
+      "additionalProperties": false,
+      "description": "The review of a draft from a drawing (IMP-02): floor, scale, each object, and whether the\nperson accepted what the drawing leaves out (shapes not imported, heights).",
+      "properties": {
+        "floor": {
+          "$ref": "#/$defs/FloorReview"
+        },
+        "scale": {
+          "$ref": "#/$defs/ScaleReview"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/ObjectReview"
+          },
+          "maxItems": 400,
+          "type": "array"
+        },
+        "omissions": {
+          "enum": [
+            "proposed",
+            "accepted"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "floor",
+        "scale",
+        "objects",
+        "omissions"
+      ],
+      "title": "DrawingReview",
+      "type": "object"
+    },
+    "DrawingReviewed": {
+      "additionalProperties": false,
+      "description": "A correction made while reviewing a draft from a drawing (IMP-02, 0.10.0): the floor, the\nscale, an object's name or kind, or 'not an object'. ``correction`` says it in words; every\nobject it changed is recorded as it was and as it became, so the log still describes the\nscene. The review state itself is the drawing source's ``review``.",
+      "properties": {
+        "type": {
+          "const": "drawing_reviewed",
+          "type": "string"
+        },
+        "revision": {
+          "description": "Scene revision this edit produced.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "source_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "correction": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/ReviewedObjectChange"
+          },
+          "maxItems": 800,
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "revision",
+        "source_id",
+        "correction",
+        "objects"
+      ],
+      "title": "DrawingReviewed",
       "type": "object"
     },
     "DrawingUnits": {
@@ -1369,6 +1467,62 @@
         "corners"
       ],
       "title": "FloorRectangleSuggestion",
+      "type": "object"
+    },
+    "FloorReview": {
+      "additionalProperties": false,
+      "description": "Which floor the draft uses: a closed outline, one sized around the objects, or none.",
+      "properties": {
+        "choice": {
+          "enum": [
+            "outline",
+            "automatic",
+            "none"
+          ],
+          "type": "string"
+        },
+        "drawn_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The drawn outline used, for 'outline'."
+        },
+        "object_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The floor scene object; null for 'none'."
+        },
+        "status": {
+          "enum": [
+            "proposed",
+            "accepted",
+            "corrected"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "choice",
+        "drawn_id",
+        "object_id",
+        "status"
+      ],
+      "title": "FloorReview",
       "type": "object"
     },
     "GeneratedAssetRequest": {
@@ -1893,7 +2047,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.9.0",
+          "const": "0.10.0",
           "type": "string"
         }
       },
@@ -2131,7 +2285,8 @@
             "user_supplied",
             "supplier",
             "inferred",
-            "default"
+            "default",
+            "drawn"
           ],
           "type": "string"
         },
@@ -2222,7 +2377,8 @@
             "user_supplied",
             "supplier",
             "inferred",
-            "default"
+            "default",
+            "drawn"
           ],
           "type": "string"
         },
@@ -2744,6 +2900,33 @@
       "title": "ObjectRemoved",
       "type": "object"
     },
+    "ObjectReview": {
+      "additionalProperties": false,
+      "description": "What the person decided about one drawn object.",
+      "properties": {
+        "drawn_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "proposed",
+            "accepted",
+            "corrected",
+            "not_an_object",
+            "used_as_floor"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "drawn_id",
+        "status"
+      ],
+      "title": "ObjectReview",
+      "type": "object"
+    },
     "PhotoCalibration": {
       "additionalProperties": false,
       "description": "How positions on the photo's floor become scene metres.\n\n``image_to_floor`` is a 3 x 3 homography, row-major, mapping (u, v, 1) on the photo to\n(x, z, w) on the scene floor (y = 0), valid only for points on the floor plane. The scene\nframe has +X to the right of the photo and the camera on the +Z side, looking towards -Z.",
@@ -3054,7 +3237,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.9.0",
+          "const": "0.10.0",
           "type": "string"
         },
         "id": {
@@ -3395,6 +3578,68 @@
       "title": "ProviderRun",
       "type": "object"
     },
+    "ReferenceLength": {
+      "additionalProperties": false,
+      "description": "A length the person knows, marked on the drawing with two points (IMP-02).",
+      "properties": {
+        "a": {
+          "$ref": "#/$defs/PlanPoint"
+        },
+        "b": {
+          "$ref": "#/$defs/PlanPoint"
+        },
+        "drawing_length": {
+          "description": "|b - a| in drawing units.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "real_length_m": {
+          "description": "The real length the person entered.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "metres_per_unit": {
+          "description": "real_length_m / drawing_length.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "compared_with": {
+          "anyOf": [
+            {
+              "description": "Strictly positive length in metres.",
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Metres per unit of the drawing's or chosen unit when it was entered."
+        },
+        "agrees": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Whether the two scales are within 2 %."
+        }
+      },
+      "required": [
+        "a",
+        "b",
+        "drawing_length",
+        "real_length_m",
+        "metres_per_unit",
+        "compared_with",
+        "agrees"
+      ],
+      "title": "ReferenceLength",
+      "type": "object"
+    },
     "RestoredModel": {
       "additionalProperties": false,
       "properties": {
@@ -3502,6 +3747,44 @@
         "source_ref"
       ],
       "title": "ReviewedLength",
+      "type": "object"
+    },
+    "ReviewedObjectChange": {
+      "additionalProperties": false,
+      "description": "One object as a drawing review correction found and left it (null: absent).",
+      "properties": {
+        "object_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "before": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SceneObject"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "after": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SceneObject"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "object_id",
+        "before",
+        "after"
+      ],
+      "title": "ReviewedObjectChange",
       "type": "object"
     },
     "RevisedDimensions": {
@@ -3680,6 +3963,63 @@
       "title": "RotateIntent",
       "type": "object"
     },
+    "ScaleReview": {
+      "additionalProperties": false,
+      "description": "The scale in use and how it was established: the drawing's unit, a unit the person\nchose, or a known length they marked. ``status``: 'unchecked' (taken as read), 'confirmed'\n(the person accepted or chose it), 'measured' (a reference length set it or agrees).",
+      "properties": {
+        "basis": {
+          "enum": [
+            "drawing_unit",
+            "chosen_unit",
+            "reference_length"
+          ],
+          "type": "string"
+        },
+        "unit": {
+          "description": "The drawing's nominal unit (also for a reference).",
+          "enum": [
+            "m",
+            "cm",
+            "mm",
+            "in",
+            "ft"
+          ],
+          "type": "string"
+        },
+        "metres_per_unit": {
+          "description": "Strictly positive length in metres.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "status": {
+          "enum": [
+            "unchecked",
+            "confirmed",
+            "measured"
+          ],
+          "type": "string"
+        },
+        "reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReferenceLength"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "basis",
+        "unit",
+        "metres_per_unit",
+        "status",
+        "reference"
+      ],
+      "title": "ScaleReview",
+      "type": "object"
+    },
     "Scene": {
       "additionalProperties": false,
       "description": "Placed objects plus the record of every edit in effect.\n\n``revision`` advances by one for every accepted edit, undo and redo, so a command prepared\nagainst an older revision is always detected. ``edit_log`` lists, oldest first, the edits\nthat produced the current objects. An undone edit leaves the log, so the revisions of its\nrecords may have gaps; the log never describes values the scene does not hold.",
@@ -3722,6 +4062,9 @@
               },
               {
                 "$ref": "#/$defs/AssetRevised"
+              },
+              {
+                "$ref": "#/$defs/DrawingReviewed"
               }
             ],
             "type": "object"
@@ -4239,7 +4582,7 @@
           "type": "string"
         },
         "to_version": {
-          "const": "0.9.0",
+          "const": "0.10.0",
           "type": "string"
         },
         "notes": {
@@ -4381,7 +4724,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.9.0",
+          "const": "0.10.0",
           "type": "string"
         },
         "project_id": {

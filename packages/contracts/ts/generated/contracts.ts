@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.9.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.10.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -33,7 +33,7 @@ export interface ReplayWorldContracts {
   DrawingAnalysis: DrawingAnalysis;
 }
 export interface Project {
-  schema_version: "0.9.0";
+  schema_version: "0.10.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -212,7 +212,7 @@ export interface Length {
    * Strictly positive length in metres.
    */
   value_m: number;
-  origin: "measured" | "user_supplied" | "supplier" | "inferred" | "default";
+  origin: "measured" | "user_supplied" | "supplier" | "inferred" | "default" | "drawn";
   source_ref: string | null;
   review_status: "unreviewed" | "confirmed";
   uncertainty_m: UncertaintyBounds | null;
@@ -326,6 +326,10 @@ export interface DrawingImport {
    */
   objects: DrawingObject[];
   skipped: SkippedEntities[];
+  /**
+   * The review of the draft (0.10.0); null only in an analysis.
+   */
+  review: DrawingReview | null;
 }
 export interface DrawingFile {
   uri: string;
@@ -384,7 +388,7 @@ export interface DrawingRef {
    */
   handle: string | null;
   layer: string;
-  entity: "LINE" | "LWPOLYLINE" | "POLYLINE" | "INSERT" | "TEXT" | "MTEXT";
+  entity: "LINE" | "LWPOLYLINE" | "POLYLINE" | "INSERT" | "TEXT" | "MTEXT" | "CIRCLE" | "ARC";
   /**
    * For geometry inside a block: the block names from the drawing down, separated by ' > '; null for an entity drawn directly in model space.
    */
@@ -631,6 +635,10 @@ export interface DrawingObject {
    * @maxItems 2000
    */
   outline: [PlanPoint, PlanPoint, PlanPoint, ...PlanPoint[]];
+  /**
+   * 'exact': the footprint rectangle is the drawn shape; 'enclosing': the rectangle encloses a shape that is not one (or a block's extent), so it is approximate.
+   */
+  footprint_fit: "exact" | "enclosing";
   centre: PlanPoint;
   /**
    * Footprint along its rotated X, in drawing units.
@@ -675,6 +683,89 @@ export interface SkippedEntities {
    */
   layout: boolean;
   reason: string;
+}
+/**
+ * The review of a draft from a drawing (IMP-02): floor, scale, each object, and whether the
+ * person accepted what the drawing leaves out (shapes not imported, heights).
+ */
+export interface DrawingReview {
+  floor: FloorReview;
+  scale: ScaleReview;
+  /**
+   * @maxItems 400
+   */
+  objects: ObjectReview[];
+  omissions: "proposed" | "accepted";
+}
+/**
+ * Which floor the draft uses: a closed outline, one sized around the objects, or none.
+ */
+export interface FloorReview {
+  choice: "outline" | "automatic" | "none";
+  /**
+   * The drawn outline used, for 'outline'.
+   */
+  drawn_id: string | null;
+  /**
+   * The floor scene object; null for 'none'.
+   */
+  object_id: string | null;
+  status: "proposed" | "accepted" | "corrected";
+}
+/**
+ * The scale in use and how it was established: the drawing's unit, a unit the person
+ * chose, or a known length they marked. ``status``: 'unchecked' (taken as read), 'confirmed'
+ * (the person accepted or chose it), 'measured' (a reference length set it or agrees).
+ */
+export interface ScaleReview {
+  basis: "drawing_unit" | "chosen_unit" | "reference_length";
+  /**
+   * The drawing's nominal unit (also for a reference).
+   */
+  unit: "m" | "cm" | "mm" | "in" | "ft";
+  /**
+   * Strictly positive length in metres.
+   */
+  metres_per_unit: number;
+  status: "unchecked" | "confirmed" | "measured";
+  reference: ReferenceLength | null;
+}
+/**
+ * A length the person knows, marked on the drawing with two points (IMP-02).
+ */
+export interface ReferenceLength {
+  a: PlanPoint;
+  b: PlanPoint;
+  /**
+   * |b - a| in drawing units.
+   */
+  drawing_length: number;
+  /**
+   * The real length the person entered.
+   */
+  real_length_m: number;
+  /**
+   * real_length_m / drawing_length.
+   */
+  metres_per_unit: number;
+  /**
+   * Metres per unit of the drawing's or chosen unit when it was entered.
+   */
+  compared_with: number | null;
+  /**
+   * Whether the two scales are within 2 %.
+   */
+  agrees: boolean | null;
+}
+/**
+ * What the person decided about one drawn object.
+ */
+export interface ObjectReview {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  drawn_id: string;
+  status: "proposed" | "accepted" | "corrected" | "not_an_object" | "used_as_floor";
 }
 /**
  * A reusable definition that scene objects instantiate by referencing its ``id``.
@@ -1085,7 +1176,7 @@ export interface Scene {
    */
   revision: number;
   objects: SceneObject[];
-  edit_log: (ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised)[];
+  edit_log: (ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed)[];
 }
 export interface SceneObject {
   /**
@@ -1127,7 +1218,7 @@ export interface KnownParameter {
   label: string;
   unit: "m" | "s" | "kg" | "rad" | "m/s" | "1";
   value: number;
-  origin: "measured" | "user_supplied" | "supplier" | "inferred" | "default";
+  origin: "measured" | "user_supplied" | "supplier" | "inferred" | "default" | "drawn";
   source_ref: string | null;
   review_status: "unreviewed" | "confirmed";
   uncertainty: UncertaintyBounds | null;
@@ -1247,18 +1338,51 @@ export interface RevisedInstance {
   object_id: string;
   dimensions: AxisChange[];
 }
+/**
+ * A correction made while reviewing a draft from a drawing (IMP-02, 0.10.0): the floor, the
+ * scale, an object's name or kind, or 'not an object'. ``correction`` says it in words; every
+ * object it changed is recorded as it was and as it became, so the log still describes the
+ * scene. The review state itself is the drawing source's ``review``.
+ */
+export interface DrawingReviewed {
+  type: "drawing_reviewed";
+  /**
+   * Scene revision this edit produced.
+   */
+  revision: number;
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  source_id: string;
+  correction: string;
+  /**
+   * @maxItems 800
+   */
+  objects: ReviewedObjectChange[];
+}
+/**
+ * One object as a drawing review correction found and left it (null: absent).
+ */
+export interface ReviewedObjectChange {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  object_id: string;
+  before: SceneObject | null;
+  after: SceneObject | null;
+}
 export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.9.0";
+  schema_version: "0.10.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.9.0";
+  schema_version: "0.10.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -1295,7 +1419,7 @@ export interface UpgradeReport {
    * Schema version of the submitted document.
    */
   from_version: string;
-  to_version: "0.9.0";
+  to_version: "0.10.0";
   notes: string[];
   project: Project;
   validation: ValidationReport;

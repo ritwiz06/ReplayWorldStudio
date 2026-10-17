@@ -1,26 +1,30 @@
-"""Read a bounded subset of ASCII DXF into a floor plan and layout objects (IMP-01).
+"""Read a bounded subset of ASCII DXF into a floor plan and layout objects (IMP-01, IMP-02).
 
 Supported (``rws-dxf/1``), in model space and inside block definitions:
 
 * ``LINE``;
-* ``LWPOLYLINE`` and 2D ``POLYLINE`` made of straight segments, open or closed;
+* ``LWPOLYLINE`` and 2D ``POLYLINE``, open or closed; arc segments (bulges) are drawn as straight
+  segments of at most 10 degrees;
+* ``CIRCLE`` (a 32-sided closed outline whose footprint is the square around it) and ``ARC``
+  (an open line of 10-degree segments);
 * ``INSERT`` of a block, with its insertion point, base point, X/Y scale (mirroring included),
   rotation and nested inserts (at most 8 deep), drawn in the plan (extrusion +Z or -Z);
 * ``TEXT``, ``MTEXT`` and block ``ATTRIB`` values, used only to name things;
 * the header's ``$INSUNITS`` (inches, feet, millimetres, centimetres, metres), ``$MEASUREMENT``
   and ``$ACADVER``, and each block's own insertion units.
 
-Everything else is reported, never silently dropped: arcs, circles, ellipses, splines, hatches,
-solids, 3D entities, polylines with arc segments, array inserts (``MINSERT``), external
-references and anything not drawn in the plan are listed as layout geometry that was not
-imported; dimensions, leaders and other annotation are listed as not used. Open lines stay on
-the plan but do not become objects. Binary DXF and DWG files are refused with the route to an
-ASCII DXF export.
+Everything else is reported, never silently dropped: ellipses, splines, hatches, solids, 3D
+entities, curve-fitted polylines, array inserts (``MINSERT``), external references and anything
+not drawn in the plan are listed as layout geometry that was not imported; dimensions, leaders
+and other annotation are listed as not used. Open lines stay on the plan but do not become
+objects. Binary DXF and DWG files are refused with the route to an ASCII DXF export.
 
-Layout objects are drawn deterministically: the largest closed outline covering most of the
-drawing is the floor; every other closed polyline and every top-level block insert is one object
-whose footprint rectangle comes from the drawing. Names come from a block attribute, a text
-inside the outline, the block name or the layer, in that order; kinds from layer names
+Layout objects are drawn deterministically and only proposed: the largest closed outline
+covering most of the drawing is proposed as the floor, and the review (IMP-02) decides. Every
+other closed outline and every top-level block insert is one object whose footprint rectangle
+comes from the drawing, marked ``exact`` or ``enclosing`` (approximate). Names come from a block
+attribute, a text inside the outline (only the smallest outline holding it, and never an outline
+that holds other objects), the block name or the layer, in that order; kinds from layer names
 (walkways, keep-clear zones, columns and walls) and are otherwise equipment. Text read from the
 file is content, never an instruction. Error messages never echo file content beyond entity
 types, handles, layer and block names.
@@ -133,8 +137,6 @@ ANNOTATION: Final[dict[str, str]] = {
     "ARCALIGNEDTEXT": "Text is read only from TEXT, MTEXT and block attributes.",
 }
 UNSUPPORTED: Final[dict[str, str]] = {
-    "ARC": "Arcs are not in the supported subset (lines and straight polylines).",
-    "CIRCLE": "Circles are not in the supported subset; a round column or tank is not imported.",
     "ELLIPSE": "Ellipses are not in the supported subset.",
     "SPLINE": "Splines are not in the supported subset.",
     "HATCH": "Hatches (filled areas) are not in the supported subset.",
@@ -385,6 +387,40 @@ def _xy(entity: Entity, x_code: int, y_code: int) -> Point:
     return (entity.number(x_code), entity.number(y_code))
 
 
+ARC_STEP_RAD: Final = math.pi / 18
+"""Arcs are drawn as straight segments of at most 10 degrees; circles as 32 sides."""
+CIRCLE_SIDES: Final = 32
+
+
+def _arc_points(cx: float, cy: float, r: float, start: float, sweep: float) -> list[Point]:
+    """Points along an arc from ``start`` (radians, counter-clockwise) through ``sweep``."""
+    n = max(2, math.ceil(abs(sweep) / ARC_STEP_RAD))
+    return [
+        (cx + r * math.cos(start + sweep * i / n), cy + r * math.sin(start + sweep * i / n))
+        for i in range(n + 1)
+    ]
+
+
+def _bulged(points: list[Point], bulges: list[float], closed: bool) -> list[Point]:
+    """A polyline's vertices with each arc segment (non-zero bulge) drawn as short segments."""
+    out: list[Point] = []
+    count = len(points) if closed else len(points) - 1
+    for i in range(len(points)):
+        out.append(points[i])
+        if i >= count or bulges[i] == 0:
+            continue
+        (x1, y1), (x2, y2) = points[i], points[(i + 1) % len(points)]
+        b = bulges[i]
+        dx, dy = x2 - x1, y2 - y1
+        # The centre lies on the chord's left normal for a counter-clockwise (positive) bulge.
+        k = (1 - b * b) / (4 * b)
+        cx, cy = (x1 + x2) / 2 - k * dy, (y1 + y2) / 2 + k * dx
+        r = math.hypot(x1 - cx, y1 - cy)
+        start = math.atan2(y1 - cy, x1 - cx)
+        out.extend(_arc_points(cx, cy, r, start, 4 * math.atan(b))[1:-1])
+    return out
+
+
 def _polygon_area(points: list[Point]) -> float:
     return 0.5 * abs(
         sum(
@@ -548,26 +584,59 @@ class Reader:
             )
 
     def primitive(self, entity: Entity, block: str | None) -> Primitive | None:
-        """A LINE or straight polyline as a primitive in its own frame, or None (skipped)."""
+        """A LINE, polyline, circle or arc as straight segments in its own frame, or None
+        (skipped). Arc segments, arcs and circles are approximated by short straight segments."""
         kind = entity.type
         ref_entity: DrawingEntity
         if kind == "LINE":
             ref_entity = "LINE"
             points = [_xy(entity, 10, 20), _xy(entity, 11, 21)]
             closed = False
+        elif kind in ("CIRCLE", "ARC"):
+            ref_entity = "CIRCLE" if kind == "CIRCLE" else "ARC"
+            ocs = _ocs(entity)
+            if ocs is None:
+                self.skip(entity, "Not drawn in the plan (tilted extrusion).", True)
+                return None
+            cx, cy = _xy(entity, 10, 20)
+            r = entity.number(40)
+            if r <= 0:
+                self.skip(entity, "Degenerate: its radius is zero.", True)
+                return None
+            if kind == "CIRCLE":
+                step = 2 * math.pi / CIRCLE_SIDES
+                local = [
+                    (cx + r * math.cos(i * step), cy + r * math.sin(i * step))
+                    for i in range(CIRCLE_SIDES)
+                ]
+                closed = True
+            else:
+                start = math.radians(entity.number(50))
+                end = math.radians(entity.number(51))
+                sweep = (end - start) % (2 * math.pi) or 2 * math.pi
+                local = _arc_points(cx, cy, r, start, sweep)
+                closed = False
+            points = [_apply(ocs, q) for q in local]
         elif kind == "LWPOLYLINE":
             ref_entity = "LWPOLYLINE"
-            if any(c == 42 and _float(v) != 0 for c, v in entity.groups):
-                self.skip(entity, "Polylines with arc segments (bulges) are not supported.", True)
-                return None
             ocs = _ocs(entity)
             if ocs is None:
                 self.skip(entity, "Not drawn in the plan (tilted extrusion).", True)
                 return None
             xs = [_float(v) for c, v in entity.groups if c == 10]
             ys = [_float(v) for c, v in entity.groups if c == 20]
-            points = [_apply(ocs, p) for p in zip(xs, ys, strict=False)]
+            # A bulge (code 42) belongs to the vertex before it.
+            bulges: list[float] = []
+            for c, v in entity.groups:
+                if c == 10:
+                    bulges.append(0.0)
+                elif c == 42 and bulges:
+                    bulges[-1] = _float(v)
             closed = _int(entity.first(70)) & 1 == 1
+            local = list(zip(xs, ys, strict=False))
+            if any(bulges):
+                local = _bulged(local, bulges[: len(local)], closed)
+            points = [_apply(ocs, p) for p in local]
         elif kind == "POLYLINE":
             ref_entity = "POLYLINE"
             flags = _int(entity.first(70))
@@ -576,21 +645,22 @@ class Reader:
                     entity, "3D polylines, meshes and polyface meshes are not supported.", True
                 )
                 return None
-            if flags & (2 | 4) or any(_float(v.first(42) or "0") != 0 for v in entity.children):
-                self.skip(
-                    entity, "Curve-fitted polylines and arc segments are not supported.", True
-                )
+            if flags & (2 | 4):
+                self.skip(entity, "Curve-fitted (smoothed) polylines are not supported.", True)
                 return None
             ocs = _ocs(entity)
             if ocs is None:
                 self.skip(entity, "Not drawn in the plan (tilted extrusion).", True)
                 return None
-            points = [
-                _apply(ocs, _xy(v, 10, 20))
-                for v in entity.children
-                if v.type == "VERTEX" and not _int(v.first(70)) & 16
+            vertices = [
+                v for v in entity.children if v.type == "VERTEX" and not _int(v.first(70)) & 16
             ]
             closed = flags & 1 == 1
+            local = [_xy(v, 10, 20) for v in vertices]
+            vertex_bulges = [_float(v.first(42) or "0") for v in vertices]
+            if any(vertex_bulges):
+                local = _bulged(local, vertex_bulges, closed)
+            points = [_apply(ocs, q) for q in local]
         else:
             return None
         deduped = [p for i, p in enumerate(points) if i == 0 or p != points[i - 1]]
@@ -666,7 +736,7 @@ class Reader:
         self._warn_block_units(block)
         prims: list[Primitive] = []
         for entity in block.entities:
-            if entity.type in ("LINE", "LWPOLYLINE", "POLYLINE"):
+            if entity.type in ("LINE", "LWPOLYLINE", "POLYLINE", "CIRCLE", "ARC"):
                 prim = self.primitive(entity, block.name)
                 if prim:
                     prims.append(prim)
@@ -773,7 +843,9 @@ def _generic(kind: ObjectKind, layer: str) -> str:
     if kind == "keep_clear":
         return "Keep-clear zone"
     if kind == "structure":
-        return "Column" if re.search(r"\bcol(umn)?s?\b|column|pillar", layer, re.I) else "Structure"
+        if re.search(r"\bcol(umn)?s?\b|column|pillar", layer, re.I):
+            return "Column"
+        return "Wall outline" if re.search("wall", layer, re.I) else "Structure"
     return _title(layer) or "Object"
 
 
@@ -864,25 +936,34 @@ def read_drawing(data: bytes, filename: str) -> tuple[DrawingImport, list[str]]:
         if entity.paper_space:
             reader.skip(entity, "In a paper-space sheet, not the model.", False)
             continue
-        if entity.type in ("LINE", "LWPOLYLINE", "POLYLINE"):
+        if entity.type in ("LINE", "LWPOLYLINE", "POLYLINE", "CIRCLE", "ARC"):
             prim = reader.primitive(entity, None)
             if prim is None:
                 continue
             reader.count(1)
             add_line(prim)
             if prim.closed:
-                fp = _footprint_of_outline(prim.points)
+                if entity.type == "CIRCLE":
+                    r = entity.number(40)
+                    centre = _apply(_ocs(entity) or IDENTITY, _xy(entity, 10, 20))
+                    fp = Footprint(centre, 2 * r, 2 * r, 0.0, False)
+                    notes = [
+                        f"A circle (radius {r:g} drawing units), drawn as a {CIRCLE_SIDES}-sided "
+                        "outline; the box is the square around it."
+                    ]
+                else:
+                    fp = _footprint_of_outline(prim.points)
+                    notes = (
+                        []
+                        if fp.exact
+                        else [
+                            f"The outline is not a rectangle ({len(prim.points)} corners); the "
+                            "box is the smallest rectangle around it."
+                        ]
+                    )
                 if fp.width <= 0 or fp.depth <= 0:
                     reader.skip(entity, "Degenerate: its outline has no area.", True)
                     continue
-                notes = (
-                    []
-                    if fp.exact
-                    else [
-                        f"The outline is not a rectangle ({len(prim.points)} corners); the box "
-                        "is the smallest rectangle around it."
-                    ]
-                )
                 candidates.append((prim, entity, prim.points, fp, notes))
             else:
                 open_lines[prim.ref.layer] = open_lines.get(prim.ref.layer, 0) + 1
@@ -917,7 +998,17 @@ def read_drawing(data: bytes, filename: str) -> tuple[DrawingImport, list[str]]:
                 # A block that is only a line has no footprint; it stays on the plan.
                 open_lines[entity.layer] = open_lines.get(entity.layer, 0) + 1
                 continue
-            fp = Footprint(rect.centre, rect.width, rect.depth, _normalise(angle, False), True)
+            # The extent is exact when the block draws that very rectangle (an outline).
+            box = {(round(x, 9), round(y, 9)) for x, y in ((x0, y0), (x1, y0), (x1, y1), (x0, y1))}
+            drawn_box = any(
+                p.closed
+                and len(p.points) == 4
+                and {(round(x, 9), round(y, 9)) for x, y in p.points} == box
+                for p in prims
+            )
+            if not drawn_box:
+                notes.append("The box is the extent of everything the block draws.")
+            fp = Footprint(rect.centre, rect.width, rect.depth, _normalise(angle, False), drawn_box)
             candidates.append((Primitive(corners, True, ref), entity, corners, fp, notes))
         elif entity.type in ("TEXT", "MTEXT"):
             found = _text_of(entity)
@@ -958,6 +1049,26 @@ def read_drawing(data: bytes, filename: str) -> tuple[DrawingImport, list[str]]:
         ) not in ("walkway", "keep_clear"):
             floor_index = largest
 
+    # A text names only the smallest outline that contains it, and never an outline that holds
+    # other objects (a building or a zone): a note inside a building is not its name.
+    centres = [fp.centre for _, _, _, fp, _ in candidates]
+    containers = {
+        i
+        for i, (_, _, outline, _, _) in enumerate(candidates)
+        if any(j != i and _inside(c, outline) for j, c in enumerate(centres))
+    }
+    owned: dict[int, list[PlanLabel]] = {}
+    for note in texts:
+        holders = [
+            i
+            for i, (_, _, outline, _, _) in enumerate(candidates)
+            if _inside((note.at.x, note.at.y), outline)
+        ]
+        if holders:
+            owner = min(holders, key=lambda i: _polygon_area(candidates[i][2]))
+            if owner not in containers:
+                owned.setdefault(owner, []).append(note)
+
     objects: list[DrawingObject] = []
     used_ids: set[str] = set()
     per_layer: dict[str, int] = {}
@@ -980,7 +1091,7 @@ def read_drawing(data: bytes, filename: str) -> tuple[DrawingImport, list[str]]:
             role = "footprint"
             block_name = _clean_name(entity.first(2) or "") if entity.type == "INSERT" else ""
             kind = _kind(ref.layer, block_name)
-            label, label_from = _name(entity, outline, texts, blocks)
+            label, label_from = _name(entity, outline, owned.get(index, []), blocks)
             if label_from == "layer":
                 base_label = _generic(kind, ref.layer)
                 per_layer[base_label] = per_layer.get(base_label, 0) + 1
@@ -995,6 +1106,7 @@ def read_drawing(data: bytes, filename: str) -> tuple[DrawingImport, list[str]]:
                 kind=kind,
                 refs=[ref],
                 outline=[PlanPoint(x=x, y=y) for x, y in outline],
+                footprint_fit="exact" if fp.exact else "enclosing",
                 centre=PlanPoint(x=fp.centre[0], y=fp.centre[1]),
                 width=fp.width,
                 depth=fp.depth,
@@ -1026,6 +1138,7 @@ def read_drawing(data: bytes, filename: str) -> tuple[DrawingImport, list[str]]:
 
     drawing = DrawingImport(
         reader=READER,
+        review=None,
         file=DrawingFile(uri=drawing_uri(hashlib.sha256(data).hexdigest()), bytes=len(data)),
         dxf_version=_clean_name(header.get("$ACADVER", "")) or None,
         units=_units(header, extent),

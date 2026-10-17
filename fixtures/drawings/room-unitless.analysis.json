@@ -214,6 +214,7 @@
             "y": 8000.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 6000.0,
           "y": 4000.0
@@ -258,6 +259,7 @@
             "y": 2200.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 2000.0,
           "y": 1600.0
@@ -300,6 +302,7 @@
             "y": 1800.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 5400.0,
           "y": 1400.0
@@ -342,6 +345,7 @@
             "y": 6000.0
           }
         ],
+        "footprint_fit": "exact",
         "centre": {
           "x": 9500.0,
           "y": 5500.0
@@ -352,7 +356,8 @@
         "notes": []
       }
     ],
-    "skipped": []
+    "skipped": [],
+    "review": null
   },
   "warnings": []
 }

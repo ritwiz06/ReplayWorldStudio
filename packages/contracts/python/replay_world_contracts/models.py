@@ -35,6 +35,10 @@ Conventions (see docs/contracts.md):
 * A ``default`` value is a display placeholder: it can never be ``confirmed``. A check that needs
   a verified value accepts only ``measured``, ``supplier`` and ``user_supplied`` evidence
   (:func:`is_verified`); an estimate or a display default means the value is still needed.
+* Geometry read from a design drawing is ``drawn`` (0.10.0): the drawing's size at the scale the
+  review settled, never a site measurement. It can support a design-layout result only once the
+  drawing is reviewed (scale, floor, the objects used, what the drawing leaves out), never an
+  as-built one.
 
 JSON Schema and TypeScript types are generated from these models by
 ``scripts/contracts.mjs``; never edit the generated files by hand. Older documents are
@@ -54,7 +58,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.9.0"]
+SchemaVersion = Literal["0.10.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -92,12 +96,17 @@ MODEL_ORIGIN_TOLERANCE_M: Final = 1e-4
 NOMINAL_MATCH_TOLERANCE_M: Final = 1e-3
 """How far a glTF asset's nominal dimensions may differ from its model's extents."""
 
-Origin = Literal["measured", "user_supplied", "supplier", "inferred", "default"]
-"""Where a known value came from. 'default' and 'inferred' values must stay visibly distinct."""
+Origin = Literal["measured", "user_supplied", "supplier", "inferred", "default", "drawn"]
+"""Where a known value came from. 'default' and 'inferred' values must stay visibly distinct.
+'drawn' (0.10.0) is read from a design drawing at its reviewed scale: design geometry, not a
+measurement of what was built."""
 VERIFIED_ORIGINS: Final[tuple[Origin, ...]] = ("measured", "supplier", "user_supplied")
-"""Evidence a check may rely on. 'inferred' is an estimate and 'default' a display placeholder:
-a check that needs such a value reports it as needed (for example "height needed") instead of
-using it."""
+"""Evidence a check may rely on as it is. 'inferred' is an estimate and 'default' a display
+placeholder: a check that needs such a value reports it as needed (for example "height needed")
+instead of using it. 'drawn' is in DESIGN_ORIGINS instead."""
+DESIGN_ORIGINS: Final[tuple[Origin, ...]] = ("drawn",)
+"""Evidence that supports a design-layout result once its drawing is reviewed, and never an
+as-built one."""
 
 ReviewStatus = Literal["unreviewed", "confirmed"]
 Axis = Literal["width", "height", "depth"]
@@ -827,8 +836,44 @@ class AssetRevised(ContractModel):
         return self
 
 
+class ReviewedObjectChange(ContractModel):
+    """One object as a drawing review correction found and left it (null: absent)."""
+
+    object_id: StableId
+    before: SceneObject | None
+    after: SceneObject | None
+
+    @model_validator(mode="after")
+    def _consistent(self) -> ReviewedObjectChange:
+        if self.before is None and self.after is None:
+            raise ValueError(f"review change of '{self.object_id}' has neither before nor after")
+        for state in (self.before, self.after):
+            if state is not None and state.id != self.object_id:
+                raise ValueError(f"review change of '{self.object_id}' holds another object")
+        return self
+
+
+class DrawingReviewed(ContractModel):
+    """A correction made while reviewing a draft from a drawing (IMP-02, 0.10.0): the floor, the
+    scale, an object's name or kind, or 'not an object'. ``correction`` says it in words; every
+    object it changed is recorded as it was and as it became, so the log still describes the
+    scene. The review state itself is the drawing source's ``review``."""
+
+    type: Literal["drawing_reviewed"]
+    revision: int = Field(ge=1, description="Scene revision this edit produced.")
+    source_id: StableId
+    correction: NonEmptyText
+    objects: list[ReviewedObjectChange] = Field(max_length=800)
+
+    @model_validator(mode="after")
+    def _unique(self) -> DrawingReviewed:
+        _require_unique((o.object_id for o in self.objects), "object in one review correction")
+        return self
+
+
 EditRecord = Annotated[
-    ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised, Field(discriminator="type")
+    ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed,
+    Field(discriminator="type"),
 ]
 
 
@@ -871,6 +916,11 @@ class Scene(ContractModel):
 
         live = {o.id: o for o in self.objects}
         removed = {r.object.id: r.revision for r in self.edit_log if isinstance(r, ObjectRemoved)}
+        for r in self.edit_log:
+            if isinstance(r, DrawingReviewed):
+                for gone in r.objects:
+                    if gone.after is None:
+                        removed[gone.object_id] = r.revision
         for object_id, revision in removed.items():
             if object_id in live:
                 raise ValueError(
@@ -887,7 +937,7 @@ class Scene(ContractModel):
                 continue
             object_ids = (
                 [o.object_id for o in record.objects]
-                if isinstance(record, AssetRevised)
+                if isinstance(record, AssetRevised | DrawingReviewed)
                 else [record.object_id]
             )
             for object_id in object_ids:
@@ -898,6 +948,21 @@ class Scene(ContractModel):
                     )
             if isinstance(record, ObjectAdded):
                 asset_ref[record.object_id] = (record.revision, record.asset_id)
+                continue
+            if isinstance(record, DrawingReviewed):
+                for reviewed in record.objects:
+                    if reviewed.after is None:
+                        continue
+                    asset_ref[reviewed.object_id] = (record.revision, reviewed.after.asset_id)
+                    latest[(reviewed.object_id, "transform")] = (
+                        record.revision,
+                        reviewed.after.transform,
+                    )
+                    for axis in ("width", "height", "depth"):
+                        latest[(reviewed.object_id, axis)] = (
+                            record.revision,
+                            getattr(reviewed.after.dimensions, axis),
+                        )
                 continue
             if isinstance(record, AssetRevised):
                 for item in record.objects:
@@ -1185,8 +1250,13 @@ METRES_PER_UNIT: Final[dict[str, float]] = {
 }
 """Exact metres per drawing unit; a drawing's ``source_to_world`` uses one of these."""
 DxfHandle = Annotated[str, StringConstraints(pattern=r"^[0-9A-F]{1,16}$")]
-DrawingEntity = Literal["LINE", "LWPOLYLINE", "POLYLINE", "INSERT", "TEXT", "MTEXT"]
-"""Entity types in the supported subset (TEXT and MTEXT only name things)."""
+DrawingEntity = Literal[
+    "LINE", "LWPOLYLINE", "POLYLINE", "INSERT", "TEXT", "MTEXT", "CIRCLE", "ARC"
+]
+"""Entity types in the supported subset (TEXT and MTEXT only name things; CIRCLE and ARC, from
+0.10.0, are drawn as many-sided outlines and lines)."""
+SCALE_AGREEMENT: Final = 0.02
+"""A reference length agrees with a unit when the scales differ by at most 2 %."""
 
 
 class PlanPoint(ContractModel):
@@ -1247,6 +1317,10 @@ class DrawingObject(ContractModel):
     kind: ObjectKind
     refs: list[DrawingRef] = Field(min_length=1, max_length=20)
     outline: list[PlanPoint] = Field(min_length=3, max_length=2000)
+    footprint_fit: Literal["exact", "enclosing"] = Field(
+        description="'exact': the footprint rectangle is the drawn shape; 'enclosing': the "
+        "rectangle encloses a shape that is not one (or a block's extent), so it is approximate."
+    )
     centre: PlanPoint
     width: float = Field(gt=0, description="Footprint along its rotated X, in drawing units.")
     depth: float = Field(gt=0, description="Footprint along its rotated Y, in drawing units.")
@@ -1301,6 +1375,105 @@ class DrawingFile(ContractModel):
     bytes: int = Field(ge=1, le=MAX_DRAWING_BYTES)
 
 
+class ReferenceLength(ContractModel):
+    """A length the person knows, marked on the drawing with two points (IMP-02)."""
+
+    a: PlanPoint
+    b: PlanPoint
+    drawing_length: float = Field(gt=0, description="|b - a| in drawing units.")
+    real_length_m: PositiveLength = Field(description="The real length the person entered.")
+    metres_per_unit: PositiveLength = Field(description="real_length_m / drawing_length.")
+    compared_with: PositiveLength | None = Field(
+        description="Metres per unit of the drawing's or chosen unit when it was entered."
+    )
+    agrees: bool | None = Field(description="Whether the two scales are within 2 %.")
+
+    @model_validator(mode="after")
+    def _consistent(self) -> ReferenceLength:
+        span = ((self.b.x - self.a.x) ** 2 + (self.b.y - self.a.y) ** 2) ** 0.5
+        if abs(span - self.drawing_length) > 1e-6 * max(span, 1.0):
+            raise ValueError("a reference length's drawing length must be the distance a-b")
+        if abs(self.metres_per_unit * self.drawing_length - self.real_length_m) > 1e-9 * max(
+            self.real_length_m, 1.0
+        ):
+            raise ValueError("a reference length's scale must be its real length / drawing length")
+        if (self.compared_with is None) != (self.agrees is None):
+            raise ValueError("a reference length records a comparison and its result together")
+        if self.compared_with is not None:
+            within = abs(self.metres_per_unit / self.compared_with - 1) <= SCALE_AGREEMENT
+            if within != self.agrees:
+                raise ValueError("a reference length's 'agrees' must match the 2 % rule")
+        return self
+
+
+class ScaleReview(ContractModel):
+    """The scale in use and how it was established: the drawing's unit, a unit the person
+    chose, or a known length they marked. ``status``: 'unchecked' (taken as read), 'confirmed'
+    (the person accepted or chose it), 'measured' (a reference length set it or agrees)."""
+
+    basis: Literal["drawing_unit", "chosen_unit", "reference_length"]
+    unit: LengthUnit = Field(description="The drawing's nominal unit (also for a reference).")
+    metres_per_unit: PositiveLength
+    status: Literal["unchecked", "confirmed", "measured"]
+    reference: ReferenceLength | None
+
+    @model_validator(mode="after")
+    def _consistent(self) -> ScaleReview:
+        ref = self.reference
+        if self.basis == "reference_length":
+            if ref is None or self.status != "measured":
+                raise ValueError("a scale from a reference length is measured and records it")
+            if abs(self.metres_per_unit - ref.metres_per_unit) > 1e-12 * self.metres_per_unit:
+                raise ValueError("a scale from a reference length uses the reference's scale")
+            return self
+        if abs(self.metres_per_unit - METRES_PER_UNIT[self.unit]) > 1e-12:
+            raise ValueError(f"{self.unit} is {METRES_PER_UNIT[self.unit]} m per unit")
+        if self.status == "measured" and (ref is None or ref.agrees is not True):
+            raise ValueError("a unit is 'measured' only when a reference length agrees with it")
+        if self.basis == "chosen_unit" and self.status == "unchecked":
+            raise ValueError("a unit the person chose is at least confirmed")
+        return self
+
+
+class FloorReview(ContractModel):
+    """Which floor the draft uses: a closed outline, one sized around the objects, or none."""
+
+    choice: Literal["outline", "automatic", "none"]
+    drawn_id: StableId | None = Field(description="The drawn outline used, for 'outline'.")
+    object_id: StableId | None = Field(description="The floor scene object; null for 'none'.")
+    status: Literal["proposed", "accepted", "corrected"]
+
+    @model_validator(mode="after")
+    def _consistent(self) -> FloorReview:
+        if (self.choice == "outline") != (self.drawn_id is not None):
+            raise ValueError("a floor names its drawn outline exactly when it uses one")
+        if (self.choice == "none") != (self.object_id is None):
+            raise ValueError("a floor has a scene object unless there is none")
+        return self
+
+
+class ObjectReview(ContractModel):
+    """What the person decided about one drawn object."""
+
+    drawn_id: StableId
+    status: Literal["proposed", "accepted", "corrected", "not_an_object", "used_as_floor"]
+
+
+class DrawingReview(ContractModel):
+    """The review of a draft from a drawing (IMP-02): floor, scale, each object, and whether the
+    person accepted what the drawing leaves out (shapes not imported, heights)."""
+
+    floor: FloorReview
+    scale: ScaleReview
+    objects: list[ObjectReview] = Field(max_length=MAX_DRAWING_OBJECTS)
+    omissions: Literal["proposed", "accepted"]
+
+    @model_validator(mode="after")
+    def _unique(self) -> DrawingReview:
+        _require_unique((o.drawn_id for o in self.objects), "reviewed drawing object")
+        return self
+
+
 class DrawingImport(ContractModel):
     """The deterministic reading of one DXF drawing (IMP-01), kept with the project."""
 
@@ -1315,6 +1488,9 @@ class DrawingImport(ContractModel):
     labels: list[PlanLabel] = Field(max_length=MAX_DRAWING_LABELS)
     objects: list[DrawingObject] = Field(max_length=MAX_DRAWING_OBJECTS)
     skipped: list[SkippedEntities]
+    review: DrawingReview | None = Field(
+        description="The review of the draft (0.10.0); null only in an analysis."
+    )
 
     @model_validator(mode="after")
     def _consistent(self) -> DrawingImport:
@@ -1324,6 +1500,17 @@ class DrawingImport(ContractModel):
             raise ValueError("a drawing has at most one floor outline")
         if self.extent_min.x > self.extent_max.x or self.extent_min.y > self.extent_max.y:
             raise ValueError("the drawing extent's minimum exceeds its maximum")
+        review = self.review
+        if review is None:
+            return self
+        drawn = {o.id for o in self.objects}
+        reviewed = {o.drawn_id for o in review.objects}
+        if reviewed != drawn:
+            raise ValueError("the review has exactly one entry per drawn object")
+        on_floor = [o.drawn_id for o in review.objects if o.status == "used_as_floor"]
+        expected = [review.floor.drawn_id] if review.floor.choice == "outline" else []
+        if on_floor != expected:
+            raise ValueError("exactly the floor's outline (if any) is reviewed as 'used_as_floor'")
         return self
 
 
@@ -1360,23 +1547,35 @@ class SourceDocument(ContractModel):
                 f"drawing source '{self.id}': the stored file name must be its sha256 "
                 f"({self.sha256})"
             )
-        units, transform = drawing.units, self.source_to_world
+        units, transform, review = drawing.units, self.source_to_world, drawing.review
         if units.basis is None:
             raise ValueError(
                 f"drawing source '{self.id}': the unit was never settled (units.basis is null)"
             )
+        if review is None:
+            raise ValueError(f"drawing source '{self.id}' has no review")
         if transform is None:
             return self  # reported by the general shape check
-        if units.basis == "drawing_header" and transform.source_unit != units.declared:
+        scale = review.scale
+        if scale.basis == "drawing_unit":
+            if scale.unit != units.declared:
+                raise ValueError(
+                    f"drawing source '{self.id}' takes its unit from the header ({units.declared}) "
+                    f"but its review uses {scale.unit}"
+                )
+            if units.question is not None and scale.status == "unchecked":
+                raise ValueError(
+                    f"drawing source '{self.id}': the header leaves a question about its unit, so "
+                    "the person must have confirmed it"
+                )
+        if (
+            transform.source_unit != scale.unit
+            or abs(transform.metres_per_source_unit - scale.metres_per_unit)
+            > 1e-12 * scale.metres_per_unit
+        ):
             raise ValueError(
-                f"drawing source '{self.id}' takes its unit from the header ({units.declared}) "
-                f"but its transform uses {transform.source_unit}"
-            )
-        expected = METRES_PER_UNIT[transform.source_unit]
-        if abs(transform.metres_per_source_unit - expected) > 1e-12:
-            raise ValueError(
-                f"drawing source '{self.id}': {transform.source_unit} is {expected} m per unit, "
-                f"not {transform.metres_per_source_unit}"
+                f"drawing source '{self.id}': the transform must use the reviewed scale "
+                f"({scale.metres_per_unit} m per {scale.unit})"
             )
         return self
 
@@ -1469,8 +1668,43 @@ class Project(ContractModel):
                 )
         live = {o.id for o in self.scene.objects}
         removed = {r.object.id for r in self.scene.edit_log if isinstance(r, ObjectRemoved)}
+        removed |= {
+            change.object_id
+            for r in self.scene.edit_log
+            if isinstance(r, DrawingReviewed)
+            for change in r.objects
+            if change.after is None
+        }
         for source in self.sources:
-            for drawn in source.drawing.objects if source.drawing else []:
+            drawing = source.drawing
+            if drawing is None:
+                continue
+            review = drawing.review
+            status = {o.drawn_id: o.status for o in review.objects} if review else {}
+            floor_id = review.floor.object_id if review else None
+            if floor_id is not None and floor_id not in live and floor_id not in removed:
+                raise ValueError(
+                    f"drawing source '{source.id}': the floor object '{floor_id}' is not in the "
+                    "scene and was not removed"
+                )
+            for drawn in drawing.objects:
+                state = status.get(drawn.id, "proposed")
+                if state == "not_an_object" and drawn.object_id in live:
+                    raise ValueError(
+                        f"drawing source '{source.id}' object '{drawn.id}' is reviewed as not an "
+                        f"object, but '{drawn.object_id}' is in the scene"
+                    )
+                if (
+                    state == "used_as_floor"
+                    and drawn.object_id in live
+                    and drawn.object_id != floor_id
+                ):
+                    raise ValueError(
+                        f"drawing source '{source.id}' object '{drawn.id}' is the floor's "
+                        f"outline, but '{drawn.object_id}' is in the scene as another object"
+                    )
+                if state in ("not_an_object", "used_as_floor"):
+                    continue
                 if drawn.object_id not in live and drawn.object_id not in removed:
                     raise ValueError(
                         f"drawing source '{source.id}' object '{drawn.id}' became object "

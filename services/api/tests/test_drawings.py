@@ -225,25 +225,52 @@ def test_absent_unsupported_conflicting_or_implausible_units_are_asked(
 
 def test_unsupported_geometry_is_listed_with_its_reason_never_dropped(client: TestClient) -> None:
     analysis = analyse(client, "unsupported-mm.dxf")
-    assert sorted(by_label(analysis)) == ["Floor", "Mixer"]
+    # A circle, an arc and a polyline with an arc segment are read (IMP-02); the rest is listed.
+    assert sorted(by_label(analysis)) == ["Column 1", "Equipment 1", "Floor", "Mixer"]
     skipped = {(s.entity, s.handles[0]): (s.layout, s.reason) for s in analysis.drawing.skipped}
     assert skipped == {
         ("3DFACE", "10D"): (True, "3D faces are not in the supported subset."),
-        ("ARC", "106"): (True, "Arcs are not in the supported subset (lines and straight "
-                         "polylines)."),
-        ("CIRCLE", "105"): (True, "Circles are not in the supported subset; a round column or tank "
-                            "is not imported."),
         ("HATCH", "108"): (True, "Hatches (filled areas) are not in the supported subset."),
         ("INSERT", "10A"): (True, "Array inserts (MINSERT) are not supported."),
         ("INSERT", "10B"): (True, "Its block 'GHOST' is not defined in the drawing."),
-        ("LWPOLYLINE", "109"): (True, "Polylines with arc segments (bulges) are not supported."),
         ("LWPOLYLINE", "10C"): (True, "Not drawn in the plan (tilted extrusion)."),
         ("SPLINE", "107"): (True, "Splines are not in the supported subset."),
         ("DIMENSION", "10E"): (False, "Dimensions are annotation; the geometry itself is read."),
         ("LINE", "10F"): (False, "In a paper-space sheet, not the model."),
-    }  # fmt: skip
+    }
     layout_first = [s.layout for s in analysis.drawing.skipped]
     assert layout_first == sorted(layout_first, reverse=True)
+
+
+def test_circles_arcs_and_arc_segments_are_drawn_and_marked_approximate(
+    client: TestClient,
+) -> None:
+    analysis = analyse(client, "unsupported-mm.dxf")
+    objects = by_label(analysis)
+    column = objects["Column 1"]  # CIRCLE r 250 on S-COLS
+    assert (column.kind, column.refs[0].entity, column.footprint_fit) == (
+        "structure",
+        "CIRCLE",
+        "enclosing",
+    )
+    assert (column.centre.x, column.centre.y, column.width, column.depth) == (5000, 4000, 500, 500)
+    assert len(column.outline) == 32 and "the square around it" in column.notes[0]
+    tank = objects["Equipment 1"]  # a rectangle whose second side is a half circle
+    assert tank.footprint_fit == "enclosing" and len(tank.outline) > 4
+    assert (tank.width, tank.depth) == pytest.approx((2500, 1000))
+    arc = next(line for line in analysis.drawing.lines if line.ref.entity == "ARC")
+    assert not arc.closed and len(arc.points) == 10  # 90 degrees in 10-degree steps
+    assert objects["Mixer"].footprint_fit == "exact"
+    assert "1 open line (1 on A-DOOR)" in analysis.warnings[0]
+
+
+def test_a_note_inside_a_building_does_not_name_it(client: TestClient) -> None:
+    analysis = analyse(client, "warehouse-cm.dxf")
+    objects = by_label(analysis)
+    assert "Wall outline 1" in objects and "Column bays are 6.00 m" not in objects
+    assert objects["Floor"].refs[0].layer == "SITE-BOUNDARY"  # the proposal the review corrects
+    assert analysis.drawing.units.question is None  # cm drawn as "mm" still looks plausible
+    assert objects["Water tank"].refs[0].entity == "CIRCLE"
 
 
 def test_a_dwg_is_refused_with_the_dxf_export_route_and_not_stored(
@@ -272,10 +299,10 @@ def test_a_dwg_is_refused_with_the_dxf_export_route_and_not_stored(
         (b"  0\r\nSECTION\r\n  2\r\nENTITIES\r\n  0\r\nLINE\r\n", 422, "The drawing ends before "
          "its EOF marker; the file may be truncated."),
         (b"   \n", 422, "The file is empty."),
-        (b"  0\r\nSECTION\r\n  2\r\nENTITIES\r\n  0\r\nCIRCLE\r\n  8\r\nA\r\n 10\r\n0\r\n 20\r\n"
-         b"0\r\n 40\r\n1\r\n  0\r\nENDSEC\r\n  0\r\nEOF\r\n", 422, "The drawing has no lines, "
+        (b"  0\r\nSECTION\r\n  2\r\nENTITIES\r\n  0\r\nSPLINE\r\n  8\r\nA\r\n 10\r\n0\r\n 20\r\n"
+         b"0\r\n  0\r\nENDSEC\r\n  0\r\nEOF\r\n", 422, "The drawing has no lines, "
          "straight polylines or blocks in model space, so there is no layout to read. It holds "
-         "only CIRCLE, which this reader does not import."),
+         "only SPLINE, which this reader does not import."),
     ],
 )  # fmt: skip
 def test_files_that_cannot_be_read_are_refused_and_not_stored(
@@ -325,6 +352,18 @@ def drawing_project(analysis: DrawingAnalysis) -> str:
     drawing = analysis.drawing.model_dump(mode="json")
     drawing["units"]["basis"] = "drawing_header"
     drawing["objects"] = []
+    drawing["review"] = {
+        "floor": {"choice": "none", "drawn_id": None, "object_id": None, "status": "proposed"},
+        "scale": {
+            "basis": "drawing_unit",
+            "unit": "mm",
+            "metres_per_unit": 0.001,
+            "status": "unchecked",
+            "reference": None,
+        },
+        "objects": [],
+        "omissions": "proposed",
+    }
     document = json.loads(FOUNDATION.read_text())
     document["sources"].append(
         {
