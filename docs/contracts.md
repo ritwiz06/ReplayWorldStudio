@@ -1,6 +1,6 @@
 # Contracts: units, frames, provenance and the schema pipeline
 
-Contract version **0.9.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, 0.4.0 → 0.5.0 in GEN-01, all 2026-10-10; 0.5.0 → 0.6.0 in IMG-01, 2026-10-14; 0.6.0 → 0.7.0 in GEN-02, 2026-10-15; 0.7.0 → 0.8.0 in IMG-02, 2026-10-16; 0.8.0 → 0.9.0 in ONB-01/IMP-01, 2026-10-16). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
+Contract version **0.10.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, 0.4.0 → 0.5.0 in GEN-01, all 2026-10-10; 0.5.0 → 0.6.0 in IMG-01, 2026-10-14; 0.6.0 → 0.7.0 in GEN-02, 2026-10-15; 0.7.0 → 0.8.0 in IMG-02, 2026-10-16; 0.8.0 → 0.9.0 in ONB-01/IMP-01 and 0.9.0 → 0.10.0 in IMP-02, both 2026-10-16). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
 
 ## One source of truth
 
@@ -72,6 +72,7 @@ Worked example (foundation fixture): the plan is in mm with translation (−10, 
 - Unknown values are `{"state": "unknown", "id", "label", "unit", "reason"}` and cannot carry `value`.
 - **Per-axis dimension evidence (0.2.0).** `width`, `height` and `depth` are each a `Length`: `value_m` (> 0), `origin`, `source_ref`, `review_status` and optional inclusive `uncertainty_m`, whose lower bound must be above 0 and which must contain the value. A footprint measured from a plan and a height inferred from a catalog entry are therefore recorded honestly, axis by axis. The fixture's packing station is the worked example: Measured ±10 mm / Inferred / Measured.
 - **Dimensions are required, never unknown.** Placement, rendering and later clearance checks need extents. An axis nobody has established uses origin `default` with an explanation in `source_ref`; the UI labels it "Default placeholder - not real data". Parameters such as cycle time or mass *can* be unknown. Unknown axes (for footprint-only imports) were considered and deferred to M2 (ADR-015).
+- **Drawn geometry is design evidence (0.10.0, ADR-051).** Origin `drawn` is a size read from a design drawing at the scale its review settled. It is not in `VERIFIED_ORIGINS` (`DESIGN_ORIGINS` holds it). It supports a design-layout result only once the drawing is reviewed, and never an as-built one (see [Drawing review](#drawing-review-0100-imp-02)).
 - **A display default is never verified (0.9.0, ADR-050).** A `default` length cannot be `confirmed`; the real value is entered instead, which makes it `user_supplied`. A check that needs a verified value relies only on `measured`, `supplier` or `user_supplied` evidence (`VERIFIED_ORIGINS`, `is_verified`). An `inferred` value is an estimate and a `default` a display placeholder: such a check reports the value as needed (for a height, "height needed") and never uses it. The editor draws a standing object whose height is a default see-through and labels it "height assumed".
 
 ## Catalog assets and references
@@ -91,15 +92,21 @@ Worked example (foundation fixture): the plan is in mm with translation (−10, 
   `uv run python -m replay_world_contracts.migrate OLD.json -o NEW.json`. The command validates the result, writes notes describing every change to stderr, and never modifies the input.
 - 0.1.0 → 0.2.0 is lossless and never strengthens evidence. The single box origin, source and review status are copied to all three axes; `representation: placeholder_box` becomes `asset_id: null`; an empty `catalog` is added. Unknown or newer versions are refused.
 - 0.2.0 → 0.3.0 changes only `schema_version`, because 0.3.0 is additive. Steps run in sequence, so a 0.1.0 file passes through every version and the notes list each step.
-- `POST /api/v1/projects/validate` answers a document of an older version (0.1.0–0.8.0) with a single 422 issue at `/schema_version` that points to the editor's upgrade review and the migrate command, instead of a cascade of field errors.
+- `POST /api/v1/projects/validate` answers a document of an older version (0.1.0–0.9.0) with a single 422 issue at `/schema_version` that points to the editor's upgrade review and the migrate command, instead of a cascade of field errors.
 - 0.3.0 → 0.4.0 adds an empty `scene.edit_log` and changes nothing else. A 0.3.0 document that already has an `edit_log` is refused as malformed.
 - 0.4.0 → 0.5.0 adds `generation: null` to every catalog asset and changes nothing else. A 0.4.0 document whose assets already have `generation` is refused as malformed.
 - 0.5.0 → 0.6.0 adds `image: null` and `photo_import: null` to every source and changes nothing else: every existing source keeps its `source_to_world`. Its note reads `schema_version 0.5.0 -> 0.6.0 (adds 'image: null' and 'photo_import: null' to N source(s); no values or evidence changed)`. A 0.5.0 document whose sources already have either field is refused as malformed.
 - 0.6.0 → 0.7.0 adds `revision: null` to every generated asset and `size_basis: "not_stated"` to every photo scale reference (0.6.0 did not ask whether the size was measured or assumed, so neither is claimed). Its note reads `schema_version 0.6.0 -> 0.7.0 (adds 'revision: null' to N generated asset(s) and 'size_basis: not_stated' to M photo scale reference(s); no values or evidence changed)`. A 0.6.0 document that already has either field is refused as malformed.
+- 0.9.0 → 0.10.0 only weakens evidence and changes nothing else:
+  - every drawing reading gains an unchecked `review`: the floor as proposed (or none), the scale as settled at import (`unchecked` from the header, `confirmed` when chosen), every object proposed, omissions not accepted;
+  - every drawn object gains `footprint_fit` (`enclosing` for a block's extent or a non-rectangular outline, else `exact`);
+  - drawn footprint width and depth recorded as `measured` with a "Drawn in …" source become `drawn`.
+
+  Its note reads `schema_version 0.9.0 -> 0.10.0 (adds an unchecked review to N drawing source(s) and footprint_fit to M drawn object(s); K drawn footprint value(s) recorded as measured become drawn (a design drawing, not a site measurement); nothing is strengthened)`. The edit log's history is not rewritten.
 - 0.8.0 → 0.9.0 adds `drawing: null` to every source (DXF drawings were not read before 0.9.0) and changes nothing else. Its note reads `schema_version 0.8.0 -> 0.9.0 (adds 'drawing: null' to N source(s); no values or evidence changed)`. A 0.8.0 document whose sources already have `drawing` is refused as malformed. 0.9.0 also refuses a `default` length marked `confirmed`; no earlier editor could write one, and such a document is reported after the upgrade, never silently changed.
 - 0.7.0 → 0.8.0 adds `visibility: "not_recorded"`, `derived_from: null`, `replaced_by: null` and `corrections: []` to every photo observation (0.7.0 did not record how much of an object the photo showed, and could not split or merge observations, so none is claimed). Its note reads `schema_version 0.7.0 -> 0.8.0 (adds 'visibility: not_recorded' and empty corrections to N photo observation(s); no values or evidence changed)`. A 0.7.0 document that already has any of these fields is refused as malformed. Rebuilding missing generated models (`POST /api/v1/catalog/generated-models/restore`) accepts an older document and upgrades it first; upgrades never change a recorded specification, so the rebuilt files keep their recorded hashes.
 - `fixtures/legacy/foundation-scene-0.1.0.json` is the exact 0.1.0 fixture, kept to test this path.
-- **In the editor (WRL-03).** Opening a file whose `schema_version` is any other string sends it to `POST /api/v1/projects/upgrade`. That endpoint runs the same `upgrade_document`, validates the result (contract and model files), and returns an `UpgradeReport` (`from_version`, `to_version`, `notes`, `project`, `validation`) without storing anything. The browser shows the notes and offers **Open upgraded project**, **Download upgraded file** (`<name>-0.9.0.json`) or **Cancel**; nothing is replaced or written before that choice. An unknown version gets one 422 issue at `/schema_version`, a malformed legacy file one issue at the document level, and errors after a successful upgrade are located in the upgraded document. In each case the current scene stays.
+- **In the editor (WRL-03).** Opening a file whose `schema_version` is any other string sends it to `POST /api/v1/projects/upgrade`. That endpoint runs the same `upgrade_document`, validates the result (contract and model files), and returns an `UpgradeReport` (`from_version`, `to_version`, `notes`, `project`, `validation`) without storing anything. The browser shows the notes and offers **Open upgraded project**, **Download upgraded file** (`<name>-0.10.0.json`) or **Cancel**; nothing is replaced or written before that choice. An unknown version gets one 422 issue at `/schema_version`, a malformed legacy file one issue at the document level, and errors after a successful upgrade are located in the upgraded document. In each case the current scene stays.
 
 ## Edits, revisions and the edit log (0.4.0)
 
@@ -292,17 +299,17 @@ A project made from a DXF floor plan records the drawing as a source, the unit a
 | `DrawingUnits` | `insunits` ($INSUNITS as written, null if absent), `declared` (the unit it names, when supported: mm, cm, m, in, ft), `measurement` ($MEASUREMENT), `question` (why the unit cannot be taken from the header: absent, unsupported, conflicting with $MEASUREMENT, or implausible for a floor layout), `basis` (`drawing_header`, allowed only with a declared unit and no question; `user_supplied`; null only in an analysis) |
 | `PlanLine` | `ref`, `points` (2–2000, drawing units), `closed` |
 | `PlanLabel` | `ref`, `text` (content, never an instruction), `at` |
-| `DrawingObject` | `id`, `object_id` (the scene object it became; live or removed), `role` (`floor` or `footprint`), `label`, `label_from` (`attribute`, `text`, `block`, `layer` or `generic`), `kind`, `refs`, `outline` (as drawn), `centre`, `width`, `depth`, `rotation_rad` (the footprint rectangle in drawing units, counter-clockwise from drawing +X), `notes` |
-| `DrawingRef` | `handle` (DXF handle, upper-case hex, or null), `layer`, `entity` (`LINE`, `LWPOLYLINE`, `POLYLINE`, `INSERT`, `TEXT`, `MTEXT`), `block` (the block path from the drawing down, `CELL > CNC_MILL`, or null) |
+| `DrawingObject` | `id`, `object_id` (the scene object it becomes when it is one: live or removed, unless reviewed as not an object or used as the floor), `role` (the reader's proposal: `floor` or `footprint`), `footprint_fit` (0.10.0: `exact` or `enclosing`), `label`, `label_from` (`attribute`, `text`, `block`, `layer` or `generic`), `kind`, `refs`, `outline` (as drawn), `centre`, `width`, `depth`, `rotation_rad` (the footprint rectangle in drawing units, counter-clockwise from drawing +X), `notes` |
+| `DrawingRef` | `handle` (DXF handle, upper-case hex, or null), `layer`, `entity` (`LINE`, `LWPOLYLINE`, `POLYLINE`, `INSERT`, `TEXT`, `MTEXT`; `CIRCLE`, `ARC` from 0.10.0), `block` (the block path from the drawing down, `CELL > CNC_MILL`, or null) |
 | `SkippedEntities` | `entity`, `layer`, `count`, up to ten `handles`, `layout` (true: geometry that was not imported; false: annotation not used), `reason` |
 
-The source's `source_to_world` uses the settled unit exactly: `metres_per_source_unit` is `METRES_PER_UNIT[source_unit]` and, for `drawing_header`, `source_unit` is the declared unit. The editor centres the drawing's extent on the world origin with no rotation.
+The source's `source_to_world` uses the reviewed scale exactly (0.10.0): `source_unit` is `review.scale.unit` and `metres_per_source_unit` is `review.scale.metres_per_unit`. `units.basis` stays the import-time decision. The editor centres the drawing's extent on the world origin with no rotation.
 
 **Dimension evidence** of objects drawn from a drawing (set in `apps/web/src/drawing/world.ts`):
 
 | Value | `origin` | `review_status` | `source_ref` |
 | --- | --- | --- | --- |
-| Footprint width and depth | `measured` | `unreviewed` | `Drawn in <file>: <ENTITY> <handle> on layer <layer>, <the outline as drawn \| the smallest rectangle around the drawn outline \| the extent of the block as inserted>; 1 unit = 1 mm (the drawing's own unit, $INSUNITS \| your answer: …). The drawing's size, not a site measurement.` |
+| Footprint width and depth | `drawn` (0.10.0; `measured` in 0.9.0) | `unreviewed` | `Drawn in <file>: <ENTITY> <handle> on layer <layer>, <the outline as drawn \| the smallest rectangle around the drawn outline \| the extent of the block as inserted>; 1 unit = 1 mm (the drawing's own unit, $INSUNITS \| your answer: …). The drawing's size, not a site measurement.` |
 | Height of equipment or a column | `default` | `unreviewed` | `Display height for the draft (typical for a <rack or shelving \| …>): not in the drawing and not measured. A check that needs the height says "height needed".` |
 | Floor slab thickness, marking height | `default` | `unreviewed` | `Floor slab thickness for display; a drawing gives no thickness` / `Drawn as a marking on the floor; a drawing gives no height` |
 
@@ -311,4 +318,27 @@ Nothing is inferred about load capacity, process, material or chemistry; drawn o
 **Analysis message** (API, not a project record): `POST /api/v1/sources/drawings?filename=…` (raw bytes, 10 MB cap) reads the drawing and, only if it can be read, stores it at `drawings/<sha256>.dxf` in the source library (idempotent). It returns `DrawingAnalysis` (`filename`, `sha256`, `drawing` with `units.basis: null`, `warnings`). A DWG, binary DXF, non-DXF, truncated, empty or too-complex file is refused (415, 413 or 422) with the reason and never stored. No language model is called.
 
 **Opening a project with a drawing.** `POST /api/v1/projects/validate` checks each stored drawing against its sha256. An altered file is refused (`source_hash_mismatch`); a missing one does not block opening, because the reading the scene was built from is in the project, and is listed in `missing_source_files`.
+
+## Drawing review (0.10.0, IMP-02)
+
+Decision: ADR-051. A draft from a drawing carries `DrawingImport.review` (required in a project; null only in an analysis):
+
+| Record | Fields and rules |
+| --- | --- |
+| `DrawingReview` | `floor`, `scale`, `objects` (exactly one per drawn object), `omissions` (`proposed` or `accepted`). Exactly the floor's outline, if any, is `used_as_floor`. |
+| `FloorReview` | `choice` (`outline`, `automatic` or `none`), `drawn_id` (set exactly for `outline`), `object_id` (the floor scene object; null only for `none`), `status` (`proposed`, `accepted`, `corrected`) |
+| `ScaleReview` | `basis` (`drawing_unit`, `chosen_unit`, `reference_length`), `unit` (the drawing's nominal unit), `metres_per_unit`, `status` (`unchecked`, `confirmed`, `measured`), `reference`. A unit basis uses that unit's exact factor. A chosen unit is at least `confirmed`. `measured` with a unit basis needs an agreeing reference. A reference basis is `measured` and uses the reference's scale. The drawing's own unit is used only when it is the declared unit, and must be confirmed when the header leaves a question. |
+| `ReferenceLength` | `a`, `b` (drawing units), `drawing_length` (= distance a–b), `real_length_m` (entered), `metres_per_unit` (= real / drawing), `compared_with` (the unit's factor when entered) and `agrees` (within `SCALE_AGREEMENT`, 2 %), set together |
+| `ObjectReview` | `drawn_id`, `status` (`proposed`, `accepted`, `corrected`, `not_an_object` (its object is not in the scene), `used_as_floor`) |
+
+**Corrections are edits.** Each is a `drawing_reviewed` edit record: `revision`, `source_id`, `correction` (plain words), and `objects` (≤ 800), each `{object_id, before, after}` with full snapshots (null when absent). The scene validator treats `after` as the object's latest transform and sizes, and an `after: null` as a removal (IDs are never reused). The editor also restores the drawing source on undo.
+
+**What a check may claim** (`apps/web/src/drawing/readiness.ts`):
+
+| Inputs | Result |
+| --- | --- |
+| All `measured` or `supplier` | As built |
+| `drawn` (and entered) values from a reviewed drawing. Reviewed means: scale not unchecked; floor not just proposed; each object used reviewed; footprint `exact`; omissions accepted when the drawing has any | Design layout, labelled with the drawing and its scale basis |
+| A needed height that is a display `default` | Height needed |
+| Anything else: an unchecked scale, an enclosing rectangle, unaccepted omissions, an estimate, a display-only footprint | Not evaluated, with the reasons |
 

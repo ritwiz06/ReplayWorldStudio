@@ -588,13 +588,18 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
 - Done when:
   - The main screen leads with **Upload**, **Change something** and **Play or compare**. Everything else is contextual, and engineering detail (sources, uncertainty, evidence) is one step away, not in the way.
   - A first-time user reaches a walkable view from one file without reading instructions. This is checked in browser journeys; measured with people only in UX-02.
-- Status (2026-10-16): **open; partly built** in ONB-01.
-  - **Built:**
-    - the three actions lead the left panel and highlight the next step;
-    - **Upload a floor plan** is the start panel's first card;
-    - the browser journey reaches a walkable view from one file.
-  - **Precise gap:** the editor's panels (object list, catalog, full inspector, fixture switcher) are always shown, not contextual or behind Details.
-- Evidence: e2e/drawing.spec.ts; docs/onb-01/1-start.jpg, 3-draft-world.jpg.
+- Status (2026-10-16): **done for the beginner-facing screen** (ADR-051). Measuring it with people stays UX-02.
+  - A first visit shows the simple screen:
+    - the three actions, the next one highlighted ("Now check the draft …" while a review is open);
+    - a selection card that says what the selected object is and where its size comes from, with *Check it*, *Move*, *Turn*, *Resize* (the editor's 3D handles) and *Size, position and evidence…*;
+    - the drawing panel with Review, Drawing and Compare.
+  - Behind **Details** in the top bar (remembered): the object list, catalog, inspector, the assistant's change bar, the scene picker and the engineering status line. *Go to the full editor* opens them.
+  - Review corrections are on the primary screen, not in the inspector.
+- Evidence:
+  - e2e/drawing-review.spec.ts (`@smoke`): on the simple screen, upload → review → move (through Details) → walk → compare → save → reopen;
+  - e2e/creation.spec.ts first visit (the evidence one click away);
+  - screens docs/imp-02/ at 1440 × 900 and 1280 × 800.
+- Remaining (not blocking): at 1280 × 800 the review panel scrolls; Start and Open stay in the top bar.
 
 ### IMP-01 - Build DXF geometry adapter
 
@@ -626,6 +631,27 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   - a measured scale for a scaled or unitless drawing, beyond the five units;
   - split, merge and re-kind of drawn objects;
   - circles and arcs (round columns, tanks, door swings), which are listed, not drawn.
+- Status (2026-10-16): **open; the essential review journey is built** (contract 0.10.0, ADR-051).
+  - **Built:**
+    - **the floor:** accept, another closed outline, or sized around the objects; the 40 % rule only proposes;
+    - **the scale:** confirm the unit, choose another (each shows the floor size it gives), or one known length between two snapped points; a disagreement over 2 % shows both floor sizes, and the person's choice and measurement are kept beside the header's unit;
+    - **each object:** accept, rename, change the kind (equipment, structure, walkway or keep-clear marking), *not an object*, or make it an object again; from the plan or the 3D view;
+    - **accepting what the drawing leaves out;**
+    - every correction is one `drawing_reviewed` edit, so undo, redo, save and reopen restore it;
+    - circles and arcs are read, as approximate (`enclosing`) footprints and plan lines;
+    - drawn sizes are `drawn` (design evidence), with one readiness rule for later checks.
+  - **Precise gap (why it stays open):**
+    - split and merge of drawn objects (IMG-02's patterns);
+    - mapping equipment to catalog or generated models (the done-when's "correct mappings");
+    - wall solids from wall lines (no thickness or height is claimed);
+    - closing an open shape into an object;
+    - more than one known length, rotation or non-uniform scale.
+- Evidence:
+  - e2e/drawing-review.spec.ts on `fixtures/drawings/warehouse-cm.dxf`, made to fool the floor rule and the unit: correct, move, walk, compare, undo/redo, save, reopen;
+  - src/drawing/review.test.ts;
+  - packages/contracts/tests/test_drawing_sources.py;
+  - services/api/tests/test_drawings.py;
+  - screens docs/imp-02/.
 
 ### ENR-01 - Enrich an object from a machine photo or 3D model
 
@@ -706,6 +732,11 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
 - Baseline status: planned; reconcile with actual repository
 - Done when: Labeled overlap/clearance fixtures pass with explicit tolerances.
 - Note (2026-10-16, ADR-049): part of the first release (journey step 2). Results distinguish "passed", "failed", "not evaluated", "input missing" and "height needed". A check that depends on a provisional value asks for confirmation or returns the value it needs; it never passes on an estimate. Each result shows the exact dimensions it used.
+- Note (2026-10-16, IMP-02, ADR-051): a check must take its inputs through `checkReadiness` and its outcome through `finalise` (apps/web/src/drawing/readiness.ts):
+  - an as-built result only on measured or supplier values;
+  - a design-layout result (labelled with the drawing) only on a reviewed drawing with exact footprints;
+  - "height needed" for display heights;
+  - otherwise "not evaluated", with the reasons.
 - Note (2026-10-16, ONB-01):
   - Contract 0.9.0 provides `VERIFIED_ORIGINS` and `is_verified`, and a default can never be confirmed.
   - The compare panel answers clearance, overhead, throughput and load questions only by naming the missing input; overhead gives "height needed" with the objects listed.

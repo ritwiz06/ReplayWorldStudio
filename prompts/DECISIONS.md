@@ -915,3 +915,51 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - real drawings exceed the limits;
   - a supported entity type is needed (circles for round columns are the first candidate);
   - a later check needs a status finer than origin plus "never confirmed".
+
+### ADR-051 - Drawn geometry is design evidence; a reviewed drawing supports only a design-layout result
+
+- Date: 2026-10-16 (America/Phoenix). Status: adopted (IMP-02, UX-01; contract 0.10.0). Refines ADR-050 points 3 and 5.
+- **Context.**
+  - ONB-01 recorded footprints read from a DXF as `measured`, so `is_verified` accepted them: a future clearance check could have passed on a design drawing as if it were the site.
+  - The first reading can be wrong in ways a beginner cannot see: the floor rule picked a site boundary in the new warehouse fixture, and a centimetre drawing labelled millimetres still looked plausible.
+  - A footprint can be only an enclosing rectangle (a circle, an L-shape, a block's extent), and a drawing can leave layout geometry out.
+- **Options considered.**
+  - Keep `measured` and teach every check to look up the drawing link (easy to forget; the evidence badge says "Measured").
+  - Add a review status to every `Length` (every record and file changes).
+  - A new origin `drawn` plus a review record on the drawing and one readiness rule that every check uses (chosen).
+- **Decision.**
+  1. **`drawn` is a new origin**: geometry read from a design drawing at its reviewed scale. It is not in `VERIFIED_ORIGINS`; it is the only `DESIGN_ORIGINS` value.
+  2. **The draft is reviewed in four plain questions**, saved as `DrawingImport.review`:
+     - the floor: the reader's outline, another outline, or sized around the objects;
+     - the scale: the drawing's unit (unchecked until confirmed), a unit the person chooses, or one known length between two points;
+     - each object: accepted, corrected (name or kind), not an object, or used as the floor;
+     - whether the person accepts what the drawing leaves out.
+
+     The drawing's own reading (header units, kinds and names as read) is never changed. A known length that disagrees with the unit by more than 2 % is shown with both floor sizes. The person chooses; the measurement and the choice are both kept.
+  3. **Each correction is one edit**: a `drawing_reviewed` record with every object as it was and became, plus a snapshot of the drawing source. Undo and redo restore it exactly, and the log still describes the scene. A scale change keeps a moved object's offset in metres.
+  4. **What a check may claim** (`apps/web/src/drawing/readiness.ts`):
+     - measured or supplier values give an as-built result;
+     - drawn values give a design-layout result, labelled with the drawing and the scale basis, and only when all of these hold:
+       - the scale is not unchecked;
+       - the floor is not just proposed;
+       - every object used is reviewed;
+       - its footprint is `exact`;
+       - the omissions are accepted when the drawing has any;
+     - a display default for a needed height gives "height needed";
+     - anything else gives "not evaluated", with the reasons.
+
+     No combination yields a clean pass on an unchecked scale, an enclosing rectangle, unaccepted omissions or a display height.
+  5. **Circles and arcs are read**: circles as 32-sided outlines with an enclosing-square footprint, marked `enclosing`; arcs and polyline arc segments as 10-degree segments. A single wall line still gives no wall.
+  6. **Migration 0.9.0 → 0.10.0 only weakens**:
+     - every drawing gains an unchecked review;
+     - drawn objects gain `footprint_fit`: `enclosing` for blocks and non-rectangles;
+     - `measured` footprints whose source says "Drawn in …" become `drawn`;
+     - the edit log's history is not rewritten.
+  7. **The simple screen (UX-01)** shows the three actions, a selection card and the drawing panel with the review. The object list, catalog, inspector, assistant bar, scene picker and engineering status sit behind **Details**, and "Go to the full editor" opens them.
+- **Consequences.**
+  - GEO-01/02 must call the readiness rule and report its label. A design drawing never establishes as-built clearance.
+  - The warehouse fixture's round tank keeps any check that uses it at "not evaluated" until its size is entered.
+- **Revisit when:**
+  - a site measurement path exists (a measured object would then be `measured`, and an as-built result possible);
+  - drawings need rotation or non-uniform scale corrections;
+  - split and merge of drawn objects are built.
