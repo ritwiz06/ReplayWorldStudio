@@ -1,4 +1,4 @@
-import type { CatalogAsset, SceneObject, Transform } from "@replay-world/contracts";
+import type { CatalogAsset, Project, SceneObject, Transform } from "@replay-world/contracts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createApiClient } from "./api/client";
 import type { ResolvedEdit } from "./assist/editIntent";
@@ -6,16 +6,21 @@ import { CatalogPanel } from "./components/CatalogPanel";
 import { ChangeBar } from "./components/ChangeBar";
 import { CreateObject } from "./components/CreateObject";
 import { UnsavedChangesDialog, UpgradeReviewDialog } from "./components/Dialogs";
+import { DrawingImport } from "./components/DrawingImport";
 import { ImproveModel } from "./components/ImproveModel";
 import { Inspector } from "./components/Inspector";
+import { JourneyPanel } from "./components/JourneyPanel";
 import { EditRejectedNotice, FileRejectedPanel, LoadErrorPanel, PlacementBanner } from "./components/Notices";
 import { ObjectList } from "./components/ObjectList";
 import { PhotoImport } from "./components/PhotoImport";
+import { type DrawingView, SourceDrawing } from "./components/SourceDrawing";
 import { SourcePhoto } from "./components/SourcePhoto";
 import { StartPanel } from "./components/StartPanel";
 import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
 import { FixtureBanner, ModelNotice, PlanOverlay, ViewToolbar, WalkHud } from "./components/ViewControls";
+import { compareWithDrawing } from "./drawing/compare";
+import { drawingSource, toWorld } from "./drawing/world";
 import type { Axis, CommandRequest, EditCommand } from "./editing/commands";
 import type { Outcome } from "./editing/history";
 import { copyId, copyName, instanceId, instanceName } from "./editing/newObjects";
@@ -64,6 +69,31 @@ function rememberStartSeen() {
 
 const TOOL_KEYS: Record<string, EditTool> = { v: "select", m: "move", r: "rotate", s: "resize" };
 
+/** What to do with a tool chosen before any object is selected. */
+const TOOL_FIRST: Record<Exclude<EditTool, "select">, string> = {
+  move: "Move: click an object in the view or the list first, then drag the yellow disc across the floor",
+  rotate: "Rotate: click an object in the view or the list first, then drag the ring",
+  resize: "Resize: click an object in the view or the list first, then drag a face handle",
+};
+
+/** The source drawing's lines as floor-level segments in world metres, for the 3D underlay. */
+function underlayOf(project: Project | null): Float32Array | null {
+  const source = project ? drawingSource(project) : null;
+  if (!source) return null;
+  const t = source.source_to_world;
+  const values: number[] = [];
+  for (const line of source.drawing.lines) {
+    const pts = line.points.map((p) => toWorld(t, p));
+    const count = line.closed ? pts.length : pts.length - 1;
+    for (let i = 0; i < count; i++) {
+      const a = pts[i]!;
+      const b = pts[(i + 1) % pts.length]!;
+      values.push(a.x, 0.009, a.z, b.x, 0.009, b.z);
+    }
+  }
+  return new Float32Array(values);
+}
+
 const TOOL_HELP: Record<Exclude<EditTool, "select">, (snap: boolean) => string> = {
   move: (snap) => `Move: drag an arrow along X, Y or Z, or the yellow disc across the floor · snap ${snap ? "10 mm" : "1 mm"}`,
   rotate: (snap) => `Rotate: drag the ring to turn about the vertical axis · snap ${snap ? "15°" : "1°"}`,
@@ -90,10 +120,13 @@ export function App() {
   const [start, setStart] = useState(() => !startSeen());
   const [create, setCreate] = useState<"describe" | "builder" | null>(null);
   const [photoImport, setPhotoImport] = useState(false);
+  const [drawingImport, setDrawingImport] = useState(false);
+  const [drawingPanel, setDrawingPanel] = useState<{ open: boolean; view: DrawingView }>({ open: true, view: "drawing" });
+  const [underlayShown, setUnderlayShown] = useState(true);
   /** The object whose generated model is being improved. */
   const [improve, setImprove] = useState<string | null>(null);
   const [rebuild, setRebuild] = useState<{ busy: boolean; message: string | null }>({ busy: false, message: null });
-  const overlayOpen = start || create !== null || photoImport || improve !== null;
+  const overlayOpen = start || create !== null || photoImport || drawingImport || improve !== null;
   // Selection and placement belong to the project they were made in.
   const [selection, setSelection] = useState<{ loadId: number; id: string | null }>({ loadId: 0, id: null });
   const [placement, setPlacement] = useState<Placement | null>(null);
@@ -107,6 +140,13 @@ export function App() {
   const [pixelsPerMetre, setPixelsPerMetre] = useState<number | null>(null);
   const viewport = useRef<HTMLElement>(null);
 
+  const sourceDrawing = project ? drawingSource(project) : null;
+  const underlay = useMemo(() => underlayOf(sourceDrawing ? project : null), [sourceDrawing]); // eslint-disable-line react-hooks/exhaustive-deps
+  const journeyStage = useMemo(() => {
+    if (!project || !sourceDrawing) return "upload" as const;
+    const counts = compareWithDrawing(project)?.counts;
+    return counts && counts.changed + counts.removed + counts.added > 0 ? ("compare" as const) : ("change" as const);
+  }, [project, sourceDrawing]);
   const selectedId = selection.loadId === loadId ? selection.id : null;
   const selected = project?.scene.objects.find((o) => o.id === selectedId) ?? null;
   const activePlacement = placement?.loadId === loadId ? placement : null;
@@ -358,7 +398,7 @@ export function App() {
   }, [activePlacement, dragging, editable, issue, mode, overlayOpen, prompt, remove, save, select, selected, startDuplicate, step]);
 
   const help = MODES.find((m) => m.id === mode)!.help;
-  const hint = mode !== "walk" && tool !== "select" && selected ? TOOL_HELP[tool](snapOn) : help;
+  const hint = mode !== "walk" && tool !== "select" ? (selected ? TOOL_HELP[tool](snapOn) : TOOL_FIRST[tool]) : help;
 
   return (
     <div className="app">
@@ -379,6 +419,23 @@ export function App() {
         onStart={() => setStart(true)}
       />
       <aside className="panel panel-left">
+        <JourneyPanel
+          stage={journeyStage}
+          hasDrawing={sourceDrawing !== null}
+          disabled={prompt !== null || dragging}
+          onUpload={() => {
+            if (mode === "walk") setMode("orbit");
+            setDrawingImport(true);
+          }}
+          onChange={() => {
+            if (mode === "walk") setMode("orbit");
+            setTool("move");
+          }}
+          onCompare={() => {
+            if (sourceDrawing) setDrawingPanel({ open: true, view: "compare" });
+            else setMode("walk");
+          }}
+        />
         <ObjectList project={project} selectedId={selected?.id ?? null} onSelect={select} />
         {project && (
           <CatalogPanel
@@ -422,6 +479,7 @@ export function App() {
             onCommand={runAndReport}
             onDragChange={setDragging}
             onHandleProbe={onHandleProbe}
+            underlay={underlayShown ? underlay : null}
           />
         )}
         <div className="viewport-overlays">
@@ -459,6 +517,21 @@ export function App() {
         )}
         {project && mode === "top" && <PlanOverlay pixelsPerMetre={pixelsPerMetre} />}
         {project && mode === "walk" && <WalkHud onReset={() => issue("reset-walk")} onExit={() => setMode("orbit")} />}
+        {project && sourceDrawing && mode !== "walk" && (
+          <SourceDrawing
+            project={project}
+            selectedId={selected?.id ?? null}
+            view={drawingPanel.view}
+            open={drawingPanel.open}
+            underlay={underlayShown}
+            onView={(view) => setDrawingPanel({ open: true, view })}
+            onOpen={(open) => setDrawingPanel((p) => ({ ...p, open }))}
+            onUnderlay={setUnderlayShown}
+            onSelect={select}
+            onWalk={() => setMode("walk")}
+            missingFiles={source?.kind === "file" ? source.report.missing_source_files : []}
+          />
+        )}
         {project && <SourcePhoto key={`photo-${loadId}`} client={client} project={project} selectedId={selected?.id ?? null} onSelect={select} onView={showView} missingFiles={source?.kind === "file" ? source.report.missing_source_files : []} />}
         {project && mode !== "walk" && !activePlacement && (
           <ChangeBar
@@ -529,6 +602,10 @@ export function App() {
             closeStart();
             setPhotoImport(true);
           }}
+          onDrawing={() => {
+            closeStart();
+            setDrawingImport(true);
+          }}
           onOpenFile={(file) => {
             closeStart();
             void session.openFile(file);
@@ -545,6 +622,19 @@ export function App() {
             setPhotoImport(false);
             if (mode === "walk") setMode("orbit");
             session.loadCreated(created, filename);
+          }}
+        />
+      )}
+      {drawingImport && !prompt && (
+        <DrawingImport
+          client={client}
+          onClose={() => setDrawingImport(false)}
+          onCreated={(created, filename) => {
+            setDrawingImport(false);
+            setTool("select");
+            if (mode === "walk") setMode("orbit");
+            setDrawingPanel({ open: true, view: "drawing" });
+            session.loadCreated(created, filename, "drawing");
           }}
         />
       )}

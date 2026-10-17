@@ -1,5 +1,5 @@
 import type { Project, SceneObject } from "@replay-world/contracts";
-import { dimensionEvidence } from "../evidence";
+import { dimensionEvidence, heightAssumed } from "../evidence";
 import { formatFootprint, KIND_LABEL } from "../format";
 import { fitDistortion, isStretched } from "../scene/fit";
 import { EvidenceBadge } from "./EvidenceBadge";
@@ -39,7 +39,13 @@ export function ObjectList({ project, selectedId, onSelect }: Props) {
                 {KIND_LABEL[o.kind]} · {o.asset_id ? "catalog asset" : "scene geometry"}
               </span>
               <span className="object-meta">{formatFootprint(o.dimensions)}</span>
-              <EvidenceBadge evidence={dimensionEvidence(o.dimensions)} />
+              {heightAssumed(o) ? (
+                <span className="badge badge-default" title="The footprint has evidence; the height is only assumed for display" data-testid="height-assumed-badge">
+                  Height assumed
+                </span>
+              ) : (
+                <EvidenceBadge evidence={dimensionEvidence(o.dimensions)} />
+              )}
               <StretchBadge stretch={stretchOf(project, o)} />
             </button>
           </li>

@@ -4,6 +4,7 @@ import {
   SCHEMA_VERSION,
   validateAssistStatus,
   validateCatalogAsset,
+  validateDrawingAnalysis,
   validateEditProposalResult,
   validateGeneratedModel,
   validateGeneratedModelRestoreReport,
@@ -200,6 +201,16 @@ export function createApiClient(
         timeoutMs: GENERATE_TIMEOUT_MS,
       });
     },
+    /** Read a DXF drawing (deterministically; no language model) and store it by its sha256.
+     * Nothing is added to a project; a DWG or unreadable file is refused and not stored. */
+    uploadDrawing: (file: Blob, filename: string, signal?: AbortSignal) =>
+      request(`/api/v1/sources/drawings?${new URLSearchParams({ filename }).toString()}`, validateDrawingAnalysis, {
+        method: "POST",
+        body: file,
+        contentType: "application/octet-stream",
+        signal,
+        timeoutMs: GENERATE_TIMEOUT_MS,
+      }),
     /** Where the API serves a stored source photo. */
     sourceFileUrl: (uri: string) => `${baseUrl}/api/v1/sources/files/${uri}`,
     /** Rebuild a project's missing generated models from their recorded specifications. */

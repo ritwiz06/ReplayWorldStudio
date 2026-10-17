@@ -11,8 +11,8 @@ export type SceneSource =
   | { kind: "fixture"; name: FixtureName }
   | { kind: "file"; filename: string; report: ValidationReport }
   | { kind: "upgrade"; filename: string; fromVersion: string }
-  /** A world just built from a photo; not saved yet. */
-  | { kind: "photo"; filename: string };
+  /** A world just built from a photo or a drawing; not saved yet. */
+  | { kind: "photo" | "drawing"; filename: string };
 
 export type SceneState =
   | { status: "loading" }
@@ -255,9 +255,11 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
     offerReplacement(`open ${filename}`, () => replace(project, { kind: "file", filename, report: verdict.value }, project.scene.revision));
   }, [client, fileCheck, offerReplacement, replace]);
 
-  /** Open a project built in the editor (a world from a photo); it is unsaved until saved. */
+  /** Open a project built in the editor (a world from a photo or a drawing); it is unsaved
+   * until saved, and replaces the open project only after the usual unsaved-change check. */
   const loadCreated = useCallback(
-    (project: Project, filename: string) => offerReplacement(`open the world built from ${filename}`, () => replace(project, { kind: "photo", filename }, null)),
+    (project: Project, filename: string, from: "photo" | "drawing" = "photo") =>
+      offerReplacement(`open the world built from ${filename}`, () => replace(project, { kind: from, filename }, null)),
     [offerReplacement, replace],
   );
 

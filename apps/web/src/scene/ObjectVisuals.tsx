@@ -6,8 +6,10 @@ import { Edges, Html } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
 import { memo, type ReactNode, useMemo } from "react";
 import { BoxGeometry, CanvasTexture, EdgesGeometry, type Group, RepeatWrapping, SRGBColorSpace } from "three";
+import { heightAssumed } from "../evidence";
 import { formatFootprint } from "../format";
 import type { ModelState } from "../hooks/useCatalogModels";
+import { displayForm, type DisplayForm, partsOf } from "./displayForms";
 import { instanceModel } from "./modelLoader";
 import { placementOf } from "./placement";
 import { isSlab } from "./sceneBounds";
@@ -52,7 +54,10 @@ export const ObjectVisual = memo(function ObjectVisual({ object, asset, model, s
   else if (gltf && model?.status === "failed") body = <FallbackBox object={object} />;
   else if (gltf) body = <LoadingBox object={object} />;
   else if (object.kind === "structure") body = <StructureBox object={object} />;
-  else body = <PlaceholderBox object={object} />;
+  else {
+    const form = displayForm(object);
+    body = form === "box" ? <PlaceholderBox object={object} /> : <ProvisionalForm object={object} form={form} />;
+  }
 
   return (
     <group name={object.id} {...(interactive ? handlers : {})}>
@@ -83,6 +88,7 @@ function PlacedBox({ object, children }: { object: SceneObject; children: ReactN
 
 function StructureBox({ object }: { object: SceneObject }) {
   const slab = isSlab(object);
+  const assumed = heightAssumed(object);
   return (
     <PlacedBox object={object}>
       <meshStandardMaterial
@@ -90,18 +96,47 @@ function StructureBox({ object }: { object: SceneObject }) {
         roughness={slab ? 0.72 : 0.92}
         metalness={0}
         envMapIntensity={slab ? 0.6 : 0.4}
+        transparent={assumed}
+        opacity={assumed ? 0.62 : 1}
       />
+      {assumed && <Edges color="#d6dbe0" />}
     </PlacedBox>
   );
 }
 
+/** A box with no model. One whose height is only assumed is see-through, so it reads as a
+ * provisional footprint with a display height, not as a measured solid. */
 function PlaceholderBox({ object }: { object: SceneObject }) {
   const color = object.kind === "reference" ? "#c4a24a" : "#7891ad";
+  const assumed = heightAssumed(object);
   return (
     <PlacedBox object={object}>
-      <meshStandardMaterial color={color} roughness={0.8} metalness={0.05} />
-      <Edges color={object.kind === "reference" ? "#e0c477" : "#a5b8cc"} />
+      <meshStandardMaterial color={color} roughness={0.8} metalness={0.05} transparent={assumed} opacity={assumed ? 0.6 : 1} depthWrite={!assumed} />
+      <Edges color={object.kind === "reference" ? "#e0c477" : assumed ? "#d3e2f1" : "#a5b8cc"} />
     </PlacedBox>
+  );
+}
+
+/** A simple stand-in shape (rack, table, conveyor) inside the recorded box, see-through like
+ * every provisional object; the box's outline shows the extent the object actually records. */
+function ProvisionalForm({ object, form }: { object: SceneObject; form: Exclude<DisplayForm, "box"> }) {
+  const p = placementOf(object);
+  const [w, h, d] = p.size;
+  const parts = useMemo(() => partsOf(form, w, h, d), [form, w, h, d]);
+  return (
+    <group position={p.position} rotation={p.rotation} name={`form-${form}`}>
+      {parts.map((part, i) => (
+        <mesh key={i} position={part.centre} castShadow receiveShadow>
+          <boxGeometry args={part.size} />
+          <meshStandardMaterial color="#8aa3bd" roughness={0.7} metalness={0.1} transparent opacity={0.78} />
+        </mesh>
+      ))}
+      <mesh position={p.meshOffset}>
+        <boxGeometry args={p.size} />
+        <meshBasicMaterial transparent opacity={0.06} color="#7891ad" depthWrite={false} />
+        <Edges color="#d3e2f1" />
+      </mesh>
+    </group>
   );
 }
 
@@ -232,7 +267,12 @@ function ObjectLabel({ object, emphasis, planWidth }: { object: SceneObject; emp
         title={object.name}
       >
         <strong>{object.name}</strong>
-        {emphasis && !plan && <span>{formatFootprint(object.dimensions)}</span>}
+        {emphasis && !plan && (
+          <span>
+            {formatFootprint(object.dimensions)}
+            {heightAssumed(object) && " (height assumed)"}
+          </span>
+        )}
       </div>
     </Html>
   );

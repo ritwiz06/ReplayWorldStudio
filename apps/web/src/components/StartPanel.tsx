@@ -1,5 +1,5 @@
-// The guided entry: four things a first-time user can do - explore, describe an object, start
-// from a photo, open a project. The detailed editor stays one click away and is what every
+// The guided entry: what a first-time user can do - upload a floor plan (first), explore,
+// describe an object, start from a photo, open a project. The detailed editor stays one click away and is what every
 // choice leads into.
 import { type ChangeEvent, useEffect, useRef } from "react";
 
@@ -10,11 +10,12 @@ interface Props {
   onDescribe: () => void;
   onBuild: () => void;
   onPhoto: () => void;
+  onDrawing: () => void;
   onOpenFile: (file: File) => void;
   onClose: () => void;
 }
 
-export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onPhoto, onOpenFile, onClose }: Props) {
+export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onPhoto, onDrawing, onOpenFile, onClose }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -43,7 +44,15 @@ export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onPhoto,
       <h2 id="start-title">What would you like to do?</h2>
       <p className="muted">Replay World Studio builds editable 3D worlds. Factory layouts are the first example.</p>
       <div className="start-cards">
-        <button type="button" className="start-card" data-testid="start-explore" onClick={onExplore} autoFocus>
+        <button type="button" className="start-card start-card-main" data-testid="start-drawing" disabled={!apiOnline} onClick={onDrawing} autoFocus>
+          <strong>Upload a floor plan</strong>
+          <span>
+            {apiOnline
+              ? "Start from a DXF layout: see the plan at once, walk through a 3D draft, move things and compare with the drawing."
+              : "Needs the local API, which is not reachable."}
+          </span>
+        </button>
+        <button type="button" className="start-card" data-testid="start-explore" onClick={onExplore}>
           <strong>Explore the demo</strong>
           <span>Walk around a small packaging line, select equipment and see where every size comes from.</span>
         </button>

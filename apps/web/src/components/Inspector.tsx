@@ -1,9 +1,11 @@
 import { versionsOf } from "../assist/revisionDraft";
 import type { CatalogAsset, Dimensions, Length, Project, SceneObject } from "@replay-world/contracts";
+import { describeRef, drawnFrom } from "../drawing/world";
 import {
   AXES,
   axesDifferingFromNominal,
   dimensionEvidence,
+  heightAssumed,
   licenseLabel,
   redistributionLabel,
 } from "../evidence";
@@ -19,6 +21,7 @@ import {
 } from "../format";
 import type { ModelState, ModelStates } from "../hooks/useCatalogModels";
 import type { SceneSource } from "../hooks/useProject";
+import { displayForm } from "../scene/displayForms";
 import { fitDistortion, fitScale, isStretched } from "../scene/fit";
 import { EditPanel } from "./EditPanel";
 import { ObjectEditLog, SceneEditLog } from "./EditLog";
@@ -52,6 +55,8 @@ function sourceLabel(source: SceneSource | null): string {
       return `${source.filename} (upgraded from ${source.fromVersion}; not saved yet)`;
     case "photo":
       return `Built from the photo ${source.filename} (not saved yet)`;
+    case "drawing":
+      return `Built from the drawing ${source.filename} (not saved yet)`;
     case "fixture":
       return source.name === "industrial-demo" ? "API industrial demo" : "API foundation fixture";
     default:
@@ -370,6 +375,7 @@ function ObjectDetails({ project, object, asset, model, edit, onImprove }: Detai
       <p className="muted mono">{object.id}</p>
       <p className="muted">{KIND_LABEL[object.kind]}</p>
       <p className="placeholder-note">{representationNote(object, asset, model)}</p>
+      <DrawnFrom project={project} object={object} />
 
       <EditPanel key={object.id} object={object} asset={asset} {...edit} />
 
@@ -438,8 +444,38 @@ function ObjectDetails({ project, object, asset, model, edit, onImprove }: Detai
   );
 }
 
+/** Where a drawn object came from in its drawing, and what about it is only assumed. */
+function DrawnFrom({ project, object }: { project: Project; object: SceneObject }) {
+  const link = drawnFrom(project, object.id);
+  const assumed = heightAssumed(object);
+  if (!link && !assumed) return null;
+  return (
+    <div className="drawn-from" data-testid="drawn-from">
+      {link && (
+        <p>
+          <strong>From the drawing</strong> {link.source.filename}: {describeRef(link.drawn.refs[0]!)}
+          {link.drawn.label_from === "text" ? ", named by the text inside it" : link.drawn.label_from === "attribute" ? ", named by its block attribute" : ""}.
+          {link.drawn.notes.length > 0 && ` ${link.drawn.notes.join(" ")}`}
+        </p>
+      )}
+      {assumed && (
+        <p className="height-assumed" data-testid="height-assumed">
+          <strong>Height assumed for display</strong> ({formatMetres(object.dimensions.height.value_m)}): {link ? "a floor plan has no heights" : "nobody has established it"}, so
+          this is not a measurement. Type the real height under Size (H) to use it; until then a check that needs it says <q>height needed</q>.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function representationNote(object: SceneObject, asset: CatalogAsset | null, model: ModelState | undefined): string {
   if (object.kind === "walkway" || object.kind === "keep_clear") return "Floor marking drawn at its recorded size.";
+  if (!asset && heightAssumed(object)) {
+    const form = displayForm(object);
+    return form === "box"
+      ? "Provisional see-through box: footprint from its source, height assumed for display."
+      : `Provisional see-through ${form} shape, chosen from its name and drawn inside its recorded box: footprint from its source, height assumed for display.`;
+  }
   if (!asset) return "Scene geometry with no catalog asset, drawn as a plain solid.";
   if (asset.visual.type === "placeholder_box") return "Instance of a provisional catalog asset, drawn as a placeholder box.";
   if (model?.status === "failed") return "Its glTF model could not be shown; drawn as a labelled fallback box at the recorded size.";

@@ -2,7 +2,7 @@ import type { Project, SceneObject } from "@replay-world/contracts";
 import { GizmoHelper, GizmoViewport, Grid, Html, useCursor } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
-import { type Box3, type DirectionalLight, type Intersection, PMREMGenerator, Vector3 } from "three";
+import { type Box3, BufferGeometry, type DirectionalLight, Float32BufferAttribute, type Intersection, PMREMGenerator, Vector3 } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { AXIS_ORDER, type CommandRequest } from "../editing/commands";
 import { formatFixed, radToDeg } from "../editing/units";
@@ -40,6 +40,8 @@ interface Props {
   onCommand: (request: CommandRequest) => void;
   onDragChange: (dragging: boolean) => void;
   onHandleProbe: (probe: HandleProbe | null) => void;
+  /** The source drawing's lines on the floor (world x, y, z per segment end), or null. */
+  underlay?: Float32Array | null;
 }
 
 const BACKGROUND = "#1f2329";
@@ -81,6 +83,7 @@ export function SceneViewport({
   onCommand,
   onDragChange,
   onHandleProbe,
+  underlay = null,
 }: Props) {
   const objects = project.scene.objects;
   // While a handle is dragged, the object is drawn from this preview; the scene is unchanged
@@ -144,6 +147,7 @@ export function SceneViewport({
         infiniteGrid
       />
       <HandlesFirst />
+      {underlay && <DrawingUnderlay positions={underlay} />}
       {objects.map((o) => (
         <ObjectVisual
           key={o.id}
@@ -192,6 +196,22 @@ export function SceneViewport({
         </GizmoHelper>
       )}
     </Canvas>
+  );
+}
+
+/** The drawing's lines on the floor: where everything was drawn, so a moved object visibly
+ * leaves its drawn outline behind. Not pickable: clicks go to the objects. */
+function DrawingUnderlay({ positions }: { positions: Float32Array }) {
+  const geometry = useMemo(() => {
+    const g = new BufferGeometry();
+    g.setAttribute("position", new Float32BufferAttribute(positions, 3));
+    return g;
+  }, [positions]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <lineSegments geometry={geometry} renderOrder={2} raycast={() => null} name="drawing-underlay">
+      <lineBasicMaterial color="#26313d" transparent opacity={0.9} depthWrite={false} />
+    </lineSegments>
   );
 }
 

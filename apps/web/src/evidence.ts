@@ -1,5 +1,5 @@
 // Small, pure summaries of the evidence carried by contract records, for display only.
-import type { CatalogAsset, Dimensions, UsageRights } from "@replay-world/contracts";
+import type { CatalogAsset, Dimensions, SceneObject, UsageRights } from "@replay-world/contracts";
 
 export type Axis = keyof Dimensions;
 export type Origin = Dimensions["width"]["origin"];
@@ -40,4 +40,13 @@ const REDISTRIBUTION_LABEL: Record<UsageRights["redistribution"], string> = {
 
 export function redistributionLabel(rights: UsageRights): string {
   return REDISTRIBUTION_LABEL[rights.redistribution];
+}
+
+/** A standing object whose height is only a display default (for example drawn from a floor
+ * plan): it is drawn see-through and labelled "height assumed", so it never looks measured. */
+export function heightAssumed(o: SceneObject): boolean {
+  if (o.dimensions.height.origin !== "default") return false;
+  if (o.kind === "equipment") return true;
+  // A structure that rises above the floor (a column, not the floor slab).
+  return o.kind === "structure" && o.transform.position_m.y + o.dimensions.height.value_m > 0.05;
 }
