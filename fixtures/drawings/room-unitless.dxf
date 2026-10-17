@@ -1,0 +1,278 @@
+999
+Synthetic test drawing - Replay World Studio fixtures
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1015
+  9
+$INSUNITS
+ 70
+0
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LAYER
+ 70
+4
+  0
+LAYER
+  5
+108
+  2
+0
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+109
+  2
+WALLS
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+10A
+  2
+MACHINES
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+10B
+  2
+LABELS
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+ENDTAB
+  0
+TABLE
+  2
+BLOCK_RECORD
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+BLOCKS
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+LWPOLYLINE
+  5
+101
+100
+AcDbEntity
+  8
+WALLS
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+0
+ 20
+0
+ 10
+12000
+ 20
+0
+ 10
+12000
+ 20
+8000
+ 10
+0
+ 20
+8000
+  0
+LWPOLYLINE
+  5
+102
+100
+AcDbEntity
+  8
+MACHINES
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+1000
+ 20
+1000
+ 10
+3000
+ 20
+1000
+ 10
+3000
+ 20
+2200
+ 10
+1000
+ 20
+2200
+  0
+TEXT
+  5
+103
+100
+AcDbEntity
+  8
+LABELS
+100
+AcDbText
+ 10
+2000.0
+ 20
+1600.0
+ 30
+0.0
+ 40
+120.0
+  1
+Saw
+  0
+LWPOLYLINE
+  5
+104
+100
+AcDbEntity
+  8
+MACHINES
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+5000
+ 20
+1000
+ 10
+5800
+ 20
+1000
+ 10
+5800
+ 20
+1800
+ 10
+5000
+ 20
+1800
+  0
+TEXT
+  5
+105
+100
+AcDbEntity
+  8
+LABELS
+100
+AcDbText
+ 10
+5400.0
+ 20
+1400.0
+ 30
+0.0
+ 40
+120.0
+  1
+Drill press
+  0
+LWPOLYLINE
+  5
+106
+100
+AcDbEntity
+  8
+MACHINES
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+8000
+ 20
+5000
+ 10
+11000
+ 20
+5000
+ 10
+11000
+ 20
+6000
+ 10
+8000
+ 20
+6000
+  0
+TEXT
+  5
+107
+100
+AcDbEntity
+  8
+LABELS
+100
+AcDbText
+ 10
+9500.0
+ 20
+5500.0
+ 30
+0.0
+ 40
+120.0
+  1
+Assembly bench
+  0
+ENDSEC
+  0
+EOF

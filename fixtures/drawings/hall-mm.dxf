@@ -1,0 +1,714 @@
+999
+Synthetic test drawing - Replay World Studio fixtures
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1015
+  9
+$INSUNITS
+ 70
+4
+  9
+$MEASUREMENT
+ 70
+1
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LAYER
+ 70
+9
+  0
+LAYER
+  5
+116
+  2
+0
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+117
+  2
+A-WALL
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+118
+  2
+S-COLS
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+119
+  2
+EQUIPMENT
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11A
+  2
+WALKWAY
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11B
+  2
+KEEP-CLEAR
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11C
+  2
+CONVEYOR
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11D
+  2
+TEXT
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11E
+  2
+DIMS
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+ENDTAB
+  0
+TABLE
+  2
+BLOCK_RECORD
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+BLOCKS
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+LWPOLYLINE
+  5
+101
+100
+AcDbEntity
+  8
+A-WALL
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+0
+ 20
+0
+ 10
+24000
+ 20
+0
+ 10
+24000
+ 20
+16000
+ 10
+0
+ 20
+16000
+  0
+LWPOLYLINE
+  5
+102
+100
+AcDbEntity
+  8
+S-COLS
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+9800
+ 20
+7800
+ 10
+10200
+ 20
+7800
+ 10
+10200
+ 20
+8200
+ 10
+9800
+ 20
+8200
+  0
+LWPOLYLINE
+  5
+103
+100
+AcDbEntity
+  8
+S-COLS
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+17800
+ 20
+7800
+ 10
+18200
+ 20
+7800
+ 10
+18200
+ 20
+8200
+ 10
+17800
+ 20
+8200
+  0
+LWPOLYLINE
+  5
+104
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+2000
+ 20
+2000
+ 10
+5000
+ 20
+2000
+ 10
+5000
+ 20
+4000
+ 10
+2000
+ 20
+4000
+  0
+TEXT
+  5
+105
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+3500.0
+ 20
+3000.0
+ 30
+0.0
+ 40
+150.0
+  1
+Press 1
+  0
+LWPOLYLINE
+  5
+106
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+2000
+ 20
+5500
+ 10
+5000
+ 20
+5500
+ 10
+5000
+ 20
+7500
+ 10
+2000
+ 20
+7500
+  0
+TEXT
+  5
+107
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+3500.0
+ 20
+6500.0
+ 30
+0.0
+ 40
+150.0
+  1
+Press 2
+  0
+LWPOLYLINE
+  5
+108
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+10000
+ 20
+13500
+ 10
+16000
+ 20
+13500
+ 10
+16000
+ 20
+14600
+ 10
+10000
+ 20
+14600
+  0
+TEXT
+  5
+109
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+13000.0
+ 20
+14050.0
+ 30
+0.0
+ 40
+150.0
+  1
+Pallet rack
+  0
+LWPOLYLINE
+  5
+10A
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+22800
+ 20
+7000
+ 10
+23600
+ 20
+7000
+ 10
+23600
+ 20
+7400
+ 10
+22800
+ 20
+7400
+  0
+TEXT
+  5
+10B
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+23200.0
+ 20
+7200.0
+ 30
+0.0
+ 40
+150.0
+  1
+Electrical panel
+  0
+LWPOLYLINE
+  5
+10C
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+10996.18
+ 20
+3109.862
+ 10
+13314.402
+ 20
+3731.027
+ 10
+13003.82
+ 20
+4890.138
+ 10
+10685.598
+ 20
+4268.973
+  0
+TEXT
+  5
+10D
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+12000
+ 20
+4000
+ 30
+0.0
+ 40
+150.0
+  1
+Packing table
+  0
+LWPOLYLINE
+  5
+10E
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+6
+ 70
+1
+ 10
+18000
+ 20
+2000
+ 10
+21000
+ 20
+2000
+ 10
+21000
+ 20
+3000
+ 10
+19000
+ 20
+3000
+ 10
+19000
+ 20
+4500
+ 10
+18000
+ 20
+4500
+  0
+TEXT
+  5
+10F
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+18400
+ 20
+2500
+ 30
+0.0
+ 40
+150.0
+  1
+Workbench
+  0
+LWPOLYLINE
+  5
+110
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+13000
+ 20
+9500
+ 10
+15000
+ 20
+9500
+ 10
+15000
+ 20
+11000
+ 10
+13000
+ 20
+11000
+  0
+LWPOLYLINE
+  5
+111
+100
+AcDbEntity
+  8
+WALKWAY
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+6500
+ 20
+500
+ 10
+8300
+ 20
+500
+ 10
+8300
+ 20
+15500
+ 10
+6500
+ 20
+15500
+  0
+LWPOLYLINE
+  5
+112
+100
+AcDbEntity
+  8
+KEEP-CLEAR
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+21600
+ 20
+6800
+ 10
+22800
+ 20
+6800
+ 10
+22800
+ 20
+7600
+ 10
+21600
+ 20
+7600
+  0
+LWPOLYLINE
+  5
+113
+100
+AcDbEntity
+  8
+CONVEYOR
+100
+AcDbPolyline
+ 90
+2
+ 70
+0
+ 10
+5000
+ 20
+3000
+ 10
+10800
+ 20
+3000
+  0
+TEXT
+  5
+114
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+12000
+ 20
+15500
+ 30
+0.0
+ 40
+300.0
+  1
+Hall A - ground floor (synthetic)
+  0
+DIMENSION
+  5
+115
+100
+AcDbEntity
+  8
+DIMS
+100
+AcDbDimension
+  2
+*D1
+ 10
+24000.0
+ 20
+-1000.0
+ 30
+0.0
+ 70
+32
+  1
+24000
+  0
+ENDSEC
+  0
+EOF

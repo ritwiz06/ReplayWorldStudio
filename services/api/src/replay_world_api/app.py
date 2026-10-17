@@ -16,9 +16,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import ValidationError
 from replay_world_contracts import (
+    MAX_DRAWING_BYTES,
     SCHEMA_VERSION,
     AssistStatus,
     CatalogAsset,
+    DrawingAnalysis,
     EditProposalRequest,
     EditProposalResult,
     GeneratedAssetRequest,
@@ -59,6 +61,7 @@ from .assist.provider import (
 )
 from .assist.revisions import propose_revision
 from .catalog_files import CatalogFileError, check_model_files, resolve_catalog_file
+from .drawings import DrawingError, analyse_drawing, check_drawing_files
 from .generated_assets import (
     create_asset_revision,
     create_generated_asset,
@@ -384,6 +387,53 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             status = {"too_large": 413, "hash_mismatch": 409, "unsafe": 400}.get(exc.kind, 422)
             raise HTTPException(status_code=status, detail=exc.message) from None
 
+    @app.post(
+        "/api/v1/sources/drawings",
+        openapi_extra={
+            "requestBody": {
+                "required": True,
+                "content": {
+                    media: {"schema": {"type": "string", "format": "binary"}}
+                    for media in ("application/dxf", "application/octet-stream", "text/plain")
+                },
+            }
+        },
+    )
+    async def upload_drawing(
+        request: Request,
+        filename: Annotated[str, Query(min_length=1, max_length=255)],
+    ) -> DrawingAnalysis:
+        """Read a DXF drawing deterministically (IMP-01) and store it by its sha256.
+
+        Nothing is added to a project. A DWG, binary DXF, damaged, empty, too large or too
+        complex file is refused with the reason and is not stored. No language model is called.
+        """
+        chunks: list[bytes] = []
+        size = 0
+        async for chunk in request.stream():
+            size += len(chunk)
+            if size > MAX_DRAWING_BYTES:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"The drawing is larger than {MAX_DRAWING_BYTES // 1048576} MB. "
+                    "Export only the floor-layout layers.",
+                )
+            chunks.append(chunk)
+        data = b"".join(chunks)
+        try:
+            return await anyio.to_thread.run_sync(
+                lambda: analyse_drawing(data, filename, settings.sources_dir)
+            )
+        except DrawingError as exc:
+            status = {
+                "too_large": 413,
+                "dwg": 415,
+                "binary": 415,
+                "not_dxf": 415,
+                "unsafe": 400,
+            }.get(exc.kind, 422)
+            raise HTTPException(status_code=status, detail=exc.message) from None
+
     @app.get("/api/v1/sources/files/{uri:path}", response_class=FileResponse)
     def get_source_file(uri: str) -> FileResponse:
         try:
@@ -477,6 +527,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     def _checked_source_files(project: Project, allow_missing: bool) -> tuple[int, list[str]]:
         verified, issues, missing = check_source_files(project, settings.sources_dir, allow_missing)
+        drawing_issues, missing_drawings = check_drawing_files(project, settings.sources_dir)
+        issues += drawing_issues
+        missing += missing_drawings
         if issues:
             raise RequestValidationError(issues)
         return verified, missing

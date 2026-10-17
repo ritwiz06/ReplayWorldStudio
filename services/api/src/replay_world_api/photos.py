@@ -423,18 +423,38 @@ def store_photo(
             "transfer. Nothing was stored.",
         )
     uri = photo_uri(digest, info.media_type)
+    write_library_file(sources_dir, uri, data, "photo")
+    return StoredPhoto(
+        filename=sanitise_filename(filename, info.media_type),
+        sha256=digest,
+        image=SourceImage(
+            uri=uri,
+            media_type=info.media_type,
+            width_px=info.width_px,
+            height_px=info.height_px,
+            bytes=len(data),
+        ),
+    )
 
+
+def write_library_file(sources_dir: Path, uri: str, data: bytes, noun: str) -> None:
+    """Store ``data`` at ``<sources_dir>/<uri>`` (``<folder>/<name>``), content-addressed.
+
+    The write is atomic; the same bytes again change nothing; a different file already there is
+    never replaced; nothing is written outside the library, even through a symbolic link.
+    """
+    folder_name, name = uri.split("/")
     sources_dir.mkdir(parents=True, exist_ok=True)
     root = sources_dir.resolve()
-    folder = sources_dir / PHOTO_FOLDER
+    folder = sources_dir / folder_name
     # Check before creating anything: a symbolic link here must not lead writes elsewhere.
     if not folder.resolve().is_relative_to(root):
-        raise PhotoError("unsafe", "The photo folder resolves outside the source library.")
+        raise PhotoError("unsafe", f"The {noun} folder resolves outside the source library.")
     folder.mkdir(exist_ok=True)
     real_folder = folder.resolve()
     if not real_folder.is_relative_to(root) or not real_folder.is_dir():
-        raise PhotoError("unsafe", "The photo folder resolves outside the source library.")
-    target = real_folder / PurePosixPath(uri).name
+        raise PhotoError("unsafe", f"The {noun} folder resolves outside the source library.")
+    target = real_folder / name
 
     if target.exists() or target.is_symlink():
         existing = target.resolve()
@@ -448,18 +468,6 @@ def store_photo(
             )
     else:
         _write_atomically(real_folder, target, data)
-
-    return StoredPhoto(
-        filename=sanitise_filename(filename, info.media_type),
-        sha256=digest,
-        image=SourceImage(
-            uri=uri,
-            media_type=info.media_type,
-            width_px=info.width_px,
-            height_px=info.height_px,
-            bytes=len(data),
-        ),
-    )
 
 
 def _write_atomically(folder: Path, target: Path, data: bytes) -> None:
