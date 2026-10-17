@@ -741,7 +741,15 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   - Contract 0.9.0 provides `VERIFIED_ORIGINS` and `is_verified`, and a default can never be confirmed.
   - The compare panel answers clearance, overhead, throughput and load questions only by naming the missing input; overhead gives "height needed" with the objects listed.
   - No check is computed yet.
-- Evidence: not recorded by this package
+- Status (2026-10-17): **done against its criterion** (ADR-052; contract 0.11.0). Labelled overlap and clearance fixtures pass with an explicit 1 mm tolerance:
+  - `fixtures/drawings/layout-checks-mm.dxf`, every outcome worked out by hand: an overlap that only a 45° turn creates (0.231 m), the closest gap (0.469 m, then 0.100 m once turned square), an object 0.40 m into a keep-clear zone, a box that only encloses a round tank ("not evaluated accurately", 0.05 m), an unreviewed drawing and an omitted shape in a zone ("cannot determine yet");
+  - results use the edited positions, sizes and turns, and follow moves, turns, resizes, reclassification, undo and redo, and scale changes;
+  - the outcomes are the three of ADR-052 ("fits in the reviewed design", "conflict found", "cannot determine yet"), plus "not evaluated accurately" and "height needed". They replace the five words of the 2026-10-16 note. No result is as built.
+- Evidence:
+  - `apps/web/src/checks/checks.test.ts` (14 tests, layout and route);
+  - `e2e/layout-checks.spec.ts` (`@smoke`): the simple screen, Check layout, selecting from a finding, before and after, undo and redo, save and reopen;
+  - screens in `docs/geo-01/` at 1440 × 900 and 1280 × 800.
+- Remaining (not blocking): "service areas" are only the keep-clear zones drawn or marked in the review. No per-machine access or service zone is assumed, and none comes from supplier data yet.
 
 ### GEO-02 - Check specified routes and envelopes
 
@@ -750,7 +758,17 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
 - Baseline status: planned; reconcile with actual repository
 - Done when: Seeded route obstruction is highlighted; unmodeled vehicle kinematics remain explicit.
 - Note (2026-10-16, ADR-049): answers the journey's "Does the pallet route still fit?" after a move, showing the route and the exact dimensions used. Overhead clearance needs a confirmed height ("height needed" otherwise).
-- Evidence: not recorded by this package
+- Status (2026-10-17): **done against its criterion** (ADR-052).
+  - A seeded obstruction (Machine B moved into the 2.00 m aisle) blocks a 1.20 m item with 0.10 m each side. The narrowest place (0.50 m) and the objects either side are highlighted on the plan and in 3D, and the drawing's own arrangement still fits beside it.
+  - The vehicle's kinematics stay explicit: every answer says "Width-only route; turning not evaluated", and the limits name vehicle length, turning and heights.
+  - The person picks A and B on the plan and enters the width and an optional allowance; nothing is assumed.
+  - Uncertain geometry (approximate or unreviewed footprints, open lines, left-out shapes) never proves a route clear.
+  - Overhead envelopes answer "height needed" while heights are only for display.
+- Evidence:
+  - `apps/web/src/checks/checks.test.ts`: the clear aisle, the 0.80 m doorway, the left-out spline, the move, a resize and unknown omissions;
+  - `e2e/layout-checks.spec.ts` (`@smoke`);
+  - screens in `docs/geo-01/`.
+- Remaining (not blocking): swept paths for vehicles with length and turning; height envelopes once heights are entered; the route question is not saved in the project.
 
 ## M6 - Production-event simulation and comparison
 

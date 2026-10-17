@@ -846,6 +846,44 @@ Append entries in chronological order. If a live repository session log already 
   - IMP-02 and AGT-01 open.
 - **Next concrete task:** GEO-01 through the readiness rule, or the rest of IMP-02, on the user's priority.
 
+### 2026-10-17 - GEO-01/02 "Does this layout fit?" on the simple screen (contract 0.11.0)
+
+- **Active issues:** GEO-01, GEO-02 (M5). Started from `d1613cd` on `main`.
+- **Goal:** open a reviewed drawing, move a machine, ask whether it conflicts with another object or a keep-clear zone, ask whether an item can get from one point to another, and compare the answers before and after the move. 2D, the reviewed design only; deterministic; no Voyager call.
+- **Work completed:**
+  - `apps/web/src/checks/`:
+    - `geometry.ts`: exact polygon tests;
+    - `inputs.ts`: what the checks see;
+    - `layout.ts` (GEO-01): overlaps, keep-clear zones, floor edge, 1 mm tolerance, closest gap;
+    - `route.ts` (GEO-02): distance field and A*, exact verification, three passes, widest-path blockage, rays for the narrowest passage;
+    - `arrangement.ts`: the drawing's own arrangement;
+    - `results.ts`: what the plan and 3D show.
+  - **Check layout** on the simple screen: the entry under Play or compare, the Check view in the drawing panel, before/after table, findings that select their objects, the route question, "Measurements and limits"; the 3D highlights; outcomes in Compare's captions.
+  - **Readiness wording:** no as-built level; "Fits in the reviewed design", "Conflict found", "Cannot determine yet", "Height needed". The clearance question now points to Check layout; the status bar says what is and is not checked.
+  - **Contract 0.11.0:** `DrawingImport.omitted` with each left-out shape's extent (or none when it cannot be placed); migration 0.10.0 → 0.11.0 adds `omitted: null`.
+  - **Fixture:** `layout-checks-mm.dxf`, with outcomes worked out by hand.
+- **Fixed during the work:**
+  - a diagonal measurement slipped past the 0.80 m doorway's thin partition (11 m): the passage is now the narrowest of 12 directions plus the one across travel;
+  - the widest-path chain wandered among equal values, so a blockage was reported in the wrong place: the reported place is now on the shortest route that keeps the bottleneck, at its narrowest exactly measured passage;
+  - from the screenshots: a moved object named by a finding showed in "moved" blue, and its dashed original outline was filled red;
+  - an omitted hatch with arc edges, a bulged polyline or a picture could have been given an extent smaller than the shape: their position is now unknown.
+- **Commands and outcomes:**
+  - `pnpm check`: exit 0 (pytest 807; Vitest 208 + contracts 10).
+  - Full Playwright suite: 52 passed, 22 skipped (the screen specs).
+  - `e2e/layout-checks.spec.ts` (smoke): passed.
+- **Timing (Node, this machine):** the footprint check under 3 ms; a route 30–65 ms when it fits and 90–115 ms when blocked, on the 20 m × 10 m fixture (about 155,000 cells).
+- **Visual evidence:** docs/geo-01/ (conflict, clear, blocked, as drawn, compare; at 1440 × 900 and 1280 × 800).
+- **Decisions:** ADR-052 (three outcomes; nothing as built; exact footprints; uncertain geometry never proves a route; omitted shapes placed; one entry on the simple screen).
+- **Known limitations:**
+  - width only: no turning or vehicle length;
+  - no heights;
+  - service zones only where drawn or marked;
+  - the route question is not saved in the project;
+  - at 1280 × 800 the Check panel scrolls and covers the right of the 3D view.
+- **Effort:** about 50 min active to this commit (17:51 to 18:38 UTC, 10:51 to 11:38 MST), CI not included.
+- **Milestone status:** M5's two issues done against their criteria; M4 continues (IMP-02, AGT-01 open).
+- **Next concrete task:** on the user's priority: the rest of IMP-02, ENR-01/02, or SIM-01.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

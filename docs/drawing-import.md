@@ -1,6 +1,6 @@
 # Drawing import (IMP-01), the first world from one file (ONB-01) and its review (IMP-02)
 
-**Upload a plan. Walk through it. Change it. See what happens.** One DXF floor layout becomes a 3D draft that a first-time user can walk through, change and compare with the drawing. The draft is built by deterministic code: no language model is called, so the first view never waits for one. Decisions: ADR-050 and ADR-051 (with ADR-049). Contract: [contracts.md, Drawing sources](contracts.md#drawing-sources-090-imp-01-and-onb-01) and [Drawing review](contracts.md#drawing-review-0100-imp-02).
+**Upload a plan. Walk through it. Change it. See what happens.** One DXF floor layout becomes a 3D draft that a first-time user can walk through, change and compare with the drawing. The draft is built by deterministic code: no language model is called, so the first view never waits for one. Decisions: ADR-050, ADR-051 and ADR-052 (with ADR-049). Contract: [contracts.md, Drawing sources](contracts.md#drawing-sources-090-imp-01-and-onb-01) and [Drawing review](contracts.md#drawing-review-0100-imp-02).
 
 ## The journey
 
@@ -125,26 +125,79 @@ These are scripted timings on one machine, not onboarding measurements with peop
   - the unit question;
   - a DWG, unsupported geometry, a cancelled upload and unsaved changes, each leaving the current scene as it was.
 
-## What a later check may claim (ADR-051)
+## Does this layout fit? (GEO-01/02, ADR-052)
 
-`apps/web/src/drawing/readiness.ts` is the rule GEO-01/02 checks must use.
-- **Measured or supplier values** give an as-built result.
-- **Drawn values give a design-layout result**, labelled "on the design layout: the design drawing … not the site as built", and only once all of these hold:
-  - the scale is confirmed or measured;
-  - the floor is decided;
-  - each object used is reviewed;
-  - each object used has an exact footprint;
-  - the omissions are accepted.
-- **A display height** gives "height needed".
-- **Anything else** gives "not evaluated", with the reasons.
+A 2D check of the **reviewed design**: footprints on the floor plan, with the positions, sizes and turns as they are now. It is not a physical simulation, it never certifies the site as built, and it knows nothing about heights, loads, throughput or chemistry.
 
-Tested in `src/drawing/review.test.ts`:
-- an unreviewed hall never passes;
-- the reviewed hall gives a design-layout pass for a rectangle;
-- "height needed" for an overhead check;
-- the L-shaped bench's enclosing box blocks a pass.
+**Where it is.** On the simple screen, **Check layout** sits under "Play or compare". It opens the drawing panel's Check view:
+- one sentence for footprints and keep-clear zones, and one for the route if one is asked;
+- a small table: the drawing's own arrangement ("As drawn") against the edited one ("Now"), each with its own results; choosing a column shows that arrangement on the plan;
+- the plan, with conflicts in red, approximations in amber, the route, its narrowest place and the points A and B;
+- each finding, with buttons that select its objects;
+- "Can an item get from A to B?": pick A and B on the plan, enter the item's width and, optionally, an allowance kept clear on each side;
+- **Measurements and limits** (closed by default): every number to the millimetre, the tolerance, the grid resolution, what was tested and what is not checked.
 
-In the browser, the reviewed warehouse still answers "not ready" for clearance because of the round tank's enclosing square.
+While the Check view is open, the 3D view outlines the same objects and areas and draws the route. Every edit, undo, redo, review correction and scale change recomputes the answers. The route's points and width are kept while the app is open, not saved in the project.
+
+**Three outcomes**, each naming its source (the drawing and how its scale was settled):
+
+| Outcome | When |
+| --- | --- |
+| **Fits in the reviewed design** | Exact footprints, a reviewed drawing, and no conflict; for a route, a corridor of the needed width avoids everything, including anything uncertain |
+| **Conflict found** / **Blockage found** | Two exact footprints overlap by more than 1 mm, one stands in a keep-clear zone or past the floor's edge; or the widest possible way is narrower than the item needs, by more than the grid's resolution |
+| **Cannot determine yet** | The drawing is not reviewed; an object used is unreviewed, estimated or sized for display; the only routes pass uncertain geometry; a shape the drawing left out could be anywhere; or a blockage is within the grid's resolution of the need. The answer says which. "Not evaluated accurately" marks boxes that overlap where one only encloses its shape (a tank, a curved outline, a block) |
+
+Overhead clearance answers **height needed** while a height is only for display.
+
+**Footprints (GEO-01).**
+- Overlap depth: the smallest push that separates the two turned rectangles (separating axes). Shortest gap: the exact distance between them. Tolerance: 1 mm; touching is not a conflict.
+- Keep-clear zones are objects of kind keep-clear (as read, or corrected in the review). An object in one is a conflict; an open line or a left-out shape inside one means the zone cannot be confirmed clear.
+- An object reaching past the reviewed floor outline is reported.
+- A box that only encloses its shape is never reported as an exact collision. Clear boxes are clear, since the shape is inside its box.
+
+**Routes (GEO-02).** The item needs a corridor of its width plus the allowance on each side. Nothing is assumed: no cart size, door opening or operating rule.
+1. A distance field on a grid over the floor (2 cm cells, coarser for a floor larger than 64 m²) finds a route with A* that keeps half the corridor plus one cell clear.
+2. The route is straightened, then checked exactly against every polygon at a quarter of a cell. Its narrowest passage is measured exactly with rays across it.
+3. The search runs first avoiding everything, then avoiding only exactly known geometry, then for the widest possible way. Only the first can give "fits". The second gives "cannot determine yet" and names the uncertain shapes the route passes. The third gives a blockage, highlighted where it is narrowest, with the objects either side.
+4. Every answer says **"Width-only route; turning not evaluated."** A long pallet, a turning forklift or an articulated vehicle may need more room at the turns.
+
+**What the drawing leaves out (contract 0.11.0).** The reader now records where each left-out layout shape lies (its extent in drawing units), so it affects only answers near it. A shape that cannot be placed (inside a block, an insert, an infinite line, a picture, a curve that can bulge past its points) could be anywhere, so keep-clear zones and routes are not confirmed. A drawing read before 0.11.0 has no positions: upload it again. Accepting the omissions in the review never turns missing geometry into proof of a clear route.
+
+**Fixture outcomes** (`fixtures/drawings/layout-checks-mm.dxf`, 20 m × 10 m in millimetres; each worked out by hand in `scripts/build_dxf_fixtures.py`):
+
+| Case | Answer |
+| --- | --- |
+| Not reviewed | Cannot determine yet: the scale is not checked yet; the floor is only proposed; what the drawing leaves out is not yet accepted |
+| As drawn, reviewed | Conflict: the mixer, turned 45°, overlaps the control panel by 0.231 m (8000 + 800√2 − 8900 mm); closest other pair: mixer and Rack A, 0.469 m |
+| Mixer turned square | Fits; closest: mixer and control panel, 0.100 m |
+| Machine B moved 1.2 m west | Conflict: 0.40 m into Keep-clear zone 1 |
+| Packing table beside the round tank | Not evaluated accurately: the boxes overlap by 0.05 m, but the tank's box only encloses a round shape (the table's corner is 0.541 m from the tank's centre, outside its 0.5 m radius) |
+| Control panel reclassified as keep-clear | Conflict: the mixer stands 0.23 m into it |
+| Scale corrected to centimetres | Conflict: overlap 2.31 m |
+| Keep-clear zone moved over the left-out spline | Cannot determine: the zone contains an omitted SPLINE |
+| 1.20 m item, 0.10 m each side, along the aisle | Fits: narrowest passage 2.00 m between the racks |
+| The same item through the partition's doorway | Blockage: 0.80 m between the partition's two halves; it needs 1.40 m |
+| A 0.60 m item through the doorway | Cannot determine: the only route passes the omitted SPLINE 117 just beyond it |
+| Machine B moved into the aisle | Blockage: 0.50 m between Machine B and a rack; as drawn, the route still fits |
+| Rack B made 2.4 m deep | Blockage at the start: 1.30 m left of the aisle |
+| Positions of left-out shapes unknown (a 0.10.0 file) | Cannot determine: they could be anywhere |
+
+**Time.** On this machine (Node, Apple silicon), the footprint check takes under 3 ms and a route 30–65 ms when it fits, 90–115 ms when it is blocked (three searches) on the 20 m × 10 m fixture (about 155,000 cells).
+
+**Tests.**
+- `apps/web/src/checks/checks.test.ts`: each fixture outcome above.
+- `services/api/tests/test_drawings.py`: where left-out shapes lie, and that an extent is never smaller than its shape.
+- `packages/contracts/tests/`: the 0.11.0 record and migration.
+- `e2e/layout-checks.spec.ts` (`@smoke`, simple screen): review → conflict → turn → fits → route fits → move → blocked → before and after → undo and redo → Compare → save → reopen → the doorway question.
+- `e2e/geo-screens.spec.ts`: screenshots at 1440 × 900 and 1280 × 800 in [docs/geo-01/](geo-01/).
+
+**Limits a manager will see.**
+- Only the reviewed design: if the site differs from the drawing, so will the answer.
+- Width only: no turning, no vehicle length, no reversing, no people passing.
+- Heights are not checked: overhead questions answer "height needed" while heights are only for display.
+- Working room around a machine is checked only where a keep-clear zone is drawn or marked in the review.
+- A route is answered for the two points picked; other routes are not implied.
+- Strength, floor loading, throughput, process chemistry and movement over time are not checked.
 
 ## Gaps
 
@@ -155,7 +208,7 @@ In the browser, the reviewed warehouse still answers "not ready" for clearance b
   - closing an open shape into an object;
   - more than one known length, rotation or non-uniform scale.
 - **UX-01:** done for the beginner-facing screen (see BACKLOG). Measuring it with people is UX-02.
-- **GEO-01/02:** no check is computed yet; they must use the readiness rule above.
+- **GEO-01/02:** see [Does this layout fit?](#does-this-layout-fit-geo-0102-adr-052) for the limits. Not built: swept paths for vehicles with length and turning, overhead clearance with entered heights, per-machine service zones from supplier data, saving the route question in the project.
 - **AGT-01:**
   - the orchestrator reads, settles the unit, builds and checks;
   - it does not match equipment to catalog or generated models, or propose changes;

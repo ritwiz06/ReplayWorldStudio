@@ -963,3 +963,32 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - a site measurement path exists (a measured object would then be `measured`, and an as-built result possible);
   - drawings need rotation or non-uniform scale corrections;
   - split and merge of drawn objects are built.
+
+### ADR-052 - "Does this layout fit?": exact 2D answers on the reviewed design, three outcomes, nothing as built
+
+- Date: 2026-10-17 (America/Phoenix). Status: adopted (GEO-01, GEO-02; contract 0.11.0). Replaces ADR-051 point 4's first line; refines ADR-049's result words.
+- **Context.**
+  - ADR-051 let measured or supplier values give an "as-built" result. A supplier's size describes a machine, not where it stands on site, and nothing in the product measures positions on site, so no input can establish the site as built.
+  - The first checks have to answer a manager's question after a move ("does it still fit? can the cart still get through?") on a drawing whose footprints may be approximate (a tank's enclosing square, a block's extent), whose omitted shapes may lie anywhere, and whose objects may not all be reviewed.
+  - A route on a grid is approximate; a 0.80 m doorway measured diagonally looked 11 m wide in the first attempt.
+- **Options considered.**
+  - Bounding boxes everywhere (fast, but reports approximations as collisions or as clear).
+  - A physics engine or a vehicle model (out of scope; invents dimensions and kinematics).
+  - Exact polygon tests for footprints, a grid search for routes whose result is then verified exactly, and three outcomes that keep uncertain geometry from ever proving a fit (chosen).
+- **Decision.**
+  1. **Three outcomes**: "Fits in the reviewed design", "Conflict found" (layout) or "Blockage found" (route), and "Cannot determine yet". Overhead questions answer "Height needed" while a height is only for display. Nothing is labelled as built or site-verified (`CheckLevel` is `design_layout`, `review_needed` or `height_needed`).
+  2. **Footprints (GEO-01)** use the current positions, sizes and turns. Overlap depth is a separating-axis test on the turned rectangles, the gap is the exact polygon distance, and the tolerance is 1 mm (touching is not a conflict). Keep-clear zones are objects of kind `keep_clear` (reviewed or reclassified). Objects reaching past the reviewed floor outline are reported.
+  3. **An approximate footprint never gives an exact answer.** Overlapping boxes where either side only encloses its shape (a circle, a non-rectangle, a block) give "Not evaluated accurately", with the correction ("enter its real size"). Unreviewed objects, estimates and display-only sizes give "cannot determine". Clear boxes are clear, because the shape is inside its box.
+  4. **Routes (GEO-02)** take two points the person picks on the plan, the item's width and an optional allowance each side; the corridor is width + 2 × allowance. Nothing is assumed: no cart size, door opening or operating rule. The search is a distance field on a grid (2 cm, or coarser so the floor has at most 160,000 cells) with A*; the found route is string-pulled and then checked exactly against the polygons at a quarter cell. The narrowest passage is measured exactly with rays in 12 directions plus the one across travel. When there is no route, the widest possible way's narrowest place is reported and highlighted; within one grid step of the need it is "cannot determine", not "blocked". Every answer says "Width-only route; turning not evaluated."
+  5. **Uncertain geometry cannot prove a clear route.** The route is searched three times: avoiding everything (fits), avoiding only exact geometry (cannot determine, naming the uncertain shapes the route passes), and the widest way (blocked). Uncertain means: an approximate or unreviewed footprint, an open line in the drawing, or a shape the drawing left out. Accepting the omissions in the review does not change this.
+  6. **Omitted shapes have a place (contract 0.11.0).** `DrawingImport.omitted` records each left-out layout entity with its extent in drawing units, or no extent when it cannot be placed (inside a block, an XLINE or RAY, a tilted entity). A placed omission affects only answers near it; one with no place, or a migrated drawing (`omitted: null`), keeps keep-clear zones and routes from being confirmed anywhere.
+  7. **One entry on the simple screen.** "Check layout" under "Play or compare" opens the drawing panel's Check view: the outcome sentences, a before/after table (the drawing's own arrangement against the edited one, each with its own results), the plan with red conflicts, amber approximations, the route and its narrowest place, the findings (each selects its objects), the route question, and "Measurements and limits" with the exact numbers, tolerance, resolution and what is not checked. The 3D view outlines the same objects and areas while the view is open. Results recompute after every edit, undo, redo, review correction and scale change. The route's points and width are kept while the app is open, not in the project file.
+- **Consequences.**
+  - Clearance for service and access is only as good as the keep-clear zones drawn or marked in the review; the product never assumes one.
+  - A drawing that omits much (many unplaceable shapes) will answer "cannot determine" for routes and zones until it is redrawn or exported with its geometry exploded.
+  - A grid route can miss a passage narrower than the need plus about two cells: such cases are "cannot determine", never "fits".
+- **Revisit when:**
+  - vehicles with length and turning are needed (swept paths);
+  - heights are entered for overhead clearance;
+  - a site measurement path exists (positions measured on site);
+  - service zones per machine come from supplier data.
