@@ -362,6 +362,30 @@ def analysis(name: str) -> bytes:
     return (json.dumps(result.model_dump(mode="json"), indent=2) + "\n").encode()
 
 
+def same(name: str, committed: bytes, built: bytes) -> bool:
+    """Drawings must match byte for byte. A reader's output may differ in the last digits of a
+    float between platforms' maths libraries (a rotated outline's sine and cosine), so it is
+    compared as JSON with a 1e-9 tolerance."""
+    if not name.endswith(".json"):
+        return committed == built
+    import json
+
+    def close(a: object, b: object) -> bool:
+        if isinstance(a, float) or isinstance(b, float):
+            return (
+                isinstance(a, int | float)
+                and isinstance(b, int | float)
+                and math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-9)
+            )
+        if isinstance(a, dict) and isinstance(b, dict):
+            return a.keys() == b.keys() and all(close(a[k], b[k]) for k in a)
+        if isinstance(a, list) and isinstance(b, list):
+            return len(a) == len(b) and all(close(x, y) for x, y in zip(a, b, strict=True))
+        return a == b
+
+    return close(json.loads(committed), json.loads(built))
+
+
 ANALYSES = {f"{name[:-4]}.analysis.json": name for name in ("hall-mm.dxf", "room-unitless.dxf")}
 
 
@@ -374,7 +398,7 @@ def main(argv: list[str]) -> int:
         data = build()
         path = OUT / name
         if check:
-            if not path.exists() or path.read_bytes() != data:
+            if not path.exists() or not same(name, path.read_bytes(), data):
                 stale.append(name)
         else:
             OUT.mkdir(parents=True, exist_ok=True)
