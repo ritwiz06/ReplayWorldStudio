@@ -1,4 +1,5 @@
 import type { Project } from "@replay-world/contracts";
+import { drawingSource } from "../drawing/world";
 import type { ModelSummary } from "../hooks/useCatalogModels";
 import type { CameraMode } from "../scene/CameraRig";
 
@@ -35,8 +36,10 @@ export function StatusBar({ project, mode, models, savedAs, dirty, details }: Pr
           )}
           <span data-testid="edit-count">{project.scene.edit_log.length} edits recorded</span>
           {project.scene.edit_log.length > 0 && (
-            <span className="status-warn" data-testid="unchecked-status" title="Spatial clearance checks arrive in M5">
-              Edited layout · not checked for clearance, collisions or feasibility
+            <span className="status-warn" data-testid="unchecked-status">
+              {drawingSource(project)
+                ? "Edited layout · overlaps and routes are checked only in Check layout (2D); nothing physical is checked"
+                : "Edited layout · not checked for clearance, collisions or feasibility"}
             </span>
           )}
           {savedAs && !dirty && <span data-testid="saved-as">Saved as {savedAs}</span>}

@@ -1,5 +1,6 @@
-// What can be checked yet (ADR-049): route, process and physical checks are not built. A
-// question about them gets a plain answer naming the missing input, never an invented result.
+// What can be checked yet (ADR-049, ADR-052): footprint, keep-clear and width-only route checks
+// are in Check layout; process and physical checks are not built. A question about them gets a
+// plain answer naming the missing input, never an invented result.
 // A check that needs a verified height answers "height needed" while any height is only a
 // display value or an estimate.
 import type { Length, Project, SceneObject } from "@replay-world/contracts";
@@ -53,7 +54,7 @@ export function answer(project: Project, question: CheckQuestion): CheckAnswer {
   }
   const missing: Record<Exclude<CheckQuestion, "overhead">, string> = {
     clearance:
-      "A clearance check needs the clear width each route must keep (for people, carts or a forklift) and each machine's access and service zones. The drawing gives footprints and walkway outlines only, so no clearance result is shown.",
+      "Check layout answers part of this: whether footprints overlap or stand in a keep-clear zone, and whether an item of a width you enter can get from one point to another (width only; turning is not evaluated). Working room around a machine is checked only where the drawing or the review marks it as a keep-clear zone; access and service zones are never assumed.",
     throughput:
       "Throughput needs each station's cycle time, the order work moves between stations, and the shift pattern. A drawing contains none of these, and they are never guessed.",
     strength:

@@ -1,9 +1,10 @@
 import type { Project, SceneObject } from "@replay-world/contracts";
-import { GizmoHelper, GizmoViewport, Grid, Html, useCursor } from "@react-three/drei";
+import { GizmoHelper, GizmoViewport, Grid, Html, Line, useCursor } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
-import { type Box3, BufferGeometry, type DirectionalLight, Float32BufferAttribute, type Intersection, PMREMGenerator, Vector3 } from "three";
+import { type Box3, BufferGeometry, type DirectionalLight, DoubleSide, Float32BufferAttribute, type Intersection, PMREMGenerator, Shape, ShapeGeometry, Vector2, Vector3 } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import type { SceneChecks } from "../checks/results";
 import { AXIS_ORDER, type CommandRequest } from "../editing/commands";
 import { formatFixed, radToDeg } from "../editing/units";
 import type { ModelStates } from "../hooks/useCatalogModels";
@@ -42,6 +43,8 @@ interface Props {
   onHandleProbe: (probe: HandleProbe | null) => void;
   /** The source drawing's lines on the floor (world x, y, z per segment end), or null. */
   underlay?: Float32Array | null;
+  /** What the layout checks found, highlighted while they are open (GEO-01/02). */
+  checks?: SceneChecks | null;
 }
 
 const BACKGROUND = "#1f2329";
@@ -84,6 +87,7 @@ export function SceneViewport({
   onDragChange,
   onHandleProbe,
   underlay = null,
+  checks = null,
 }: Props) {
   const objects = project.scene.objects;
   // While a handle is dragged, the object is drawn from this preview; the scene is unchanged
@@ -148,6 +152,7 @@ export function SceneViewport({
       />
       <HandlesFirst />
       {underlay && <DrawingUnderlay positions={underlay} />}
+      {checks && <CheckHighlights checks={checks} />}
       {objects.map((o) => (
         <ObjectVisual
           key={o.id}
@@ -212,6 +217,66 @@ function DrawingUnderlay({ positions }: { positions: Float32Array }) {
     <lineSegments geometry={geometry} renderOrder={2} raycast={() => null} name="drawing-underlay">
       <lineBasicMaterial color="#26313d" transparent opacity={0.9} depthWrite={false} />
     </lineSegments>
+  );
+}
+
+const none = () => null;
+const FLAG_COLOUR = { conflict: "#ff5c57", uncertain: "#f0b429" } as const;
+const ROUTE_COLOUR = { fits: "#57d9a3", conflict: "#ff5c57", cannot_determine: "#f0b429" } as const;
+
+/** The layout checks' findings in the scene: each affected object outlined as a box (seen
+ * through whatever is in front of it), overlapping areas filled on the floor, and the route
+ * with its ends and, where it is blocked, the narrowest place. Not pickable. */
+function CheckHighlights({ checks }: { checks: SceneChecks }) {
+  const areas = useMemo(
+    () =>
+      checks.regions.map((r) => {
+        // Drawn in the XY plane and laid flat: (x, y) becomes world (x, -y), so y is -z.
+        const shape = new Shape(r.points.map((p) => new Vector2(p.x, -p.z)));
+        return { geometry: new ShapeGeometry(shape), flag: r.flag };
+      }),
+    [checks.regions],
+  );
+  useEffect(() => () => areas.forEach((a) => a.geometry.dispose()), [areas]);
+  const lift = 0.03;
+  return (
+    <group name="check-highlights">
+      {checks.outlines.map((o, i) => {
+        const ring = [...o.points, o.points[0]!];
+        const segments: [number, number, number][] = [];
+        for (let k = 0; k < o.points.length; k++) {
+          const a = o.points[k]!;
+          const b = o.points[(k + 1) % o.points.length]!;
+          segments.push([a.x, lift, a.z], [b.x, lift, b.z], [a.x, o.top, a.z], [b.x, o.top, b.z], [a.x, lift, a.z], [a.x, o.top, a.z]);
+        }
+        return (
+          <group key={`o${i}`}>
+            <Line raycast={none} points={segments} segments color={FLAG_COLOUR[o.flag]} lineWidth={2.5} depthTest={false} transparent opacity={0.95} renderOrder={10} />
+            <Line raycast={none} points={ring.map((p) => [p.x, lift, p.z] as [number, number, number])} color={FLAG_COLOUR[o.flag]} lineWidth={3.5} depthTest={false} renderOrder={10} />
+          </group>
+        );
+      })}
+      {areas.map((a, i) => (
+        <mesh raycast={none} key={`a${i}`} geometry={a.geometry} rotation={[-Math.PI / 2, 0, 0]} position={[0, lift + 0.005, 0]} renderOrder={11}>
+          <meshBasicMaterial color={FLAG_COLOUR[a.flag]} transparent opacity={0.55} side={DoubleSide} depthTest={false} depthWrite={false} />
+        </mesh>
+      ))}
+      {checks.route && checks.route.points.length > 1 && (
+        <Line raycast={none} points={checks.route.points.map((p) => [p.x, lift + 0.01, p.z] as [number, number, number])} color={ROUTE_COLOUR[checks.route.outcome]} lineWidth={4} depthTest={false} renderOrder={12} />
+      )}
+      {checks.ends.map((p, i) => (
+        <mesh raycast={none} key={`e${i}`} position={[p.x, lift + 0.02, p.z]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={13}>
+          <circleGeometry args={[0.18, 24]} />
+          <meshBasicMaterial color={i === 0 ? "#7cc4ff" : "#c39bff"} depthTest={false} />
+        </mesh>
+      ))}
+      {checks.passage && (
+        <mesh raycast={none} position={[checks.passage.x, lift + 0.02, checks.passage.z]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={13}>
+          <ringGeometry args={[0.22, 0.32, 32]} />
+          <meshBasicMaterial color={FLAG_COLOUR.conflict} depthTest={false} side={DoubleSide} />
+        </mesh>
+      )}
+    </group>
   );
 }
 

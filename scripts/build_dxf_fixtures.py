@@ -19,6 +19,12 @@ is involved. Run ``uv run python scripts/build_dxf_fixtures.py`` to (re)write th
   but the geometry is in centimetres, which still reads as a plausible 6 m x 4 m, so no question
   is asked. A note gives a known length (column bays of 6.00 m). Also a round tank (circle), a
   door swing (arc), a title block and a drop zone drawn on the equipment layer.
+* ``layout-checks-mm.dxf`` - GEO-01/02 cases with outcomes worked out by hand (mm): a 20 m x
+  10 m floor; two racks from the west wall with a 2.00 m aisle between them (a clear route); a
+  partition across the floor with a 0.80 m doorway (a narrow blockage), and an omitted spline
+  just beyond it; a 1.60 m mixer turned 45 degrees whose corner reaches 0.231 m into a control
+  panel (an overlap that only the rotation creates); a keep-clear zone 0.80 m from a machine (a
+  move changes the result); a round water tank (an approximate obstacle).
 * ``layout.dwg`` - not a drawing: a DWG signature and filler bytes, to check the DWG message.
 
 ``hall-mm.analysis.json`` and ``room-unitless.analysis.json`` are what the API's reader returns
@@ -378,6 +384,55 @@ def warehouse_cm() -> bytes:
     return d.render()
 
 
+def layout_checks_mm() -> bytes:
+    layers = ["0", "A-WALL", "RACKS", "EQUIPMENT", "KEEP-CLEAR", "TANKS", "TEXT"]
+    d = Dxf(insunits=4, measurement=1, layers=layers)
+    e = d.entities
+    e.append(d.rect("A-WALL", 0, 0, 20000, 10000))
+    # A partition across the floor with a 0.80 m doorway (y 4600 to 5400).
+    for y0, y1 in ((0, 4600), (5400, 10000)):
+        e.append(d.rect("A-WALL", 17000, y0, 17200, y1))
+        e.append(d.text("TEXT", (17100, (y0 + y1) / 2), "Partition", 60.0))
+    # Two racks from the west wall with a 2.00 m aisle between them (y 4000 to 6000): the aisle is
+    # the only way east from its west end.
+    for name, y0 in (("Rack A", 6000), ("Rack B", 3000)):
+        e.append(d.rect("RACKS", 0, y0, 15000, y0 + 1000))
+        e.append(d.text("TEXT", (7500, y0 + 500), name, 200.0))
+    # A 1.60 m square mixer turned 45 degrees: its right corner (9131.4, 8600) reaches 231.4 mm
+    # into the control panel; square to the axes it would stand 0.10 m clear.
+    e.append(d.poly("EQUIPMENT", rotated_rect(8000, 8600, 1600, 1600, 45.0)))
+    e.append(d.text("TEXT", (8000, 8600), "Mixer", 150.0))
+    e.append(d.rect("EQUIPMENT", 8900, 8400, 9500, 8800))
+    e.append(d.text("TEXT", (9200, 8600), "Control panel", 40.0))
+    # A keep-clear zone in front of a cabinet, 0.80 m from Machine B.
+    e.append(d.rect("KEEP-CLEAR", 11000, 8000, 13000, 9600))
+    e.append(d.rect("EQUIPMENT", 11500, 9600, 12500, 9900))
+    e.append(d.text("TEXT", (12000, 9750), "Electrical cabinet", 60.0))
+    e.append(d.rect("EQUIPMENT", 13800, 8200, 15300, 9200))
+    e.append(d.text("TEXT", (14550, 8700), "Machine B", 150.0))
+    e.append(d.rect("EQUIPMENT", 3000, 1000, 4200, 1800))
+    e.append(d.text("TEXT", (3600, 1400), "Packing table", 100.0))
+    # A round tank: only an enclosing square is known exactly.
+    e.append(
+        d.raw(
+            "CIRCLE",
+            "TANKS",
+            (100, "AcDbCircle"),
+            (10, 12000.0),
+            (20, 1500.0),
+            (30, 0.0),
+            (40, 500.0),
+        )
+    )
+    e.append(d.text("TEXT", (12000, 1500), "Water tank", 100.0))
+    # A shape the reader does not import, just beyond the doorway.
+    e.append(
+        d.raw("SPLINE", "EQUIPMENT", (100, "AcDbSpline"), (70, 8), (71, 3), (72, 0), (73, 2),
+              (10, 17250.0), (20, 4500.0), (30, 0.0), (10, 17700.0), (20, 5500.0), (30, 0.0))
+    )  # fmt: skip
+    return d.render()
+
+
 def dwg_stub() -> bytes:
     return b"AC1032" + bytes((i * 37) % 251 for i in range(250))
 
@@ -388,6 +443,7 @@ FILES = {
     "cell-blocks-m.dxf": cell_blocks_m,
     "unsupported-mm.dxf": unsupported_mm,
     "warehouse-cm.dxf": warehouse_cm,
+    "layout-checks-mm.dxf": layout_checks_mm,
     "layout.dwg": dwg_stub,
 }
 
@@ -434,7 +490,7 @@ def same(name: str, committed: bytes, built: bytes) -> bool:
 
 ANALYSES = {
     f"{name[:-4]}.analysis.json": name
-    for name in ("hall-mm.dxf", "room-unitless.dxf", "warehouse-cm.dxf")
+    for name in ("hall-mm.dxf", "room-unitless.dxf", "warehouse-cm.dxf", "layout-checks-mm.dxf")
 }
 
 

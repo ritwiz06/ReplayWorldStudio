@@ -288,6 +288,8 @@ def test_0_6_0_documents_gain_a_null_revision_and_an_unstated_size_basis(
         "schema_version 0.9.0 -> 0.10.0 (adds an unchecked review to 0 drawing sources and "
         "footprint_fit to 0 drawn objects; 0 drawn footprint values recorded as measured become "
         "drawn (a design drawing, not a site measurement); nothing is strengthened)",
+        "schema_version 0.10.0 -> 0.11.0 (adds 'omitted: null' to 0 drawing readings: where their "
+        "left-out shapes lie was not recorded, so checks treat them as possibly anywhere)",
     ]
     assert "revision" not in old["catalog"][-1]["generation"]  # input untouched
     Project.model_validate(upgrade.document)

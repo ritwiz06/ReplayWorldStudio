@@ -136,13 +136,14 @@ test("a draft that fooled the first reading is corrected, moved, compared, saved
   await page.getByTestId("check-questions").locator("summary").click();
   await page.getByTestId("check-clearance").click();
   // A round tank's enclosing square is approximate: no check may pass on it until its size is entered.
-  await expect(page.getByTestId("check-answer")).toContainText("The values are not ready for a check either: Water tank's box only encloses its drawn shape (enter its size to use it).");
+  await expect(page.getByTestId("check-answer")).toContainText("Check layout answers part of this");
+  await expect(page.getByTestId("check-answer")).toContainText("The values are not ready for a check either: Water tank's box only encloses a round shape: enter its real size to check it exactly.");
 
   // Save: the header's unit and the person's measurement are both kept, with every decision.
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("save").click()]);
   const text = readFileSync((await download.path())!, "utf8");
   const saved = JSON.parse(text) as Saved;
-  expect(saved.schema_version).toBe("0.10.0");
+  expect(saved.schema_version).toBe("0.11.0");
   const drawing = saved.sources[0]!.drawing;
   expect(drawing.units.declared).toBe("mm");
   expect(drawing.review.floor).toMatchObject({ choice: "outline", drawn_id: "dxf-102", status: "corrected" });

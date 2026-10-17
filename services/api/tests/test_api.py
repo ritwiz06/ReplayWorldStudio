@@ -41,7 +41,7 @@ def test_health_reports_service_and_schema_version(client: TestClient) -> None:
     assert response.status_code == 200
     health = HealthResponse.model_validate_json(response.content)
     assert health.status == "ok"
-    assert health.schema_version == "0.10.0"
+    assert health.schema_version == "0.11.0"
 
 
 def test_foundation_fixture_is_served_as_a_valid_project(client: TestClient) -> None:
@@ -72,7 +72,7 @@ def test_valid_project_is_accepted_with_evidence_counts(client: TestClient) -> N
     )
     assert status == 200
     report = ValidationReport.model_validate(body)
-    assert (report.schema_version, report.object_count, report.asset_count) == ("0.10.0", 6, 3)
+    assert (report.schema_version, report.object_count, report.asset_count) == ("0.11.0", 6, 3)
     assert (report.known_parameter_count, report.unknown_parameter_count) == (3, 3)
     assert report.edit_record_count == 0
 
@@ -108,7 +108,7 @@ def test_legacy_schema_gets_one_actionable_rejection(client: TestClient) -> None
     assert status == 422
     [issue] = ValidationErrorResponse.model_validate(body).detail
     assert (issue.loc, issue.type) == (["body", "schema_version"], "schema_version_outdated")
-    assert "Schema 0.1.0 is an older contract; this API accepts 0.10.0" in issue.msg
+    assert "Schema 0.1.0 is an older contract; this API accepts 0.11.0" in issue.msg
     assert "Open the file in the editor to review the upgrade" in issue.msg
     assert "python -m replay_world_contracts.migrate" in issue.msg
 

@@ -58,7 +58,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.10.0"]
+SchemaVersion = Literal["0.11.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -1342,6 +1342,27 @@ class SkippedEntities(ContractModel):
     reason: NonEmptyText
 
 
+class OmittedShape(ContractModel):
+    """Where a layout shape that was not imported lies (0.11.0), so a check can tell whether it
+    could matter there. ``min``/``max`` are its extent in drawing units, or null when its
+    position could not be read (inside a block, tilted, infinite, or of unknown size): such a
+    shape could be anywhere."""
+
+    entity: NonEmptyText
+    handle: DxfHandle | None
+    layer: NonEmptyText
+    min: PlanPoint | None
+    max: PlanPoint | None
+
+    @model_validator(mode="after")
+    def _extent(self) -> OmittedShape:
+        if (self.min is None) != (self.max is None):
+            raise ValueError("an omitted shape's extent has both corners or neither")
+        if self.min and self.max and (self.min.x > self.max.x or self.min.y > self.max.y):
+            raise ValueError("an omitted shape's extent minimum exceeds its maximum")
+        return self
+
+
 class DrawingUnits(ContractModel):
     """What the drawing says about its units, and how the unit used was established."""
 
@@ -1488,6 +1509,11 @@ class DrawingImport(ContractModel):
     labels: list[PlanLabel] = Field(max_length=MAX_DRAWING_LABELS)
     objects: list[DrawingObject] = Field(max_length=MAX_DRAWING_OBJECTS)
     skipped: list[SkippedEntities]
+    omitted: list[OmittedShape] | None = Field(
+        max_length=MAX_DRAWING_OBJECTS,
+        description="Where each layout shape that was not imported lies (0.11.0); null for a "
+        "reading made before positions were recorded.",
+    )
     review: DrawingReview | None = Field(
         description="The review of the draft (0.10.0); null only in an analysis."
     )

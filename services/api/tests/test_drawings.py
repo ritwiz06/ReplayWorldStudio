@@ -15,11 +15,12 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 from replay_world_api.app import create_app
-from replay_world_api.drawings import DrawingError, read_drawing
+from replay_world_api.drawings import DrawingError, Entity, _extent, read_drawing
 from replay_world_api.settings import AssistSettings, Settings
 from replay_world_contracts import (
     DrawingAnalysis,
     DrawingObject,
+    PlanPoint,
     ValidationErrorResponse,
     ValidationReport,
 )
@@ -352,6 +353,7 @@ def drawing_project(analysis: DrawingAnalysis) -> str:
     drawing = analysis.drawing.model_dump(mode="json")
     drawing["units"]["basis"] = "drawing_header"
     drawing["objects"] = []
+    drawing["omitted"] = []
     drawing["review"] = {
         "floor": {"choice": "none", "drawn_id": None, "object_id": None, "status": "proposed"},
         "scale": {
@@ -425,3 +427,29 @@ def test_the_fixtures_are_what_their_script_writes() -> None:
         check=False,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_omitted_shapes_record_where_they_lie_or_that_it_is_unknown(client: TestClient) -> None:
+    omitted = {
+        (o.entity, o.handle): o for o in analyse(client, "unsupported-mm.dxf").drawing.omitted or []
+    }
+    spline = omitted[("SPLINE", "107")]
+    assert (spline.min, spline.max) == (PlanPoint(x=6000, y=1000), PlanPoint(x=7000, y=2000))
+    # A hatch with no boundary, an array insert, an undefined block and a tilted outline: unknown.
+    for key in (("HATCH", "108"), ("INSERT", "10A"), ("INSERT", "10B"), ("LWPOLYLINE", "10C")):
+        assert omitted[key].min is None and omitted[key].max is None
+    assert analyse(client, "hall-mm.dxf").drawing.omitted == []  # only annotation is left out
+
+
+def test_an_omitted_extent_is_never_smaller_than_the_shape() -> None:
+    corners = [(10, "0"), (20, "0"), (11, "4"), (21, "0")]
+    corners += [(12, "0"), (22, "3"), (13, "4"), (23, "3")]
+    assert _extent(Entity("SOLID", corners)) == ((0.0, 0.0), (4.0, 3.0))
+    # An arc segment (bulge), a hatch with an arc edge, and a picture sized in pixels can reach
+    # past the coordinates they list: their position is unknown rather than too small.
+    bulged = [(90, "2"), (10, "0"), (20, "0"), (42, "1"), (10, "4"), (20, "0")]
+    assert _extent(Entity("LWPOLYLINE", bulged)) is None
+    arc_edge = [(10, "0"), (20, "0"), (72, "2"), (10, "2"), (20, "2"), (40, "5")]
+    assert _extent(Entity("HATCH", arc_edge)) is None
+    image = [(10, "0"), (20, "0"), (11, "0.01"), (21, "0"), (12, "0"), (22, "0.01")]
+    assert _extent(Entity("IMAGE", image)) is None

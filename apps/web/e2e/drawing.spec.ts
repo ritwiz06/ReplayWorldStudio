@@ -120,14 +120,17 @@ test("a DXF floor plan becomes a walkable draft that is moved, compared, saved a
   await expect(compare.getByTestId("compare-change-obj-dxf-104")).toHaveText("Press 1 moved 2.00 m");
   await expect(compare.getByTestId("compare-after-object-obj-dxf-104")).toHaveAttribute("data-state", "moved");
   await expect(compare.getByTestId("compare-before-object-obj-dxf-104")).toHaveAttribute("data-state", "drawn");
-  await expect(compare.getByTestId("not-available")).toContainText("Not available yet: route, process and physical checks.");
+  await expect(compare.getByTestId("not-available")).toContainText("Not available yet: process and physical checks (turning, heights, loads, throughput).");
+  // An unreviewed drawing gives no layout result, before or after the move.
+  await expect(compare.getByTestId("compare-before-result")).toHaveText(" · cannot determine yet");
+  await expect(compare.getByTestId("compare-after-result")).toHaveText(" · cannot determine yet");
   await compare.getByTestId("check-questions").locator("summary").click();
   await compare.getByTestId("check-overhead").click();
   await expect(compare.getByTestId("check-answer")).toHaveAttribute("data-status", "height_needed");
   await expect(compare.getByTestId("check-answer")).toContainText("Height needed. 9 objects have only a height assumed for display");
   await compare.getByTestId("check-clearance").click();
   await expect(compare.getByTestId("check-answer")).toHaveAttribute("data-status", "not_available");
-  await expect(compare.getByTestId("check-answer")).toContainText("no clearance result is shown");
+  await expect(compare.getByTestId("check-answer")).toContainText("Check layout answers part of this");
   await expect(compare.getByTestId("check-answer")).toContainText("The values are not ready for a check either: Column 1 is not reviewed yet");
 
   // Undo and redo keep the link to the drawing.
@@ -141,7 +144,7 @@ test("a DXF floor plan becomes a walkable draft that is moved, compared, saved a
 
   // Save: the drawing, its unit basis, every source reference and the move are in the file.
   const saved = await save(page);
-  expect(saved.json.schema_version).toBe("0.10.0");
+  expect(saved.json.schema_version).toBe("0.11.0");
   const [source] = saved.json.sources;
   expect([source?.kind, source?.filename, source?.drawing.units.basis]).toEqual(["dxf", "hall-mm.dxf", "drawing_header"]);
   expect(source?.drawing.objects.find((o) => o.object_id === "obj-dxf-104")?.refs[0]).toMatchObject({ handle: "104", layer: "EQUIPMENT" });

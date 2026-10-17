@@ -1,7 +1,8 @@
 // The drawing a world was built from, beside the 3D view (ONB-01). "Drawing" shows the plan as
 // drawn, linked both ways to the scene; "Compare" shows the drawing and the current arrangement
 // side by side with every change listed, the way to walk through it, and plain answers for the
-// checks that are not built yet. Nothing is animated and no clearance result is invented.
+// checks that are not built yet; "Check" answers whether the layout fits (GEO-01/02). Nothing is
+// animated and no result is invented.
 import type { Project } from "@replay-world/contracts";
 import { useMemo, useState } from "react";
 import { answer, type CheckAnswer, QUESTIONS } from "../drawing/checks";
@@ -11,8 +12,10 @@ import type { DrawingObject } from "@replay-world/contracts";
 import type { ReviewCorrection } from "../drawing/review";
 import { DrawingPlan } from "./DrawingPlan";
 import { DrawingReview } from "./DrawingReview";
+import type { CheckPair, RouteAsk } from "../checks/results";
+import { LayoutCheck } from "./LayoutCheck";
 
-export type DrawingView = "review" | "drawing" | "compare";
+export type DrawingView = "review" | "drawing" | "compare" | "check";
 
 interface Props {
   project: Project;
@@ -31,9 +34,16 @@ interface Props {
   focus: string | null;
   onReview: (correction: ReviewCorrection) => string | null;
   onDrawn: (drawn: DrawingObject) => void;
+  /** The layout checks, computed while the Check or Compare view is open. */
+  checks: CheckPair | null;
+  routeAsk: RouteAsk | null;
+  onRouteAsk: (ask: RouteAsk) => void;
 }
 
-export function SourceDrawing({ project, selectedId, view, open, underlay, onView, onOpen, onUnderlay, onSelect, onWalk, missingFiles, focus, onReview, onDrawn }: Props) {
+const OUTCOME_SHORT = { fits: "fits", conflict: "conflict found", cannot_determine: "cannot determine yet" } as const;
+const ROUTE_SHORT = { fits: "route fits", conflict: "route blocked", cannot_determine: "route cannot be determined yet" } as const;
+
+export function SourceDrawing({ project, selectedId, view, open, underlay, onView, onOpen, onUnderlay, onSelect, onWalk, missingFiles, focus, onReview, onDrawn, checks, routeAsk, onRouteAsk }: Props) {
   const source = drawingSource(project);
   const comparison = useMemo(() => compareWithDrawing(project), [project]);
   const [asked, setAsked] = useState<CheckAnswer | null>(null);
@@ -63,9 +73,13 @@ export function SourceDrawing({ project, selectedId, view, open, underlay, onVie
             <button type="button" role="tab" aria-selected={view === "compare"} data-testid="drawing-tab-compare" onClick={() => onView("compare")}>
               Compare
             </button>
+            <button type="button" role="tab" aria-selected={view === "check"} data-testid="drawing-tab-check" onClick={() => onView("check")}>
+              Check
+            </button>
           </div>
         )}
       </div>
+      {open && view === "check" && checks && <LayoutCheck checks={checks} ask={routeAsk} onAsk={onRouteAsk} selectedId={selectedId} onSelect={onSelect} />}
       {open && view === "review" && <DrawingReview project={project} source={source} selectedId={selectedId} focus={focus} onReview={onReview} onDrawn={onDrawn} />}
       {open && view === "drawing" && (
         <div className="source-drawing-body">
@@ -93,13 +107,31 @@ export function SourceDrawing({ project, selectedId, view, open, underlay, onVie
           </p>
           <div className="compare-plans">
             <figure>
-              <figcaption>As drawn</figcaption>
+              <figcaption>
+                As drawn
+                {checks && (
+                  <span className={`caption-result check-${checks.drawn.layout.outcome}`} data-testid="compare-before-result">
+                    {" "}
+                    · {OUTCOME_SHORT[checks.drawn.layout.outcome]}
+                    {checks.drawn.route && `, ${ROUTE_SHORT[checks.drawn.route.outcome]}`}
+                  </span>
+                )}
+              </figcaption>
               <div className="drawing-plan-frame">
                 <DrawingPlan drawing={drawing} statuses={statuses} selectedId={selectedId} onSelect={onSelect} labels="selected" testId="compare-before" title="The layout as drawn" />
               </div>
             </figure>
             <figure>
-              <figcaption>Now</figcaption>
+              <figcaption>
+                Now
+                {checks && (
+                  <span className={`caption-result check-${checks.now.layout.outcome}`} data-testid="compare-after-result">
+                    {" "}
+                    · {OUTCOME_SHORT[checks.now.layout.outcome]}
+                    {checks.now.route && `, ${ROUTE_SHORT[checks.now.route.outcome]}`}
+                  </span>
+                )}
+              </figcaption>
               <div className="drawing-plan-frame">
                 <DrawingPlan
                   drawing={drawing}
@@ -138,11 +170,14 @@ export function SourceDrawing({ project, selectedId, view, open, underlay, onVie
             <button type="button" className="button button-primary" data-testid="compare-walk" onClick={onWalk}>
               Walk through it
             </button>
+            <button type="button" className="button" data-testid="compare-check" onClick={() => onView("check")}>
+              Check layout
+            </button>
             <span className="muted small">W A S D to walk, drag to look; the drawing stays on the floor.</span>
           </div>
           <div className="not-yet" data-testid="not-available">
             <p>
-              <strong>Not available yet:</strong> route, process and physical checks. Nothing is animated and no clearance or capacity result is shown.
+              <strong>Not available yet:</strong> process and physical checks (turning, heights, loads, throughput). Nothing is animated and no capacity result is shown. Check layout answers overlaps, keep-clear zones and width-only routes.
             </p>
             <details data-testid="check-questions">
               <summary>Ask about a check…</summary>

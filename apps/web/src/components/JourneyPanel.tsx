@@ -1,6 +1,7 @@
 // The main screen's three actions (UX-01, ADR-049): upload a plan, change something, play or
 // compare. Each is one click; the editor's detail (object list, catalog, inspector) stays where
-// it is for whoever needs it. The step the person is on is highlighted.
+// it is for whoever needs it. The step the person is on is highlighted. Under the third, for a
+// draft from a drawing, one entry asks whether the layout fits (GEO-01/02).
 interface Props {
   /** Which step comes next: no drawing yet, a draft not changed yet, or changes to look at. */
   stage: "upload" | "change" | "compare";
@@ -11,9 +12,10 @@ interface Props {
   onUpload: () => void;
   onChange: () => void;
   onCompare: () => void;
+  onCheck: () => void;
 }
 
-export function JourneyPanel({ stage, hasDrawing, reviewOpen, disabled, onUpload, onChange, onCompare }: Props) {
+export function JourneyPanel({ stage, hasDrawing, reviewOpen, disabled, onUpload, onChange, onCompare, onCheck }: Props) {
   const steps = [
     {
       id: "upload",
@@ -52,6 +54,12 @@ export function JourneyPanel({ stage, hasDrawing, reviewOpen, disabled, onUpload
           </span>
         </button>
       ))}
+      {hasDrawing && (
+        <button type="button" className="journey-sub" data-testid="journey-check" disabled={disabled} onClick={onCheck}>
+          <strong>Check layout</strong>
+          <span>Overlaps, keep-clear zones, and whether an item can get through.</span>
+        </button>
+      )}
     </section>
   );
 }

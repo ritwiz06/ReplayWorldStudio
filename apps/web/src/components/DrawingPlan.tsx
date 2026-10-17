@@ -3,7 +3,8 @@
 // import is drawn where it is now, with a dashed outline where the drawing has it. For the
 // review (IMP-02) it shows each outline's review status, lets the person pick an outline as
 // the floor, and marks two points (snapped to the drawing's corners and centres) for a known
-// length.
+// length. For the layout checks (GEO-01/02) it highlights the objects a finding names, the
+// overlapping areas, a route and its narrowest passage, and lets the person pick route points.
 import type { DrawingImport, DrawingObject, PlanPoint, Project } from "@replay-world/contracts";
 import { type KeyboardEvent, type MouseEvent, useMemo } from "react";
 import { type DrawingSource, footprintOnPlan, type Reviewed } from "../drawing/world";
@@ -22,15 +23,34 @@ interface Props {
   title: string;
   /** The review's status per drawn object (decides which outline is the floor). */
   statuses?: ReadonlyMap<string, Reviewed> | undefined;
-  /** "floor": every outline can be picked; "measure": clicks mark points. */
-  mode?: "select" | "floor" | "measure" | undefined;
+  /** "floor": every outline can be picked; "measure": clicks mark points (snapped); "point":
+   * clicks mark points where they are. */
+  mode?: "select" | "floor" | "measure" | "point" | undefined;
   /** Called with the drawn object clicked (instead of `onSelect`) when given. */
   onDrawn?: ((drawn: DrawingObject) => void) | undefined;
   /** A drawn object focused in the review that has no scene object. */
   focusDrawnId?: string | null | undefined;
-  /** Measure mode: a clicked point, snapped to the nearest corner or centre within 12 px. */
+  /** Measure mode: a clicked point, snapped to the nearest corner or centre within 12 px (in
+   * point mode, not snapped). */
   onPoint?: ((point: PlanPoint) => void) | undefined;
   marks?: readonly PlanPoint[] | undefined;
+  /** Layout check results to draw over the plan. */
+  checks?: PlanChecks | undefined;
+}
+
+export type Flag = "conflict" | "uncertain";
+
+/** What the layout and route checks show on the plan, in drawing units. */
+export interface PlanChecks {
+  /** Objects a finding names (by scene object ID). */
+  flagged: ReadonlyMap<string, Flag>;
+  regions: { points: PlanPoint[]; flag: Flag }[];
+  route: { points: PlanPoint[]; outcome: "fits" | "conflict" | "cannot_determine" } | null;
+  start: PlanPoint | null;
+  end: PlanPoint | null;
+  passage: { at: PlanPoint; label: string } | null;
+  /** Objects added since the import (not in the drawing), where they are now. */
+  added: { id: string; name: string; outline: PlanPoint[] }[];
 }
 
 const SNAP_PX = 12;
@@ -101,7 +121,7 @@ function scaleLength(spanM: number): number {
   return [1, 2, 5, 10].map((k) => k * step).filter((v) => v <= target).at(-1) ?? step;
 }
 
-export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId, title, metresPerUnit, statuses, mode = "select", onDrawn, focusDrawnId, onPoint, marks }: Props) {
+export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId, title, metresPerUnit, statuses, mode = "select", onDrawn, focusDrawnId, onPoint, marks, checks }: Props) {
   const { extent_min: lo, extent_max: hi } = drawing;
   const span = Math.max(hi.x - lo.x, hi.y - lo.y, 1e-9);
   const margin = span * 0.04;
@@ -137,7 +157,7 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
   };
 
   function mark(e: MouseEvent<SVGSVGElement>) {
-    if (mode !== "measure" || !onPoint) return;
+    if ((mode !== "measure" && mode !== "point") || !onPoint) return;
     const svg = e.currentTarget;
     const ctm = svg.getScreenCTM();
     if (!ctm) return;
@@ -146,6 +166,7 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
     pt.y = e.clientY;
     const local = pt.matrixTransform(ctm.inverse());
     const clicked = { x: local.x, y: -local.y };
+    if (mode === "point") return onPoint(clicked);
     const tolerance = SNAP_PX / Math.abs(ctm.a);
     let best: PlanPoint | null = null;
     let bestDistance = tolerance;
@@ -186,14 +207,16 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
         const state = notObject ? "not-object" : removed ? "removed" : moved ? "moved" : "drawn";
         const interactive =
           mode === "floor" ? onDrawn !== undefined : mode === "select" && !floor && (onDrawn !== undefined || (!removed && !notObject && onSelect !== undefined));
-        const kindClass = notObject ? "plan-not-object" : KIND_CLASS[drawn.kind];
+        const kindClass = notObject ? "plan-not-object" : KIND_CLASS[current?.kind ?? drawn.kind];
+        const flag = checks?.flagged.get(drawn.object_id);
         return (
           <g
             key={drawn.id}
-            className={`plan-object ${floor ? "plan-floor" : kindClass} plan-${state}${selected ? " selected" : ""}`}
+            className={`plan-object ${floor ? "plan-floor" : kindClass} plan-${state}${selected ? " selected" : ""}${flag ? ` plan-flag-${flag}` : ""}`}
             data-testid={`${testId}-object-${drawn.object_id}`}
             data-drawn={drawn.id}
             data-state={floor ? "floor" : state}
+            data-flag={flag}
             {...(interactive
               ? {
                   role: "button",
@@ -213,6 +236,7 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
           </g>
         );
       })}
+      {checks && <CheckLayer checks={checks} font={font} testId={testId} selectedId={selectedId} onSelect={mode === "select" ? onSelect : undefined} />}
       <g className="plan-names">
         {shapes.map((shape) => {
           const at = placed.get(shape.id);
@@ -260,3 +284,60 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
   );
 }
 
+
+/** The checks' highlights: added objects, overlapping areas, the route, its narrowest passage,
+ * and the start and destination. Drawn over the objects; only added objects take clicks. */
+function CheckLayer({ checks, font, testId, selectedId, onSelect }: { checks: PlanChecks; font: number; testId: string; selectedId: string | null | undefined; onSelect: ((id: string) => void) | undefined }) {
+  return (
+    <g className="plan-checks" data-testid={`${testId}-checks`}>
+      {checks.added.map((a) => {
+        const flag = checks.flagged.get(a.id);
+        return (
+          <g
+            key={a.id}
+            className={`plan-object plan-equipment plan-added${a.id === selectedId ? " selected" : ""}${flag ? ` plan-flag-${flag}` : ""}`}
+            data-testid={`${testId}-object-${a.id}`}
+            data-flag={flag}
+            {...(onSelect ? { role: "button", tabIndex: 0, "aria-label": `${a.name} (added since the drawing)`, onClick: (e: MouseEvent) => {
+                    e.stopPropagation();
+                    onSelect(a.id);
+                  },
+                } : {})}
+          >
+            <title>{a.name}</title>
+            <polygon points={points(a.outline)} vectorEffect="non-scaling-stroke" />
+          </g>
+        );
+      })}
+      {checks.regions.map((r, i) => (
+        <polygon key={`r${i}`} className={`plan-region plan-region-${r.flag}`} points={points(r.points)} vectorEffect="non-scaling-stroke" />
+      ))}
+      {checks.route && checks.route.points.length > 1 && (
+        <polyline className={`plan-route plan-route-${checks.route.outcome}`} data-testid={`${testId}-route`} data-outcome={checks.route.outcome} points={points(checks.route.points)} vectorEffect="non-scaling-stroke" />
+      )}
+      {checks.passage && (
+        <g className="plan-passage" data-testid={`${testId}-passage`}>
+          <circle cx={checks.passage.at.x} cy={-checks.passage.at.y} r={font * 0.45} vectorEffect="non-scaling-stroke" />
+          <text x={checks.passage.at.x + font * 0.7} y={-checks.passage.at.y} fontSize={font * 0.75} dominantBaseline="middle">
+            {checks.passage.label}
+          </text>
+        </g>
+      )}
+      {(
+        [
+          [checks.start, "A", "start"],
+          [checks.end, "B", "end"],
+        ] as const
+      ).map(([p, letter, which]) =>
+        p ? (
+          <g key={which} className={`plan-end plan-end-${which}`} data-testid={`${testId}-${which}`}>
+            <circle cx={p.x} cy={-p.y} r={font * 0.55} vectorEffect="non-scaling-stroke" />
+            <text x={p.x} y={-p.y} fontSize={font * 0.7} textAnchor="middle" dominantBaseline="central">
+              {letter}
+            </text>
+          </g>
+        ) : null,
+      )}
+    </g>
+  );
+}

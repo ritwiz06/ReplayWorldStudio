@@ -49,6 +49,7 @@ from replay_world_contracts import (
     DrawingObject,
     DrawingRef,
     DrawingUnits,
+    OmittedShape,
     PlanLabel,
     PlanLine,
     PlanPoint,
@@ -568,6 +569,9 @@ class Reader:
     block_units: dict[str, int]
     header_unit: int | None
     skips: Skips = field(default_factory=Skips)
+    omitted: list[OmittedShape] = field(default_factory=list)
+    #: The block being expanded, if any: omitted shapes inside blocks have no plan position.
+    _in_block: str | None = None
     warnings: list[str] = field(default_factory=list)
     _expanded: dict[str, list[Primitive]] = field(default_factory=dict)
     _count: int = 0
@@ -677,6 +681,27 @@ class Reader:
 
     def skip(self, entity: Entity, reason: str, layout: bool) -> None:
         self.skips.add(entity.type, entity.layer, entity.handle, reason, layout)
+        if not layout:
+            return
+        extent = None if self._in_block is not None else _extent(entity)
+        if len(self.omitted) >= MAX_DRAWING_OBJECTS:
+            extent = None  # beyond the record's limit: kept only as "somewhere"
+            if self.omitted[-1].min is None and self.omitted[-1].entity == "(more)":
+                return
+            self.omitted.append(
+                OmittedShape(entity="(more)", handle=None, layer=entity.layer, min=None, max=None)
+            )
+            return
+        lo, hi = extent if extent else (None, None)
+        self.omitted.append(
+            OmittedShape(
+                entity=entity.type,
+                handle=entity.handle,
+                layer=entity.layer,
+                min=PlanPoint(x=lo[0], y=lo[1]) if lo else None,
+                max=PlanPoint(x=hi[0], y=hi[1]) if hi else None,
+            )
+        )
 
     def classify_other(self, entity: Entity) -> None:
         kind = entity.type
@@ -734,6 +759,7 @@ class Reader:
                 "contains itself.",
             )
         self._warn_block_units(block)
+        outer, self._in_block = self._in_block, block.name
         prims: list[Primitive] = []
         for entity in block.entities:
             if entity.type in ("LINE", "LWPOLYLINE", "POLYLINE", "CIRCLE", "ARC"):
@@ -752,6 +778,7 @@ class Reader:
                 self.classify_other(entity)
             if len(prims) > MAX_DRAWING_LINES:
                 self.count(len(prims))  # refuses: one block alone expands past the limit
+        self._in_block = outer
         self._expanded[key] = prims
         return prims
 
@@ -769,6 +796,47 @@ class Reader:
                 f", but the drawing says {INSUNITS_NAME.get(self.header_unit, 'other units')}. "
                 "Its instances were read at the scale they are inserted with; check their size."
             )
+
+
+#: Shapes whose listed coordinates do not bound them: infinite lines, inserts of unknown size,
+#: and pictures sized in pixels.
+_UNPLACEABLE: Final = frozenset(
+    {"XLINE", "RAY", "INSERT", "IMAGE", "WIPEOUT"}
+    | {"UNDERLAY", "PDFUNDERLAY", "DWFUNDERLAY", "DGNUNDERLAY"}
+)
+
+
+def _extent(entity: Entity) -> tuple[Point, Point] | None:
+    """The plan extent of a shape that was not imported, from its coordinates, or None when it
+    cannot be placed: infinite lines, inserts of unknown size, pictures, tilted shapes, curves
+    that can bulge past their points (arc segments, a hatch's arc, ellipse or spline edges), or
+    fewer than two distinct points. An extent is never smaller than the shape; it may be larger
+    (a spline's control points, a hatch's elevation point)."""
+    if entity.type in _UNPLACEABLE:
+        return None
+    if any(code == 42 and _float(value) != 0 for code, value in entity.groups):
+        return None
+    if entity.type == "HATCH" and any(code == 40 for code, _ in entity.groups):
+        return None
+    ocs = _ocs(entity)
+    if ocs is None:
+        return None
+    if entity.type == "ELLIPSE":
+        cx, cy = _xy(entity, 10, 20)
+        r = math.hypot(entity.number(11), entity.number(21))
+        return (cx - r, cy - r), (cx + r, cy + r)
+    points: list[Point] = []
+    pending: dict[int, float] = {}
+    for code, value in entity.groups:
+        if 10 <= code <= 18:
+            pending[code] = _float(value)
+        elif 20 <= code <= 28 and code - 10 in pending:
+            points.append(_apply(ocs, (pending.pop(code - 10), _float(value))))
+    if len(set(points)) < 2:
+        return None
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    return (min(xs), min(ys)), (max(xs), max(ys))
 
 
 def _header(pairs: list[tuple[int, str]]) -> dict[str, str]:
@@ -1149,6 +1217,7 @@ def read_drawing(data: bytes, filename: str) -> tuple[DrawingImport, list[str]]:
         labels=texts,
         objects=objects,
         skipped=reader.skips.records(),
+        omitted=reader.omitted,
     )
     return drawing, warnings
 

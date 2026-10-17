@@ -2572,3 +2572,220 @@ label.button.disabled {
   stroke: #14171b;
   stroke-width: 1;
 }
+
+/* ---------- GEO-01/02 Check layout ---------- */
+.journey-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0 0 2px 32px;
+  padding: 5px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.journey-sub strong {
+  font-size: 12px;
+}
+.journey-sub span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.journey-sub:hover:not(:disabled) {
+  background: var(--panel-raised);
+}
+.journey-sub:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.journey-sub:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.check-result {
+  padding: 6px 8px;
+  border-left: 3px solid var(--muted);
+  border-radius: 4px;
+  background: var(--panel-raised);
+}
+.check-result.check-fits {
+  border-left-color: var(--ok);
+}
+.check-result.check-fits strong {
+  color: var(--ok);
+}
+.check-result.check-conflict {
+  border-left-color: var(--error);
+}
+.check-result.check-conflict strong {
+  color: #ff8a85;
+}
+.check-result.check-cannot_determine {
+  border-left-color: var(--warn);
+}
+.check-result.check-cannot_determine strong {
+  color: var(--warn);
+}
+.check-scope {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+}
+.check-compare {
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.check-compare th,
+.check-compare td {
+  padding: 2px 8px 2px 0;
+  text-align: left;
+  font-weight: normal;
+}
+.check-compare thead th {
+  color: var(--muted);
+}
+.check-compare button[aria-pressed="true"] {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: underline;
+}
+.check-compare td[data-outcome="fits"] {
+  color: var(--ok);
+}
+.check-compare td[data-outcome="conflict"] {
+  color: #ff8a85;
+}
+.check-compare td[data-outcome="cannot_determine"] {
+  color: var(--warn);
+}
+.caption-result {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.caption-result.check-fits {
+  color: var(--ok);
+}
+.caption-result.check-conflict {
+  color: #ff8a85;
+}
+.caption-result.check-cannot_determine {
+  color: var(--warn);
+}
+.source-drawing .check-plan {
+  aspect-ratio: 2 / 1;
+  max-height: 34vh;
+}
+.drawing-plan.plan-mode-point {
+  cursor: crosshair;
+}
+.drawing-plan.plan-mode-point .plan-object {
+  pointer-events: none;
+}
+.check-findings {
+  margin: 0;
+  padding-left: 18px;
+}
+.check-findings li + li {
+  margin-top: 3px;
+}
+.check-findings .finding-conflict::marker {
+  color: var(--error);
+}
+.check-findings .finding-uncertain::marker {
+  color: var(--warn);
+}
+.check-findings .link-button {
+  margin-right: 6px;
+}
+.route-ask {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 6px 8px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.route-ask legend {
+  padding: 0 4px;
+  font-weight: 600;
+}
+.route-ask-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+.route-ask input {
+  width: 4.5em;
+}
+.check-details summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+.check-details ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: #c3cad2;
+}
+/* A finding's colour wins over "moved", but never fills the dashed outline where it was drawn. */
+.drawing-plan .plan-object.plan-flag-conflict > polygon:not(.plan-original) {
+  fill: rgba(255, 92, 87, 0.3);
+  stroke: #ff5c57;
+  stroke-width: 2.5;
+}
+.drawing-plan .plan-object.plan-flag-uncertain > polygon:not(.plan-original) {
+  fill: rgba(240, 180, 41, 0.22);
+  stroke: #f0b429;
+  stroke-width: 2.5;
+}
+.drawing-plan .plan-added polygon {
+  stroke-dasharray: 6 2;
+}
+.drawing-plan polygon.plan-region {
+  stroke: none;
+}
+.drawing-plan polygon.plan-region-conflict {
+  fill: rgba(255, 92, 87, 0.75);
+}
+.drawing-plan polygon.plan-region-uncertain {
+  fill: rgba(240, 180, 41, 0.6);
+}
+.drawing-plan .plan-route {
+  fill: none;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.drawing-plan .plan-route-fits {
+  stroke: #57d9a3;
+}
+.drawing-plan .plan-route-conflict {
+  stroke: #ff5c57;
+}
+.drawing-plan .plan-route-cannot_determine {
+  stroke: #f0b429;
+  stroke-dasharray: 6 4;
+}
+.drawing-plan .plan-passage circle {
+  fill: none;
+  stroke: #ff5c57;
+  stroke-width: 2.5;
+}
+.drawing-plan .plan-end circle {
+  fill: #7cc4ff;
+  stroke: #14171b;
+  stroke-width: 1.5;
+}
+.drawing-plan .plan-end-end circle {
+  fill: #c39bff;
+}
+.drawing-plan .plan-end text {
+  fill: #0b1a26;
+  stroke: none;
+  font-weight: 700;
+}

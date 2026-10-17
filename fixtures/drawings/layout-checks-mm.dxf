@@ -1,0 +1,716 @@
+999
+Synthetic test drawing - Replay World Studio fixtures
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1015
+  9
+$INSUNITS
+ 70
+4
+  9
+$MEASUREMENT
+ 70
+1
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LAYER
+ 70
+7
+  0
+LAYER
+  5
+118
+  2
+0
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+119
+  2
+A-WALL
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11A
+  2
+RACKS
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11B
+  2
+EQUIPMENT
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11C
+  2
+KEEP-CLEAR
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11D
+  2
+TANKS
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  5
+11E
+  2
+TEXT
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+ENDTAB
+  0
+TABLE
+  2
+BLOCK_RECORD
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+BLOCKS
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+LWPOLYLINE
+  5
+101
+100
+AcDbEntity
+  8
+A-WALL
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+0
+ 20
+0
+ 10
+20000
+ 20
+0
+ 10
+20000
+ 20
+10000
+ 10
+0
+ 20
+10000
+  0
+LWPOLYLINE
+  5
+102
+100
+AcDbEntity
+  8
+A-WALL
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+17000
+ 20
+0
+ 10
+17200
+ 20
+0
+ 10
+17200
+ 20
+4600
+ 10
+17000
+ 20
+4600
+  0
+TEXT
+  5
+103
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+17100
+ 20
+2300.0
+ 30
+0.0
+ 40
+60.0
+  1
+Partition
+  0
+LWPOLYLINE
+  5
+104
+100
+AcDbEntity
+  8
+A-WALL
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+17000
+ 20
+5400
+ 10
+17200
+ 20
+5400
+ 10
+17200
+ 20
+10000
+ 10
+17000
+ 20
+10000
+  0
+TEXT
+  5
+105
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+17100
+ 20
+7700.0
+ 30
+0.0
+ 40
+60.0
+  1
+Partition
+  0
+LWPOLYLINE
+  5
+106
+100
+AcDbEntity
+  8
+RACKS
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+0
+ 20
+6000
+ 10
+15000
+ 20
+6000
+ 10
+15000
+ 20
+7000
+ 10
+0
+ 20
+7000
+  0
+TEXT
+  5
+107
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+7500
+ 20
+6500
+ 30
+0.0
+ 40
+200.0
+  1
+Rack A
+  0
+LWPOLYLINE
+  5
+108
+100
+AcDbEntity
+  8
+RACKS
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+0
+ 20
+3000
+ 10
+15000
+ 20
+3000
+ 10
+15000
+ 20
+4000
+ 10
+0
+ 20
+4000
+  0
+TEXT
+  5
+109
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+7500
+ 20
+3500
+ 30
+0.0
+ 40
+200.0
+  1
+Rack B
+  0
+LWPOLYLINE
+  5
+10A
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+8000.0
+ 20
+7468.629
+ 10
+9131.371
+ 20
+8600.0
+ 10
+8000.0
+ 20
+9731.371
+ 10
+6868.629
+ 20
+8600.0
+  0
+TEXT
+  5
+10B
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+8000
+ 20
+8600
+ 30
+0.0
+ 40
+150.0
+  1
+Mixer
+  0
+LWPOLYLINE
+  5
+10C
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+8900
+ 20
+8400
+ 10
+9500
+ 20
+8400
+ 10
+9500
+ 20
+8800
+ 10
+8900
+ 20
+8800
+  0
+TEXT
+  5
+10D
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+9200
+ 20
+8600
+ 30
+0.0
+ 40
+40.0
+  1
+Control panel
+  0
+LWPOLYLINE
+  5
+10E
+100
+AcDbEntity
+  8
+KEEP-CLEAR
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+11000
+ 20
+8000
+ 10
+13000
+ 20
+8000
+ 10
+13000
+ 20
+9600
+ 10
+11000
+ 20
+9600
+  0
+LWPOLYLINE
+  5
+10F
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+11500
+ 20
+9600
+ 10
+12500
+ 20
+9600
+ 10
+12500
+ 20
+9900
+ 10
+11500
+ 20
+9900
+  0
+TEXT
+  5
+110
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+12000
+ 20
+9750
+ 30
+0.0
+ 40
+60.0
+  1
+Electrical cabinet
+  0
+LWPOLYLINE
+  5
+111
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+13800
+ 20
+8200
+ 10
+15300
+ 20
+8200
+ 10
+15300
+ 20
+9200
+ 10
+13800
+ 20
+9200
+  0
+TEXT
+  5
+112
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+14550
+ 20
+8700
+ 30
+0.0
+ 40
+150.0
+  1
+Machine B
+  0
+LWPOLYLINE
+  5
+113
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+3000
+ 20
+1000
+ 10
+4200
+ 20
+1000
+ 10
+4200
+ 20
+1800
+ 10
+3000
+ 20
+1800
+  0
+TEXT
+  5
+114
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+3600
+ 20
+1400
+ 30
+0.0
+ 40
+100.0
+  1
+Packing table
+  0
+CIRCLE
+  5
+115
+100
+AcDbEntity
+  8
+TANKS
+100
+AcDbCircle
+ 10
+12000.0
+ 20
+1500.0
+ 30
+0.0
+ 40
+500.0
+  0
+TEXT
+  5
+116
+100
+AcDbEntity
+  8
+TEXT
+100
+AcDbText
+ 10
+12000
+ 20
+1500
+ 30
+0.0
+ 40
+100.0
+  1
+Water tank
+  0
+SPLINE
+  5
+117
+100
+AcDbEntity
+  8
+EQUIPMENT
+100
+AcDbSpline
+ 70
+8
+ 71
+3
+ 72
+0
+ 73
+2
+ 10
+17250.0
+ 20
+4500.0
+ 30
+0.0
+ 10
+17700.0
+ 20
+5500.0
+ 30
+0.0
+  0
+ENDSEC
+  0
+EOF

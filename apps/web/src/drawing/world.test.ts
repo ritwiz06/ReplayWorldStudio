@@ -128,13 +128,16 @@ describe("checks that are not available yet", () => {
     expect(result.needs.map((n) => n.name)).not.toContain("Walkway 1");
   });
 
-  it("names the missing input for clearance, throughput and strength, with no result", () => {
-    for (const question of ["clearance", "throughput", "strength"] as const) {
+  it("names the missing input for throughput and strength, with no result; clearance points to Check layout", () => {
+    for (const question of ["throughput", "strength"] as const) {
       const result = answer(project, question);
       expect(result.status).toBe("not_available");
       expect(result.message).toMatch(/needs/);
     }
     expect(answer(project, "strength").message).toContain("neither is ever inferred");
+    const clearance = answer(project, "clearance").message;
+    expect(clearance).toContain("Check layout answers part of this");
+    expect(clearance).toContain("access and service zones are never assumed");
   });
 
   it("is still not a result once every height is entered", () => {

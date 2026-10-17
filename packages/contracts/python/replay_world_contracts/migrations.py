@@ -54,6 +54,10 @@ each change, and the result is then validated like any other document.
       source become ``drawn``: they were read from a design drawing, not measured on site. This
       only weakens evidence; nothing else changes.
 
+0.10.0 -> 0.11.0
+    * every drawing reading gains ``omitted: null``: readings made before 0.11.0 did not record
+      where the shapes they left out lie, so a check treats each such shape as possibly anywhere.
+
 Steps run in sequence, so a 0.1.0 document passes through 0.2.0 on its way to the current
 version and its notes describe every step.
 """
@@ -365,6 +369,26 @@ def _from_0_9_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     return upgraded, [note]
 
 
+def _from_0_10_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    upgraded = copy.deepcopy(dict(old))
+    readings = 0
+    for source in upgraded["sources"]:
+        drawing = source.get("drawing")
+        if drawing is None:
+            continue
+        if "omitted" in drawing:
+            raise MigrationError("malformed 0.10.0 document: omitted shapes only exist from 0.11.0")
+        drawing["omitted"] = None
+        readings += 1
+    upgraded["schema_version"] = "0.11.0"
+    note = (
+        f"schema_version 0.10.0 -> 0.11.0 (adds 'omitted: null' to {readings} drawing "
+        f"reading{'' if readings == 1 else 's'}: where their left-out shapes lie was not "
+        "recorded, so checks treat them as possibly anywhere)"
+    )
+    return upgraded, [note]
+
+
 _STEPS: Final[dict[str, Step]] = {
     "0.1.0": _from_0_1_0,
     "0.2.0": _from_0_2_0,
@@ -375,5 +399,6 @@ _STEPS: Final[dict[str, Step]] = {
     "0.7.0": _from_0_7_0,
     "0.8.0": _from_0_8_0,
     "0.9.0": _from_0_9_0,
+    "0.10.0": _from_0_10_0,
 }
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)

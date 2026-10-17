@@ -142,10 +142,10 @@ describe("what a later check may claim", () => {
       "the floor is only proposed",
       "what the drawing leaves out is not yet accepted",
     ]);
-    expect(finalise(true, readiness).state).toBe("not_evaluated");
+    expect(finalise(true, readiness).state).toBe("cannot_determine");
   });
 
-  it("gives a design-layout result once the drawing is reviewed, never an as-built one", () => {
+  it("gives a result on the reviewed design once the drawing is reviewed, never a site-verified one", () => {
     let editor = review(hall, { kind: "accept_floor" });
     editor = review(editor, { kind: "unit", unit: "mm" });
     editor = review(editor, { kind: "accept_remaining" });
@@ -153,13 +153,13 @@ describe("what a later check may claim", () => {
     const footprint = checkReadiness(editor.project, [press], { height: false });
     expect([footprint.level, footprint.reasons]).toEqual(["design_layout", []]);
     expect(finalise(true, footprint)).toEqual({
-      state: "passed",
-      label: "Passes on the design layout: the design drawing hall-mm.dxf (scale confirmed), not the site as built",
+      state: "fits",
+      label: "Fits in the reviewed design (the reviewed design: drawn in hall-mm.dxf (scale confirmed); not the site as built)",
     });
     // A height assumed for display, and a box that only encloses an L-shaped bench, give no pass.
     expect(finalise(true, checkReadiness(editor.project, [press], { height: true })).state).toBe("height_needed");
     const approximate = checkReadiness(editor.project, [bench], { height: false });
-    expect([approximate.level, approximate.reasons]).toEqual(["review_needed", ["Workbench's box only encloses its drawn shape (enter its size to use it)"]]);
+    expect([approximate.level, approximate.reasons]).toEqual(["review_needed", ["Workbench's box only encloses an outline that is not a rectangle: enter its real size to check it exactly"]]);
   });
 
   it("treats a migrated or undone review the same way: the undo of an acceptance blocks again", () => {

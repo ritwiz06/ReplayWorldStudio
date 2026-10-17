@@ -92,6 +92,15 @@ def drawing_source(object_id: str, status: str = "proposed", **units: Any) -> di
                     "reason": "Splines are not in the supported subset.",
                 }
             ],
+            "omitted": [
+                {
+                    "entity": "SPLINE",
+                    "handle": "2B",
+                    "layer": "EQUIPMENT",
+                    "min": {"x": 100.0, "y": 100.0},
+                    "max": {"x": 300.0, "y": 200.0},
+                }
+            ],
             "review": {
                 "floor": {
                     "choice": "none",
@@ -305,6 +314,7 @@ def test_a_0_9_0_drawing_is_reviewed_as_unchecked_and_its_drawn_sizes_are_weaken
     old["schema_version"] = "0.9.0"
     drawing = old["sources"][-1]["drawing"]
     del drawing["review"]
+    del drawing["omitted"]
     for drawn in drawing["objects"]:
         del drawn["footprint_fit"]
     press = old["scene"]["objects"][0]
@@ -316,7 +326,9 @@ def test_a_0_9_0_drawing_is_reviewed_as_unchecked_and_its_drawn_sizes_are_weaken
     assert upgrade.notes == [
         "schema_version 0.9.0 -> 0.10.0 (adds an unchecked review to 1 drawing source and "
         "footprint_fit to 1 drawn object; 2 drawn footprint values recorded as measured become "
-        "drawn (a design drawing, not a site measurement); nothing is strengthened)"
+        "drawn (a design drawing, not a site measurement); nothing is strengthened)",
+        "schema_version 0.10.0 -> 0.11.0 (adds 'omitted: null' to 1 drawing reading: where their "
+        "left-out shapes lie was not recorded, so checks treat them as possibly anywhere)",
     ]
     project = Project.model_validate(upgrade.document)
     review = project.sources[-1].drawing.review  # type: ignore[union-attr]
@@ -348,3 +360,12 @@ def test_a_display_default_is_never_confirmed_or_verified() -> None:
         )
     ]
     assert [is_verified(x) for x in lengths] == [False, False, True, True]
+
+
+def test_an_omitted_shape_has_a_whole_extent_or_none(fixture_data: dict[str, Any]) -> None:
+    source = drawing_source(object_id(fixture_data))
+    source["drawing"]["omitted"][0]["max"] = None
+    with pytest.raises(ValidationError, match="both corners or neither"):
+        Project.model_validate(with_source(fixture_data, source))
+    source["drawing"]["omitted"][0]["min"] = None
+    Project.model_validate(with_source(fixture_data, source))  # position unknown: allowed

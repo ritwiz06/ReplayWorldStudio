@@ -14,6 +14,7 @@ import { EditRejectedNotice, FileRejectedPanel, LoadErrorPanel, PlacementBanner 
 import { ObjectList } from "./components/ObjectList";
 import { SelectionCard } from "./components/SelectionCard";
 import { PhotoImport } from "./components/PhotoImport";
+import { type RouteAsk, runChecks, sceneChecks } from "./checks/results";
 import { type DrawingView, SourceDrawing } from "./components/SourceDrawing";
 import { SourcePhoto } from "./components/SourcePhoto";
 import { StartPanel } from "./components/StartPanel";
@@ -151,6 +152,8 @@ export function App() {
   /** A drawn object focused in the review that has no scene object (marked not an object). */
   const [reviewFocus, setReviewFocus] = useState<{ loadId: number; drawnId: string } | null>(null);
   const [underlayShown, setUnderlayShown] = useState(true);
+  /** The route asked about in Check layout; kept while the app is open, not in the project. */
+  const [routeAsk, setRouteAsk] = useState<RouteAsk | null>(null);
   /** The object whose generated model is being improved. */
   const [improve, setImprove] = useState<string | null>(null);
   const [rebuild, setRebuild] = useState<{ busy: boolean; message: string | null }>({ busy: false, message: null });
@@ -176,6 +179,10 @@ export function App() {
     const counts = compareWithDrawing(project)?.counts;
     return counts && counts.changed + counts.removed + counts.added > 0 ? ("compare" as const) : ("change" as const);
   }, [project, sourceDrawing, reviewOpen]);
+  // The layout checks run while their results are on screen, again after every change.
+  const checking = project !== null && sourceDrawing !== null && mode !== "walk" && drawingPanel.open && (drawingPanel.view === "check" || drawingPanel.view === "compare");
+  const checks = useMemo(() => (checking && project ? runChecks(project, routeAsk) : null), [checking, project, routeAsk]);
+  const highlights = useMemo(() => (checks && drawingPanel.view === "check" ? sceneChecks(checks.now, routeAsk) : null), [checks, drawingPanel.view, routeAsk]);
   const selectedId = selection.loadId === loadId ? selection.id : null;
   const focusedDrawn = reviewFocus?.loadId === loadId ? reviewFocus.drawnId : null;
   const selected = project?.scene.objects.find((o) => o.id === selectedId) ?? null;
@@ -502,6 +509,10 @@ export function App() {
             if (sourceDrawing) setDrawingPanel({ open: true, view: "compare" });
             else setMode("walk");
           }}
+          onCheck={() => {
+            if (mode === "walk") setMode("orbit");
+            setDrawingPanel({ open: true, view: "check" });
+          }}
         />
         {!details && (
           <SelectionCard
@@ -560,6 +571,7 @@ export function App() {
             onDragChange={setDragging}
             onHandleProbe={onHandleProbe}
             underlay={underlayShown ? underlay : null}
+            checks={highlights}
           />
         )}
         <div className="viewport-overlays">
@@ -613,6 +625,9 @@ export function App() {
             focus={selected ? null : focusedDrawn}
             onReview={applyReview}
             onDrawn={pickDrawn}
+            checks={checks}
+            routeAsk={routeAsk}
+            onRouteAsk={setRouteAsk}
           />
         )}
         {project && <SourcePhoto key={`photo-${loadId}`} client={client} project={project} selectedId={selected?.id ?? null} onSelect={select} onView={showView} missingFiles={source?.kind === "file" ? source.report.missing_source_files : []} />}

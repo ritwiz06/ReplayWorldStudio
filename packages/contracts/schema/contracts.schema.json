@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.10.0",
+  "$id": "urn:replay-world:contracts:0.11.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.10.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.11.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -747,6 +747,21 @@
           },
           "type": "array"
         },
+        "omitted": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/OmittedShape"
+              },
+              "maxItems": 400,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where each layout shape that was not imported lies (0.11.0); null for a reading made before positions were recorded."
+        },
         "review": {
           "anyOf": [
             {
@@ -771,6 +786,7 @@
         "labels",
         "objects",
         "skipped",
+        "omitted",
         "review"
       ],
       "title": "DrawingImport",
@@ -2047,7 +2063,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.10.0",
+          "const": "0.11.0",
           "type": "string"
         }
       },
@@ -2927,6 +2943,62 @@
       "title": "ObjectReview",
       "type": "object"
     },
+    "OmittedShape": {
+      "additionalProperties": false,
+      "description": "Where a layout shape that was not imported lies (0.11.0), so a check can tell whether it\ncould matter there. ``min``/``max`` are its extent in drawing units, or null when its\nposition could not be read (inside a block, tilted, infinite, or of unknown size): such a\nshape could be anywhere.",
+      "properties": {
+        "entity": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "handle": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9A-F]{1,16}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layer": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlanPoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlanPoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "entity",
+        "handle",
+        "layer",
+        "min",
+        "max"
+      ],
+      "title": "OmittedShape",
+      "type": "object"
+    },
     "PhotoCalibration": {
       "additionalProperties": false,
       "description": "How positions on the photo's floor become scene metres.\n\n``image_to_floor`` is a 3 x 3 homography, row-major, mapping (u, v, 1) on the photo to\n(x, z, w) on the scene floor (y = 0), valid only for points on the floor plane. The scene\nframe has +X to the right of the photo and the camera on the +Z side, looking towards -Z.",
@@ -3237,7 +3309,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.10.0",
+          "const": "0.11.0",
           "type": "string"
         },
         "id": {
@@ -4582,7 +4654,7 @@
           "type": "string"
         },
         "to_version": {
-          "const": "0.10.0",
+          "const": "0.11.0",
           "type": "string"
         },
         "notes": {
@@ -4724,7 +4796,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.10.0",
+          "const": "0.11.0",
           "type": "string"
         },
         "project_id": {

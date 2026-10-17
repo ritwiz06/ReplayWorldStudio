@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.10.0",
+  "schema_version": "0.11.0",
   "id": "proj-gen09-regressions",
   "name": "GEN-09 regressions (GEN-08 t2 and p3 targets)",
   "units": {

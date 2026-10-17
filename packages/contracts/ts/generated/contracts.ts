@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.10.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.11.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -33,7 +33,7 @@ export interface ReplayWorldContracts {
   DrawingAnalysis: DrawingAnalysis;
 }
 export interface Project {
-  schema_version: "0.10.0";
+  schema_version: "0.11.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -326,6 +326,10 @@ export interface DrawingImport {
    */
   objects: DrawingObject[];
   skipped: SkippedEntities[];
+  /**
+   * Where each layout shape that was not imported lies (0.11.0); null for a reading made before positions were recorded.
+   */
+  omitted: OmittedShape[] | null;
   /**
    * The review of the draft (0.10.0); null only in an analysis.
    */
@@ -683,6 +687,19 @@ export interface SkippedEntities {
    */
   layout: boolean;
   reason: string;
+}
+/**
+ * Where a layout shape that was not imported lies (0.11.0), so a check can tell whether it
+ * could matter there. ``min``/``max`` are its extent in drawing units, or null when its
+ * position could not be read (inside a block, tilted, infinite, or of unknown size): such a
+ * shape could be anywhere.
+ */
+export interface OmittedShape {
+  entity: string;
+  handle: string | null;
+  layer: string;
+  min: PlanPoint | null;
+  max: PlanPoint | null;
 }
 /**
  * The review of a draft from a drawing (IMP-02): floor, scale, each object, and whether the
@@ -1375,14 +1392,14 @@ export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.10.0";
+  schema_version: "0.11.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.10.0";
+  schema_version: "0.11.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -1419,7 +1436,7 @@ export interface UpgradeReport {
    * Schema version of the submitted document.
    */
   from_version: string;
-  to_version: "0.10.0";
+  to_version: "0.11.0";
   notes: string[];
   project: Project;
   validation: ValidationReport;

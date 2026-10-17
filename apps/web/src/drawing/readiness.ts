@@ -1,20 +1,23 @@
-// What a geometric check may claim from the values it uses (ADR-051). GEO-01/02 checks must
-// pass their inputs through `checkReadiness` and their outcome through `finalise`:
-// - geometry read from a design drawing supports a *design-layout* result, and only once the
-//   drawing is reviewed (scale checked or confirmed, floor decided, each object used reviewed,
-//   its footprint exact, and what the drawing leaves out accepted);
-// - an as-built result needs measured or supplier values;
+// What a geometric check may claim from the values it uses (ADR-051, ADR-052). The layout and
+// route checks (GEO-01/02) take their inputs through these functions. They answer only about the
+// reviewed design: "fits in the reviewed design", "conflict found" or "cannot determine yet".
+// Nothing here establishes the site as built. Measured, supplier or entered sizes describe
+// objects, not where they stand on site, so no combination of evidence is "site-verified".
+// - geometry read from a design drawing counts once the drawing is reviewed (scale confirmed
+//   or measured, floor decided, each object used reviewed, its footprint exact, and what the
+//   drawing leaves out accepted);
 // - a display default (a height assumed for display, a floor sized for display), an estimate,
-//   an unchecked scale, an approximate outline or unaccepted omissions never give a pass.
-import type { Length, Project, SceneObject } from "@replay-world/contracts";
+//   an unchecked scale, an approximate outline or unaccepted omissions never support "fits";
+// - a check that needs a height and has only a display height answers "height needed".
+import type { Project, SceneObject } from "@replay-world/contracts";
 import { omissionsMatter } from "./review";
 import { type DrawingSource, drawingSource, drawnFrom } from "./world";
 
-export type CheckLevel = "as_built" | "design_layout" | "review_needed" | "height_needed";
+export type CheckLevel = "design_layout" | "review_needed" | "height_needed";
 
 export interface Readiness {
   level: CheckLevel;
-  /** Why the inputs cannot support a result yet (empty for a design-layout or as-built level). */
+  /** Why the inputs cannot support a result yet (empty when they can). */
   reasons: string[];
   /** Objects whose height is needed (only for a check that uses heights). */
   heightNeeded: { id: string; name: string }[];
@@ -22,7 +25,7 @@ export interface Readiness {
   basis: string;
 }
 
-/** What still blocks the drawing itself from supporting a design-layout result. */
+/** What still blocks the drawing itself from supporting a result. */
 export function drawingReasons(source: DrawingSource): string[] {
   const review = source.drawing.review;
   const reasons: string[] = [];
@@ -32,14 +35,47 @@ export function drawingReasons(source: DrawingSource): string[] {
   return reasons;
 }
 
-const PHYSICAL: readonly Length["origin"][] = ["measured", "supplier"];
+/** How exactly an object's footprint is known: `exact`, or why not. */
+export interface FootprintEvidence {
+  /** The footprint rectangle is the object's footprint (not a box around it, not a guess). */
+  exact: boolean;
+  /** Why the footprint cannot be relied on as it is, if it cannot. */
+  problem: string | null;
+  /** The footprint only encloses the real shape (a circle, an L-shape, a block): a clear box
+   * means clear, an overlapping box means "not evaluated accurately". */
+  encloses: boolean;
+  /** Plain words for where the size comes from. */
+  source: string;
+}
+
+export function footprintEvidence(project: Project, object: SceneObject): FootprintEvidence {
+  const d = object.dimensions;
+  const origins = new Set([d.width.origin, d.depth.origin]);
+  const tilted = Math.abs(object.transform.rotation_rad.x) > 1e-9 || Math.abs(object.transform.rotation_rad.z) > 1e-9;
+  if (tilted) return { exact: false, encloses: false, problem: `${object.name} is tilted, so its footprint is not a rectangle on the floor`, source: "tilted" };
+  if (origins.has("default")) return { exact: false, encloses: false, problem: `${object.name}'s size is only for display`, source: "display only" };
+  if (origins.has("inferred")) return { exact: false, encloses: false, problem: `${object.name}'s size is an estimate`, source: "estimated" };
+  if (origins.has("drawn")) {
+    const link = drawnFrom(project, object.id);
+    if (!link) return { exact: false, encloses: false, problem: `${object.name}'s drawn size has no drawing to check it against`, source: "drawn" };
+    const isFloor = link.source.drawing.review.floor.object_id === object.id;
+    if (!isFloor && link.status === "proposed") return { exact: false, encloses: false, problem: `${object.name} is not reviewed yet`, source: "drawn" };
+    if (link.drawn.footprint_fit === "enclosing") {
+      const what = link.drawn.refs[0]?.entity === "CIRCLE" ? "a round shape" : link.drawn.refs[0]?.entity === "INSERT" ? "a block's drawing" : "an outline that is not a rectangle";
+      return { exact: false, encloses: true, problem: `${object.name}'s box only encloses ${what}: enter its real size to check it exactly`, source: "drawn (approximate)" };
+    }
+    return { exact: true, encloses: false, problem: null, source: `drawn in ${link.source.filename}` };
+  }
+  const words = origins.has("user_supplied") ? "entered by you" : origins.has("supplier") ? "supplier data" : "measured";
+  return { exact: true, encloses: false, problem: null, source: words };
+}
 
 /** Classify the values a check would use: footprints (width, depth) and, if needed, heights. */
 export function checkReadiness(project: Project, objectIds: readonly string[], needs: { height: boolean }): Readiness {
   const source = drawingSource(project);
   const reasons = new Set<string>();
   const heightNeeded: { id: string; name: string }[] = [];
-  let physical = true;
+  const sources = new Set<string>();
   let usesDrawing = false;
   for (const id of objectIds) {
     const object = project.scene.objects.find((o) => o.id === id);
@@ -47,49 +83,37 @@ export function checkReadiness(project: Project, objectIds: readonly string[], n
       reasons.add(`'${id}' is not in the scene`);
       continue;
     }
-    const axes = needs.height ? (["width", "depth", "height"] as const) : (["width", "depth"] as const);
-    for (const axis of axes) {
-      const value = object.dimensions[axis];
-      if (!PHYSICAL.includes(value.origin)) physical = false;
-      if (value.origin === "default") {
-        if (axis === "height") heightNeeded.push({ id, name: object.name });
-        else reasons.add(`${object.name}'s ${axis} is only for display`);
-      } else if (value.origin === "inferred") reasons.add(`${object.name}'s ${axis} is an estimate`);
-      else if (value.origin === "drawn") {
-        usesDrawing = true;
-        objectReasons(project, source, object).forEach((r) => reasons.add(r));
-      }
+    const evidence = footprintEvidence(project, object);
+    if (evidence.problem) reasons.add(evidence.problem);
+    else sources.add(evidence.source);
+    if ([object.dimensions.width.origin, object.dimensions.depth.origin].includes("drawn")) usesDrawing = true;
+    if (needs.height) {
+      const h = object.dimensions.height.origin;
+      if (h === "default") heightNeeded.push({ id, name: object.name });
+      else if (h === "inferred") reasons.add(`${object.name}'s height is an estimate`);
     }
   }
   if (usesDrawing && source) drawingReasons(source).forEach((r) => reasons.add(r));
-  const level: CheckLevel = reasons.size > 0 ? "review_needed" : heightNeeded.length > 0 ? "height_needed" : physical ? "as_built" : "design_layout";
-  const basis =
-    level === "as_built"
-      ? "measured or supplier values"
-      : usesDrawing && source
-        ? `the design drawing ${source.filename} (${source.drawing.review.scale.status === "measured" ? "scale checked against a known length" : "scale confirmed"}), not the site as built`
-        : "values entered in the editor";
-  return { level, reasons: [...reasons], heightNeeded, basis };
+  const level: CheckLevel = reasons.size > 0 ? "review_needed" : heightNeeded.length > 0 ? "height_needed" : "design_layout";
+  const scale = source ? (source.drawing.review.scale.status === "measured" ? "scale checked against a known length" : "scale confirmed") : null;
+  const basis = [...sources].map((s) => (s.startsWith("drawn in") && scale ? `${s} (${scale})` : s)).join("; ") || "no sizes";
+  return { level, reasons: [...reasons], heightNeeded, basis: `the reviewed design: ${basis}; not the site as built` };
 }
 
-function objectReasons(project: Project, source: DrawingSource | null, object: SceneObject): string[] {
-  const link = drawnFrom(project, object.id);
-  if (!source || !link) return [`${object.name}'s drawn size has no drawing to check it against`];
-  const reasons: string[] = [];
-  const isFloor = source.drawing.review.floor.object_id === object.id;
-  if (!isFloor && link.status === "proposed") reasons.push(`${object.name} is not reviewed yet`);
-  if (link.drawn.footprint_fit === "enclosing") reasons.push(`${object.name}'s box only encloses its drawn shape (enter its size to use it)`);
-  return reasons;
-}
+export type CheckState = "fits" | "conflict" | "cannot_determine" | "height_needed";
 
-export type CheckState = "passed" | "failed" | "not_evaluated" | "height_needed";
+export const OUTCOME_WORDS: Record<CheckState, string> = {
+  fits: "Fits in the reviewed design",
+  conflict: "Conflict found",
+  cannot_determine: "Cannot determine yet",
+  height_needed: "Height needed",
+};
 
 /** The result a check may report for its geometric outcome, given what its inputs support. */
 export function finalise(geometricPass: boolean, readiness: Readiness): { state: CheckState; label: string } {
-  if (readiness.level === "review_needed") return { state: "not_evaluated", label: `Not evaluated: ${readiness.reasons.join("; ")}` };
+  if (readiness.level === "review_needed") return { state: "cannot_determine", label: `Cannot determine yet: ${readiness.reasons.join("; ")}` };
   if (readiness.level === "height_needed") return { state: "height_needed", label: `Height needed: ${readiness.heightNeeded.map((o) => o.name).join(", ")}` };
-  const outcome = geometricPass ? "passed" : "failed";
-  return readiness.level === "as_built"
-    ? { state: outcome, label: geometricPass ? "Passes, on measured values" : "Fails, on measured values" }
-    : { state: outcome, label: `${geometricPass ? "Passes" : "Fails"} on the design layout: ${readiness.basis}` };
+  return geometricPass
+    ? { state: "fits", label: `Fits in the reviewed design (${readiness.basis})` }
+    : { state: "conflict", label: `Conflict found in the reviewed design (${readiness.basis})` };
 }
