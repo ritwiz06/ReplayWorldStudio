@@ -545,7 +545,15 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   - At most one question is asked, and only when its answer changes what the user can do (one scale measurement for a unitless drawing).
   - No long form.
   - The original file is stored as a hash-checked source, and the draft goes through the command path (undo, save, reopen).
-- Evidence: not recorded
+- Status (2026-10-16): **done for DXF** (ADR-050; docs/drawing-import.md).
+- Evidence:
+  - **Browser journey** `e2e/drawing.spec.ts` (`@smoke`, in CI): upload `hall-mm.dxf` → plan → walk → move → compare → undo/redo → save → reopen; the source link and the change survive. Also the unit question, and a DWG, unsupported geometry, a cancelled upload and unsaved changes each leaving the current scene as it was.
+  - **Commits and CI:** `08f69e2` (contract 0.9.0), `90392f6` (reader), `e06414b` (web), `d40561c` (float-tolerant fixture check); CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38991725360 green on both jobs.
+  - **Measured** (5 runs, local, scripted, not with people): plan painted 32 ms after choosing the file; draft built and checked 24 ms; first walkable draft 546 ms median (docs/onb-01/timings.jsonl).
+  - **Screens** at 1440 × 900 in docs/onb-01/, inspected; usability fixes made from them: label placement, the drawing on the 3D floor, a compact compare panel, "Height assumed" badges, stand-in shapes.
+- What "recognisable provisional models" means here:
+  - see-through stand-in shapes for racks, tables and benches, and conveyors (by name), boxes otherwise, all labelled "height assumed";
+  - generated or supplied models replace them through ENR-01.
 
 ### AGT-01 - One orchestrating agent with bounded tools
 
@@ -563,7 +571,14 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   - Each value records its source and uncertainty.
   - Uploaded files are data, never instructions.
   - It runs without AI (R09): deterministic import and manual mapping still work.
-- Evidence: not recorded
+- Status (2026-10-16): **open; partly built** in ONB-01 (`apps/web/src/drawing/orchestrator.ts`).
+  - **Built:** identify a file (DXF, or DWG refused with the export route); extract layout candidates (API reader); build the draft world; check it against the contract. Progress is shown per step, cancel leaves the project intact, it runs without AI, and file text is data.
+  - **Precise gap:**
+    - equipment is not matched to catalog or generated models;
+    - the orchestrator does not propose changes;
+    - no model step exists (optional Voyager naming or grouping), so a cancellable model call is not exercised;
+    - no Voyager call was made in ONB-01.
+- Evidence: e2e/drawing.spec.ts; services/api/tests/test_drawings.py.
 
 ### UX-01 - Three-action main screen
 
@@ -573,7 +588,13 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
 - Done when:
   - The main screen leads with **Upload**, **Change something** and **Play or compare**. Everything else is contextual, and engineering detail (sources, uncertainty, evidence) is one step away, not in the way.
   - A first-time user reaches a walkable view from one file without reading instructions. This is checked in browser journeys; measured with people only in UX-02.
-- Evidence: not recorded
+- Status (2026-10-16): **open; partly built** in ONB-01.
+  - **Built:**
+    - the three actions lead the left panel and highlight the next step;
+    - **Upload a floor plan** is the start panel's first card;
+    - the browser journey reaches a walkable view from one file.
+  - **Precise gap:** the editor's panels (object list, catalog, full inspector, fixture switcher) are always shown, not contextual or behind Details.
+- Evidence: e2e/drawing.spec.ts; docs/onb-01/1-start.jpg, 3-draft-world.jpg.
 
 ### IMP-01 - Build DXF geometry adapter
 
@@ -583,7 +604,11 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
 - Done when: Parse declared entity subset; warn on unsupported data and nested-unit conflicts.
 - Note (2026-10-10): unchanged in scope; it feeds the same world model and source records that described and image objects use.
 - Note (2026-10-16, ADR-049): the first adapter of ONB-01, so it must produce layout candidates (floor, walls and columns, equipment footprints, labels and blocks) for the agent and the draft world, not only geometry.
-- Evidence: not recorded by this package
+- Status (2026-10-16): **done** (`services/api/src/replay_world_api/drawings.py`, `rws-dxf/1`; contract 0.9.0; ADR-050).
+  - The subset, units rules and refusals are in docs/drawing-import.md.
+  - Candidates: floor, columns, equipment footprints, walkways, keep-clear zones, labels and blocks.
+  - Wall lines are kept as plan lines, not wall solids; that is moved to IMP-02.
+- Evidence: `services/api/tests/test_drawings.py` (22 tests on the synthetic fixtures in `fixtures/drawings/`) and `packages/contracts/tests/test_drawing_sources.py`.
 
 ### IMP-02 - Review scale and map equipment
 
@@ -596,7 +621,11 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   - Corrections happen in place in the draft, never by restarting the import.
   - Provisional values stay marked until evidence replaces them.
   - Reuse the IMG-02 correction patterns: split, merge, add, and record every correction.
-- Evidence: not recorded by this package
+- Note (2026-10-16, after ONB-01): the gaps the first DXF journey leaves for review:
+  - wall solids from wall lines (a single line has no thickness or height);
+  - a measured scale for a scaled or unitless drawing, beyond the five units;
+  - split, merge and re-kind of drawn objects;
+  - circles and arcs (round columns, tanks, door swings), which are listed, not drawn.
 
 ### ENR-01 - Enrich an object from a machine photo or 3D model
 
@@ -677,6 +706,10 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
 - Baseline status: planned; reconcile with actual repository
 - Done when: Labeled overlap/clearance fixtures pass with explicit tolerances.
 - Note (2026-10-16, ADR-049): part of the first release (journey step 2). Results distinguish "passed", "failed", "not evaluated", "input missing" and "height needed". A check that depends on a provisional value asks for confirmation or returns the value it needs; it never passes on an estimate. Each result shows the exact dimensions it used.
+- Note (2026-10-16, ONB-01):
+  - Contract 0.9.0 provides `VERIFIED_ORIGINS` and `is_verified`, and a default can never be confirmed.
+  - The compare panel answers clearance, overhead, throughput and load questions only by naming the missing input; overhead gives "height needed" with the objects listed.
+  - No check is computed yet.
 - Evidence: not recorded by this package
 
 ### GEO-02 - Check specified routes and envelopes

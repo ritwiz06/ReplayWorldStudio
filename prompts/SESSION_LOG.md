@@ -734,6 +734,63 @@ Append entries in chronological order. If a live repository session log already 
   - GEN-09 open on independent review only.
 - **Next concrete task:** ONB-01 with IMP-01, AGT-01 and UX-01, on the user's implementation prompt.
 
+### 2026-10-16 - ONB-01 first world from one DXF (with IMP-01; AGT-01 and UX-01 partly)
+
+- **Active milestone / issue:** M4; ONB-01, IMP-01, AGT-01, UX-01.
+- **Starting commit:** `096a87a`. **Commits:**
+  - `08f69e2`: contract 0.9.0, drawing sources and never-confirmed defaults;
+  - `90392f6`: the IMP-01 reader, upload endpoint and fixtures;
+  - `e06414b`: the ONB-01 web journey;
+  - `d40561c`: a float-tolerant fixture check;
+  - the records commit.
+- **Goal:** the smallest complete "upload a plan, walk it, change it, see what happens": one DXF to a walkable, editable draft, compared with the drawing, saved and reopened.
+- **Work completed:**
+  - **Contract 0.9.0 (ADR-050):**
+    - `SourceDocument.drawing` holds the reading: units and their basis, lines, labels, objects linked to scene objects, and skipped entities with reasons;
+    - the original DXF is named `drawings/<sha256>.dxf`;
+    - a `default` length can never be `confirmed`; `VERIFIED_ORIGINS` and `is_verified` name the evidence a check may rely on;
+    - the 0.8.0 migration adds `drawing: null`.
+  - **IMP-01:**
+    - a bounded ASCII DXF reader (`rws-dxf/1`) and `POST /api/v1/sources/drawings`;
+    - the units rules, layout candidates, refusals, and the hash check on open;
+    - five synthetic fixtures from `scripts/build_dxf_fixtures.py`.
+  - **ONB-01 web:**
+    - the upload dialog: the plan at once, one unit question when needed, progress and cancel;
+    - the draft world: see-through provisional objects with stand-in shapes and "height assumed", and the drawing on the 3D floor;
+    - the drawing panel, with Compare and the not-available answers ("height needed");
+    - the three-action left panel and a start card.
+  - **Usability fixes from the desktop screens:**
+    - plan labels placed without collisions;
+    - a darker floor underlay;
+    - a compact compare panel;
+    - DWG shown as a warning;
+    - "Height assumed" badges;
+    - stand-in shapes.
+- **Commands and outcomes:**
+  - `pnpm check`: exit 0 (pytest 795, Vitest 186 + contracts 10, lint, types, build).
+  - Full Playwright suite: 50 passed, 18 skipped (env-gated inspection specs).
+  - `e2e/drawing.spec.ts`: 3 passed. The smoke set is now 11.
+  - CI run 38991427619 (`e06414b`): the browser smoke job passed, including the drawing journey in software WebGL. The fixture check failed: the reader's JSON output differs from Linux in the last float digits. Fixed in `d40561c` with a 1e-9 JSON tolerance; the drawings stay byte-exact.
+  - CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/38991725360 green (`d40561c`).
+- **Measurements** (5 runs, local, scripted; docs/onb-01/timings.jsonl):
+  - plan painted 32 ms after choosing the file;
+  - draft built and checked 24 ms;
+  - first walkable view 546 ms median;
+  - the reader alone: 71 ms on a 4,900-line drawing.
+- **Visual evidence:** docs/onb-01/ (10 screens at 1440 × 900, inspected).
+- **Decisions:** ADR-050.
+- **Known limitations:**
+  - IMP-02: wall solids, a measured scale, split/merge/re-kind, circles and arcs;
+  - GEO-01/02: no check computed yet;
+  - AGT-01: no catalog or model matching, no change proposals, no model step; no Voyager call was made;
+  - UX-01: the editor panels are always shown.
+- **Effort:** about 1 h 15 min, from the recorded start (17:32 MST, 00:32 UTC) to the records commit, all active; it includes waiting on two CI runs.
+- **Milestone status:**
+  - M4 in progress: ONB-01 and IMP-01 done; AGT-01 and UX-01 open;
+  - M3 open (IMG-03);
+  - GEN-09 open on independent review.
+- **Next concrete task:** IMP-02 (review of the draft: walls, measured scale, corrections in place), or GEO-01 on the user's priority.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

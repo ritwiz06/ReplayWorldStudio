@@ -887,3 +887,31 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - measured onboarding misses its targets;
   - the user changes the priority.
 
+
+### ADR-050 - A drawing's reading lives in the project; its unit is settled once; a display default is never verified
+
+- Date: 2026-10-16. Status: adopted (ONB-01, IMP-01; contract 0.9.0).
+- **Context.**
+  - ONB-01 needs one DXF to become a walkable, editable draft whose objects stay traceable to the drawing through moves, undo, save and reopen, and whose comparison with the drawing needs no second project.
+  - A floor plan gives footprints, not heights or appearance; the first world still needs a height to be drawn.
+  - ADR-049: a check never passes on a provisional value; "height needed" is a result of its own.
+- **Options considered.**
+  - Keep only the stored DXF and re-read it on open (the comparison and links would depend on the reader's version and on the file being present).
+  - Store the reading in the project (chosen), the original by its sha256 beside it.
+  - Add a new review status such as "provisional" (every existing record would need a decision), or keep `default` and forbid confirming it (chosen).
+  - Parse with a DXF library (a dependency for a small subset) or a bounded reader of our own (chosen: the subset is explicit, and everything outside it is reported).
+- **Decision.**
+  1. **`SourceDocument.drawing`** (`DrawingImport`, `rws-dxf/1`) records the units and how they were settled, the plan lines and texts in drawing units with handles and layers, every drawn object with the scene object it became, and every entity left out with its reason. The original DXF is stored as `drawings/<sha256>.dxf`. An altered file is refused on open; a missing one is reported, because the reading is in the project.
+  2. **The unit is settled once and recorded.** It comes from `$INSUNITS` only when the header is clear, consistent with `$MEASUREMENT` and plausible for a floor; otherwise the person chooses it (`basis: user_supplied`). The transform uses exactly that unit's factor.
+  3. **Drawn footprints are `measured`** (from the drawing: its size, not a site measurement). **Heights are `default`**, a typical display value said to be one. **A `default` length can never be `confirmed`.** Checks rely only on `measured`, `supplier` or `user_supplied` evidence (`VERIFIED_ORIGINS`); an estimate or a display default means the value is needed.
+  4. **Display is honest about it.** A standing object whose height is a default is drawn see-through. A rack, table or conveyor (by its name) gets a simple stand-in shape inside its recorded box; the label says "height assumed". The stand-in is appearance only; nothing about load, process, material or chemistry is inferred.
+  5. **Compare uses the drawing itself** (through the source's transform) as the original arrangement. The drawing's lines are also drawn on the 3D floor, so a moved object leaves its drawn outline visible.
+  6. **One bounded orchestrator, no model step yet.** Read → settle the unit → build → API contract check, each a typed step; failures and cancel change nothing; the editor's unsaved-change check decides any replacement.
+- **Consequences.**
+  - Projects carry up to about 1 MB of plan geometry (the reader's limits: 5,000 lines, 400 objects).
+  - 0.8.0 documents gain `drawing: null`. A confirmed default, which no editor wrote, is reported, not repaired.
+  - GEO-01/02 inherit the verified-evidence rule and the "height needed" answer.
+- **Revisit when:**
+  - real drawings exceed the limits;
+  - a supported entity type is needed (circles for round columns are the first candidate);
+  - a later check needs a status finer than origin plus "never confirmed".
