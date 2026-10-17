@@ -8,6 +8,7 @@ export const ORIGIN_LABEL: Record<Origin, string> = {
   supplier: "Supplier",
   inferred: "Inferred",
   default: "Default",
+  drawn: "Drawn",
 };
 
 export const REVIEW_LABEL: Record<Dimensions["width"]["review_status"], string> = {

@@ -85,8 +85,11 @@ test.describe("first visit", () => {
     // The marker in the 3D view (which listens for Enter) mounts just after the banner.
     await expect(page.getByTestId("placement-readout")).toBeVisible();
     await page.keyboard.press("Enter");
-    await revision(page, 1);
     await objects(page, 16);
+    // A first visit starts on the simple screen; the evidence is one click away (UX-01).
+    await expect(page.getByTestId("selection-card")).toContainText("Guarded conveyor with control screen");
+    await page.getByTestId("details-toggle").click();
+    await revision(page, 1);
     await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", "5/5 ready, 0 failed");
     const inspector = page.getByTestId("object-inspector");
     await expect(inspector.getByTestId("model-state")).toHaveText("Loaded; hash and bounds verified");

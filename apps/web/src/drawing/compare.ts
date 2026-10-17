@@ -3,7 +3,7 @@
 // itself (through the project's source-to-world transform), so the comparison needs no second
 // project and survives save and reopen.
 import type { Project, SceneObject, Transform } from "@replay-world/contracts";
-import { type DrawingSource, drawingSource, drawnSize, drawnTransform } from "./world";
+import { type DrawingSource, drawingSource, drawnSize, drawnTransform, statusOf } from "./world";
 
 export type ChangeStatus = "unchanged" | "changed" | "removed" | "added";
 
@@ -36,13 +36,18 @@ export function compareWithDrawing(project: Project): Comparison | null {
   if (!source) return null;
   const t = source.source_to_world;
   const live = new Map(project.scene.objects.map((o) => [o.id, o]));
-  const drawnIds = new Set(source.drawing.objects.map((d) => d.object_id));
-  const changes: Change[] = source.drawing.objects.map((drawn) => {
+  const floorId = source.drawing.review.floor.object_id;
+  // The floor is not part of the arrangement, and outlines the review set aside (the floor's
+  // outline, anything marked not an object) are the review's decisions, not layout changes.
+  const shown = source.drawing.objects.filter((d) => !["used_as_floor", "not_an_object"].includes(statusOf(source, d.id)));
+  const drawnIds = new Set(shown.map((d) => d.object_id));
+  const changes: Change[] = shown.map((drawn) => {
     const transform = drawnTransform(t, drawn);
     const before = { transform, ...drawnSize(t, drawn) };
     const now = live.get(drawn.object_id) ?? null;
     if (!now) return { objectId: drawn.object_id, label: drawn.label, status: "removed", what: ["removed"], before, after: null };
     const what: string[] = [];
+    if (now.kind !== drawn.kind) what.push(`now ${now.kind === "keep_clear" ? "a keep-clear zone" : now.kind === "walkway" ? "a walkway" : now.kind} (drawn as ${drawn.kind.replace("_", "-")})`);
     const p = now.transform.position_m;
     const moved = Math.hypot(p.x - transform.position_m.x, p.z - transform.position_m.z);
     if (moved > MOVE_TOLERANCE_M) what.push(`moved ${moved.toFixed(2)} m`);
@@ -57,7 +62,7 @@ export function compareWithDrawing(project: Project): Comparison | null {
     return { objectId: drawn.object_id, label: now.name, status: what.length ? "changed" : "unchanged", what, before, after: now };
   });
   for (const object of project.scene.objects) {
-    if (drawnIds.has(object.id)) continue;
+    if (drawnIds.has(object.id) || object.id === floorId) continue;
     changes.push({ objectId: object.id, label: object.name, status: "added", what: ["added: not in the drawing"], before: null, after: object });
   }
   const counts: Record<ChangeStatus, number> = { unchanged: 0, changed: 0, removed: 0, added: 0 };

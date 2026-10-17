@@ -8,25 +8,31 @@ interface Props {
   models: ModelSummary;
   savedAs: string | null;
   dirty: boolean;
+  /** Show the engineering detail (units, frame, schema, revision); hidden on the simple screen. */
+  details: boolean;
 }
 
 const MODE_LABEL: Record<CameraMode, string> = { orbit: "Orbit view", top: "Top view (plan)", walk: "Walk view" };
 
-export function StatusBar({ project, mode, models, savedAs, dirty }: Props) {
+export function StatusBar({ project, mode, models, savedAs, dirty, details }: Props) {
   return (
     <footer className="statusbar" data-testid="status-bar">
       {project ? (
         <>
-          <span>
-            Units {project.units.length} · {project.units.time} · {project.units.mass} ·{" "}
-            {project.units.angle}
-          </span>
-          <span>
-            {project.world_frame.handedness}-handed · {project.world_frame.up_axis} up · floor{" "}
-            {project.world_frame.floor_plane}
-          </span>
-          <span>Schema {project.schema_version}</span>
-          <span data-testid="revision-status">Scene revision {project.scene.revision}</span>
+          {details && (
+            <>
+              <span>
+                Units {project.units.length} · {project.units.time} · {project.units.mass} ·{" "}
+                {project.units.angle}
+              </span>
+              <span>
+                {project.world_frame.handedness}-handed · {project.world_frame.up_axis} up · floor{" "}
+                {project.world_frame.floor_plane}
+              </span>
+              <span>Schema {project.schema_version}</span>
+              <span data-testid="revision-status">Scene revision {project.scene.revision}</span>
+            </>
+          )}
           <span data-testid="edit-count">{project.scene.edit_log.length} edits recorded</span>
           {project.scene.edit_log.length > 0 && (
             <span className="status-warn" data-testid="unchecked-status" title="Spatial clearance checks arrive in M5">

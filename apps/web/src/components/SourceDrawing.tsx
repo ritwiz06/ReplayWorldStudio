@@ -6,10 +6,13 @@ import type { Project } from "@replay-world/contracts";
 import { useMemo, useState } from "react";
 import { answer, type CheckAnswer, QUESTIONS } from "../drawing/checks";
 import { compareWithDrawing, summary } from "../drawing/compare";
-import { describeRef, drawingSource, drawnFrom } from "../drawing/world";
+import { describeRef, drawingSource, drawnFrom, scalePhrase } from "../drawing/world";
+import type { DrawingObject } from "@replay-world/contracts";
+import type { ReviewCorrection } from "../drawing/review";
 import { DrawingPlan } from "./DrawingPlan";
+import { DrawingReview } from "./DrawingReview";
 
-export type DrawingView = "drawing" | "compare";
+export type DrawingView = "review" | "drawing" | "compare";
 
 interface Props {
   project: Project;
@@ -24,9 +27,13 @@ interface Props {
   onWalk: () => void;
   /** Source files the API reported missing when the project was opened. */
   missingFiles: readonly string[];
+  /** A drawn object focused in the review without a scene object. */
+  focus: string | null;
+  onReview: (correction: ReviewCorrection) => string | null;
+  onDrawn: (drawn: DrawingObject) => void;
 }
 
-export function SourceDrawing({ project, selectedId, view, open, underlay, onView, onOpen, onUnderlay, onSelect, onWalk, missingFiles }: Props) {
+export function SourceDrawing({ project, selectedId, view, open, underlay, onView, onOpen, onUnderlay, onSelect, onWalk, missingFiles, focus, onReview, onDrawn }: Props) {
   const source = drawingSource(project);
   const comparison = useMemo(() => compareWithDrawing(project), [project]);
   const [asked, setAsked] = useState<CheckAnswer | null>(null);
@@ -34,19 +41,22 @@ export function SourceDrawing({ project, selectedId, view, open, underlay, onVie
   const drawing = source.drawing;
   const moved = new Set(comparison.changes.filter((c) => c.status === "changed" && c.what.some((w) => w.startsWith("moved") || w.startsWith("turned"))).map((c) => c.objectId));
   const link = selectedId ? drawnFrom(project, selectedId) : null;
-  const t = source.source_to_world;
-  const unit = `1 unit = 1 ${t.source_unit} (${drawing.units.basis === "drawing_header" ? "from the drawing" : "your answer"})`;
+  const unit = scalePhrase(drawing.review.scale);
+  const statuses = new Map(drawing.review.objects.map((o) => [o.drawn_id, o.status]));
   const changed = comparison.changes.filter((c) => c.status !== "unchanged");
   const missing = missingFiles.includes(drawing.file.uri);
 
   return (
-    <section className={`source-drawing${open ? " open" : ""}${view === "compare" && open ? " wide" : ""}`} aria-label="Source drawing" data-testid="source-drawing">
+    <section className={`source-drawing${open ? " open" : ""}${view !== "drawing" && open ? " wide" : ""}`} aria-label="Source drawing" data-testid="source-drawing">
       <div className="source-drawing-head">
         <button type="button" className="source-photo-toggle" aria-expanded={open} data-testid="source-drawing-toggle" onClick={() => onOpen(!open)}>
           {open ? "Hide" : `Drawing: ${source.filename}`}
         </button>
         {open && (
           <div className="segmented" role="tablist" aria-label="Drawing view">
+            <button type="button" role="tab" aria-selected={view === "review"} data-testid="drawing-tab-review" onClick={() => onView("review")}>
+              Review
+            </button>
             <button type="button" role="tab" aria-selected={view === "drawing"} data-testid="drawing-tab-drawing" onClick={() => onView("drawing")}>
               Drawing
             </button>
@@ -56,10 +66,11 @@ export function SourceDrawing({ project, selectedId, view, open, underlay, onVie
           </div>
         )}
       </div>
+      {open && view === "review" && <DrawingReview project={project} source={source} selectedId={selectedId} focus={focus} onReview={onReview} onDrawn={onDrawn} />}
       {open && view === "drawing" && (
         <div className="source-drawing-body">
           <div className="drawing-plan-frame small-plan">
-            <DrawingPlan drawing={drawing} selectedId={selectedId} onSelect={onSelect} labels="selected" testId="source-plan" title={`Plan of ${source.filename}`} />
+            <DrawingPlan drawing={drawing} statuses={statuses} selectedId={selectedId} onSelect={onSelect} labels="selected" testId="source-plan" title={`Plan of ${source.filename}`} />
           </div>
           <p className="source-photo-caption">
             {source.filename} · {unit} · click an outline to select it
@@ -84,7 +95,7 @@ export function SourceDrawing({ project, selectedId, view, open, underlay, onVie
             <figure>
               <figcaption>As drawn</figcaption>
               <div className="drawing-plan-frame">
-                <DrawingPlan drawing={drawing} selectedId={selectedId} onSelect={onSelect} labels="selected" testId="compare-before" title="The layout as drawn" />
+                <DrawingPlan drawing={drawing} statuses={statuses} selectedId={selectedId} onSelect={onSelect} labels="selected" testId="compare-before" title="The layout as drawn" />
               </div>
             </figure>
             <figure>
@@ -92,6 +103,7 @@ export function SourceDrawing({ project, selectedId, view, open, underlay, onVie
               <div className="drawing-plan-frame">
                 <DrawingPlan
                   drawing={drawing}
+                  statuses={statuses}
                   now={{ project, source, moved }}
                   selectedId={selectedId}
                   onSelect={onSelect}

@@ -9,6 +9,7 @@ const DESCRIPTION: Record<Evidence, string> = {
   supplier: "Taken from supplier data",
   inferred: "Inferred - check before relying on it",
   default: "Default placeholder - not real data",
+  drawn: "Read from a design drawing at its reviewed scale: design geometry, not a site measurement",
   unknown: "Not established - no value is assumed",
   mixed: "Axes have different evidence - inspect each axis",
 };

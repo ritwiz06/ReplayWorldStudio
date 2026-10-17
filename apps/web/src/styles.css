@@ -324,6 +324,10 @@ nav .panel-title {
   border-color: #7a4422;
   border-style: dashed;
 }
+.badge-drawn {
+  color: #7fd6c8;
+  border-color: #2f6b62;
+}
 .badge-unknown {
   color: #f08080;
   border-color: #7a2f2f;
@@ -2447,4 +2451,124 @@ label.button.disabled {
 }
 .not-yet details[open] summary {
   margin-bottom: 6px;
+}
+
+/* ---------- IMP-02 review, UX-01 simple screen ---------- */
+.app.simple {
+  grid-template-columns: 272px minmax(0, 1fr) 0;
+}
+.button[aria-pressed="true"] {
+  border-color: #3a76a8;
+  background: #1d4f7a;
+  color: #fff;
+}
+.selection-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.selection-card p {
+  margin: 0;
+}
+.selection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.review-panel .review-plan {
+  aspect-ratio: 16 / 9;
+  max-height: 30vh;
+}
+.review-ready {
+  padding: 6px 8px;
+  border-left: 3px solid var(--warn);
+  background: rgba(212, 167, 44, 0.08);
+}
+.review-ready.ready {
+  border-left-color: var(--ok);
+  background: rgba(87, 171, 90, 0.08);
+}
+.review-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+}
+.review-items > li.todo > strong {
+  color: var(--warn);
+}
+.review-items > li.done > strong {
+  color: var(--ok);
+}
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.review-hint {
+  color: var(--warn);
+}
+.review-measure,
+.review-object {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-raised);
+}
+.review-measure input {
+  width: 6em;
+}
+.review-name input {
+  width: 70%;
+}
+.review-kinds {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0;
+  padding: 0;
+  border: 0;
+}
+.review-kinds legend {
+  padding: 0;
+}
+.review-preview {
+  padding: 4px 8px;
+  border-left: 3px solid var(--ok);
+}
+.review-preview.conflict {
+  border-left-color: var(--warn);
+}
+.review-preview p {
+  margin: 0;
+}
+.drawing-plan.plan-mode-measure {
+  cursor: crosshair;
+}
+.drawing-plan.plan-mode-floor .plan-object[role="button"]:hover polygon {
+  stroke: var(--warn);
+  stroke-width: 3;
+}
+.drawing-plan .plan-not-object polygon {
+  fill: none;
+  stroke: #6b737c;
+  stroke-dasharray: 2 3;
+}
+.drawing-plan .plan-marks line {
+  stroke: var(--warn);
+  stroke-width: 2;
+}
+.drawing-plan .plan-marks circle {
+  fill: var(--warn);
+  stroke: #14171b;
+  stroke-width: 1;
 }

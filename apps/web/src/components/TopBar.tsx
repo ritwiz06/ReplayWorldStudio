@@ -23,6 +23,9 @@ interface Props {
   onLoadFixture: (name: FixtureName) => void;
   /** Show the guided start panel. */
   onStart: () => void;
+  /** The advanced panels (object list, catalog, inspector) are shown. */
+  details: boolean;
+  onDetails: () => void;
 }
 
 const FIXTURES: FixtureName[] = ["industrial-demo", "foundation"];
@@ -39,7 +42,7 @@ function sceneStatus(scene: SceneState): [tone: string, text: string] {
   }
 }
 
-export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel, redoLabel, busy, onUndo, onRedo, onSave, onOpenFile, onLoadFixture, onStart }: Props) {
+export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel, redoLabel, busy, onUndo, onRedo, onSave, onOpenFile, onLoadFixture, onStart, details, onDetails }: Props) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [tone, text] = sceneStatus(scene);
   const checking = fileCheck.status === "checking";
@@ -124,6 +127,17 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
         >
           Save<span className="label-long"> project</span>
         </button>
+        <button
+          type="button"
+          className="button"
+          aria-pressed={details}
+          onClick={onDetails}
+          data-testid="details-toggle"
+          title={details ? "Hide the object list, catalog and inspector" : "Show the object list, catalog and the inspector with every value's evidence"}
+        >
+          Details
+        </button>
+        {details && (
         <div className="segmented scene-picker" role="group" aria-label="Scene">
           {FIXTURES.map((name) => (
             <button
@@ -139,6 +153,7 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
             </button>
           ))}
         </div>
+        )}
         <button
           type="button"
           className="button button-primary"

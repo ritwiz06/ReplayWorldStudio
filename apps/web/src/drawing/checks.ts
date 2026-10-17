@@ -3,6 +3,7 @@
 // A check that needs a verified height answers "height needed" while any height is only a
 // display value or an estimate.
 import type { Length, Project, SceneObject } from "@replay-world/contracts";
+import { checkReadiness } from "./readiness";
 
 export type CheckQuestion = "overhead" | "clearance" | "throughput" | "strength";
 
@@ -22,7 +23,8 @@ export const QUESTIONS: readonly { id: CheckQuestion; label: string }[] = [
   { id: "strength", label: "Will the floor hold the machines?" },
 ];
 
-/** Evidence a check may rely on (the contract's VERIFIED_ORIGINS). */
+/** Evidence a check may rely on as it is (the contract's VERIFIED_ORIGINS); drawn geometry is
+ * design evidence, used only through the readiness rule. */
 export function isVerified(length: Length): boolean {
   return length.origin === "measured" || length.origin === "supplier" || length.origin === "user_supplied";
 }
@@ -57,5 +59,13 @@ export function answer(project: Project, question: CheckQuestion): CheckAnswer {
     strength:
       "A floor-load check needs each machine's mass and the floor's rated load. Nothing here records mass or strength, and neither is ever inferred from a drawing or a name.",
   };
-  return { question, status: "not_available", title: "Not available yet", message: missing[question], needs: [] };
+  // Even before checks exist, say what the drawing would have to settle first.
+  const readiness = checkReadiness(project, project.scene.objects.filter((o) => o.kind !== "structure" || standing(o)).map((o) => o.id), { height: false });
+  const first =
+    readiness.level === "review_needed"
+      ? ` The values are not ready for a check either: ${readiness.reasons.slice(0, 3).join("; ")}${readiness.reasons.length > 3 ? "; and more" : ""}.`
+      : readiness.level === "design_layout"
+        ? ` When checks exist, this drawing supports a design-layout result only, not the site as built.`
+        : "";
+  return { question, status: "not_available", title: "Not available yet", message: missing[question] + first, needs: [] };
 }

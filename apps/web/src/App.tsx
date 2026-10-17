@@ -1,4 +1,4 @@
-import type { CatalogAsset, Project, SceneObject, Transform } from "@replay-world/contracts";
+import type { CatalogAsset, DrawingObject, Project, SceneObject, Transform } from "@replay-world/contracts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createApiClient } from "./api/client";
 import type { ResolvedEdit } from "./assist/editIntent";
@@ -12,6 +12,7 @@ import { Inspector } from "./components/Inspector";
 import { JourneyPanel } from "./components/JourneyPanel";
 import { EditRejectedNotice, FileRejectedPanel, LoadErrorPanel, PlacementBanner } from "./components/Notices";
 import { ObjectList } from "./components/ObjectList";
+import { SelectionCard } from "./components/SelectionCard";
 import { PhotoImport } from "./components/PhotoImport";
 import { type DrawingView, SourceDrawing } from "./components/SourceDrawing";
 import { SourcePhoto } from "./components/SourcePhoto";
@@ -20,6 +21,7 @@ import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
 import { FixtureBanner, ModelNotice, PlanOverlay, ViewToolbar, WalkHud } from "./components/ViewControls";
 import { compareWithDrawing } from "./drawing/compare";
+import { type ReviewCorrection, reviewItems } from "./drawing/review";
 import { drawingSource, toWorld } from "./drawing/world";
 import type { Axis, CommandRequest, EditCommand } from "./editing/commands";
 import type { Outcome } from "./editing/history";
@@ -49,6 +51,25 @@ type Placement = { nonce: number; loadId: number } & (
 );
 
 const START_SEEN_KEY = "rws.start.seen";
+const DETAILS_KEY = "rws.details";
+
+/** The advanced panels (object list, catalog, inspector) are shown when the person asked for
+ * them last time; a first visit starts with the simple screen. */
+function detailsPreferred(): boolean {
+  try {
+    return window.localStorage.getItem(DETAILS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function rememberDetails(shown: boolean) {
+  try {
+    window.localStorage.setItem(DETAILS_KEY, shown ? "1" : "0");
+  } catch {
+    // Not remembered; the simple screen shows next time.
+  }
+}
 
 /** The guided start panel opens on a first visit; afterwards only from the Start button. */
 function startSeen(): boolean {
@@ -121,7 +142,14 @@ export function App() {
   const [create, setCreate] = useState<"describe" | "builder" | null>(null);
   const [photoImport, setPhotoImport] = useState(false);
   const [drawingImport, setDrawingImport] = useState(false);
-  const [drawingPanel, setDrawingPanel] = useState<{ open: boolean; view: DrawingView }>({ open: true, view: "drawing" });
+  const [drawingPanel, setDrawingPanel] = useState<{ open: boolean; view: DrawingView }>({ open: true, view: "review" });
+  const [details, setDetailsState] = useState(detailsPreferred);
+  const setDetails = useCallback((shown: boolean) => {
+    rememberDetails(shown);
+    setDetailsState(shown);
+  }, []);
+  /** A drawn object focused in the review that has no scene object (marked not an object). */
+  const [reviewFocus, setReviewFocus] = useState<{ loadId: number; drawnId: string } | null>(null);
   const [underlayShown, setUnderlayShown] = useState(true);
   /** The object whose generated model is being improved. */
   const [improve, setImprove] = useState<string | null>(null);
@@ -142,12 +170,14 @@ export function App() {
 
   const sourceDrawing = project ? drawingSource(project) : null;
   const underlay = useMemo(() => underlayOf(sourceDrawing ? project : null), [sourceDrawing]); // eslint-disable-line react-hooks/exhaustive-deps
+  const reviewOpen = sourceDrawing !== null && reviewItems(sourceDrawing).some((item) => !item.done);
   const journeyStage = useMemo(() => {
-    if (!project || !sourceDrawing) return "upload" as const;
+    if (!project || !sourceDrawing || reviewOpen) return "upload" as const;
     const counts = compareWithDrawing(project)?.counts;
     return counts && counts.changed + counts.removed + counts.added > 0 ? ("compare" as const) : ("change" as const);
-  }, [project, sourceDrawing]);
+  }, [project, sourceDrawing, reviewOpen]);
   const selectedId = selection.loadId === loadId ? selection.id : null;
+  const focusedDrawn = reviewFocus?.loadId === loadId ? reviewFocus.drawnId : null;
   const selected = project?.scene.objects.find((o) => o.id === selectedId) ?? null;
   const activePlacement = placement?.loadId === loadId ? placement : null;
   const summary = summarise(models);
@@ -286,6 +316,40 @@ export function App() {
     [run, select],
   );
 
+  /** A review correction (IMP-02) through the command engine; returns why it was refused. */
+  const applyReview = useCallback(
+    (correction: ReviewCorrection): string | null => {
+      if (!project || !sourceDrawing) return "There is no drawing to review.";
+      const outcome = run({ baseRevision: project.scene.revision, command: { type: "review_drawing", sourceId: sourceDrawing.id, correction } });
+      if (!outcome) return "The scene is not editable right now.";
+      if (!outcome.ok) return outcome.rejection.kind === "no_change" ? null : outcome.rejection.message;
+      const id = outcome.change.objectId;
+      if (correction.kind === "object" && correction.action === "not_an_object") {
+        setReviewFocus({ loadId, drawnId: correction.drawnId });
+        select(null);
+      } else if (id && outcome.state.project.scene.objects.some((o) => o.id === id)) {
+        setReviewFocus(null);
+        if (correction.kind === "object") select(id);
+      }
+      return null;
+    },
+    [loadId, project, run, select, sourceDrawing],
+  );
+
+  /** A drawn outline clicked on the plan: select its object, or focus it in the review. */
+  const pickDrawn = useCallback(
+    (drawn: DrawingObject) => {
+      if (project?.scene.objects.some((o) => o.id === drawn.object_id)) {
+        setReviewFocus(null);
+        select(drawn.object_id);
+      } else {
+        select(null);
+        setReviewFocus({ loadId, drawnId: drawn.id });
+      }
+    },
+    [loadId, project, select],
+  );
+
   const rebuildModels = useCallback(async () => {
     if (!project) return;
     setRebuild({ busy: true, message: null });
@@ -401,7 +465,7 @@ export function App() {
   const hint = mode !== "walk" && tool !== "select" ? (selected ? TOOL_HELP[tool](snapOn) : TOOL_FIRST[tool]) : help;
 
   return (
-    <div className="app">
+    <div className={`app${details ? "" : " simple"}`}>
       <TopBar
         scene={scene}
         fixtureName={source?.kind === "fixture" || scene.status !== "loaded" ? session.fixtureName : null}
@@ -417,11 +481,14 @@ export function App() {
         onOpenFile={(file) => void session.openFile(file)}
         onLoadFixture={session.loadFixture}
         onStart={() => setStart(true)}
+        details={details}
+        onDetails={() => setDetails(!details)}
       />
       <aside className="panel panel-left">
         <JourneyPanel
           stage={journeyStage}
           hasDrawing={sourceDrawing !== null}
+          reviewOpen={reviewOpen}
           disabled={prompt !== null || dragging}
           onUpload={() => {
             if (mode === "walk") setMode("orbit");
@@ -436,8 +503,21 @@ export function App() {
             else setMode("walk");
           }}
         />
-        <ObjectList project={project} selectedId={selected?.id ?? null} onSelect={select} />
-        {project && (
+        {!details && (
+          <SelectionCard
+            project={project}
+            selected={selected}
+            onCheck={() => setDrawingPanel({ open: true, view: "review" })}
+            tool={tool}
+            onTool={(next) => {
+              if (mode === "walk") setMode("orbit");
+              setTool(next);
+            }}
+            onDetails={() => setDetails(true)}
+          />
+        )}
+        {details && <ObjectList project={project} selectedId={selected?.id ?? null} onSelect={select} />}
+        {details && project && (
           <CatalogPanel
             project={project}
             placingAssetId={activePlacement?.kind === "add" ? activePlacement.assetId : null}
@@ -530,10 +610,13 @@ export function App() {
             onSelect={select}
             onWalk={() => setMode("walk")}
             missingFiles={source?.kind === "file" ? source.report.missing_source_files : []}
+            focus={selected ? null : focusedDrawn}
+            onReview={applyReview}
+            onDrawn={pickDrawn}
           />
         )}
         {project && <SourcePhoto key={`photo-${loadId}`} client={client} project={project} selectedId={selected?.id ?? null} onSelect={select} onView={showView} missingFiles={source?.kind === "file" ? source.report.missing_source_files : []} />}
-        {project && mode !== "walk" && !activePlacement && (
+        {details && project && mode !== "walk" && !activePlacement && (
           <ChangeBar
             key={loadId}
             client={client}
@@ -551,6 +634,7 @@ export function App() {
           </p>
         )}
       </main>
+      {details && (
       <aside className="panel panel-right">
         <Inspector
           project={project}
@@ -572,7 +656,8 @@ export function App() {
           onImprove={() => selected && setImprove(selected.id)}
         />
       </aside>
-      <StatusBar project={project} mode={mode} models={summary} savedAs={session.savedAs} dirty={session.dirty} />
+      )}
+      <StatusBar project={project} mode={mode} models={summary} savedAs={session.savedAs} dirty={session.dirty} details={details} />
       {prompt?.kind === "unsaved" && project && (
         <UnsavedChangesDialog
           action={prompt.action}
@@ -611,6 +696,10 @@ export function App() {
             void session.openFile(file);
           }}
           onClose={closeStart}
+          onFullEditor={() => {
+            closeStart();
+            setDetails(true);
+          }}
         />
       )}
       {photoImport && !prompt && (
@@ -633,7 +722,8 @@ export function App() {
             setDrawingImport(false);
             setTool("select");
             if (mode === "walk") setMode("orbit");
-            setDrawingPanel({ open: true, view: "drawing" });
+            setDrawingPanel({ open: true, view: "review" });
+            setReviewFocus(null);
             session.loadCreated(created, filename, "drawing");
           }}
         />

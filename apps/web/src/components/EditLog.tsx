@@ -43,13 +43,17 @@ function recordTitle(record: EditRecord, project: Project): string {
       const who = record.objects.length === 1 ? name(record.objects[0]!.object_id) : `${record.objects.length} objects`;
       return `Improved the model of ${who}: ${record.asset_before} → ${record.asset_after}`;
     }
+    case "drawing_reviewed":
+      return `Review: ${record.correction}`;
   }
 }
 
 /** Records about one object, newest first, with before/after values and replaced evidence. */
 export function ObjectEditLog({ project, objectId }: { project: Project; objectId: string }) {
   const records = project.scene.edit_log
-    .filter((r) => (r.type === "asset_revised" ? r.objects.some((o) => o.object_id === objectId) : r.type !== "object_removed" && r.object_id === objectId))
+    .filter((r) =>
+      r.type === "asset_revised" || r.type === "drawing_reviewed" ? r.objects.some((o) => o.object_id === objectId) : r.type !== "object_removed" && r.object_id === objectId,
+    )
     .reverse();
   if (records.length === 0) return <p className="muted">No edits recorded for this object.</p>;
   return (
@@ -69,6 +73,8 @@ export function ObjectEditLog({ project, objectId }: { project: Project; objectI
                 </li>
               ))}
             </ul>
+          ) : record.type === "drawing_reviewed" ? (
+            <span>Review: {record.correction}</span>
           ) : record.type === "asset_revised" ? (
             <ul>
               <li>

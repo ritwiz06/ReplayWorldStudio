@@ -39,7 +39,19 @@ export default defineConfig({
     screenshot: "only-on-failure",
     // Existing tests open the editor directly; the guided start panel has its own tests, which
     // start with empty storage.
-    storageState: { cookies: [], origins: [{ origin: `http://127.0.0.1:${WEB_PORT}`, localStorage: [{ name: "rws.start.seen", value: "1" }] }] },
+    // They also show the advanced panels (Details); the simple screen has its own tests.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: `http://127.0.0.1:${WEB_PORT}`,
+          localStorage: [
+            { name: "rws.start.seen", value: "1" },
+            { name: "rws.details", value: "1" },
+          ],
+        },
+      ],
+    },
   },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },

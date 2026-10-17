@@ -13,9 +13,11 @@ interface Props {
   onDrawing: () => void;
   onOpenFile: (file: File) => void;
   onClose: () => void;
+  /** Close and show the full editor (object list, catalog, inspector). */
+  onFullEditor: () => void;
 }
 
-export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onPhoto, onDrawing, onOpenFile, onClose }: Props) {
+export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onPhoto, onDrawing, onOpenFile, onClose, onFullEditor }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -78,7 +80,7 @@ export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onPhoto,
         <button type="button" className="link-button" data-testid="start-build" onClick={onBuild}>
           Build an object by hand
         </button>
-        <button type="button" className="link-button" data-testid="start-editor" onClick={onClose}>
+        <button type="button" className="link-button" data-testid="start-editor" onClick={onFullEditor}>
           Go to the full editor
         </button>
       </div>

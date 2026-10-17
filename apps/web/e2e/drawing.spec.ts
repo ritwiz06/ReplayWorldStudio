@@ -67,7 +67,9 @@ test("a DXF floor plan becomes a walkable draft that is moved, compared, saved a
   await expect(dialog).toBeHidden();
   await expect(page.getByTestId("viewport")).toHaveAttribute("data-renderer", "ready");
   await expect(page.getByTestId("scene-source")).toHaveText("Built from the drawing hall-mm.dxf (not saved yet)");
-  await expect(page.getByTestId("journey-change")).toHaveAttribute("aria-current", "step");
+  // The upload step stays current until the draft is reviewed, and says so.
+  await expect(page.getByTestId("journey-upload")).toHaveAttribute("aria-current", "step");
+  await expect(page.getByTestId("journey-upload")).toContainText("Now check the draft: floor, scale and objects, in the Review panel.");
 
   // Walk: the draft is walkable.
   await page.getByTestId("mode-walk").click();
@@ -97,6 +99,7 @@ test("a DXF floor plan becomes a walkable draft that is moved, compared, saved a
   await expect(inspector.getByTestId("drawn-from")).toContainText("From the drawing hall-mm.dxf: LWPOLYLINE 104 on layer EQUIPMENT, named by the text inside it.");
   await expect(inspector.getByTestId("height-assumed")).toContainText("Height assumed for display (2.20 m)");
   await expect(inspector.getByTestId("axis-height")).toContainText("Default");
+  await page.getByTestId("drawing-tab-drawing").click();
   await expect(page.getByTestId("source-plan-object-obj-dxf-104")).toHaveClass(/selected/);
   await expect(page.getByTestId("source-drawing-link")).toHaveText("Press 1 comes from LWPOLYLINE 104 on layer EQUIPMENT.");
 
@@ -108,12 +111,12 @@ test("a DXF floor plan becomes a walkable draft that is moved, compared, saved a
   await x.fill("-6.500");
   await x.press("Enter");
   await expect(page.getByTestId("save-state")).toHaveText("Unsaved changes");
-  await expect(page.getByTestId("journey-compare")).toHaveAttribute("aria-current", "step");
+  await expect(page.getByTestId("journey-upload")).toHaveAttribute("aria-current", "step"); // its review is still open
 
   // Play or compare: the drawing and the arrangement now, the change listed, nothing invented.
   await page.getByTestId("journey-compare").click();
   const compare = page.getByTestId("drawing-compare");
-  await expect(compare.getByTestId("compare-summary")).toHaveText("Compared with hall-mm.dxf: 1 changed · 11 as drawn");
+  await expect(compare.getByTestId("compare-summary")).toHaveText("Compared with hall-mm.dxf: 1 changed · 10 as drawn");
   await expect(compare.getByTestId("compare-change-obj-dxf-104")).toHaveText("Press 1 moved 2.00 m");
   await expect(compare.getByTestId("compare-after-object-obj-dxf-104")).toHaveAttribute("data-state", "moved");
   await expect(compare.getByTestId("compare-before-object-obj-dxf-104")).toHaveAttribute("data-state", "drawn");
@@ -125,19 +128,20 @@ test("a DXF floor plan becomes a walkable draft that is moved, compared, saved a
   await compare.getByTestId("check-clearance").click();
   await expect(compare.getByTestId("check-answer")).toHaveAttribute("data-status", "not_available");
   await expect(compare.getByTestId("check-answer")).toContainText("no clearance result is shown");
+  await expect(compare.getByTestId("check-answer")).toContainText("The values are not ready for a check either: Column 1 is not reviewed yet");
 
   // Undo and redo keep the link to the drawing.
   await page.getByTestId("undo").click();
-  await expect(compare.getByTestId("compare-summary")).toHaveText("Compared with hall-mm.dxf: 12 as drawn");
+  await expect(compare.getByTestId("compare-summary")).toHaveText("Compared with hall-mm.dxf: 11 as drawn");
   await page.getByTestId("redo").click();
-  await expect(compare.getByTestId("compare-summary")).toHaveText("Compared with hall-mm.dxf: 1 changed · 11 as drawn");
+  await expect(compare.getByTestId("compare-summary")).toHaveText("Compared with hall-mm.dxf: 1 changed · 10 as drawn");
   await compare.getByTestId("compare-walk").click();
   await expect(page.getByTestId("walk-hud")).toBeVisible();
   await page.keyboard.press("Escape");
 
   // Save: the drawing, its unit basis, every source reference and the move are in the file.
   const saved = await save(page);
-  expect(saved.json.schema_version).toBe("0.9.0");
+  expect(saved.json.schema_version).toBe("0.10.0");
   const [source] = saved.json.sources;
   expect([source?.kind, source?.filename, source?.drawing.units.basis]).toEqual(["dxf", "hall-mm.dxf", "drawing_header"]);
   expect(source?.drawing.objects.find((o) => o.object_id === "obj-dxf-104")?.refs[0]).toMatchObject({ handle: "104", layer: "EQUIPMENT" });
@@ -155,7 +159,7 @@ test("a DXF floor plan becomes a walkable draft that is moved, compared, saved a
   await objectList(page, /Press 1/).click();
   await expect(page.getByTestId("drawn-from")).toContainText("LWPOLYLINE 104 on layer EQUIPMENT");
   await page.getByTestId("journey-compare").click();
-  await expect(page.getByTestId("compare-summary")).toHaveText("Compared with hall-mm.dxf: 1 changed · 11 as drawn");
+  await expect(page.getByTestId("compare-summary")).toHaveText("Compared with hall-mm.dxf: 1 changed · 10 as drawn");
 });
 
 test("a drawing without units asks once, and the answer is recorded as the person's", async ({ page }) => {
@@ -175,7 +179,7 @@ test("a drawing without units asks once, and the answer is recorded as the perso
   await dialog.getByTestId("drawing-open").click();
   await objects(page, 4);
   await objectList(page, /Saw/).click();
-  await expect(page.getByTestId("axis-width")).toContainText("1 unit = 1 mm (your answer: the drawing did not settle its unit)");
+  await expect(page.getByTestId("axis-width")).toContainText("1 unit = 1 mm (your choice of unit)");
 });
 
 test("a DWG, a cancelled upload and unsaved changes all leave the current scene as it was", async ({ page }) => {
@@ -193,8 +197,8 @@ test("a DWG, a cancelled upload and unsaved changes all leave the current scene 
 
   // Unsupported geometry is listed, never silently dropped.
   await dialog.getByTestId("drawing-file-input").setInputFiles(drawing("unsupported-mm.dxf"));
-  await expect(dialog.getByTestId("drawing-skipped")).toContainText("9 shapes not imported");
-  await expect(dialog.getByTestId("drawing-skipped-circle")).toContainText("1 CIRCLE on layer S-COLS (105): Circles are not in the supported subset");
+  await expect(dialog.getByTestId("drawing-skipped")).toContainText("6 shapes not imported");
+  await expect(dialog.getByTestId("drawing-skipped-spline")).toContainText("1 SPLINE on layer EQUIPMENT (107): Splines are not in the supported subset");
 
   // Cancel while the drawing is being read.
   await page.route("**/api/v1/sources/drawings*", async (route) => {

@@ -40,19 +40,24 @@ describe("a draft world from a drawing", () => {
     expect(press.id).toBe("obj-dxf-104");
     expect(press.transform).toEqual({ position_m: { x: -8.5, y: 0, z: 5 }, rotation_rad: { order: "XYZ", x: 0, y: 0, z: 0 } });
     expect([press.dimensions.width.value_m, press.dimensions.depth.value_m]).toEqual([3, 2]);
-    expect(press.dimensions.width).toMatchObject({ origin: "measured", review_status: "unreviewed" });
+    expect(press.dimensions.width).toMatchObject({ origin: "drawn", review_status: "unreviewed" });
     expect(press.dimensions.width.source_ref).toBe(
-      "Drawn in hall-mm.dxf: LWPOLYLINE 104 on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). The drawing's size, not a site measurement.",
+      "Drawn in hall-mm.dxf: LWPOLYLINE 104 on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
     );
     expect(press.dimensions.height).toMatchObject({ value_m: 2.2, origin: "default", review_status: "unreviewed" });
     expect(press.dimensions.height.source_ref).toContain("not in the drawing and not measured");
     expect(isVerified(press.dimensions.height)).toBe(false);
-    expect(isVerified(press.dimensions.width)).toBe(true);
+    expect(isVerified(press.dimensions.width)).toBe(false); // design geometry, not a measurement
 
     const table = project.scene.objects.find((o) => o.name === "Packing table")!;
     expect((table.transform.rotation_rad.y * 180) / Math.PI).toBeCloseTo(15, 3);
     const floor = project.scene.objects[0]!;
-    expect([floor.name, floor.kind, floor.transform.position_m.y, floor.dimensions.height.value_m]).toEqual(["Floor", "structure", -0.1, 0.1]);
+    expect([floor.id, floor.name, floor.kind, floor.transform.position_m.y, floor.dimensions.height.value_m]).toEqual(["obj-dxf-floor", "Floor", "structure", -0.1, 0.1]);
+    expect(project.sources[0]?.drawing?.review).toMatchObject({
+      floor: { choice: "outline", drawn_id: "dxf-101", object_id: "obj-dxf-floor", status: "proposed" },
+      scale: { basis: "drawing_unit", unit: "mm", status: "unchecked" },
+      omissions: "proposed",
+    });
     const walkway = project.scene.objects.find((o) => o.kind === "walkway")!;
     expect(walkway.dimensions.height.value_m).toBe(0.005);
     expect(drawnFrom(project, press.id)?.drawn.refs[0]).toEqual({ handle: "104", layer: "EQUIPMENT", entity: "LWPOLYLINE", block: null });
@@ -68,7 +73,8 @@ describe("a draft world from a drawing", () => {
     expect(validateProject(project).ok).toBe(true);
     expect(project.sources[0]?.drawing?.units.basis).toBe("user_supplied");
     const saw = project.scene.objects.find((o) => o.name === "Saw")!;
-    expect(saw.dimensions.width.source_ref).toContain("1 unit = 1 mm (your answer: the drawing did not settle its unit)");
+    expect(saw.dimensions.width.source_ref).toContain("1 unit = 1 mm (your choice of unit)");
+    expect(project.sources[0]?.drawing?.review?.scale).toMatchObject({ basis: "chosen_unit", status: "confirmed" });
   });
 });
 
@@ -77,8 +83,8 @@ describe("comparing with the drawing", () => {
 
   it("finds every object as drawn before anything changes", () => {
     const comparison = compareWithDrawing(project)!;
-    expect(comparison.counts).toEqual({ unchanged: 12, changed: 0, removed: 0, added: 0 });
-    expect(summary(comparison.counts)).toBe("12 as drawn");
+    expect(comparison.counts).toEqual({ unchanged: 11, changed: 0, removed: 0, added: 0 });
+    expect(summary(comparison.counts)).toBe("11 as drawn");
   });
 
   it("reports a move through the editor, keeps the source link, and undo restores the drawing", () => {

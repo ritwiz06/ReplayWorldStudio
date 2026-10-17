@@ -1,9 +1,12 @@
 // The drawing as a plan (ONB-01): its lines, texts and the objects drawn from it, in drawing
 // units with +Y up. Optionally the current arrangement over it: an object moved since the
-// import is drawn where it is now, with a dashed outline where the drawing has it.
-import type { DrawingImport, DrawingObject, Project } from "@replay-world/contracts";
-import { type KeyboardEvent, useMemo } from "react";
-import { type DrawingSource, footprintOnPlan } from "../drawing/world";
+// import is drawn where it is now, with a dashed outline where the drawing has it. For the
+// review (IMP-02) it shows each outline's review status, lets the person pick an outline as
+// the floor, and marks two points (snapped to the drawing's corners and centres) for a known
+// length.
+import type { DrawingImport, DrawingObject, PlanPoint, Project } from "@replay-world/contracts";
+import { type KeyboardEvent, type MouseEvent, useMemo } from "react";
+import { type DrawingSource, footprintOnPlan, type Reviewed } from "../drawing/world";
 
 interface Props {
   drawing: DrawingImport;
@@ -17,7 +20,20 @@ interface Props {
   metresPerUnit?: number | null | undefined;
   testId: string;
   title: string;
+  /** The review's status per drawn object (decides which outline is the floor). */
+  statuses?: ReadonlyMap<string, Reviewed> | undefined;
+  /** "floor": every outline can be picked; "measure": clicks mark points. */
+  mode?: "select" | "floor" | "measure" | undefined;
+  /** Called with the drawn object clicked (instead of `onSelect`) when given. */
+  onDrawn?: ((drawn: DrawingObject) => void) | undefined;
+  /** A drawn object focused in the review that has no scene object. */
+  focusDrawnId?: string | null | undefined;
+  /** Measure mode: a clicked point, snapped to the nearest corner or centre within 12 px. */
+  onPoint?: ((point: PlanPoint) => void) | undefined;
+  marks?: readonly PlanPoint[] | undefined;
 }
+
+const SNAP_PX = 12;
 
 const KIND_CLASS: Record<DrawingObject["kind"], string> = {
   equipment: "plan-equipment",
@@ -85,38 +101,74 @@ function scaleLength(spanM: number): number {
   return [1, 2, 5, 10].map((k) => k * step).filter((v) => v <= target).at(-1) ?? step;
 }
 
-export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId, title, metresPerUnit }: Props) {
+export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId, title, metresPerUnit, statuses, mode = "select", onDrawn, focusDrawnId, onPoint, marks }: Props) {
   const { extent_min: lo, extent_max: hi } = drawing;
   const span = Math.max(hi.x - lo.x, hi.y - lo.y, 1e-9);
   const margin = span * 0.04;
   const font = span / 42;
   const viewBox = `${lo.x - margin} ${-(hi.y + margin)} ${hi.x - lo.x + 2 * margin} ${hi.y - lo.y + 2 * margin}`;
   const live = useMemo(() => new Map(now?.project.scene.objects.map((o) => [o.id, o]) ?? []), [now?.project]);
-  const objects = useMemo(() => [...drawing.objects].sort((a, b) => Number(b.role === "floor") - Number(a.role === "floor")), [drawing.objects]);
+  const isFloor = useMemo(() => (d: DrawingObject) => (statuses ? statuses.get(d.id) === "used_as_floor" : d.role === "floor"), [statuses]);
+  const objects = useMemo(() => [...drawing.objects].sort((a, b) => Number(isFloor(b)) - Number(isFloor(a))), [drawing.objects, isFloor]);
+  const snapTargets = useMemo(
+    () => [...drawing.lines.flatMap((l) => l.points), ...drawing.objects.map((o) => o.centre)],
+    [drawing.lines, drawing.objects],
+  );
   const shapes = useMemo(
     () =>
       objects
-        .filter((d) => d.role !== "floor" && (labels === "all" || d.object_id === selectedId))
+        .filter((d) => !isFloor(d) && statuses?.get(d.id) !== "not_an_object" && (labels === "all" || d.object_id === selectedId || d.id === focusDrawnId))
         .map((d) => {
           const current = now ? live.get(d.object_id) : undefined;
           const outline = current && now?.moved.has(d.object_id) ? footprintOnPlan(now.source.source_to_world, current) : d.outline;
           return { id: d.id, text: current?.name ?? d.label, outline };
         }),
-    [objects, labels, selectedId, now, live],
+    [objects, labels, selectedId, now, live, isFloor, statuses, focusDrawnId],
   );
   const placed = useMemo(() => placeLabels(shapes, font), [shapes, font]);
   const bar = metresPerUnit ? scaleLength(span * metresPerUnit) : null;
 
-  const select = (id: string) => onSelect?.(id);
-  const onKey = (id: string) => (e: KeyboardEvent) => {
+  const choose = (drawn: DrawingObject) => (onDrawn ? onDrawn(drawn) : onSelect?.(drawn.object_id));
+  const onKey = (drawn: DrawingObject) => (e: KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      select(id);
+      choose(drawn);
     }
   };
 
+  function mark(e: MouseEvent<SVGSVGElement>) {
+    if (mode !== "measure" || !onPoint) return;
+    const svg = e.currentTarget;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const local = pt.matrixTransform(ctm.inverse());
+    const clicked = { x: local.x, y: -local.y };
+    const tolerance = SNAP_PX / Math.abs(ctm.a);
+    let best: PlanPoint | null = null;
+    let bestDistance = tolerance;
+    for (const target of snapTargets) {
+      const distance = Math.hypot(target.x - clicked.x, target.y - clicked.y);
+      if (distance <= bestDistance) {
+        best = target;
+        bestDistance = distance;
+      }
+    }
+    onPoint(best ? { x: best.x, y: best.y } : clicked);
+  }
+
   return (
-    <svg className="drawing-plan" viewBox={viewBox} role="img" aria-label={title} data-testid={testId} preserveAspectRatio="xMidYMid meet">
+    <svg
+      className={`drawing-plan plan-mode-${mode}`}
+      viewBox={viewBox}
+      role="img"
+      aria-label={title}
+      data-testid={testId}
+      preserveAspectRatio="xMidYMid meet"
+      onClick={mark}
+    >
       <title>{title}</title>
       <g className="plan-lines">
         {drawing.lines.map((line, i) =>
@@ -124,21 +176,36 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
         )}
       </g>
       {objects.map((drawn) => {
-        const floor = drawn.role === "floor";
+        const floor = isFloor(drawn);
+        const notObject = statuses?.get(drawn.id) === "not_an_object";
         const current = now ? live.get(drawn.object_id) : undefined;
         const moved = now?.moved.has(drawn.object_id) ?? false;
-        const removed = now !== undefined && current === undefined;
-        const selected = drawn.object_id === selectedId;
+        const removed = !floor && !notObject && now !== undefined && current === undefined;
+        const selected = drawn.object_id === selectedId || drawn.id === focusDrawnId;
         const shape = current && moved && now ? footprintOnPlan(now.source.source_to_world, current) : drawn.outline;
-        const state = removed ? "removed" : moved ? "moved" : "drawn";
-        const interactive = !floor && !removed && onSelect !== undefined;
+        const state = notObject ? "not-object" : removed ? "removed" : moved ? "moved" : "drawn";
+        const interactive =
+          mode === "floor" ? onDrawn !== undefined : mode === "select" && !floor && (onDrawn !== undefined || (!removed && !notObject && onSelect !== undefined));
+        const kindClass = notObject ? "plan-not-object" : KIND_CLASS[drawn.kind];
         return (
           <g
             key={drawn.id}
-            className={`plan-object ${floor ? "plan-floor" : KIND_CLASS[drawn.kind]} plan-${state}${selected ? " selected" : ""}`}
+            className={`plan-object ${floor ? "plan-floor" : kindClass} plan-${state}${selected ? " selected" : ""}`}
             data-testid={`${testId}-object-${drawn.object_id}`}
-            data-state={state}
-            {...(interactive ? { role: "button", tabIndex: 0, "aria-label": `${drawn.label} (${state === "moved" ? "moved since the drawing" : "as drawn"})`, onClick: () => select(drawn.object_id), onKeyDown: onKey(drawn.object_id) } : {})}
+            data-drawn={drawn.id}
+            data-state={floor ? "floor" : state}
+            {...(interactive
+              ? {
+                  role: "button",
+                  tabIndex: 0,
+                  "aria-label": mode === "floor" ? `Use ${drawn.label} as the floor` : `${drawn.label} (${state === "moved" ? "moved since the drawing" : notObject ? "not an object" : "as drawn"})`,
+                  onClick: (e: MouseEvent) => {
+                    e.stopPropagation();
+                    choose(drawn);
+                  },
+                  onKeyDown: onKey(drawn),
+                }
+              : {})}
           >
             <title>{current?.name ?? drawn.label}</title>
             {moved && <polygon className="plan-original" points={points(drawn.outline)} vectorEffect="non-scaling-stroke" />}
@@ -165,6 +232,14 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
           );
         })}
       </g>
+      {marks && marks.length > 0 && (
+        <g className="plan-marks" data-testid={`${testId}-marks`}>
+          {marks.length === 2 && <line x1={marks[0]!.x} y1={-marks[0]!.y} x2={marks[1]!.x} y2={-marks[1]!.y} vectorEffect="non-scaling-stroke" />}
+          {marks.map((m, i) => (
+            <circle key={i} cx={m.x} cy={-m.y} r={font * 0.35} vectorEffect="non-scaling-stroke" />
+          ))}
+        </g>
+      )}
       {bar && metresPerUnit && (
         <g className="plan-scale" data-testid={`${testId}-scale`}>
           <line x1={lo.x} y1={-lo.y + margin * 0.55} x2={lo.x + bar / metresPerUnit} y2={-lo.y + margin * 0.55} vectorEffect="non-scaling-stroke" />
