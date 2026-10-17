@@ -791,6 +791,61 @@ Append entries in chronological order. If a live repository session log already 
   - GEN-09 open on independent review.
 - **Next concrete task:** IMP-02 (review of the draft: walls, measured scale, corrections in place), or GEO-01 on the user's priority.
 
+### 2026-10-16 - IMP-02 essential review and the UX-01 simple screen (contract 0.10.0)
+
+- **Active milestone / issue:** M4; IMP-02, UX-01 (GEO-01/02 evidence rule).
+- **Starting commit:** `cf651ef`.
+- **Commits:**
+  - `6458387`: contract 0.10.0 and the reader;
+  - `05194ab`: the web review and the simple screen;
+  - `0599387`: docs and backlog;
+  - this records commit.
+- **Goal:** correct a draft from a drawing in minutes, and make sure a corrected layout can safely feed later geometric checks.
+- **Evidence decision (ADR-051):**
+  - `drawn` is a new origin for design-drawing geometry. It is not verified; it is design evidence.
+  - Footprints from ONB-01 were `measured`, so `is_verified` would have accepted them as site measurements. The 0.9.0 migration weakens them to `drawn`, adds an unchecked review and a conservative `footprint_fit`, and rewrites no history.
+  - A readiness rule decides what a check may claim:
+    - as built only on measured or supplier values;
+    - design layout only on a reviewed drawing with exact footprints and accepted omissions;
+    - "height needed" for display heights;
+    - otherwise "not evaluated".
+- **Work completed:**
+  - **The review panel:**
+    - the floor: accept, another outline, or sized around the objects;
+    - the scale: confirm, choose a unit, or one known length from two snapped points, with the 2 % rule; both values kept;
+    - objects: rename, change the kind, not an object, make an object again, accept the rest;
+    - omissions.
+  - Each answer is one `drawing_reviewed` edit with a source snapshot; undo and redo restore it.
+  - **The reader:** circles, arcs and arc segments; `footprint_fit`; text naming fixed (a note inside a building no longer names it).
+  - **Fixture:** `warehouse-cm.dxf`, which fools the floor rule and the unit.
+  - **Simple screen:**
+    - the selection card (check it, move, turn, resize, details);
+    - Details hides the list, catalog, inspector, change bar, scene picker and engineering status;
+    - "Go to the full editor" opens Details.
+- **Fixed while inspecting the screens:**
+  - the review plan inherited the upload dialog's layout class;
+  - the object card kept the previous object's name. Leaving the field would have renamed the next object; caught in a screenshot.
+  - Compare listed review set-asides as removals and drew the floor's outline as removed.
+  - Rotate and resize were reachable only by keyboard on the simple screen.
+  - "1 not objects".
+- **Commands and outcomes:**
+  - `pnpm check`: exit 0 (pytest 804; Vitest 194 + 10).
+  - Full Playwright suite: 51 passed, 20 skipped.
+  - `e2e/drawing-review.spec.ts` (smoke): passed.
+  - CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39009389061 green on both jobs (`0599387`).
+- **Visual evidence:** docs/imp-02/ (8 screens at 1440 × 900 and at 1280 × 800).
+- **Known limitations:** IMP-02 is still open:
+  - split and merge;
+  - mapping to catalog or generated models;
+  - wall solids;
+  - closing an open shape;
+  - more than one known length, rotation, non-uniform scale.
+- **Effort:** about 1 h (05:26 to 06:22 UTC, 22:26 to 23:22 MST), all active, including one CI run.
+- **Milestone status:** M4 in progress:
+  - ONB-01, IMP-01 and UX-01 done;
+  - IMP-02 and AGT-01 open.
+- **Next concrete task:** GEO-01 through the readiness rule, or the rest of IMP-02, on the user's priority.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title
