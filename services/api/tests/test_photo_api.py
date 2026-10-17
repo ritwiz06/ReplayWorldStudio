@@ -97,6 +97,7 @@ def photo_project(stored: StoredPhoto) -> str:
             ],
             "visible_text": [],
         },
+        "drawing": None,
     }
     document = json.loads(FOUNDATION.read_text())
     document["sources"].append(source)

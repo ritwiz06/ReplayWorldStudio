@@ -28,6 +28,13 @@ Conventions (see docs/contracts.md):
   the reconstructed floor mapping, and one observation per detected object - accepted or
   rejected - linked to the scene object it became. Image positions are fractions of the
   displayed image, so they do not depend on its resolution.
+* A drawing source keeps the original DXF file (named by its sha256 in the local source
+  library), the units and how they were established, the plan geometry read from it in drawing
+  units with each entity's handle and layer, the layout objects drawn from it linked to the scene
+  objects they became, and every entity that was not used, with the reason.
+* A ``default`` value is a display placeholder: it can never be ``confirmed``. A check that needs
+  a verified value accepts only ``measured``, ``supplier`` and ``user_supplied`` evidence
+  (:func:`is_verified`); an estimate or a display default means the value is still needed.
 
 JSON Schema and TypeScript types are generated from these models by
 ``scripts/contracts.mjs``; never edit the generated files by hand. Older documents are
@@ -47,7 +54,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.8.0"]
+SchemaVersion = Literal["0.9.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -87,6 +94,10 @@ NOMINAL_MATCH_TOLERANCE_M: Final = 1e-3
 
 Origin = Literal["measured", "user_supplied", "supplier", "inferred", "default"]
 """Where a known value came from. 'default' and 'inferred' values must stay visibly distinct."""
+VERIFIED_ORIGINS: Final[tuple[Origin, ...]] = ("measured", "supplier", "user_supplied")
+"""Evidence a check may rely on. 'inferred' is an estimate and 'default' a display placeholder:
+a check that needs such a value reports it as needed (for example "height needed") instead of
+using it."""
 
 ReviewStatus = Literal["unreviewed", "confirmed"]
 Axis = Literal["width", "height", "depth"]
@@ -157,6 +168,15 @@ class Length(ContractModel):
     uncertainty_m: UncertaintyBounds | None
 
     @model_validator(mode="after")
+    def _default_is_never_confirmed(self) -> Length:
+        if self.origin == "default" and self.review_status == "confirmed":
+            raise ValueError(
+                "a default length is a display placeholder and cannot be confirmed; enter the "
+                "real value instead (it is then user_supplied)"
+            )
+        return self
+
+    @model_validator(mode="after")
     def _value_within_uncertainty(self) -> Length:
         u = self.uncertainty_m
         if u is None:
@@ -169,6 +189,15 @@ class Length(ContractModel):
                 f"[{u.lower}, {u.upper}] m"
             )
         return self
+
+
+def is_verified(length: Length) -> bool:
+    """Whether a check may rely on ``length``: measured, supplier or user-supplied evidence.
+
+    An inferred value is an estimate and a default a display placeholder; neither is ever used
+    as if it were known. A check that needs one reports the value as needed instead.
+    """
+    return length.origin in VERIFIED_ORIGINS
 
 
 class Dimensions(ContractModel):
@@ -1138,12 +1167,173 @@ class PhotoImport(ContractModel):
         return self
 
 
+# --- Drawing sources -------------------------------------------------------------------------
+
+DRAWING_PATH_PATTERN: Final = r"^drawings/[0-9a-f]{64}\.dxf$"
+"""Source-library-relative path of a stored drawing: ``drawings/<sha256>.dxf``."""
+DrawingPath = Annotated[str, StringConstraints(pattern=DRAWING_PATH_PATTERN)]
+MAX_DRAWING_BYTES: Final = 10 * 1024 * 1024
+MAX_DRAWING_LINES: Final = 5000
+MAX_DRAWING_OBJECTS: Final = 400
+MAX_DRAWING_LABELS: Final = 500
+METRES_PER_UNIT: Final[dict[str, float]] = {
+    "m": 1.0,
+    "cm": 0.01,
+    "mm": 0.001,
+    "in": 0.0254,
+    "ft": 0.3048,
+}
+"""Exact metres per drawing unit; a drawing's ``source_to_world`` uses one of these."""
+DxfHandle = Annotated[str, StringConstraints(pattern=r"^[0-9A-F]{1,16}$")]
+DrawingEntity = Literal["LINE", "LWPOLYLINE", "POLYLINE", "INSERT", "TEXT", "MTEXT"]
+"""Entity types in the supported subset (TEXT and MTEXT only name things)."""
+
+
+class PlanPoint(ContractModel):
+    """A point on the drawing, in drawing units (DXF world coordinates)."""
+
+    x: float
+    y: float
+
+
+class DrawingRef(ContractModel):
+    """One entity in the drawing: its handle, layer and type, and the block it was drawn in."""
+
+    handle: DxfHandle | None = Field(description="The entity's DXF handle; null if it has none.")
+    layer: NonEmptyText
+    entity: DrawingEntity
+    block: NonEmptyText | None = Field(
+        description="For geometry inside a block: the block names from the drawing down, "
+        "separated by ' > '; null for an entity drawn directly in model space."
+    )
+
+
+class PlanLine(ContractModel):
+    """A straight-segment line or polyline on the plan, in drawing units."""
+
+    ref: DrawingRef
+    points: list[PlanPoint] = Field(min_length=2, max_length=2000)
+    closed: bool
+
+
+class PlanLabel(ContractModel):
+    """A text on the plan, recorded as content (never followed as an instruction)."""
+
+    ref: DrawingRef
+    text: NonEmptyText
+    at: PlanPoint
+
+
+class DrawingObject(ContractModel):
+    """A layout object drawn from the drawing, and the scene object it became.
+
+    ``outline`` is the shape as drawn (a closed polyline's vertices, or a block's extent after
+    its insertion transform). ``centre``, ``width``, ``depth`` and ``rotation_rad`` give the
+    footprint rectangle the scene object was placed with, in drawing units; the rotation is
+    counter-clockwise on the plan, from the drawing's +X axis to the footprint's width.
+    """
+
+    id: StableId
+    object_id: StableId
+    role: Literal["floor", "footprint"] = Field(
+        description="'floor': the outer outline, built as the floor slab; 'footprint': something "
+        "standing or marked on the floor."
+    )
+    label: NonEmptyText
+    label_from: Literal["attribute", "text", "block", "layer", "generic"] = Field(
+        description="Where the name came from: a block attribute, a text inside the outline, "
+        "the block name, the layer name, or a plain description such as 'Floor'."
+    )
+    kind: ObjectKind
+    refs: list[DrawingRef] = Field(min_length=1, max_length=20)
+    outline: list[PlanPoint] = Field(min_length=3, max_length=2000)
+    centre: PlanPoint
+    width: float = Field(gt=0, description="Footprint along its rotated X, in drawing units.")
+    depth: float = Field(gt=0, description="Footprint along its rotated Y, in drawing units.")
+    rotation_rad: float
+    notes: list[NonEmptyText]
+
+
+class SkippedEntities(ContractModel):
+    """Entities of one type on one layer that were not used, and why."""
+
+    entity: NonEmptyText = Field(description="The DXF entity type, e.g. CIRCLE.")
+    layer: NonEmptyText
+    count: int = Field(ge=1)
+    handles: list[DxfHandle] = Field(max_length=10, description="Up to ten of their handles.")
+    layout: bool = Field(
+        description="True if it may be layout geometry (a shape that was not imported); false "
+        "for annotation such as dimensions."
+    )
+    reason: NonEmptyText
+
+
+class DrawingUnits(ContractModel):
+    """What the drawing says about its units, and how the unit used was established."""
+
+    insunits: int | None = Field(description="The header's $INSUNITS code; null if absent.")
+    declared: LengthUnit | None = Field(
+        description="The unit $INSUNITS names, when it is one of the supported length units."
+    )
+    measurement: Literal["metric", "imperial"] | None = Field(
+        description="The header's $MEASUREMENT; null if absent."
+    )
+    question: NonEmptyText | None = Field(
+        description="Why the unit cannot be taken from the drawing as it stands (absent, "
+        "unsupported, conflicting or implausible); null when the header settles it."
+    )
+    basis: Literal["drawing_header", "user_supplied"] | None = Field(
+        description="How the unit in source_to_world was established; null only in an "
+        "analysis, before anyone has decided."
+    )
+
+    @model_validator(mode="after")
+    def _basis_needs_a_settled_header(self) -> DrawingUnits:
+        if self.basis == "drawing_header" and (self.declared is None or self.question is not None):
+            raise ValueError(
+                "a unit taken from the drawing header needs a declared unit and no open question"
+            )
+        return self
+
+
+class DrawingFile(ContractModel):
+    uri: DrawingPath
+    bytes: int = Field(ge=1, le=MAX_DRAWING_BYTES)
+
+
+class DrawingImport(ContractModel):
+    """The deterministic reading of one DXF drawing (IMP-01), kept with the project."""
+
+    reader: Literal["rws-dxf/1"]
+    file: DrawingFile
+    dxf_version: NonEmptyText | None = Field(description="The header's $ACADVER, if present.")
+    units: DrawingUnits
+    layers: list[NonEmptyText]
+    extent_min: PlanPoint
+    extent_max: PlanPoint
+    lines: list[PlanLine] = Field(max_length=MAX_DRAWING_LINES)
+    labels: list[PlanLabel] = Field(max_length=MAX_DRAWING_LABELS)
+    objects: list[DrawingObject] = Field(max_length=MAX_DRAWING_OBJECTS)
+    skipped: list[SkippedEntities]
+
+    @model_validator(mode="after")
+    def _consistent(self) -> DrawingImport:
+        _require_unique((o.id for o in self.objects), "drawing object id")
+        _require_unique((o.object_id for o in self.objects), "object drawn from the drawing")
+        if sum(o.role == "floor" for o in self.objects) > 1:
+            raise ValueError("a drawing has at most one floor outline")
+        if self.extent_min.x > self.extent_max.x or self.extent_min.y > self.extent_max.y:
+            raise ValueError("the drawing extent's minimum exceeds its maximum")
+        return self
+
+
 class SourceDocument(ContractModel):
     """Where scene content came from.
 
     A drawing or plan has a single ``source_to_world`` transform. A ``photo`` has none - a
     perspective photo maps to the floor only through its calibration - and instead carries its
-    stored ``image`` and the reviewed ``photo_import``.
+    stored ``image`` and the reviewed ``photo_import``. An imported DXF drawing also carries its
+    ``drawing`` reading (0.9.0); its transform uses the unit that reading settled.
     """
 
     id: StableId
@@ -1154,6 +1344,41 @@ class SourceDocument(ContractModel):
     import_warnings: list[NonEmptyText]
     image: SourceImage | None
     photo_import: PhotoImport | None
+    drawing: DrawingImport | None
+
+    @model_validator(mode="after")
+    def _drawing_shape(self) -> SourceDocument:
+        drawing = self.drawing
+        if drawing is None:
+            return self
+        if self.kind != "dxf":
+            raise ValueError(f"only a dxf source carries a drawing reading ('{self.id}')")
+        if self.filename is None or self.sha256 is None:
+            raise ValueError(f"drawing source '{self.id}' needs its filename and sha256")
+        if drawing.file.uri != f"drawings/{self.sha256}.dxf":
+            raise ValueError(
+                f"drawing source '{self.id}': the stored file name must be its sha256 "
+                f"({self.sha256})"
+            )
+        units, transform = drawing.units, self.source_to_world
+        if units.basis is None:
+            raise ValueError(
+                f"drawing source '{self.id}': the unit was never settled (units.basis is null)"
+            )
+        if transform is None:
+            return self  # reported by the general shape check
+        if units.basis == "drawing_header" and transform.source_unit != units.declared:
+            raise ValueError(
+                f"drawing source '{self.id}' takes its unit from the header ({units.declared}) "
+                f"but its transform uses {transform.source_unit}"
+            )
+        expected = METRES_PER_UNIT[transform.source_unit]
+        if abs(transform.metres_per_source_unit - expected) > 1e-12:
+            raise ValueError(
+                f"drawing source '{self.id}': {transform.source_unit} is {expected} m per unit, "
+                f"not {transform.metres_per_source_unit}"
+            )
+        return self
 
     @model_validator(mode="after")
     def _photo_shape(self) -> SourceDocument:
@@ -1245,6 +1470,12 @@ class Project(ContractModel):
         live = {o.id for o in self.scene.objects}
         removed = {r.object.id for r in self.scene.edit_log if isinstance(r, ObjectRemoved)}
         for source in self.sources:
+            for drawn in source.drawing.objects if source.drawing else []:
+                if drawn.object_id not in live and drawn.object_id not in removed:
+                    raise ValueError(
+                        f"drawing source '{source.id}' object '{drawn.id}' became object "
+                        f"'{drawn.object_id}', which is not in the scene and was not removed"
+                    )
             if source.photo_import is None:
                 continue
             for observation in source.photo_import.observations:

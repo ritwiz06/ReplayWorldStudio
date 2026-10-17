@@ -15,6 +15,7 @@ from pydantic_core import CoreSchema
 
 from .assist import (
     AssistStatus,
+    DrawingAnalysis,
     EditProposalRequest,
     EditProposalResult,
     GeneratedAssetRequest,
@@ -62,6 +63,7 @@ ROOT_MODELS: Final[tuple[type[BaseModel], ...]] = (
     GeneratedAssetRevisionRequest,
     ModelRevisionProposalRequest,
     ModelRevisionProposalResult,
+    DrawingAnalysis,
 )
 BUNDLE_ID: Final = f"urn:replay-world:contracts:{SCHEMA_VERSION}"
 

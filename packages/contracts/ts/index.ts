@@ -5,6 +5,7 @@ import bundle from "../schema/contracts.schema.json";
 import type {
   AssistStatus,
   CatalogAsset,
+  DrawingAnalysis,
   EditProposalResult,
   GeneratedModel,
   GeneratedModelRestoreReport,
@@ -22,7 +23,7 @@ import type {
 
 export type * from "./generated/contracts";
 
-export const SCHEMA_VERSION: Project["schema_version"] = "0.8.0";
+export const SCHEMA_VERSION: Project["schema_version"] = "0.9.0";
 
 /** One structural problem, located by a JSON Pointer such as `/scene/objects/2/dimensions`. */
 export interface ContractIssue {
@@ -76,3 +77,4 @@ export const validateGeometryDraft = validatorFor<GeometryDraft>("GeometryDraft"
 export const validateImageProposalResult = validatorFor<ImageProposalResult>("ImageProposalResult");
 export const validateStoredPhoto = validatorFor<StoredPhoto>("StoredPhoto");
 export const validateModelRevisionProposalResult = validatorFor<ModelRevisionProposalResult>("ModelRevisionProposalResult");
+export const validateDrawingAnalysis = validatorFor<DrawingAnalysis>("DrawingAnalysis");

@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.8.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.9.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -30,9 +30,10 @@ export interface ReplayWorldContracts {
   GeneratedAssetRevisionRequest: GeneratedAssetRevisionRequest;
   ModelRevisionProposalRequest: ModelRevisionProposalRequest;
   ModelRevisionProposalResult: ModelRevisionProposalResult;
+  DrawingAnalysis: DrawingAnalysis;
 }
 export interface Project {
-  schema_version: "0.8.0";
+  schema_version: "0.9.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -68,7 +69,8 @@ export interface FixtureLabel {
  *
  * A drawing or plan has a single ``source_to_world`` transform. A ``photo`` has none - a
  * perspective photo maps to the floor only through its calibration - and instead carries its
- * stored ``image`` and the reviewed ``photo_import``.
+ * stored ``image`` and the reviewed ``photo_import``. An imported DXF drawing also carries its
+ * ``drawing`` reading (0.9.0); its transform uses the unit that reading settled.
  */
 export interface SourceDocument {
   /**
@@ -82,6 +84,7 @@ export interface SourceDocument {
   import_warnings: string[];
   image: SourceImage | null;
   photo_import: PhotoImport | null;
+  drawing: DrawingImport | null;
 }
 /**
  * Maps a 2D source plan (drawing) point to world metres.
@@ -295,6 +298,383 @@ export interface ImageBox {
   top: number;
   right: number;
   bottom: number;
+}
+/**
+ * The deterministic reading of one DXF drawing (IMP-01), kept with the project.
+ */
+export interface DrawingImport {
+  reader: "rws-dxf/1";
+  file: DrawingFile;
+  /**
+   * The header's $ACADVER, if present.
+   */
+  dxf_version: string | null;
+  units: DrawingUnits;
+  layers: string[];
+  extent_min: PlanPoint;
+  extent_max: PlanPoint;
+  /**
+   * @maxItems 5000
+   */
+  lines: PlanLine[];
+  /**
+   * @maxItems 500
+   */
+  labels: PlanLabel[];
+  /**
+   * @maxItems 400
+   */
+  objects: DrawingObject[];
+  skipped: SkippedEntities[];
+}
+export interface DrawingFile {
+  uri: string;
+  bytes: number;
+}
+/**
+ * What the drawing says about its units, and how the unit used was established.
+ */
+export interface DrawingUnits {
+  /**
+   * The header's $INSUNITS code; null if absent.
+   */
+  insunits: number | null;
+  /**
+   * The unit $INSUNITS names, when it is one of the supported length units.
+   */
+  declared: ("m" | "cm" | "mm" | "in" | "ft") | null;
+  /**
+   * The header's $MEASUREMENT; null if absent.
+   */
+  measurement: ("metric" | "imperial") | null;
+  /**
+   * Why the unit cannot be taken from the drawing as it stands (absent, unsupported, conflicting or implausible); null when the header settles it.
+   */
+  question: string | null;
+  /**
+   * How the unit in source_to_world was established; null only in an analysis, before anyone has decided.
+   */
+  basis: ("drawing_header" | "user_supplied") | null;
+}
+/**
+ * A point on the drawing, in drawing units (DXF world coordinates).
+ */
+export interface PlanPoint {
+  x: number;
+  y: number;
+}
+/**
+ * A straight-segment line or polyline on the plan, in drawing units.
+ */
+export interface PlanLine {
+  ref: DrawingRef;
+  /**
+   * @minItems 2
+   * @maxItems 2000
+   */
+  points: [PlanPoint, PlanPoint, ...PlanPoint[]];
+  closed: boolean;
+}
+/**
+ * One entity in the drawing: its handle, layer and type, and the block it was drawn in.
+ */
+export interface DrawingRef {
+  /**
+   * The entity's DXF handle; null if it has none.
+   */
+  handle: string | null;
+  layer: string;
+  entity: "LINE" | "LWPOLYLINE" | "POLYLINE" | "INSERT" | "TEXT" | "MTEXT";
+  /**
+   * For geometry inside a block: the block names from the drawing down, separated by ' > '; null for an entity drawn directly in model space.
+   */
+  block: string | null;
+}
+/**
+ * A text on the plan, recorded as content (never followed as an instruction).
+ */
+export interface PlanLabel {
+  ref: DrawingRef;
+  text: string;
+  at: PlanPoint;
+}
+/**
+ * A layout object drawn from the drawing, and the scene object it became.
+ *
+ * ``outline`` is the shape as drawn (a closed polyline's vertices, or a block's extent after
+ * its insertion transform). ``centre``, ``width``, ``depth`` and ``rotation_rad`` give the
+ * footprint rectangle the scene object was placed with, in drawing units; the rotation is
+ * counter-clockwise on the plan, from the drawing's +X axis to the footprint's width.
+ */
+export interface DrawingObject {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  id: string;
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  object_id: string;
+  /**
+   * 'floor': the outer outline, built as the floor slab; 'footprint': something standing or marked on the floor.
+   */
+  role: "floor" | "footprint";
+  label: string;
+  /**
+   * Where the name came from: a block attribute, a text inside the outline, the block name, the layer name, or a plain description such as 'Floor'.
+   */
+  label_from: "attribute" | "text" | "block" | "layer" | "generic";
+  kind: "structure" | "equipment" | "reference" | "walkway" | "keep_clear";
+  /**
+   * @minItems 1
+   * @maxItems 20
+   */
+  refs:
+    | [DrawingRef]
+    | [DrawingRef, DrawingRef]
+    | [DrawingRef, DrawingRef, DrawingRef]
+    | [DrawingRef, DrawingRef, DrawingRef, DrawingRef]
+    | [DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef]
+    | [DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef]
+    | [DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef]
+    | [DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef]
+    | [DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef, DrawingRef]
+    | [
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef
+      ]
+    | [
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef
+      ]
+    | [
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef
+      ]
+    | [
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef
+      ]
+    | [
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef
+      ]
+    | [
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef
+      ]
+    | [
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef
+      ]
+    | [
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef
+      ]
+    | [
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef
+      ]
+    | [
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef
+      ]
+    | [
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef,
+        DrawingRef
+      ];
+  /**
+   * @minItems 3
+   * @maxItems 2000
+   */
+  outline: [PlanPoint, PlanPoint, PlanPoint, ...PlanPoint[]];
+  centre: PlanPoint;
+  /**
+   * Footprint along its rotated X, in drawing units.
+   */
+  width: number;
+  /**
+   * Footprint along its rotated Y, in drawing units.
+   */
+  depth: number;
+  rotation_rad: number;
+  notes: string[];
+}
+/**
+ * Entities of one type on one layer that were not used, and why.
+ */
+export interface SkippedEntities {
+  /**
+   * The DXF entity type, e.g. CIRCLE.
+   */
+  entity: string;
+  layer: string;
+  count: number;
+  /**
+   * Up to ten of their handles.
+   *
+   * @maxItems 10
+   */
+  handles:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string];
+  /**
+   * True if it may be layout geometry (a shape that was not imported); false for annotation such as dimensions.
+   */
+  layout: boolean;
+  reason: string;
 }
 /**
  * A reusable definition that scene objects instantiate by referencing its ``id``.
@@ -871,14 +1251,14 @@ export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.8.0";
+  schema_version: "0.9.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.8.0";
+  schema_version: "0.9.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -915,7 +1295,7 @@ export interface UpgradeReport {
    * Schema version of the submitted document.
    */
   from_version: string;
-  to_version: "0.8.0";
+  to_version: "0.9.0";
   notes: string[];
   project: Project;
   validation: ValidationReport;
@@ -1698,4 +2078,19 @@ export interface RevisionAdjustment {
    */
   part_ids: [string, ...string[]];
   text: string;
+}
+/**
+ * A DXF drawing stored in the source library and read deterministically (IMP-01).
+ *
+ * Nothing is in a project yet. ``drawing.units.basis`` is null: when ``units.question`` is set
+ * the person chooses the unit before any real size is assigned.
+ */
+export interface DrawingAnalysis {
+  filename: string;
+  sha256: string;
+  drawing: DrawingImport;
+  /**
+   * Things the person should check, such as a block whose own units differ.
+   */
+  warnings: string[];
 }

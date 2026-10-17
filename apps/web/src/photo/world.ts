@@ -473,6 +473,7 @@ export function buildPhotoProject(input: WorldInput): Project {
           observations,
           visible_text: input.visibleText.filter((t) => t.trim()).slice(0, 20),
         },
+        drawing: null,
       },
     ],
     catalog,

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.8.0",
+  "$id": "urn:replay-world:contracts:0.9.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.8.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.9.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -67,6 +67,9 @@
     },
     "ModelRevisionProposalResult": {
       "$ref": "#/$defs/ModelRevisionProposalResult"
+    },
+    "DrawingAnalysis": {
+      "$ref": "#/$defs/DrawingAnalysis"
     }
   },
   "required": [
@@ -90,7 +93,8 @@
     "StoredPhoto",
     "GeneratedAssetRevisionRequest",
     "ModelRevisionProposalRequest",
-    "ModelRevisionProposalResult"
+    "ModelRevisionProposalResult",
+    "DrawingAnalysis"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -618,6 +622,395 @@
         "depth"
       ],
       "title": "Dimensions",
+      "type": "object"
+    },
+    "DrawingAnalysis": {
+      "additionalProperties": false,
+      "description": "A DXF drawing stored in the source library and read deterministically (IMP-01).\n\nNothing is in a project yet. ``drawing.units.basis`` is null: when ``units.question`` is set\nthe person chooses the unit before any real size is assigned.",
+      "properties": {
+        "filename": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "drawing": {
+          "$ref": "#/$defs/DrawingImport"
+        },
+        "warnings": {
+          "description": "Things the person should check, such as a block whose own units differ.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "filename",
+        "sha256",
+        "drawing",
+        "warnings"
+      ],
+      "title": "DrawingAnalysis",
+      "type": "object"
+    },
+    "DrawingFile": {
+      "additionalProperties": false,
+      "properties": {
+        "uri": {
+          "pattern": "^drawings/[0-9a-f]{64}\\.dxf$",
+          "type": "string"
+        },
+        "bytes": {
+          "maximum": 10485760,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "uri",
+        "bytes"
+      ],
+      "title": "DrawingFile",
+      "type": "object"
+    },
+    "DrawingImport": {
+      "additionalProperties": false,
+      "description": "The deterministic reading of one DXF drawing (IMP-01), kept with the project.",
+      "properties": {
+        "reader": {
+          "const": "rws-dxf/1",
+          "type": "string"
+        },
+        "file": {
+          "$ref": "#/$defs/DrawingFile"
+        },
+        "dxf_version": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The header's $ACADVER, if present."
+        },
+        "units": {
+          "$ref": "#/$defs/DrawingUnits"
+        },
+        "layers": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "extent_min": {
+          "$ref": "#/$defs/PlanPoint"
+        },
+        "extent_max": {
+          "$ref": "#/$defs/PlanPoint"
+        },
+        "lines": {
+          "items": {
+            "$ref": "#/$defs/PlanLine"
+          },
+          "maxItems": 5000,
+          "type": "array"
+        },
+        "labels": {
+          "items": {
+            "$ref": "#/$defs/PlanLabel"
+          },
+          "maxItems": 500,
+          "type": "array"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/DrawingObject"
+          },
+          "maxItems": 400,
+          "type": "array"
+        },
+        "skipped": {
+          "items": {
+            "$ref": "#/$defs/SkippedEntities"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "reader",
+        "file",
+        "dxf_version",
+        "units",
+        "layers",
+        "extent_min",
+        "extent_max",
+        "lines",
+        "labels",
+        "objects",
+        "skipped"
+      ],
+      "title": "DrawingImport",
+      "type": "object"
+    },
+    "DrawingObject": {
+      "additionalProperties": false,
+      "description": "A layout object drawn from the drawing, and the scene object it became.\n\n``outline`` is the shape as drawn (a closed polyline's vertices, or a block's extent after\nits insertion transform). ``centre``, ``width``, ``depth`` and ``rotation_rad`` give the\nfootprint rectangle the scene object was placed with, in drawing units; the rotation is\ncounter-clockwise on the plan, from the drawing's +X axis to the footprint's width.",
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "object_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "role": {
+          "description": "'floor': the outer outline, built as the floor slab; 'footprint': something standing or marked on the floor.",
+          "enum": [
+            "floor",
+            "footprint"
+          ],
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "label_from": {
+          "description": "Where the name came from: a block attribute, a text inside the outline, the block name, the layer name, or a plain description such as 'Floor'.",
+          "enum": [
+            "attribute",
+            "text",
+            "block",
+            "layer",
+            "generic"
+          ],
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "structure",
+            "equipment",
+            "reference",
+            "walkway",
+            "keep_clear"
+          ],
+          "type": "string"
+        },
+        "refs": {
+          "items": {
+            "$ref": "#/$defs/DrawingRef"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "type": "array"
+        },
+        "outline": {
+          "items": {
+            "$ref": "#/$defs/PlanPoint"
+          },
+          "maxItems": 2000,
+          "minItems": 3,
+          "type": "array"
+        },
+        "centre": {
+          "$ref": "#/$defs/PlanPoint"
+        },
+        "width": {
+          "description": "Footprint along its rotated X, in drawing units.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "depth": {
+          "description": "Footprint along its rotated Y, in drawing units.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "rotation_rad": {
+          "type": "number"
+        },
+        "notes": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "object_id",
+        "role",
+        "label",
+        "label_from",
+        "kind",
+        "refs",
+        "outline",
+        "centre",
+        "width",
+        "depth",
+        "rotation_rad",
+        "notes"
+      ],
+      "title": "DrawingObject",
+      "type": "object"
+    },
+    "DrawingRef": {
+      "additionalProperties": false,
+      "description": "One entity in the drawing: its handle, layer and type, and the block it was drawn in.",
+      "properties": {
+        "handle": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9A-F]{1,16}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The entity's DXF handle; null if it has none."
+        },
+        "layer": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "entity": {
+          "enum": [
+            "LINE",
+            "LWPOLYLINE",
+            "POLYLINE",
+            "INSERT",
+            "TEXT",
+            "MTEXT"
+          ],
+          "type": "string"
+        },
+        "block": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "For geometry inside a block: the block names from the drawing down, separated by ' > '; null for an entity drawn directly in model space."
+        }
+      },
+      "required": [
+        "handle",
+        "layer",
+        "entity",
+        "block"
+      ],
+      "title": "DrawingRef",
+      "type": "object"
+    },
+    "DrawingUnits": {
+      "additionalProperties": false,
+      "description": "What the drawing says about its units, and how the unit used was established.",
+      "properties": {
+        "insunits": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The header's $INSUNITS code; null if absent."
+        },
+        "declared": {
+          "anyOf": [
+            {
+              "enum": [
+                "m",
+                "cm",
+                "mm",
+                "in",
+                "ft"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The unit $INSUNITS names, when it is one of the supported length units."
+        },
+        "measurement": {
+          "anyOf": [
+            {
+              "enum": [
+                "metric",
+                "imperial"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The header's $MEASUREMENT; null if absent."
+        },
+        "question": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Why the unit cannot be taken from the drawing as it stands (absent, unsupported, conflicting or implausible); null when the header settles it."
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "enum": [
+                "drawing_header",
+                "user_supplied"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "How the unit in source_to_world was established; null only in an analysis, before anyone has decided."
+        }
+      },
+      "required": [
+        "insunits",
+        "declared",
+        "measurement",
+        "question",
+        "basis"
+      ],
+      "title": "DrawingUnits",
       "type": "object"
     },
     "EditContext": {
@@ -1500,7 +1893,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.8.0",
+          "const": "0.9.0",
           "type": "string"
         }
       },
@@ -2588,11 +2981,80 @@
       "title": "PlaceholderBoxVisual",
       "type": "object"
     },
+    "PlanLabel": {
+      "additionalProperties": false,
+      "description": "A text on the plan, recorded as content (never followed as an instruction).",
+      "properties": {
+        "ref": {
+          "$ref": "#/$defs/DrawingRef"
+        },
+        "text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "at": {
+          "$ref": "#/$defs/PlanPoint"
+        }
+      },
+      "required": [
+        "ref",
+        "text",
+        "at"
+      ],
+      "title": "PlanLabel",
+      "type": "object"
+    },
+    "PlanLine": {
+      "additionalProperties": false,
+      "description": "A straight-segment line or polyline on the plan, in drawing units.",
+      "properties": {
+        "ref": {
+          "$ref": "#/$defs/DrawingRef"
+        },
+        "points": {
+          "items": {
+            "$ref": "#/$defs/PlanPoint"
+          },
+          "maxItems": 2000,
+          "minItems": 2,
+          "type": "array"
+        },
+        "closed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "ref",
+        "points",
+        "closed"
+      ],
+      "title": "PlanLine",
+      "type": "object"
+    },
+    "PlanPoint": {
+      "additionalProperties": false,
+      "description": "A point on the drawing, in drawing units (DXF world coordinates).",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "PlanPoint",
+      "type": "object"
+    },
     "Project": {
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.8.0",
+          "const": "0.9.0",
           "type": "string"
         },
         "id": {
@@ -3349,9 +3811,58 @@
       "title": "SceneObject",
       "type": "object"
     },
+    "SkippedEntities": {
+      "additionalProperties": false,
+      "description": "Entities of one type on one layer that were not used, and why.",
+      "properties": {
+        "entity": {
+          "description": "The DXF entity type, e.g. CIRCLE.",
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "layer": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "count": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "handles": {
+          "description": "Up to ten of their handles.",
+          "items": {
+            "pattern": "^[0-9A-F]{1,16}$",
+            "type": "string"
+          },
+          "maxItems": 10,
+          "type": "array"
+        },
+        "layout": {
+          "description": "True if it may be layout geometry (a shape that was not imported); false for annotation such as dimensions.",
+          "type": "boolean"
+        },
+        "reason": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity",
+        "layer",
+        "count",
+        "handles",
+        "layout",
+        "reason"
+      ],
+      "title": "SkippedEntities",
+      "type": "object"
+    },
     "SourceDocument": {
       "additionalProperties": false,
-      "description": "Where scene content came from.\n\nA drawing or plan has a single ``source_to_world`` transform. A ``photo`` has none - a\nperspective photo maps to the floor only through its calibration - and instead carries its\nstored ``image`` and the reviewed ``photo_import``.",
+      "description": "Where scene content came from.\n\nA drawing or plan has a single ``source_to_world`` transform. A ``photo`` has none - a\nperspective photo maps to the floor only through its calibration - and instead carries its\nstored ``image`` and the reviewed ``photo_import``. An imported DXF drawing also carries its\n``drawing`` reading (0.9.0); its transform uses the unit that reading settled.",
       "properties": {
         "id": {
           "description": "Stable, lowercase identifier. Never reused for a different entity.",
@@ -3428,6 +3939,16 @@
               "type": "null"
             }
           ]
+        },
+        "drawing": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DrawingImport"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -3438,7 +3959,8 @@
         "source_to_world",
         "import_warnings",
         "image",
-        "photo_import"
+        "photo_import",
+        "drawing"
       ],
       "title": "SourceDocument",
       "type": "object"
@@ -3717,7 +4239,7 @@
           "type": "string"
         },
         "to_version": {
-          "const": "0.8.0",
+          "const": "0.9.0",
           "type": "string"
         },
         "notes": {
@@ -3859,7 +4381,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.8.0",
+          "const": "0.9.0",
           "type": "string"
         },
         "project_id": {

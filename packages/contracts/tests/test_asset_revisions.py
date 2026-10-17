@@ -253,7 +253,7 @@ def photo_source() -> dict[str, Any]:
 def current(fixture_data: dict[str, Any]) -> dict[str, Any]:
     """The foundation fixture with a generated asset and a photo source, as 0.7.0 writes it."""
     fixture_data["catalog"].append(generated_asset())
-    fixture_data["sources"].append(photo_source())
+    fixture_data["sources"].append({**photo_source(), "drawing": None})
     Project.model_validate(fixture_data)
     return fixture_data
 
@@ -261,6 +261,8 @@ def current(fixture_data: dict[str, Any]) -> dict[str, Any]:
 def as_0_6_0(current: dict[str, Any]) -> dict[str, Any]:
     old = copy.deepcopy(current)
     old["schema_version"] = "0.6.0"
+    for source in old["sources"]:
+        del source["drawing"]
     for asset in old["catalog"]:
         if asset["generation"] is not None:
             del asset["generation"]["revision"]
@@ -281,6 +283,8 @@ def test_0_6_0_documents_gain_a_null_revision_and_an_unstated_size_basis(
         "'size_basis: not_stated' to 1 photo scale reference; no values or evidence changed)",
         "schema_version 0.7.0 -> 0.8.0 (adds 'visibility: not_recorded' and empty corrections to "
         "0 photo observations; no values or evidence changed)",
+        "schema_version 0.8.0 -> 0.9.0 (adds 'drawing: null' to 2 sources; no values or evidence "
+        "changed)",
     ]
     assert "revision" not in old["catalog"][-1]["generation"]  # input untouched
     Project.model_validate(upgrade.document)

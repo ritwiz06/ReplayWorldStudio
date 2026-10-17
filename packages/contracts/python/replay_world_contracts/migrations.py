@@ -37,6 +37,12 @@ each change, and the result is then validated like any other document.
       ``replaced_by: null`` and ``corrections: []``: 0.7.0 did not record how much of an object
       the photo showed, and could not split or merge observations, so none is claimed.
 
+0.8.0 -> 0.9.0
+    * every source document gains ``drawing: null``. DXF drawings were not read before 0.9.0, so
+      no source has a drawing reading. 0.9.0 also refuses a ``default`` length marked
+      ``confirmed``; no earlier editor could produce one, and such a document is reported, not
+      silently changed.
+
 Steps run in sequence, so a 0.1.0 document passes through 0.2.0 on its way to the current
 version and its notes describe every step.
 """
@@ -269,6 +275,21 @@ def _from_0_7_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     return upgraded, [note]
 
 
+def _from_0_8_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    sources = []
+    for source in old["sources"]:
+        if "drawing" in source:
+            raise MigrationError("malformed 0.8.0 document: drawing readings only exist from 0.9.0")
+        sources.append({**copy.deepcopy(dict(source)), "drawing": None})
+    upgraded = {**copy.deepcopy(dict(old)), "schema_version": "0.9.0", "sources": sources}
+    count = len(sources)
+    note = (
+        f"schema_version 0.8.0 -> 0.9.0 (adds 'drawing: null' to {count} "
+        f"source{'' if count == 1 else 's'}; no values or evidence changed)"
+    )
+    return upgraded, [note]
+
+
 _STEPS: Final[dict[str, Step]] = {
     "0.1.0": _from_0_1_0,
     "0.2.0": _from_0_2_0,
@@ -277,5 +298,6 @@ _STEPS: Final[dict[str, Step]] = {
     "0.5.0": _from_0_5_0,
     "0.6.0": _from_0_6_0,
     "0.7.0": _from_0_7_0,
+    "0.8.0": _from_0_8_0,
 }
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)

@@ -20,6 +20,7 @@ from .models import (
     REVISION_INSTRUCTION_MAX_CHARS,
     CatalogAsset,
     ContractModel,
+    DrawingImport,
     Extent3,
     GeometryDraft,
     GeometryMaterial,
@@ -549,3 +550,18 @@ class StoredPhoto(ContractModel):
     filename: NonEmptyText
     sha256: Sha256Hex
     image: SourceImage
+
+
+class DrawingAnalysis(ContractModel):
+    """A DXF drawing stored in the source library and read deterministically (IMP-01).
+
+    Nothing is in a project yet. ``drawing.units.basis`` is null: when ``units.question`` is set
+    the person chooses the unit before any real size is assigned.
+    """
+
+    filename: NonEmptyText
+    sha256: Sha256Hex
+    drawing: DrawingImport
+    warnings: list[NonEmptyText] = Field(
+        description="Things the person should check, such as a block whose own units differ."
+    )

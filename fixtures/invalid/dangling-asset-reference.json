@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.8.0",
+  "schema_version": "0.9.0",
   "id": "proj-invalid-dangling-asset-reference",
   "name": "Foundation fixture - packaging area",
   "units": {
@@ -36,7 +36,8 @@
       },
       "import_warnings": [],
       "image": null,
-      "photo_import": null
+      "photo_import": null,
+      "drawing": null
     }
   ],
   "catalog": [
