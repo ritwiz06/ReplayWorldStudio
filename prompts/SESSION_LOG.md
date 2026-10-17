@@ -871,6 +871,7 @@ Append entries in chronological order. If a live repository session log already 
   - `pnpm check`: exit 0 (pytest 807; Vitest 208 + contracts 10).
   - Full Playwright suite: 52 passed, 22 skipped (the screen specs).
   - `e2e/layout-checks.spec.ts` (smoke): passed.
+  - CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39058894766 green on both jobs (`6aa5db7`).
 - **Timing (Node, this machine):** the footprint check under 3 ms; a route 30–65 ms when it fits and 90–115 ms when blocked, on the 20 m × 10 m fixture (about 155,000 cells).
 - **Visual evidence:** docs/geo-01/ (conflict, clear, blocked, as drawn, compare; at 1440 × 900 and 1280 × 800).
 - **Decisions:** ADR-052 (three outcomes; nothing as built; exact footprints; uncertain geometry never proves a route; omitted shapes placed; one entry on the simple screen).
@@ -880,7 +881,7 @@ Append entries in chronological order. If a live repository session log already 
   - service zones only where drawn or marked;
   - the route question is not saved in the project;
   - at 1280 × 800 the Check panel scrolls and covers the right of the 3D view.
-- **Effort:** about 50 min active to this commit (17:51 to 18:38 UTC, 10:51 to 11:38 MST), CI not included.
+- **Effort:** about 49 min, all active (17:51 to 18:40 UTC, 10:51 to 11:40 MST), including one CI run.
 - **Milestone status:** M5's two issues done against their criteria; M4 continues (IMP-02, AGT-01 open).
 - **Next concrete task:** on the user's priority: the rest of IMP-02, ENR-01/02, or SIM-01.
 
