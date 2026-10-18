@@ -61,7 +61,10 @@ export function AboutPreview({ client, onClose }: Props) {
       <h3>Your files</h3>
       <ul data-testid="about-storage">
         <li>Files you upload go to this preview's server, into a folder only your browser can reach (a private cookie, no account). Other visitors cannot read them, even with the file's name.</li>
-        <li>They are deleted {RETENTION_HOURS} hours after you upload them. Server backups are not enabled for this preview.</li>
+        <li>
+          They are stored on the server temporarily and deleted {RETENTION_HOURS} hours after you first upload them: the server checks every 15 minutes, so
+          within 15 minutes after that, and at once when it restarts after being down. Server backups are not enabled for this preview.
+        </li>
         <li>
           Your project stays with you: <strong>Save project</strong> downloads it to your computer. Reopen it here any time; if its plan was deleted from the server, the
           layout still opens, and you can upload the plan again.

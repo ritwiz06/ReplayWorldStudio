@@ -77,10 +77,18 @@ def test_a_key_never_turns_ai_on_in_the_public_preview() -> None:
 def test_ai_endpoints_answer_off(a: TestClient) -> None:
     status = a.get("/api/v1/assist/status").json()
     assert status["available"] is False
-    response = a.post("/api/v1/assist/plan-proposals", json={})
-    assert response.status_code in (422, 503)
-    off = a.post("/api/v1/assist/object-proposals", json={"description": "a small table"})
-    assert off.status_code == 503
+    # Every AI request is refused before its body is read, whatever it holds.
+    for name in (
+        "object-proposals",
+        "edit-proposals",
+        "model-revisions",
+        "image-proposals",
+        "plan-proposals",
+    ):
+        for body in ({}, {"description": "a small table"}):
+            response = a.post(f"/api/v1/assist/{name}", json=body)
+            assert response.status_code == 503, name
+            assert response.json()["detail"] == "AI features are not available in this preview."
 
 
 def test_each_visitor_gets_a_private_cookie(a: TestClient) -> None:
@@ -169,6 +177,35 @@ def test_a_visitors_quota_and_the_storage_cap_are_enforced(tmp_path: Path) -> No
     with visitor(settings(tmp_path / "c", storage_cap_mb=1)) as full:
         refused = upload(full, SKETCH[:-12] + b"private tail")
         assert refused.status_code == 507 and "storage is full" in refused.json()["detail"]
+
+
+def test_the_public_preview_refuses_to_serve_as_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from replay_world_api import __main__
+
+    monkeypatch.setattr(os, "geteuid", lambda: 0)
+    with pytest.raises(SystemExit, match="Refusing to run the public preview as root"):
+        __main__._check_public(settings(tmp_path))
+
+
+def test_writes_stop_before_the_volume_fills(tmp_path: Path) -> None:
+    # Whatever the volume's size: a write that would leave less than the floor free is refused.
+    with visitor(settings(tmp_path, min_free_mb=10**9)) as tight:
+        refused = upload(tight, SKETCH)
+        assert refused.status_code == 507 and "storage is full" in refused.json()["detail"]
+
+
+def test_files_that_expired_while_the_server_was_down_go_before_it_serves(tmp_path: Path) -> None:
+    s = settings(tmp_path)
+    stale = s.data_dir / "visitors" / "abc" / "sources" / "plans" / "old.png"
+    stale.parent.mkdir(parents=True)
+    stale.write_bytes(b"x")
+    two_days_ago = time.time() - 48 * 3600
+    os.utime(stale, (two_days_ago, two_days_ago))
+    with visitor(s) as client:
+        assert not stale.exists()  # swept at start-up, before this first request
+        assert client.get("/health").status_code == 200
 
 
 def test_requests_and_bodies_are_bounded(tmp_path: Path) -> None:

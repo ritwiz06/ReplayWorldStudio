@@ -1062,7 +1062,8 @@ For a new decision, append: ID, date, status, context, options considered, decis
 
 ### ADR-055 - v0.1 runs on the user's own computer; no hosting
 
-- Date: 2026-10-18 (America/Phoenix). Status: adopted. Supersedes ADR-054's hosting decision; ADR-054's public mode stays in the code, unused.
+- Date: 2026-10-18 (America/Phoenix). Status: **superseded by ADR-056.** Its statement of the user's intent ("no hosting", local single-user release) is **incorrect**: the release goal remained an online public preview. The local launcher it added stays. The original text is kept below as the historical record.
+- Original status line: adopted. Supersedes ADR-054's hosting decision; ADR-054's public mode stays in the code, unused.
 - **Context.** The user does not want the app on Railway or any host: "public" means a finished version they can run themselves.
 - **Decision.**
   1. **`pnpm start`** builds the web app and serves it from the API on `http://127.0.0.1:8000`.
@@ -1072,3 +1073,41 @@ For a new decision, append: ID, date, status, context, options considered, decis
   2. **Normal local mode.** Files stay in `data/sources/`, and the API reads `.env`, so a Voyager key enables the AI features for the user's own use, as in development.
   3. **Not used for local running:** the 24-hour deletion, visitor cookies and AI-off mode of ADR-054. The `RWS_PUBLIC=1` container stays available and tested; `railway.json` is removed.
 - **Consequences.** No hosting costs, privacy policy or backup question. The authorization question about public AI no longer applies, since only the user uses their key.
+
+### ADR-056 - The v0.1 release goal is the online public preview; `pnpm start` stays as a local convenience
+
+- Date: 2026-10-18 (America/Phoenix). Status: adopted. Supersedes ADR-055's claim about the user's intent and its "no hosting" decision.
+- **Context.**
+  - The user asked to ship a public online preview soon (ADR-054).
+  - Mid-task they wrote: "i dont want it on railway, i want to run it on my pc, public means runnable for me only."
+  - ADR-055 and commit `fa87c95` read that message as a change of the release goal to a local-only app and dropped hosting.
+  - The user has since stated that this reading was wrong: they did not change the goal to local-only. ADR-055's attribution of that decision to them is therefore incorrect.
+- **Decision.**
+  1. **Goal.** The release goal is the online public preview of ADR-054. Three stages stay distinct in every record:
+     - *runs locally*: `pnpm start`;
+     - *ready to deploy*: the container and `railway.json`, CI-tested;
+     - *publicly launched*: only after a staging URL exists, the public journeys pass against it, and we decide to publish. It is **not** done.
+  2. **Local launcher.** `pnpm start` stays: loopback only, the user's `.env`. It is a convenience, not the release.
+  3. **Railway.** `railway.json` is restored, and it requires a volume at `/data` and one replica.
+     - The Dockerfile no longer declares `VOLUME`; Railway refuses Dockerfiles that do.
+     - The hosted service gets no Voyager variables, and AI stays off whatever the environment holds.
+     - Every non-GET request under `/api/v1/assist/` is now refused with 503 before its body is read.
+  4. **Volume permissions without a root server.**
+     - The image's entrypoint starts as root only to `chown` the `/data` mount point to `rws` (uid/gid 10001). It then `setpriv`s to `rws`, with no supplementary groups and no new privileges, before the server starts.
+     - In public mode the server refuses to run as root, and logs its uid at start.
+     - `RAILWAY_RUN_UID=0` is not used.
+     - CI starts the container on a root-owned volume and checks the uid of PID 1, the owner of `/data`, the log line, and the refusal to serve as root.
+  5. **Storage.**
+     - The volume is 4 GB (Hobby allows up to 5 GB, and a volume can grow but not shrink).
+     - The application cap falls from 3000 to 2800 MB (MiB, about 2.9 GB), counted as allocated blocks. That leaves about 1.1 GB for filesystem overhead, folders and uploads in flight.
+     - Independently, a write is refused when it would leave less than 512 MB free on the volume, so a smaller volume fills safely too.
+     - The server logs the volume's real size at start, and warns when the cap and floor exceed it.
+  6. **Retention, stated precisely.**
+     - A file expires 24 h after it was first stored; an identical re-upload does not extend it.
+     - While the server runs, a sweep every 15 minutes deletes expired files, so each is gone within 24 h 15 min.
+     - After downtime, expired files stay on the volume, unreachable, until the next start. The start-up sweep now runs **before** the first request is served.
+     - Volume backups stay off.
+     - Wording that said uploads are "never stored" (the draft ASU question) is corrected: uploads are stored temporarily on the server.
+- **Consequences.**
+  - Deploying needs the user's Railway account (docs/public-preview.md, steps 1–8).
+  - The provider-authorization question is the user's to ask; until it is answered, the hosted preview has no AI.

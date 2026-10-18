@@ -1,5 +1,5 @@
 // The public preview (ADR-054) on the production build, as anonymous visitors: the sample's
-// move-and-check moment, a DXF reviewed and saved, a PDF/image marked by hand and saved,
+// move-and-check moment, a DXF reviewed and saved, a PDF page and a picture marked by hand and saved,
 // reopening in a fresh browser, one visitor unable to read another's upload, and the app with
 // its API unreachable. Every test starts with no cookies and no stored state.
 import { readFileSync } from "node:fs";
@@ -8,6 +8,12 @@ import { type Browser, expect, type Page, test } from "@playwright/test";
 const FIXTURES = new URL("../../../../fixtures/", import.meta.url);
 const LAYOUT_DXF = readFileSync(new URL("drawings/layout-checks-mm.dxf", FIXTURES));
 const SKETCH = readFileSync(new URL("plans/rough-cell.png", FIXTURES));
+const HALL_PDF = readFileSync(new URL("plans/packing-hall.pdf", FIXTURES));
+const HALL_PX: number = JSON.parse(readFileSync(new URL("plans/plans.truth.json", FIXTURES), "utf8"))["packing-hall.pdf"].px_per_m;
+/** A visitor's own copy of the two-page hall PDF: a trailing comment changes the bytes, not the pages. */
+const privatePdf = Buffer.concat([HALL_PDF, Buffer.from("\n% a private copy for this test\n")]);
+/** Metres on the hall plan (from the hall's outer south-west corner) -> page pixels. */
+const hall = (x: number, y: number): [number, number] => [302.38 + x * HALL_PX, 579.56 + y * HALL_PX];
 
 /** A visitor's own copy of a file: different bytes, so it is not one of the shared samples. */
 const privateDxf = Buffer.concat([Buffer.from("999\nA private copy for this test\n"), LAYOUT_DXF]);
@@ -119,6 +125,17 @@ test("no AI anywhere in the preview, and the about panel says where files go", {
   await loaded(page, 12);
   const status = await page.evaluate(async () => (await fetch("/api/v1/assist/status")).json());
   expect(status.available).toBe(false); // although the server's environment holds a key
+  // Every AI request is refused, whatever it holds.
+  const refused = await page.evaluate(async () => {
+    const names = ["object-proposals", "edit-proposals", "model-revisions", "image-proposals", "plan-proposals"];
+    return Promise.all(
+      names.map(async (name) => {
+        const r = await fetch(`/api/v1/assist/${name}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ description: "a small table" }) });
+        return r.status;
+      }),
+    );
+  });
+  expect(refused).toEqual([503, 503, 503, 503, 503]);
   await page.getByTestId("open-start").click();
   await expect(page.getByTestId("start-sample")).toBeVisible();
   await expect(page.getByTestId("start-describe")).toHaveCount(0);
@@ -126,7 +143,7 @@ test("no AI anywhere in the preview, and the about panel says where files go", {
   await page.keyboard.press("Escape");
   await page.getByTestId("preview-badge").click();
   const about = page.getByTestId("about-preview");
-  await expect(about.getByTestId("about-storage")).toContainText("deleted 24 hours after you upload them");
+  await expect(about.getByTestId("about-storage")).toContainText("deleted 24 hours after you first upload them");
   await expect(about.getByTestId("about-feedback")).toHaveAttribute("href", "https://github.com/ritwiz06/ReplayWorldStudio/issues/new");
   await expect(about).toContainText("please do not post private drawings");
   // No secret reaches the browser: the built scripts hold no key value.
@@ -203,6 +220,42 @@ test("a plan picture is marked by hand, saved and reopened; its picture stays pr
   await page.getByTestId("about-clear").click();
   await expect(page.getByTestId("about-cleared")).toBeVisible();
   expect((await page.request.get(`/api/v1/sources/files/${raster}`)).status()).toBe(404);
+});
+
+test("a two-page PDF is marked by hand, saved and reopened; its page stays private to its visitor", { tag: "@public" }, async ({ page, browser }) => {
+  test.setTimeout(90_000);
+  await page.goto("/");
+  await loaded(page, 12);
+  await page.getByTestId("sample-upload").click();
+  await page.getByTestId("drawing-file-input").setInputFiles({ name: "my-hall.pdf", mimeType: "application/pdf", buffer: privatePdf });
+  await expect(page.getByTestId("plan-pages")).toContainText("my-hall.pdf has 2 pages.");
+  await page.getByTestId("plan-page-2").click();
+  const dialog = page.getByTestId("drawing-import");
+  await expect(dialog.locator("image.plan-raster")).toBeVisible();
+  await expect(dialog.getByTestId("plan-propose")).toHaveCount(0); // no AI in the preview
+  await clickPlan(page, "drawing-plan", hall(0, 15));
+  await clickPlan(page, "drawing-plan", hall(24, 15));
+  await page.getByTestId("plan-length").fill("24");
+  await expect(page.getByTestId("plan-scale")).toContainText("1 px = 1.4 cm");
+  await dialog.getByTestId("plan-manual").click();
+  await page.getByTestId("drawing-open").click();
+  await loaded(page, 1);
+  const review = page.getByTestId("drawing-review");
+  await page.getByTestId("review-zoom-4").click();
+  await review.getByTestId("review-floor-trace").click();
+  for (const corner of [hall(0.2, 0.2), hall(23.8, 0.2), hall(23.8, 13.8), hall(0.2, 13.8)]) await clickPlan(page, "review-plan", corner);
+  await review.getByTestId("review-floor-finish").click();
+  await review.getByTestId("review-add-object").click();
+  for (const corner of [hall(0.5, 9.0), hall(12.5, 9.0), hall(12.5, 10.2)]) await clickPlan(page, "review-plan", corner);
+  await loaded(page, 2);
+  const saved = await save(page);
+  const raster: string = JSON.parse(saved.text).sources[0].drawing.raster.uri;
+  expect((await page.request.get(`/api/v1/sources/files/${raster}`)).status()).toBe(200);
+
+  const other = await reopenElsewhere(browser, saved);
+  await loaded(other.page, 2);
+  expect((await other.page.request.get(`/api/v1/sources/files/${raster}`)).status()).toBe(404);
+  await other.context.close();
 });
 
 test("with the API unreachable, the page says so and offers to try again", { tag: "@public" }, async ({ page }) => {

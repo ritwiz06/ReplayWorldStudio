@@ -1004,6 +1004,41 @@ Append entries in chronological order. If a live repository session log already 
 - Known limitations: port 8000 was held by an older API from 2026-10-15 (left running; not stopped by us).
 - Next concrete task: use v0.1 locally and record what gets in the way.
 
+### 2026-10-18 - Release correction: the goal is the online public preview (ADR-056)
+
+- Starting branch and relevant commit: `main` at `fa87c95`.
+- Goal: correct ADR-055. The user did not change the release goal to local-only, so `fa87c95` attributed that decision to them wrongly.
+  - Restore the online preview path and keep `pnpm start`.
+  - Reconcile storage with the Railway volume, and run the server as non-root on a root-owned volume.
+  - Correct the privacy and ASU wording.
+  - Verify both journeys. No feature work.
+- Work completed:
+  - **ADR-056.** ADR-055 is marked superseded, with its intent claim recorded as incorrect and the original text kept.
+  - **README.** Separate status rows for runs locally, ready to deploy and publicly launched (No). The public preview container section is back.
+  - **Railway.** `railway.json` is restored, requiring a volume at `/data` and one replica. The Dockerfile drops `VOLUME`, which Railway refuses.
+  - **Server user.** `scripts/container-entrypoint.sh` gives `/data` to `rws` (10001) as root, then `setpriv`s to it. The server refuses to run as root in public mode and logs its uid and the volume's size at start.
+  - **Storage.** The cap is now 2800 MB, counted as allocated blocks, for a 4 GB volume, plus a 512 MB free-space floor (507).
+  - **Sweep and AI.** The start-up sweep runs before the first request. Every AI POST is refused with 503 in the middleware.
+  - **Wording.** The About dialog, docs/public-preview.md and the ASU question now say uploads are stored temporarily: deleted 24 h after first upload, within 15 min while the server runs, or at the next start after downtime. Backups stay off.
+  - **Tests.**
+    - API tests: all AI endpoints refused, the free-space floor, the start-up sweep, and the refusal to run as root.
+    - New public journey: a two-page PDF marked by hand, saved, and reopened by another visitor (404 for them).
+    - The e2e test checks AI POSTs are refused.
+    - CI runs the container on a root-owned volume and checks PID 1's uid and `/data`'s owner.
+- Commands run and outcomes:
+  - `pnpm check`: passed (841 pytest, 217 Vitest, 10 contracts).
+  - Container on a root-owned volume with a placeholder key, port 8090:
+    - log "running as uid 10001"; `/proc/1/status` Uid 10001 ×4; `/data` owned by 10001;
+    - AI status off, and an object proposal answers 503;
+    - `PUBLIC_URL=http://127.0.0.1:8090 pnpm --filter @replay-world/web test:e2e:public`: 6 passed (sample, no AI, DXF, picture, PDF, API unreachable).
+  - The CI container checks were dry-run locally on port 8091: all passed. `--user 0` without the entrypoint is refused.
+  - `RWS_SOURCES_DIR=<temp> RWS_API_PORT=8001 pnpm start`, with a temporary Playwright journey (not committed): sample move to conflict, undo to fits; DXF reviewed, saved, reopened; PDF page 2 and PNG each marked by hand, saved, reopened (40.7 s). No Voyager call. The LAN address was refused.
+- Known limitations and blockers:
+  - The staging URL needs the user's Railway account; the public journeys have not run against it.
+  - Not publicly launched.
+  - The local journey is not in CI.
+- Next concrete task: Railway staging (docs/public-preview.md steps 1–8).
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

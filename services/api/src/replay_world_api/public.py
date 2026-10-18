@@ -64,9 +64,21 @@ def visitor_dirs(settings: Settings, request: Request) -> VisitorDirs:
 
 
 def _size(path: Path) -> int:
+    """Disk space the files under ``path`` occupy (allocated blocks, not just their length)."""
     if not path.is_dir():
         return 0
-    return sum(f.stat().st_size for f in path.rglob("*") if f.is_file() and not f.is_symlink())
+    return sum(
+        max(f.stat().st_blocks * 512, f.stat().st_size)
+        for f in path.rglob("*")
+        if f.is_file() and not f.is_symlink()
+    )
+
+
+def free_bytes(path: Path) -> int:
+    """Free space on the filesystem holding ``path`` (its nearest existing folder)."""
+    while not path.exists() and path.parent != path:
+        path = path.parent
+    return shutil.disk_usage(path).free
 
 
 def ensure_room(settings: Settings, request: Request, incoming: int) -> None:
@@ -81,7 +93,8 @@ def ensure_room(settings: Settings, request: Request, incoming: int) -> None:
             detail=f"This preview keeps at most {limits.visitor_quota_mb} MB per visitor. Files "
             f"are deleted {limits.retention_hours:g} hours after upload; try again later.",
         )
-    if _size(settings.data_dir / "visitors") + incoming > limits.storage_cap_mb * 1024 * 1024:
+    full = _size(settings.data_dir / "visitors") + incoming > limits.storage_cap_mb * 1024 * 1024
+    if full or free_bytes(settings.data_dir) - incoming < limits.min_free_mb * 1024 * 1024:
         raise HTTPException(
             status_code=507,
             detail="The preview's storage is full right now. Please try again later.",
@@ -109,15 +122,16 @@ def sweep(data_dir: Path, retention_hours: float, now: float | None = None) -> i
     return deleted
 
 
-def start_sweeper(settings: Settings, every_s: float = 900.0) -> threading.Event:
-    """Sweep now and then every ``every_s`` seconds in a daemon thread; set the event to stop."""
+def start_sweeper(settings: Settings) -> threading.Event:
+    """Sweep now, before any request is served (files that expired while the server was down go
+    first), then every ``sweep_minutes`` in a daemon thread. Set the event to stop."""
     stop = threading.Event()
+    limits = settings.limits
+    sweep(settings.data_dir, limits.retention_hours)
 
     def run() -> None:
-        while True:
-            sweep(settings.data_dir, settings.limits.retention_hours)
-            if stop.wait(every_s):
-                return
+        while not stop.wait(limits.sweep_minutes * 60):
+            sweep(settings.data_dir, limits.retention_hours)
 
     threading.Thread(target=run, name="rws-sweeper", daemon=True).start()
     return stop
@@ -173,6 +187,9 @@ def public_middleware(
         client = client_of(request, settings.trust_proxy)
         if not limiter.allow(client, "all", limits.requests_per_minute, 60):
             return JSONResponse({"detail": "Too many requests; please slow down."}, 429)
+        if request.url.path.startswith("/api/v1/assist/") and request.method != "GET":
+            # No AI in the preview: refused here, before any body is read or any handler runs.
+            return JSONResponse({"detail": "AI features are not available in this preview."}, 503)
         writing = request.method == "POST" and request.url.path.startswith(WRITES)
         if writing and not limiter.allow(client, "write", limits.uploads_per_10_min, 600):
             return JSONResponse(

@@ -2,11 +2,17 @@
 
 Turn a floor plan into a 3D layout you can walk through, change and check. Upload a plan, move a machine, and see whether the layout still fits. Factory production areas are the first example; the world contracts stay generic.
 
-> **Status: v0.1, for running on your own computer.** It works on synthetic examples and supported files; it has not been tried on real plans yet. It does **not** convert every drawing into an accurate 3D model automatically, simulate production or physics, or certify anything about a real site.
+> **Status: v0.1, an early preview being prepared for public release online.** It works on synthetic examples and supported files; it has not been tried on real plans yet. It does **not** convert every drawing into an accurate 3D model automatically, simulate production or physics, or certify anything about a real site.
+>
+> | | |
+> | --- | --- |
+> | Runs locally | Yes: `pnpm start` (below). |
+> | Ready to deploy | Yes: the production container and `railway.json` ([docs/public-preview.md](docs/public-preview.md)). |
+> | Publicly launched | **No.** There is no staging URL yet, and launching follows a decision once the public journeys pass against it. |
 
 ## Run it on your computer
 
-After [Setup](#setup), one command builds the app and serves it on your computer only:
+After [Setup](#setup), one command builds the app and serves it on your computer only. This is a convenience for you; it is not the public preview:
 
 ```bash
 pnpm start                      # then open http://127.0.0.1:8000
@@ -194,9 +200,20 @@ API docs (OpenAPI) are served at <http://127.0.0.1:8000/docs> while the API runs
 
 | `pnpm --filter @replay-world/web test:e2e:public` | The container mode's journeys on the **production build** (built with the preview's settings, served by the API in public mode as one origin): the sample's move-and-check, no AI with a key present, DXF and plan picture saved and reopened by another visitor, cross-visitor isolation, the API unreachable. With `PUBLIC_URL=...` the same journeys run against a running container or the staging site |
 
-## Optional: the container
+## Public preview container (ADR-054, ADR-056)
 
-`docker build -t replay-world-studio .` then `docker run -p 127.0.0.1:8000:8000 -v rws-data:/data replay-world-studio` runs the same app in a container, in the stricter mode built for a hosted preview (`RWS_PUBLIC=1`, ADR-054): AI off, files deleted after 24 hours. Hosting is not planned (ADR-055); `pnpm start` is the way to run it.
+The online preview is one container: the built web app served by the API on the same origin, in public mode (`RWS_PUBLIC=1`).
+- **AI:** off even when a Voyager key is in the environment; no key reaches the browser.
+- **Visitors:** each has a private folder; files are deleted 24 hours after they are stored.
+- **Server user:** the HTTP server runs as `rws` (uid 10001), never as root.
+
+```bash
+docker build -t replay-world-studio .
+docker run -p 127.0.0.1:8000:8000 -v rws-data:/data replay-world-studio
+PUBLIC_URL=http://127.0.0.1:8000 pnpm --filter @replay-world/web test:e2e:public
+```
+
+For Railway staging (a 4 GB volume at `/data`, backups off, no Voyager variables) and the storage and privacy record, see [docs/public-preview.md](docs/public-preview.md).
 
 After changing a model in `packages/contracts/python/replay_world_contracts/models.py`, run `pnpm contracts:generate` and commit the regenerated files. After changing equipment geometry, run `pnpm assets:build` and then `pnpm fixtures:build`.
 

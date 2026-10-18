@@ -66,7 +66,12 @@ class PublicLimits:
 
     retention_hours: float = 24.0
     visitor_quota_mb: int = 100
-    storage_cap_mb: int = 3000
+    #: All visitors' files together, counted as allocated disk blocks. Sized for a 4 GB volume:
+    #: about 1.1 GB stays free for the filesystem's own overhead and uploads in flight.
+    storage_cap_mb: int = 2800
+    #: Writes are also refused when the volume itself has less than this free, whatever its size.
+    min_free_mb: int = 512
+    sweep_minutes: float = 15.0
     max_body_mb: int = 25
     uploads_per_10_min: int = 40
     requests_per_minute: int = 600
@@ -117,6 +122,7 @@ class Settings:
             ),
             visitor_quota_mb=_integer(env, "RWS_VISITOR_QUOTA_MB", PublicLimits.visitor_quota_mb),
             storage_cap_mb=_integer(env, "RWS_STORAGE_CAP_MB", PublicLimits.storage_cap_mb),
+            min_free_mb=_integer(env, "RWS_MIN_FREE_MB", PublicLimits.min_free_mb),
         )
         return cls(
             host=env.get("RWS_API_HOST", "0.0.0.0" if public else defaults.host),
