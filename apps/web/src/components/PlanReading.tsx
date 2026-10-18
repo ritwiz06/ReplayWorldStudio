@@ -30,9 +30,11 @@ interface Props {
   /** When a world from a plan is open: keep this file with it instead of starting a new one. */
   onAttach?: (() => void) | undefined;
   onAnother: () => void;
+  /** A vision model is set up; otherwise the person marks the plan (the public preview). */
+  proposals?: boolean | undefined;
 }
 
-export function PlanReading({ client, analysis, onModelMs, onDraftReady, onCreated, onAttach, onAnother }: Props) {
+export function PlanReading({ client, analysis, onModelMs, onDraftReady, onCreated, onAttach, onAnother, proposals = true }: Props) {
   const [marks, setMarks] = useState<PlanPoint[]>([]);
   const [precision, setPrecision] = useState(0);
   const [length, setLength] = useState("");
@@ -147,7 +149,19 @@ export function PlanReading({ client, analysis, onModelMs, onDraftReady, onCreat
         </fieldset>
         <div className="drawing-question" data-testid="plan-proposal" data-status={proposal.status}>
           <strong>2. The floor and objects</strong>
-          {proposal.status === "idle" && (
+          {proposal.status === "idle" && !proposals && (
+            <>
+              <p className="small" data-testid="plan-no-ai">
+                AI proposals are off here. You trace the floor and add each object in the review, on top of the plan: a few clicks per object.
+              </p>
+              <div className="review-actions">
+                <button type="button" className="button button-small button-primary" data-testid="plan-manual" onClick={() => setProposal({ status: "manual" })}>
+                  Mark it myself
+                </button>
+              </div>
+            </>
+          )}
+          {proposal.status === "idle" && proposals && (
             <>
               <p className="small">The vision model can draft the floor outline, walls and objects with their names. It is a draft: you check, trace and correct it in the review.</p>
               <div className="review-actions">
@@ -203,9 +217,11 @@ export function PlanReading({ client, analysis, onModelMs, onDraftReady, onCreat
           {proposal.status === "manual" && (
             <p className="small" data-testid="plan-manual-chosen">
               You will trace the floor and add each object in the review.{" "}
-              <button type="button" className="link-button" onClick={() => setProposal({ status: "idle" })}>
-                Propose instead
-              </button>
+              {proposals && (
+                <button type="button" className="link-button" onClick={() => setProposal({ status: "idle" })}>
+                  Propose instead
+                </button>
+              )}
             </p>
           )}
         </div>

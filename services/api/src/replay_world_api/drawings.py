@@ -35,7 +35,7 @@ from __future__ import annotations
 import hashlib
 import math
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any, Final, Literal
@@ -1278,6 +1278,18 @@ def analyse_drawing(data: bytes, filename: str, sources_dir: Path) -> DrawingAna
     return DrawingAnalysis(filename=name, sha256=digest, drawing=drawing, warnings=warnings)
 
 
+def shared_drawings(fixtures_dir: Path) -> dict[str, Path]:
+    """The synthetic fixture drawings and plans, by the library path they would have: shared,
+    read-only files that a sample project can refer to without anyone uploading them."""
+    shared: dict[str, Path] = {}
+    for folder, patterns in (("drawings", ("*.dxf",)), ("plans", ("*.pdf", "*.png", "*.jpg"))):
+        for pattern in patterns:
+            for path in sorted((fixtures_dir / folder).glob(pattern)):
+                digest = hashlib.sha256(path.read_bytes()).hexdigest()
+                shared[f"drawings/{digest}{path.suffix}"] = path
+    return shared
+
+
 def drawing_file(sources_dir: Path, uri: str) -> Path | None:
     """The library file for a drawing ``uri``, or None when it is not there (or unsafe)."""
     if not re.fullmatch(r"drawings/[0-9a-f]{64}(?:-p[1-9][0-9]{0,3})?\.(?:dxf|pdf|png|jpg)", uri):
@@ -1290,7 +1302,7 @@ def drawing_file(sources_dir: Path, uri: str) -> Path | None:
 
 
 def check_drawing_files(
-    project: Project, sources_dir: Path
+    project: Project, sources_dir: Path, shared: Mapping[str, Path] | None = None
 ) -> tuple[list[dict[str, Any]], list[str]]:
     """Check each drawing source's stored file; return (validation issues, missing files).
 
@@ -1311,7 +1323,7 @@ def check_drawing_files(
             # A PDF page as the API rendered it: checked against its own recorded hash.
             files.append((raster.uri, raster.sha256, ("sources", index, "drawing", "raster")))
         for uri, expected, loc in files:
-            path = drawing_file(sources_dir, uri)
+            path = drawing_file(sources_dir, uri) or (shared or {}).get(uri)
             if path is None:
                 missing.append(uri)
                 continue

@@ -15,9 +15,13 @@ interface Props {
   onClose: () => void;
   /** Close and show the full editor (object list, catalog, inspector). */
   onFullEditor: () => void;
+  /** Open the sample factory hall with its guide. */
+  onSample: () => void;
+  /** The public preview: no AI, so describing objects and photo import are not offered. */
+  preview?: boolean | undefined;
 }
 
-export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onPhoto, onDrawing, onOpenFile, onClose, onFullEditor }: Props) {
+export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onPhoto, onDrawing, onOpenFile, onClose, onFullEditor, onSample, preview }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -50,22 +54,29 @@ export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onPhoto,
           <strong>Upload a floor plan</strong>
           <span>
             {apiOnline
-              ? "Start from a DXF layout: see the plan at once, walk through a 3D draft, move things and compare with the drawing."
+              ? "A DXF, or a PDF or picture of the plan: see it at once, walk through a 3D draft, move things and check whether the layout still fits."
               : "Needs the local API, which is not reachable."}
           </span>
+        </button>
+        <button type="button" className="start-card" data-testid="start-sample" disabled={!apiOnline} onClick={onSample}>
+          <strong>Try the sample</strong>
+          <span>A synthetic factory hall: move one machine into the aisle and watch the route check go from clear to blocked.</span>
         </button>
         <button type="button" className="start-card" data-testid="start-explore" onClick={onExplore}>
           <strong>Explore the demo</strong>
           <span>Walk around a small packaging line, select equipment and see where every size comes from.</span>
         </button>
+        {!preview && (
         <button type="button" className="start-card" data-testid="start-describe" onClick={onDescribe}>
           <strong>Describe an object</strong>
           <span>Say what is missing, for example “a guarded conveyor about 2.2 m long with a control screen”. Check the size, then place it.</span>
         </button>
+        )}
         <button type="button" className="start-card" data-testid="start-open" disabled={!apiOnline} onClick={() => fileInput.current?.click()}>
           <strong>Open a project</strong>
           <span>{apiOnline ? "Continue from a project file you saved earlier (.json)." : "Needs the local API, which is not reachable."}</span>
         </button>
+        {!preview && (
         <button type="button" className="start-card" data-testid="start-image" disabled={!apiOnline} onClick={onPhoto}>
           <strong>Start from a photo</strong>
           <span>
@@ -74,6 +85,7 @@ export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onPhoto,
               : "Needs the local API, which is not reachable."}
           </span>
         </button>
+        )}
       </div>
       <input ref={fileInput} type="file" accept=".json,application/json" hidden onChange={handleFile} aria-label="Project file to open" data-testid="start-file-input" />
       <div className="modal-actions start-footer">

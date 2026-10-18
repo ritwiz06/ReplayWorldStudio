@@ -4,8 +4,11 @@ language-assisted proposals."""
 from __future__ import annotations
 
 import base64
+import contextlib
 import logging
 import threading
+from collections.abc import AsyncIterator
+from pathlib import Path as FilePath
 from typing import Annotated, Any, Final, Literal, NoReturn
 
 import anyio
@@ -13,6 +16,7 @@ import anyio.to_thread
 from fastapi import Body, FastAPI, HTTPException, Path, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import ValidationError
 from replay_world_contracts import (
@@ -64,7 +68,7 @@ from .assist.provider import (
 )
 from .assist.revisions import propose_revision
 from .catalog_files import CatalogFileError, check_model_files, resolve_catalog_file
-from .drawings import DrawingError, analyse_drawing, check_drawing_files
+from .drawings import DrawingError, analyse_drawing, check_drawing_files, shared_drawings
 from .generated_assets import (
     create_asset_revision,
     create_generated_asset,
@@ -79,6 +83,7 @@ from .photos import (
     store_photo,
 )
 from .plans import PlanError, library_file, read_pdf_page, store_plan
+from .public import CURRENT, clear_visitor, ensure_room, public_middleware, start_sweeper
 from .settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -87,7 +92,13 @@ logger = logging.getLogger(__name__)
 FIXTURES: Final = {
     "foundation": "scenes/foundation-scene.json",
     "industrial-demo": "scenes/industrial-demo.json",
+    "sample": "scenes/sample-factory.json",
 }
+
+OFF_IN_PREVIEW: Final = (
+    "AI proposals are off in this public preview. Mark the plan and its objects yourself, or "
+    "build objects by hand."
+)
 
 MIGRATE_COMMAND: Final = "uv run python -m replay_world_contracts.migrate FILE -o UPGRADED.json"
 
@@ -115,17 +126,53 @@ def _plan_status(exc: PlanError) -> int:
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
+
+    @contextlib.asynccontextmanager
+    async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+        # The public preview deletes visitors' files after the retention period.
+        stop = start_sweeper(settings) if settings.public else None
+        yield
+        if stop is not None:
+            stop.set()
+
+    public = settings.public
     app = FastAPI(
         title="Replay World Studio API",
         version=__version__,
         summary="Local API for editable, evidence-aware worlds.",
+        lifespan=lifespan,
+        docs_url=None if public else "/docs",
+        redoc_url=None if public else "/redoc",
+        openapi_url=None if public else "/openapi.json",
     )
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=list(settings.cors_origins),
-        allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type"],
-    )
+    if settings.cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=list(settings.cors_origins),
+            allow_methods=["GET", "POST"],
+            allow_headers=["Content-Type"],
+        )
+    if public:
+        app.middleware("http")(public_middleware(settings))
+        # The web app's scripts and the plans compress well; models and pictures barely do.
+        app.add_middleware(GZipMiddleware, minimum_size=1024)
+    # The synthetic sample plans, readable by every visitor (they are part of the app).
+    shared = shared_drawings(settings.fixtures_dir)
+
+    def sources_dir() -> FilePath:
+        """Where this request's source files live: the visitor's own folder in the public
+        preview, the local library otherwise."""
+        dirs = CURRENT.get()
+        return dirs.sources if public and dirs else settings.sources_dir
+
+    def catalog_dir() -> FilePath:
+        """Where this request's generated models are written (and, in the preview, read)."""
+        dirs = CURRENT.get()
+        return dirs.catalog if public and dirs else settings.catalog_dir
+
+    def generated_root() -> FilePath | None:
+        dirs = CURRENT.get()
+        return dirs.catalog if public and dirs else None
 
     @app.exception_handler(RequestValidationError)
     async def _request_validation_error(
@@ -163,7 +210,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/v1/catalog/files/{uri:path}", response_class=FileResponse)
     def get_catalog_file(uri: str) -> FileResponse:
         try:
-            path = resolve_catalog_file(settings.catalog_dir, uri)
+            path = resolve_catalog_file(settings.catalog_dir, uri, generated_root())
         except CatalogFileError as exc:
             raise HTTPException(
                 status_code=404 if exc.kind == "missing" else 400, detail=exc.message
@@ -254,8 +301,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 model=None,
                 vision_model=None,
                 message=(
-                    "Language proposals are off: no provider is configured. Set VOYAGER_API_KEY "
-                    "in the repository's .env and restart the API, or use the object builder."
+                    "AI proposals are off in this public preview. Everything here works without "
+                    "them: mark plans yourself, and build objects by hand."
+                    if settings.public
+                    else "Language proposals are off: no provider is configured. Set "
+                    "VOYAGER_API_KEY in the repository's .env and restart the API, or use the "
+                    "object builder."
                 ),
             )
         recorded = provider.mode == "recorded"
@@ -278,7 +329,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if provider is None:
             raise HTTPException(
                 status_code=503,
-                detail="Language proposals are off (no provider configured). Use the object "
+                detail=OFF_IN_PREVIEW
+                if settings.public
+                else "Language proposals are off (no provider configured). Use the object "
                 "builder, or set VOYAGER_API_KEY in .env and restart the API.",
             )
         return provider
@@ -350,7 +403,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if vision is None:
             raise HTTPException(
                 status_code=503,
-                detail="Photo analysis is off (no provider configured). Mark the objects "
+                detail=OFF_IN_PREVIEW
+                if settings.public
+                else "Photo analysis is off (no provider configured). Mark the objects "
                 "yourself, or set VOYAGER_API_KEY in .env and restart the API.",
             )
         try:
@@ -364,7 +419,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if vision is None:
             raise HTTPException(
                 status_code=503,
-                detail="Plan proposals are off (no provider configured). Mark the floor and "
+                detail=OFF_IN_PREVIEW
+                if settings.public
+                else "Plan proposals are off (no provider configured). Mark the floor and "
                 "objects yourself, or set VOYAGER_API_KEY in .env and restart the API.",
             )
         try:
@@ -403,9 +460,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             chunks.append(chunk)
         data = b"".join(chunks)
         try:
-            return await anyio.to_thread.run_sync(
-                lambda: store_plan(data, filename, settings.sources_dir)
-            )
+            ensure_room(settings, request, len(data))
+            folder = sources_dir()
+            return await anyio.to_thread.run_sync(lambda: store_plan(data, filename, folder))
         except PlanError as exc:
             raise HTTPException(status_code=_plan_status(exc), detail=exc.message) from None
         except PhotoError as exc:
@@ -413,14 +470,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/api/v1/sources/plans/{sha256}/pages/{page}")
     async def read_plan_page(
+        request: Request,
         sha256: Annotated[str, Path(pattern=r"^[0-9a-f]{64}$")],
         page: Annotated[int, Path(ge=1, le=50)],
         filename: Annotated[str, Query(min_length=1, max_length=255)],
     ) -> DrawingAnalysis:
         """Render the chosen page of a stored PDF and read it as a picture in pixels."""
         try:
+            ensure_room(settings, request, 4 * 1024 * 1024)
+            folder = sources_dir()
             return await anyio.to_thread.run_sync(
-                lambda: read_pdf_page(sha256, page, filename, settings.sources_dir)
+                lambda: read_pdf_page(sha256, page, filename, folder)
             )
         except PlanError as exc:
             raise HTTPException(status_code=_plan_status(exc), detail=exc.message) from None
@@ -459,7 +519,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             chunks.append(chunk)
         data = b"".join(chunks)
         try:
-            return store_photo(data, filename, settings.sources_dir, expected_sha256)
+            ensure_room(settings, request, len(data))
+            return store_photo(data, filename, sources_dir(), expected_sha256)
         except PhotoError as exc:
             status = {"too_large": 413, "hash_mismatch": 409, "unsafe": 400}.get(exc.kind, 422)
             raise HTTPException(status_code=status, detail=exc.message) from None
@@ -498,9 +559,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             chunks.append(chunk)
         data = b"".join(chunks)
         try:
-            return await anyio.to_thread.run_sync(
-                lambda: analyse_drawing(data, filename, settings.sources_dir)
-            )
+            ensure_room(settings, request, len(data))
+            folder = sources_dir()
+            return await anyio.to_thread.run_sync(lambda: analyse_drawing(data, filename, folder))
         except DrawingError as exc:
             status = {
                 "too_large": 413,
@@ -515,13 +576,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def get_source_file(uri: str) -> FileResponse:
         if uri.startswith("drawings/"):
             # A plan image's picture (the image itself, or a rendered PDF page).
-            plan = library_file(settings.sources_dir, uri)
+            plan = library_file(sources_dir(), uri) or shared.get(uri)
             if plan is None or plan.suffix not in (".png", ".jpg"):
                 raise HTTPException(status_code=404, detail="That plan picture is not here.")
             media = "image/png" if plan.suffix == ".png" else "image/jpeg"
             return FileResponse(plan, media_type=media, headers={"Cache-Control": "no-cache"})
         try:
-            path = resolve_source_file(settings.sources_dir, uri)
+            path = resolve_source_file(sources_dir(), uri)
         except PhotoError as exc:
             raise HTTPException(
                 status_code=404 if exc.kind == "missing" else 400, detail=exc.message
@@ -536,7 +597,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             spec, scale, notes = fit_to_envelope(body.spec)
             model = build_model(spec)
             if store:
-                store_model(model, settings.catalog_dir)
+                store_model(model, catalog_dir())
         except GeneratorError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from None
         return GeneratedModel(
@@ -565,7 +626,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def generated_asset(body: GeneratedAssetRequest) -> CatalogAsset:
         """Turn a reviewed proposal into a catalog asset whose model file is stored and pinned."""
         try:
-            return create_generated_asset(body, settings.catalog_dir)
+            return create_generated_asset(body, catalog_dir())
         except AssistError as exc:
             _assist_failure(exc)
         except GeneratorError as exc:
@@ -575,7 +636,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def generated_asset_revision(body: GeneratedAssetRevisionRequest) -> CatalogAsset:
         """Store a revision of a generated asset as a new asset; the previous one is unchanged."""
         try:
-            return create_asset_revision(body, settings.catalog_dir)
+            return create_asset_revision(body, catalog_dir())
         except AssistError as exc:
             _assist_failure(exc)
         except GeneratorError as exc:
@@ -605,13 +666,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             document, upgraded_from = upgrade.document, upgrade.from_version
         project = _validated(document, upgraded_from=upgraded_from)
         try:
-            return restore_generated_models(project, settings.catalog_dir)
+            return restore_generated_models(project, catalog_dir())
         except GeneratorError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from None
 
     def _checked_source_files(project: Project, allow_missing: bool) -> tuple[int, list[str]]:
-        verified, issues, missing = check_source_files(project, settings.sources_dir, allow_missing)
-        drawing_issues, missing_drawings = check_drawing_files(project, settings.sources_dir)
+        verified, issues, missing = check_source_files(project, sources_dir(), allow_missing)
+        drawing_issues, missing_drawings = check_drawing_files(project, sources_dir(), shared)
         issues += drawing_issues
         missing += missing_drawings
         if issues:
@@ -619,10 +680,38 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return verified, missing
 
     def _checked_model_files(project: Project) -> int:
-        model_files, file_issues = check_model_files(project, settings.catalog_dir)
+        model_files, file_issues = check_model_files(
+            project, settings.catalog_dir, generated_root()
+        )
         if file_issues:
             raise RequestValidationError(file_issues)
         return model_files
+
+    if public:
+
+        @app.post("/api/v1/visitor/clear")
+        def clear_my_files(request: Request) -> dict[str, str]:
+            """Delete every file this visitor stored, now (the preview deletes them anyway)."""
+            clear_visitor(settings, request)
+            return {"status": "deleted"}
+
+    if settings.web_dir is not None:
+        web = settings.web_dir.resolve()
+
+        @app.get("/{path:path}", include_in_schema=False)
+        def web_app(path: str) -> FileResponse:
+            """The built web app, on the same origin; unknown paths get the app's page."""
+            if path.startswith(("api/", "health")):
+                raise HTTPException(status_code=404, detail="Not found")
+            candidate = (web / path).resolve()
+            if path and candidate.is_relative_to(web) and candidate.is_file():
+                cache = (
+                    "public, max-age=31536000, immutable"
+                    if path.startswith("assets/")
+                    else "no-cache"
+                )
+                return FileResponse(candidate, headers={"Cache-Control": cache})
+            return FileResponse(web / "index.html", headers={"Cache-Control": "no-cache"})
 
     return app
 

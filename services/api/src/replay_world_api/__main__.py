@@ -22,6 +22,8 @@ def main(argv: list[str]) -> None:
         port=settings.port,
         reload=reload,
         reload_dirs=watched if reload else None,
+        # The public preview logs no request lines: their query strings hold uploads' names.
+        access_log=not settings.public,
     )
 
 

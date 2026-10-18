@@ -80,6 +80,7 @@ const MAX_FILE_BYTES = 5 * 1024 * 1024;
 export const FIXTURE_LABEL: Record<FixtureName, string> = {
   "industrial-demo": "Industrial demo",
   foundation: "Foundation fixture",
+  sample: "Sample factory hall",
 };
 
 const isDirty = (s: Session): boolean => s.load.status === "loaded" && s.load.savedRevision !== s.load.editor.project.scene.revision;

@@ -17,13 +17,17 @@ import { PhotoImport } from "./components/PhotoImport";
 import { type RouteAsk, runChecks, sceneChecks } from "./checks/results";
 import { type DrawingView, SourceDrawing } from "./components/SourceDrawing";
 import { SourcePhoto } from "./components/SourcePhoto";
+import { AboutPreview } from "./components/AboutPreview";
+import { SampleGuide } from "./components/SampleGuide";
 import { StartPanel } from "./components/StartPanel";
 import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
 import { FixtureBanner, ModelNotice, PlanOverlay, ViewToolbar, WalkHud } from "./components/ViewControls";
 import { compareWithDrawing } from "./drawing/compare";
 import { type ReviewCorrection, reviewItems } from "./drawing/review";
+import { SAMPLE_MACHINE, SAMPLE_MOVE_TO, SAMPLE_PROJECT_ID, SAMPLE_ROUTE } from "./drawing/sampleProject";
 import { drawingSource, isPlanImage, toWorld } from "./drawing/world";
+import { PUBLIC_PREVIEW } from "./config";
 import type { Axis, CommandRequest, EditCommand } from "./editing/commands";
 import type { Outcome } from "./editing/history";
 import { copyId, copyName, instanceId, instanceName } from "./editing/newObjects";
@@ -145,7 +149,8 @@ function besideSource(source: SceneObject): [number, number] {
 
 export function App() {
   const health = useHealth(client);
-  const session = useProject(client);
+  // The public preview opens on the sample (ADR-054); development opens on the demo.
+  const session = useProject(client, PUBLIC_PREVIEW ? "sample" : "industrial-demo");
   const { scene, fileCheck, prompt, loadId, execute, undo, redo, save } = session;
   const project = scene.status === "loaded" ? scene.project : null;
   const source = scene.status === "loaded" ? scene.source : null;
@@ -154,7 +159,10 @@ export function App() {
   const assistOn = assist.status === "known" && assist.assist.available;
   const assistNote =
     assist.status === "known" ? assist.assist.message : assist.status === "checking" ? "Checking the assistant…" : assist.message;
-  const [start, setStart] = useState(() => !startSeen());
+  // The preview's first screen is the sample with its guide, not the start panel.
+  const [start, setStart] = useState(() => !PUBLIC_PREVIEW && !startSeen());
+  const [about, setAbout] = useState(false);
+  const [guideClosed, setGuideClosed] = useState(false);
   const [create, setCreate] = useState<"describe" | "builder" | null>(null);
   const [photoImport, setPhotoImport] = useState(false);
   const [drawingImport, setDrawingImport] = useState(false);
@@ -172,7 +180,7 @@ export function App() {
   /** The object whose generated model is being improved. */
   const [improve, setImprove] = useState<string | null>(null);
   const [rebuild, setRebuild] = useState<{ busy: boolean; message: string | null }>({ busy: false, message: null });
-  const overlayOpen = start || create !== null || photoImport || drawingImport || improve !== null;
+  const overlayOpen = start || about || create !== null || photoImport || drawingImport || improve !== null;
   // Selection and placement belong to the project they were made in.
   const [selection, setSelection] = useState<{ loadId: number; id: string | null }>({ loadId: 0, id: null });
   const [placement, setPlacement] = useState<Placement | null>(null);
@@ -199,6 +207,7 @@ export function App() {
   const checking = project !== null && sourceDrawing !== null && mode !== "walk" && drawingPanel.open && (drawingPanel.view === "check" || drawingPanel.view === "compare");
   const checks = useMemo(() => (checking && project ? runChecks(project, routeAsk) : null), [checking, project, routeAsk]);
   const highlights = useMemo(() => (checks && drawingPanel.view === "check" ? sceneChecks(checks.now, routeAsk) : null), [checks, drawingPanel.view, routeAsk]);
+  const isSample = project?.id === SAMPLE_PROJECT_ID;
   const selectedId = selection.loadId === loadId ? selection.id : null;
   const focusedDrawn = reviewFocus?.loadId === loadId ? reviewFocus.drawnId : null;
   const selected = project?.scene.objects.find((o) => o.id === selectedId) ?? null;
@@ -258,6 +267,31 @@ export function App() {
     },
     [execute, select],
   );
+
+  // The sample opens ready to try: the aisle route asked, Check layout shown, Machine B selected
+  // with the move tool (set once per load, during render rather than in an effect).
+  const [sampleFor, setSampleFor] = useState<number | null>(null);
+  const sampleMachine = isSample ? (project?.scene.objects.find((o) => o.name === SAMPLE_MACHINE) ?? null) : null;
+  if (isSample && sourceDrawing && sampleFor !== loadId) {
+    setSampleFor(loadId);
+    setRouteAsk({ sourceId: sourceDrawing.id, start: SAMPLE_ROUTE.start, end: SAMPLE_ROUTE.end, width: SAMPLE_ROUTE.width, allowance: SAMPLE_ROUTE.allowance });
+    setDrawingPanel({ open: true, view: "check" });
+    if (sampleMachine) setSelection({ loadId, id: sampleMachine.id });
+    setTool("move");
+    setGuideClosed(false);
+  }
+  const sampleMoved = useMemo(
+    () => (isSample && project && sampleMachine ? (compareWithDrawing(project)?.changes.find((c) => c.objectId === sampleMachine.id)?.status === "changed") : false),
+    [isSample, project, sampleMachine],
+  );
+  const moveForMe = useCallback(() => {
+    if (!project || !sourceDrawing || !sampleMachine) return;
+    const at = toWorld(sourceDrawing.source_to_world, SAMPLE_MOVE_TO);
+    const transform = { ...sampleMachine.transform, position_m: { ...sampleMachine.transform.position_m, x: at.x, z: at.z } };
+    run({ baseRevision: project.scene.revision, command: { type: "set_transform", objectId: sampleMachine.id, transform } });
+    if (mode === "walk") setMode("orbit");
+    setDrawingPanel({ open: true, view: "check" });
+  }, [mode, project, run, sampleMachine, sourceDrawing]);
 
   /** Handles and placement: a rejection is shown as a notice. */
   const runAndReport = useCallback(
@@ -509,6 +543,7 @@ export function App() {
         onStart={() => setStart(true)}
         details={details}
         onDetails={() => setDetails(!details)}
+        onAbout={PUBLIC_PREVIEW ? () => setAbout(true) : undefined}
       />
       <aside className="panel panel-left">
         <JourneyPanel
@@ -533,6 +568,20 @@ export function App() {
             setDrawingPanel({ open: true, view: "check" });
           }}
         />
+        {isSample && !guideClosed && (
+          <SampleGuide
+            route={checks?.now.route?.outcome ?? null}
+            drawn={checks?.drawn.route?.outcome ?? null}
+            machineMoved={sampleMoved}
+            onMoveForMe={moveForMe}
+            onShowCheck={() => setDrawingPanel({ open: true, view: "check" })}
+            onUpload={() => {
+              if (mode === "walk") setMode("orbit");
+              setDrawingImport(true);
+            }}
+            onClose={() => setGuideClosed(true)}
+          />
+        )}
         {!details && (
           <SelectionCard
             project={project}
@@ -754,6 +803,12 @@ export function App() {
             void session.openFile(file);
           }}
           onClose={closeStart}
+          preview={PUBLIC_PREVIEW}
+          onSample={() => {
+            closeStart();
+            if (source?.kind !== "fixture" || source.name !== "sample") session.loadFixture("sample");
+            else setGuideClosed(false);
+          }}
           onFullEditor={() => {
             closeStart();
             setDetails(true);
@@ -772,6 +827,7 @@ export function App() {
           }}
         />
       )}
+      {about && <AboutPreview client={client} onClose={() => setAbout(false)} />}
       {drawingImport && !prompt && (
         <DrawingImport
           client={client}
@@ -784,8 +840,9 @@ export function App() {
             setReviewFocus(null);
             session.loadCreated(created, filename, "drawing");
           }}
+          proposals={assist.status === "known" && assist.assist.available && assist.assist.vision_model !== null}
           onAttach={
-            project && sourceDrawing
+            project && sourceDrawing && !isSample
               ? (attached) => {
                   const outcome = run({ baseRevision: project.scene.revision, command: { type: "attach_source", source: attached } });
                   if (outcome && !outcome.ok) setRejection(outcome.rejection.message);

@@ -9,6 +9,7 @@ export default defineConfig(
   {
     ignores: [
       "**/dist/**",
+      "**/dist-public/**",
       "**/node_modules/**",
       "**/test-results/**",
       "bench-results/**",

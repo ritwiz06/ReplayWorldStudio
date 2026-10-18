@@ -25,11 +25,13 @@ interface Props {
   onStart: () => void;
   /** The advanced panels (object list, catalog, inspector) are shown. */
   details: boolean;
+  /** The public preview's "Early preview" label, opening what it does and where files go. */
+  onAbout?: (() => void) | undefined;
   onDetails: () => void;
 }
 
 const FIXTURES: FixtureName[] = ["industrial-demo", "foundation"];
-const SHORT_FIXTURE_LABEL: Record<FixtureName, string> = { "industrial-demo": "Demo", foundation: "Foundation" };
+const SHORT_FIXTURE_LABEL: Record<FixtureName, string> = { "industrial-demo": "Demo", foundation: "Foundation", sample: "Sample" };
 
 function sceneStatus(scene: SceneState): [tone: string, text: string] {
   switch (scene.status) {
@@ -42,7 +44,7 @@ function sceneStatus(scene: SceneState): [tone: string, text: string] {
   }
 }
 
-export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel, redoLabel, busy, onUndo, onRedo, onSave, onOpenFile, onLoadFixture, onStart, details, onDetails }: Props) {
+export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel, redoLabel, busy, onUndo, onRedo, onSave, onOpenFile, onLoadFixture, onStart, details, onDetails, onAbout }: Props) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [tone, text] = sceneStatus(scene);
   const checking = fileCheck.status === "checking";
@@ -59,6 +61,11 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
       <div className="brand" title="Replay World Studio">
         <span className="brand-mark" aria-hidden="true" />
         <span className="brand-text">Replay World Studio</span>
+        {onAbout && (
+          <button type="button" className="chip chip-preview" data-testid="preview-badge" onClick={onAbout} title="What this preview does, where your files go, and how to give feedback">
+            Early preview · about &amp; privacy
+          </button>
+        )}
       </div>
       <div className="project-name" data-testid="project-name" title={loaded ? scene.project.name : undefined}>
         {loaded ? scene.project.name : "No project loaded"}

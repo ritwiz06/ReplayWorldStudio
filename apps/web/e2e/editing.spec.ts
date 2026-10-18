@@ -214,7 +214,7 @@ test("edits, undoes and redoes, saves and reopens the demo with every value inta
   await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 17 objects");
   await expect(page.getByTestId("undo")).toBeDisabled(); // undo history is not part of the file
   await expect(page.getByTestId("edit-count")).toHaveText("8 edits recorded");
-  await expect(page.getByTestId("fixture-banner")).toContainText("Edited layout - not checked for clearance or feasibility");
+  await expect(page.getByTestId("fixture-banner")).toContainText("Edited layout - still synthetic; only Check layout checks it");
   await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", "4/4 ready, 0 failed");
   await page.getByRole("button", { name: /^Infeed conveyor/ }).click();
   await expect(page.getByTestId("field-width")).toHaveValue("3.600");

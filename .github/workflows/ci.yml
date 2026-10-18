@@ -101,3 +101,50 @@ jobs:
           name: playwright-test-results
           path: apps/web/test-results/
           retention-days: 7
+
+  public-preview:
+    # The release candidate (ADR-054): the container image builds, its server answers with AI
+    # off, and the public journeys pass against that container as anonymous visitors (the
+    # sample's move-and-check, DXF and plan picture saved and reopened by another visitor,
+    # cross-visitor isolation, the API unreachable). Software WebGL: behaviour only.
+    name: Public preview (container and production-build journeys)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Build the container image
+        run: docker build -t replay-world-studio:ci .
+
+      - name: Run it with a key in its environment (it must stay unused)
+        run: |
+          docker run -d --name rws -p 8000:8000 -e VOYAGER_API_KEY=ci-placeholder-not-a-key replay-world-studio:ci
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8000/health && break; sleep 1; done
+          curl -sf http://127.0.0.1:8000/api/v1/assist/status | grep -q '"available":false'
+          if docker exec rws test -e /app/.env; then echo "a .env file is in the image"; exit 1; fi
+          if docker exec rws sh -c 'grep -lq ci-placeholder-not-a-key /app/web/assets/*'; then echo "the key reached the web bundle"; exit 1; fi
+
+      - name: Install locked dependencies and Playwright's Chromium
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --filter @replay-world/web exec playwright install --with-deps chromium --only-shell
+
+      - name: Public journeys against the container
+        run: pnpm --filter @replay-world/web test:e2e:public
+        env:
+          PUBLIC_URL: http://127.0.0.1:8000
+
+      - name: Keep traces of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-preview-test-results
+          path: apps/web/test-results/
+          retention-days: 7

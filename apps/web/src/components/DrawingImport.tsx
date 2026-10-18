@@ -19,6 +19,8 @@ interface Props {
   onCreated: (project: Project, filename: string) => void;
   /** When a world from a plan is open: keep the file with it instead (not aligned, ENR-01). */
   onAttach?: ((source: SourceDocument) => void) | undefined;
+  /** A vision model is set up to draft plan pictures (off in the public preview). */
+  proposals?: boolean | undefined;
 }
 
 /** A later plan or drawing kept with the open world: stored by hash, not aligned or merged. */
@@ -51,7 +53,7 @@ type Step =
  * the browser journey to record the measurements. */
 type Timing = { startedAt: number; pageAt: number | null; planMs: number | null; modelMs: number | null; draftMs: number | null };
 
-export function DrawingImport({ client, onClose, onCreated, onAttach }: Props) {
+export function DrawingImport({ client, onClose, onCreated, onAttach, proposals = true }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const controller = useRef<AbortController | null>(null);
@@ -192,8 +194,9 @@ export function DrawingImport({ client, onClose, onCreated, onAttach }: Props) {
             stays linked, so every object shows where it came from.
           </p>
           <p className="muted small">
-            Up to 10 MB · a DXF is read here, no AI involved · a PDF page or plan image is shown at once; you mark one length you know, and can ask the vision model to
-            draft the objects · a DWG has to be exported as DXF first (Save As &gt; DXF in your CAD program).
+            Up to 10 MB · a DXF is read here, no AI involved · a PDF page or plan image is shown at once; you mark one length you know, then
+            {proposals ? " ask the vision model to draft the objects or mark them yourself" : " mark the floor and objects yourself"} · a DWG has to be exported as DXF
+            first (Save As &gt; DXF in your CAD program).
           </p>
           {reading ? (
             <div className="drawing-reading" role="status" data-testid="drawing-reading">
@@ -259,6 +262,7 @@ export function DrawingImport({ client, onClose, onCreated, onAttach }: Props) {
           onDraftReady={() => setTiming((t) => (t.draftMs === null ? { ...t, draftMs: Math.round(performance.now() - t.startedAt) } : t))}
           onCreated={(project) => onCreated(project, step.analysis.filename)}
           onAttach={onAttach ? () => onAttach(attachedSource(step.analysis)) : undefined}
+          proposals={proposals}
           onAnother={() => setStep({ kind: "choose", error: null, dwg: false })}
         />
       )}

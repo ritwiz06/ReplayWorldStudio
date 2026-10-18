@@ -1,0 +1,1909 @@
+{
+  "schema_version": "0.12.0",
+  "id": "proj-sample-factory-hall",
+  "name": "Sample factory hall (synthetic)",
+  "units": {
+    "length": "m",
+    "time": "s",
+    "mass": "kg",
+    "angle": "rad"
+  },
+  "world_frame": {
+    "handedness": "right",
+    "up_axis": "+Y",
+    "floor_plane": "XZ"
+  },
+  "fixture": {
+    "kind": "demonstration",
+    "note": "A synthetic sample made for this preview: a 20 m x 10 m hall drawn as a DXF, reviewed, with two racks and a 2 m aisle. Not a real site; sizes are the drawing's, heights are assumed for display."
+  },
+  "sources": [
+    {
+      "id": "src-dxf-5937cfd896ae",
+      "kind": "dxf",
+      "filename": "layout-checks-mm.dxf",
+      "sha256": "5937cfd896aea81b21bf50425a7f3cffe8b1452183bd87f2c5b062b3c367aa26",
+      "source_to_world": {
+        "convention": "plan_xy_to_world_x_neg_z",
+        "source_unit": "mm",
+        "metres_per_source_unit": 0.001,
+        "rotation_about_world_y_rad": 0,
+        "translation_m": {
+          "x": -10,
+          "y": 0,
+          "z": 5
+        }
+      },
+      "import_warnings": [],
+      "image": null,
+      "photo_import": null,
+      "drawing": {
+        "reader": "rws-dxf/1",
+        "file": {
+          "uri": "drawings/5937cfd896aea81b21bf50425a7f3cffe8b1452183bd87f2c5b062b3c367aa26.dxf",
+          "bytes": 4445
+        },
+        "raster": null,
+        "dxf_version": "AC1015",
+        "units": {
+          "insunits": 4,
+          "declared": "mm",
+          "measurement": "metric",
+          "question": null,
+          "basis": "drawing_header"
+        },
+        "layers": [
+          "0",
+          "A-WALL",
+          "EQUIPMENT",
+          "KEEP-CLEAR",
+          "RACKS",
+          "TANKS",
+          "TEXT"
+        ],
+        "extent_min": {
+          "x": 0,
+          "y": 0
+        },
+        "extent_max": {
+          "x": 20000,
+          "y": 10000
+        },
+        "lines": [
+          {
+            "ref": {
+              "handle": "101",
+              "layer": "A-WALL",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 20000,
+                "y": 0
+              },
+              {
+                "x": 20000,
+                "y": 10000
+              },
+              {
+                "x": 0,
+                "y": 10000
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "102",
+              "layer": "A-WALL",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 17000,
+                "y": 0
+              },
+              {
+                "x": 17200,
+                "y": 0
+              },
+              {
+                "x": 17200,
+                "y": 4600
+              },
+              {
+                "x": 17000,
+                "y": 4600
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "104",
+              "layer": "A-WALL",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 17000,
+                "y": 5400
+              },
+              {
+                "x": 17200,
+                "y": 5400
+              },
+              {
+                "x": 17200,
+                "y": 10000
+              },
+              {
+                "x": 17000,
+                "y": 10000
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "106",
+              "layer": "RACKS",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 0,
+                "y": 6000
+              },
+              {
+                "x": 15000,
+                "y": 6000
+              },
+              {
+                "x": 15000,
+                "y": 7000
+              },
+              {
+                "x": 0,
+                "y": 7000
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "108",
+              "layer": "RACKS",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 0,
+                "y": 3000
+              },
+              {
+                "x": 15000,
+                "y": 3000
+              },
+              {
+                "x": 15000,
+                "y": 4000
+              },
+              {
+                "x": 0,
+                "y": 4000
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "10A",
+              "layer": "EQUIPMENT",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 8000,
+                "y": 7468.629
+              },
+              {
+                "x": 9131.371,
+                "y": 8600
+              },
+              {
+                "x": 8000,
+                "y": 9731.371
+              },
+              {
+                "x": 6868.629,
+                "y": 8600
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "10C",
+              "layer": "EQUIPMENT",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 8900,
+                "y": 8400
+              },
+              {
+                "x": 9500,
+                "y": 8400
+              },
+              {
+                "x": 9500,
+                "y": 8800
+              },
+              {
+                "x": 8900,
+                "y": 8800
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "10E",
+              "layer": "KEEP-CLEAR",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 11000,
+                "y": 8000
+              },
+              {
+                "x": 13000,
+                "y": 8000
+              },
+              {
+                "x": 13000,
+                "y": 9600
+              },
+              {
+                "x": 11000,
+                "y": 9600
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "10F",
+              "layer": "EQUIPMENT",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 11500,
+                "y": 9600
+              },
+              {
+                "x": 12500,
+                "y": 9600
+              },
+              {
+                "x": 12500,
+                "y": 9900
+              },
+              {
+                "x": 11500,
+                "y": 9900
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "111",
+              "layer": "EQUIPMENT",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 13800,
+                "y": 8200
+              },
+              {
+                "x": 15300,
+                "y": 8200
+              },
+              {
+                "x": 15300,
+                "y": 9200
+              },
+              {
+                "x": 13800,
+                "y": 9200
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "113",
+              "layer": "EQUIPMENT",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 3000,
+                "y": 1000
+              },
+              {
+                "x": 4200,
+                "y": 1000
+              },
+              {
+                "x": 4200,
+                "y": 1800
+              },
+              {
+                "x": 3000,
+                "y": 1800
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "115",
+              "layer": "TANKS",
+              "entity": "CIRCLE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 12500,
+                "y": 1500
+              },
+              {
+                "x": 12490.392640201615,
+                "y": 1597.545161008064
+              },
+              {
+                "x": 12461.939766255644,
+                "y": 1691.3417161825448
+              },
+              {
+                "x": 12415.734806151273,
+                "y": 1777.7851165098011
+              },
+              {
+                "x": 12353.553390593273,
+                "y": 1853.5533905932737
+              },
+              {
+                "x": 12277.785116509802,
+                "y": 1915.7348061512726
+              },
+              {
+                "x": 12191.341716182545,
+                "y": 1961.9397662556435
+              },
+              {
+                "x": 12097.545161008064,
+                "y": 1990.3926402016152
+              },
+              {
+                "x": 12000,
+                "y": 2000
+              },
+              {
+                "x": 11902.454838991936,
+                "y": 1990.3926402016152
+              },
+              {
+                "x": 11808.658283817455,
+                "y": 1961.9397662556435
+              },
+              {
+                "x": 11722.214883490198,
+                "y": 1915.7348061512726
+              },
+              {
+                "x": 11646.446609406727,
+                "y": 1853.553390593274
+              },
+              {
+                "x": 11584.265193848727,
+                "y": 1777.7851165098011
+              },
+              {
+                "x": 11538.060233744356,
+                "y": 1691.341716182545
+              },
+              {
+                "x": 11509.607359798385,
+                "y": 1597.5451610080643
+              },
+              {
+                "x": 11500,
+                "y": 1500
+              },
+              {
+                "x": 11509.607359798385,
+                "y": 1402.4548389919357
+              },
+              {
+                "x": 11538.060233744356,
+                "y": 1308.6582838174552
+              },
+              {
+                "x": 11584.265193848727,
+                "y": 1222.214883490199
+              },
+              {
+                "x": 11646.446609406727,
+                "y": 1146.4466094067263
+              },
+              {
+                "x": 11722.214883490198,
+                "y": 1084.2651938487274
+              },
+              {
+                "x": 11808.658283817455,
+                "y": 1038.0602337443568
+              },
+              {
+                "x": 11902.454838991936,
+                "y": 1009.6073597983848
+              },
+              {
+                "x": 12000,
+                "y": 1000
+              },
+              {
+                "x": 12097.545161008064,
+                "y": 1009.6073597983848
+              },
+              {
+                "x": 12191.341716182545,
+                "y": 1038.0602337443568
+              },
+              {
+                "x": 12277.7851165098,
+                "y": 1084.2651938487272
+              },
+              {
+                "x": 12353.553390593273,
+                "y": 1146.446609406726
+              },
+              {
+                "x": 12415.734806151273,
+                "y": 1222.2148834901989
+              },
+              {
+                "x": 12461.939766255644,
+                "y": 1308.6582838174547
+              },
+              {
+                "x": 12490.392640201615,
+                "y": 1402.4548389919357
+              }
+            ],
+            "closed": true
+          }
+        ],
+        "labels": [
+          {
+            "ref": {
+              "handle": "103",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Partition",
+            "at": {
+              "x": 17100,
+              "y": 2300
+            }
+          },
+          {
+            "ref": {
+              "handle": "105",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Partition",
+            "at": {
+              "x": 17100,
+              "y": 7700
+            }
+          },
+          {
+            "ref": {
+              "handle": "107",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Rack A",
+            "at": {
+              "x": 7500,
+              "y": 6500
+            }
+          },
+          {
+            "ref": {
+              "handle": "109",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Rack B",
+            "at": {
+              "x": 7500,
+              "y": 3500
+            }
+          },
+          {
+            "ref": {
+              "handle": "10B",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Mixer",
+            "at": {
+              "x": 8000,
+              "y": 8600
+            }
+          },
+          {
+            "ref": {
+              "handle": "10D",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Control panel",
+            "at": {
+              "x": 9200,
+              "y": 8600
+            }
+          },
+          {
+            "ref": {
+              "handle": "110",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Electrical cabinet",
+            "at": {
+              "x": 12000,
+              "y": 9750
+            }
+          },
+          {
+            "ref": {
+              "handle": "112",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Machine B",
+            "at": {
+              "x": 14550,
+              "y": 8700
+            }
+          },
+          {
+            "ref": {
+              "handle": "114",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Packing table",
+            "at": {
+              "x": 3600,
+              "y": 1400
+            }
+          },
+          {
+            "ref": {
+              "handle": "116",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Water tank",
+            "at": {
+              "x": 12000,
+              "y": 1500
+            }
+          }
+        ],
+        "objects": [
+          {
+            "id": "dxf-101",
+            "object_id": "obj-dxf-101",
+            "role": "floor",
+            "label": "Floor",
+            "label_from": "generic",
+            "kind": "structure",
+            "refs": [
+              {
+                "handle": "101",
+                "layer": "A-WALL",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 20000,
+                "y": 0
+              },
+              {
+                "x": 20000,
+                "y": 10000
+              },
+              {
+                "x": 0,
+                "y": 10000
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 10000,
+              "y": 5000
+            },
+            "width": 20000,
+            "depth": 10000,
+            "rotation_rad": 0,
+            "notes": [
+              "The largest closed outline, built as the floor."
+            ]
+          },
+          {
+            "id": "dxf-102",
+            "object_id": "obj-dxf-102",
+            "role": "footprint",
+            "label": "Partition",
+            "label_from": "text",
+            "kind": "structure",
+            "refs": [
+              {
+                "handle": "102",
+                "layer": "A-WALL",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 17000,
+                "y": 0
+              },
+              {
+                "x": 17200,
+                "y": 0
+              },
+              {
+                "x": 17200,
+                "y": 4600
+              },
+              {
+                "x": 17000,
+                "y": 4600
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 17100,
+              "y": 2300
+            },
+            "width": 200,
+            "depth": 4600,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-104",
+            "object_id": "obj-dxf-104",
+            "role": "footprint",
+            "label": "Partition",
+            "label_from": "text",
+            "kind": "structure",
+            "refs": [
+              {
+                "handle": "104",
+                "layer": "A-WALL",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 17000,
+                "y": 5400
+              },
+              {
+                "x": 17200,
+                "y": 5400
+              },
+              {
+                "x": 17200,
+                "y": 10000
+              },
+              {
+                "x": 17000,
+                "y": 10000
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 17100,
+              "y": 7700
+            },
+            "width": 200,
+            "depth": 4600,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-106",
+            "object_id": "obj-dxf-106",
+            "role": "footprint",
+            "label": "Rack A",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "106",
+                "layer": "RACKS",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 0,
+                "y": 6000
+              },
+              {
+                "x": 15000,
+                "y": 6000
+              },
+              {
+                "x": 15000,
+                "y": 7000
+              },
+              {
+                "x": 0,
+                "y": 7000
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 7500,
+              "y": 6500
+            },
+            "width": 15000,
+            "depth": 1000,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-108",
+            "object_id": "obj-dxf-108",
+            "role": "footprint",
+            "label": "Rack B",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "108",
+                "layer": "RACKS",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 0,
+                "y": 3000
+              },
+              {
+                "x": 15000,
+                "y": 3000
+              },
+              {
+                "x": 15000,
+                "y": 4000
+              },
+              {
+                "x": 0,
+                "y": 4000
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 7500,
+              "y": 3500
+            },
+            "width": 15000,
+            "depth": 1000,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-10a",
+            "object_id": "obj-dxf-10a",
+            "role": "footprint",
+            "label": "Mixer",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "10A",
+                "layer": "EQUIPMENT",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 8000,
+                "y": 7468.629
+              },
+              {
+                "x": 9131.371,
+                "y": 8600
+              },
+              {
+                "x": 8000,
+                "y": 9731.371
+              },
+              {
+                "x": 6868.629,
+                "y": 8600
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 8000,
+              "y": 8599.999999999998
+            },
+            "width": 1600.0002122756123,
+            "depth": 1600.0002122756105,
+            "rotation_rad": 0.7853981633974483,
+            "notes": []
+          },
+          {
+            "id": "dxf-10c",
+            "object_id": "obj-dxf-10c",
+            "role": "footprint",
+            "label": "Control panel",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "10C",
+                "layer": "EQUIPMENT",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 8900,
+                "y": 8400
+              },
+              {
+                "x": 9500,
+                "y": 8400
+              },
+              {
+                "x": 9500,
+                "y": 8800
+              },
+              {
+                "x": 8900,
+                "y": 8800
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 9200,
+              "y": 8600
+            },
+            "width": 600,
+            "depth": 400,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-10e",
+            "object_id": "obj-dxf-10e",
+            "role": "footprint",
+            "label": "Keep-clear zone 1",
+            "label_from": "layer",
+            "kind": "keep_clear",
+            "refs": [
+              {
+                "handle": "10E",
+                "layer": "KEEP-CLEAR",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 11000,
+                "y": 8000
+              },
+              {
+                "x": 13000,
+                "y": 8000
+              },
+              {
+                "x": 13000,
+                "y": 9600
+              },
+              {
+                "x": 11000,
+                "y": 9600
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 12000,
+              "y": 8800
+            },
+            "width": 2000,
+            "depth": 1600,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-10f",
+            "object_id": "obj-dxf-10f",
+            "role": "footprint",
+            "label": "Electrical cabinet",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "10F",
+                "layer": "EQUIPMENT",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 11500,
+                "y": 9600
+              },
+              {
+                "x": 12500,
+                "y": 9600
+              },
+              {
+                "x": 12500,
+                "y": 9900
+              },
+              {
+                "x": 11500,
+                "y": 9900
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 12000,
+              "y": 9750
+            },
+            "width": 1000,
+            "depth": 300,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-111",
+            "object_id": "obj-dxf-111",
+            "role": "footprint",
+            "label": "Machine B",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "111",
+                "layer": "EQUIPMENT",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 13800,
+                "y": 8200
+              },
+              {
+                "x": 15300,
+                "y": 8200
+              },
+              {
+                "x": 15300,
+                "y": 9200
+              },
+              {
+                "x": 13800,
+                "y": 9200
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 14550,
+              "y": 8700
+            },
+            "width": 1500,
+            "depth": 1000,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-113",
+            "object_id": "obj-dxf-113",
+            "role": "footprint",
+            "label": "Packing table",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "113",
+                "layer": "EQUIPMENT",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 3000,
+                "y": 1000
+              },
+              {
+                "x": 4200,
+                "y": 1000
+              },
+              {
+                "x": 4200,
+                "y": 1800
+              },
+              {
+                "x": 3000,
+                "y": 1800
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 3600,
+              "y": 1400
+            },
+            "width": 1200,
+            "depth": 800,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-115",
+            "object_id": "obj-dxf-115",
+            "role": "footprint",
+            "label": "Water tank",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "115",
+                "layer": "TANKS",
+                "entity": "CIRCLE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 12500,
+                "y": 1500
+              },
+              {
+                "x": 12490.392640201615,
+                "y": 1597.545161008064
+              },
+              {
+                "x": 12461.939766255644,
+                "y": 1691.3417161825448
+              },
+              {
+                "x": 12415.734806151273,
+                "y": 1777.7851165098011
+              },
+              {
+                "x": 12353.553390593273,
+                "y": 1853.5533905932737
+              },
+              {
+                "x": 12277.785116509802,
+                "y": 1915.7348061512726
+              },
+              {
+                "x": 12191.341716182545,
+                "y": 1961.9397662556435
+              },
+              {
+                "x": 12097.545161008064,
+                "y": 1990.3926402016152
+              },
+              {
+                "x": 12000,
+                "y": 2000
+              },
+              {
+                "x": 11902.454838991936,
+                "y": 1990.3926402016152
+              },
+              {
+                "x": 11808.658283817455,
+                "y": 1961.9397662556435
+              },
+              {
+                "x": 11722.214883490198,
+                "y": 1915.7348061512726
+              },
+              {
+                "x": 11646.446609406727,
+                "y": 1853.553390593274
+              },
+              {
+                "x": 11584.265193848727,
+                "y": 1777.7851165098011
+              },
+              {
+                "x": 11538.060233744356,
+                "y": 1691.341716182545
+              },
+              {
+                "x": 11509.607359798385,
+                "y": 1597.5451610080643
+              },
+              {
+                "x": 11500,
+                "y": 1500
+              },
+              {
+                "x": 11509.607359798385,
+                "y": 1402.4548389919357
+              },
+              {
+                "x": 11538.060233744356,
+                "y": 1308.6582838174552
+              },
+              {
+                "x": 11584.265193848727,
+                "y": 1222.214883490199
+              },
+              {
+                "x": 11646.446609406727,
+                "y": 1146.4466094067263
+              },
+              {
+                "x": 11722.214883490198,
+                "y": 1084.2651938487274
+              },
+              {
+                "x": 11808.658283817455,
+                "y": 1038.0602337443568
+              },
+              {
+                "x": 11902.454838991936,
+                "y": 1009.6073597983848
+              },
+              {
+                "x": 12000,
+                "y": 1000
+              },
+              {
+                "x": 12097.545161008064,
+                "y": 1009.6073597983848
+              },
+              {
+                "x": 12191.341716182545,
+                "y": 1038.0602337443568
+              },
+              {
+                "x": 12277.7851165098,
+                "y": 1084.2651938487272
+              },
+              {
+                "x": 12353.553390593273,
+                "y": 1146.446609406726
+              },
+              {
+                "x": 12415.734806151273,
+                "y": 1222.2148834901989
+              },
+              {
+                "x": 12461.939766255644,
+                "y": 1308.6582838174547
+              },
+              {
+                "x": 12490.392640201615,
+                "y": 1402.4548389919357
+              }
+            ],
+            "footprint_fit": "enclosing",
+            "tolerance": null,
+            "centre": {
+              "x": 12000,
+              "y": 1500
+            },
+            "width": 1000,
+            "depth": 1000,
+            "rotation_rad": 0,
+            "notes": [
+              "A circle (radius 500 drawing units), drawn as a 32-sided outline; the box is the square around it."
+            ]
+          }
+        ],
+        "skipped": [
+          {
+            "entity": "SPLINE",
+            "layer": "EQUIPMENT",
+            "count": 1,
+            "handles": [
+              "117"
+            ],
+            "layout": true,
+            "reason": "Splines are not in the supported subset."
+          }
+        ],
+        "omitted": [
+          {
+            "entity": "SPLINE",
+            "handle": "117",
+            "layer": "EQUIPMENT",
+            "min": {
+              "x": 17250,
+              "y": 4500
+            },
+            "max": {
+              "x": 17700,
+              "y": 5500
+            }
+          }
+        ],
+        "review": {
+          "floor": {
+            "choice": "outline",
+            "drawn_id": "dxf-101",
+            "object_id": "obj-dxf-floor",
+            "status": "accepted"
+          },
+          "scale": {
+            "basis": "drawing_unit",
+            "unit": "mm",
+            "metres_per_unit": 0.001,
+            "status": "confirmed",
+            "reference": null
+          },
+          "objects": [
+            {
+              "drawn_id": "dxf-101",
+              "status": "used_as_floor"
+            },
+            {
+              "drawn_id": "dxf-102",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-104",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-106",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-108",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-10a",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-10c",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-10e",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-10f",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-111",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-113",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-115",
+              "status": "accepted"
+            }
+          ],
+          "omissions": "accepted"
+        }
+      }
+    }
+  ],
+  "catalog": [],
+  "scene": {
+    "id": "scene-dxf-5937cfd896ae",
+    "name": "layout-checks-mm (draft from drawing)",
+    "revision": 0,
+    "objects": [
+      {
+        "id": "obj-dxf-floor",
+        "name": "Floor",
+        "kind": "structure",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 0,
+            "y": -0.1,
+            "z": 0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 20,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 101 on layer A-WALL, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.1,
+            "origin": "default",
+            "source_ref": "Floor slab thickness for display; a drawing gives no thickness",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 10,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 101 on layer A-WALL, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-102",
+        "name": "Partition",
+        "kind": "structure",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 7.1,
+            "y": 0,
+            "z": 2.7
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.2,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 102 on layer A-WALL, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 3,
+            "origin": "default",
+            "source_ref": "Display height for the draft (typical for a column or wall): not in the drawing and not measured. A check that needs the height says \"height needed\".",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 4.6,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 102 on layer A-WALL, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-104",
+        "name": "Partition",
+        "kind": "structure",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 7.1,
+            "y": 0,
+            "z": -2.7
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.2,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 104 on layer A-WALL, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 3,
+            "origin": "default",
+            "source_ref": "Display height for the draft (typical for a column or wall): not in the drawing and not measured. A check that needs the height says \"height needed\".",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 4.6,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 104 on layer A-WALL, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-106",
+        "name": "Rack A",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": -2.5,
+            "y": 0,
+            "z": -1.5
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 15,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 106 on layer RACKS, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 2.4,
+            "origin": "default",
+            "source_ref": "Display height for the draft (typical for a rack or shelving): not in the drawing and not measured. A check that needs the height says \"height needed\".",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 106 on layer RACKS, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-108",
+        "name": "Rack B",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": -2.5,
+            "y": 0,
+            "z": 1.5
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 15,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 108 on layer RACKS, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 2.4,
+            "origin": "default",
+            "source_ref": "Display height for the draft (typical for a rack or shelving): not in the drawing and not measured. A check that needs the height says \"height needed\".",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 108 on layer RACKS, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-10a",
+        "name": "Mixer",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": -2,
+            "y": 0,
+            "z": -3.6
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0.785398,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.6,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 10A on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.2,
+            "origin": "default",
+            "source_ref": "Display height for the draft (typical for a piece of equipment): not in the drawing and not measured. A check that needs the height says \"height needed\".",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1.6,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 10A on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-10c",
+        "name": "Control panel",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": -0.8,
+            "y": 0,
+            "z": -3.6
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.6,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 10C on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 2,
+            "origin": "default",
+            "source_ref": "Display height for the draft (typical for a cabinet or panel): not in the drawing and not measured. A check that needs the height says \"height needed\".",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.4,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 10C on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-10e",
+        "name": "Keep-clear zone 1",
+        "kind": "keep_clear",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 2,
+            "y": 0,
+            "z": -3.8
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 2,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 10E on layer KEEP-CLEAR, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.005,
+            "origin": "default",
+            "source_ref": "Drawn as a marking on the floor; a drawing gives no height",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1.6,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 10E on layer KEEP-CLEAR, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-10f",
+        "name": "Electrical cabinet",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 2,
+            "y": 0,
+            "z": -4.75
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 10F on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 2,
+            "origin": "default",
+            "source_ref": "Display height for the draft (typical for a cabinet or panel): not in the drawing and not measured. A check that needs the height says \"height needed\".",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.3,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 10F on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-111",
+        "name": "Machine B",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 4.55,
+            "y": 0,
+            "z": -3.7
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.5,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 111 on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.6,
+            "origin": "default",
+            "source_ref": "Display height for the draft (typical for a machine): not in the drawing and not measured. A check that needs the height says \"height needed\".",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 111 on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-113",
+        "name": "Packing table",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": -6.4,
+            "y": 0,
+            "z": 3.6
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.2,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 113 on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.9,
+            "origin": "default",
+            "source_ref": "Display height for the draft (typical for a table or bench): not in the drawing and not measured. A check that needs the height says \"height needed\".",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.8,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: LWPOLYLINE 113 on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-115",
+        "name": "Water tank",
+        "kind": "equipment",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 2,
+            "y": 0,
+            "z": 3.5
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: CIRCLE 115 on layer TANKS, the square around a circle (approximate); 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 2.5,
+            "origin": "default",
+            "source_ref": "Display height for the draft (typical for a tank): not in the drawing and not measured. A check that needs the height says \"height needed\".",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1,
+            "origin": "drawn",
+            "source_ref": "Drawn in layout-checks-mm.dxf: CIRCLE 115 on layer TANKS, the square around a circle (approximate); 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      }
+    ],
+    "edit_log": []
+  }
+}

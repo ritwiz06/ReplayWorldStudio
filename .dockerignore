@@ -1,0 +1,25 @@
+# Never in the image: credentials and local configuration.
+.env
+.env.*
+!.env.example
+# Not needed to build or run the preview.
+.git
+**/node_modules
+.venv
+**/__pycache__
+.mypy_cache
+.pytest_cache
+.ruff_cache
+data
+apps/web/dist
+apps/web/test-results
+apps/web/playwright-report
+bench-results
+docs
+prompts
+tests
+fixtures/photos
+fixtures/assist
+fixtures/legacy
+fixtures/gen09
+**/.DS_Store

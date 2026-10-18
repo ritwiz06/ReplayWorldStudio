@@ -22,6 +22,8 @@ if (!process.env.TEST_WORKER_INDEX) {
 
 export default defineConfig({
   testDir: "e2e",
+  // The public-preview journeys run against the production build (playwright.public.config.ts).
+  testIgnore: ["public/**"],
   fullyParallel: false,
   // Headless Chromium renders WebGL in software; two workers keep frames (and the React
   // commits behind each assertion) responsive, and WebGL-heavy checks get extra time.

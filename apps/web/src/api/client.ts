@@ -41,7 +41,7 @@ export type ApiFailure =
   /** The API answered 2xx with JSON that does not match the contract. */
   | { kind: "contract"; message: string; issues: ContractIssue[] };
 
-export type FixtureName = "industrial-demo" | "foundation";
+export type FixtureName = "industrial-demo" | "foundation" | "sample";
 
 export type ApiResult<T> = { ok: true; value: T } | { ok: false; error: ApiFailure };
 
@@ -238,6 +238,13 @@ export function createApiClient(
         body: JSON.stringify(body),
         signal,
         timeoutMs: ASSIST_TIMEOUT_MS,
+      }),
+    /** Delete every file this visitor stored on the public preview's server, now. */
+    clearVisitorFiles: (signal?: AbortSignal) =>
+      request("/api/v1/visitor/clear", (data: unknown) => (data !== null && typeof data === "object" && (data as { status?: unknown }).status === "deleted" ? { ok: true as const, value: "deleted" as const } : { ok: false as const, issues: [] }), {
+        method: "POST",
+        body: "{}",
+        signal,
       }),
     /** Where the API serves a stored source photo. */
     sourceFileUrl: (uri: string) => `${baseUrl}/api/v1/sources/files/${uri}`,

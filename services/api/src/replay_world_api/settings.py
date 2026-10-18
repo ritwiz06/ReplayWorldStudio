@@ -4,6 +4,11 @@ The process environment wins over the repository's ``.env`` file, which is read 
 API process (the browser never sees it; Vite exposes ``VITE_``-prefixed names only). The
 Voyager API key stays in this process: it is never logged, returned or sent anywhere except in
 the ``Authorization`` header of requests to the configured provider.
+
+``RWS_PUBLIC=1`` is the public preview (ADR-054): language and vision proposals are off whatever
+the key (the key is not even read), each visitor's uploads live in a folder of their own under
+``RWS_DATA_DIR`` and are deleted after ``RWS_RETENTION_HOURS``, requests are bounded, and the
+built web app is served from ``RWS_WEB_DIR`` on the same origin.
 """
 
 from __future__ import annotations
@@ -56,10 +61,31 @@ class AssistSettings:
 
 
 @dataclass(frozen=True)
+class PublicLimits:
+    """What one anonymous visitor (and everyone together) may use in the public preview."""
+
+    retention_hours: float = 24.0
+    visitor_quota_mb: int = 100
+    storage_cap_mb: int = 3000
+    max_body_mb: int = 25
+    uploads_per_10_min: int = 40
+    requests_per_minute: int = 600
+
+
+@dataclass(frozen=True)
 class Settings:
     host: str = "127.0.0.1"
     port: int = 8000
     cors_origins: tuple[str, ...] = DEFAULT_CORS_ORIGINS
+    #: The public preview: visitor-isolated storage, limits, AI off, the web app served here.
+    public: bool = False
+    #: Where visitors' folders live in the public preview (the mounted volume).
+    data_dir: Path = _REPO_ROOT / "data" / "public"
+    #: The built web app to serve on the same origin (``apps/web/dist``), if any.
+    web_dir: Path | None = None
+    #: Behind a proxy that appends the client to X-Forwarded-For (Railway): use its last entry.
+    trust_proxy: bool = False
+    limits: PublicLimits = field(default_factory=PublicLimits)
     fixtures_dir: Path = _REPO_ROOT / "fixtures"
     catalog_dir: Path = _REPO_ROOT / "assets" / "catalog"
     # Local source library for project photos (git-ignored); see docs/image-import.md.
@@ -77,18 +103,36 @@ class Settings:
             origins = tuple(o.strip() for o in raw.split(",") if o.strip())
         if "*" in origins:
             raise ValueError("RWS_CORS_ORIGINS must list explicit origins; '*' is not allowed")
-        port = _integer(env, "RWS_API_PORT", defaults.port)
+        public = env.get("RWS_PUBLIC", "").strip().lower() in ("1", "true", "yes")
+        # Railway (and most hosts) say which port to listen on in PORT.
+        port = _integer(env, "RWS_API_PORT", _integer(env, "PORT", defaults.port))
         fixtures = env.get("RWS_FIXTURES_DIR", "").strip()
         catalog = env.get("RWS_CATALOG_DIR", "").strip()
         sources = env.get("RWS_SOURCES_DIR", "").strip()
+        data = env.get("RWS_DATA_DIR", "").strip()
+        web = env.get("RWS_WEB_DIR", "").strip()
+        limits = PublicLimits(
+            retention_hours=float(
+                env.get("RWS_RETENTION_HOURS", "") or PublicLimits.retention_hours
+            ),
+            visitor_quota_mb=_integer(env, "RWS_VISITOR_QUOTA_MB", PublicLimits.visitor_quota_mb),
+            storage_cap_mb=_integer(env, "RWS_STORAGE_CAP_MB", PublicLimits.storage_cap_mb),
+        )
         return cls(
-            host=env.get("RWS_API_HOST", defaults.host),
+            host=env.get("RWS_API_HOST", "0.0.0.0" if public else defaults.host),
             port=port,
-            cors_origins=origins,
+            # The public preview is one origin: no cross-origin callers at all.
+            cors_origins=() if public else origins,
+            public=public,
+            data_dir=Path(data) if data else defaults.data_dir,
+            web_dir=Path(web) if web else None,
+            trust_proxy=env.get("RWS_TRUST_PROXY", "").strip().lower() in ("1", "true", "yes"),
+            limits=limits,
             fixtures_dir=Path(fixtures) if fixtures else defaults.fixtures_dir,
             catalog_dir=Path(catalog) if catalog else defaults.catalog_dir,
             sources_dir=Path(sources) if sources else defaults.sources_dir,
-            assist=_assist_from_env(env),
+            # No AI in the public preview, even if a key is present: it is not read at all.
+            assist=AssistSettings() if public else _assist_from_env(env),
         )
 
 

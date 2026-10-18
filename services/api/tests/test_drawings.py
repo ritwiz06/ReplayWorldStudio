@@ -399,7 +399,10 @@ def validate(client: TestClient, text: str) -> tuple[int, Any]:
 def test_a_project_with_its_drawing_is_accepted_and_a_missing_file_does_not_block(
     client: TestClient, sources: Path
 ) -> None:
-    analysis = analyse(client, "hall-mm.dxf")
+    # A copy that is not one of the shared sample fixtures (a DXF comment makes it different).
+    status, body = upload(client, b"999\nA private copy\n" + fixture("hall-mm.dxf"), "hall.dxf")
+    assert status == 200, body
+    analysis = DrawingAnalysis.model_validate(body)
     document = drawing_project(analysis)
     status, body = validate(client, document)
     assert status == 200 and ValidationReport.model_validate(body).missing_source_files == []
@@ -407,6 +410,11 @@ def test_a_project_with_its_drawing_is_accepted_and_a_missing_file_does_not_bloc
     status, body = validate(client, document)
     assert status == 200
     assert ValidationReport.model_validate(body).missing_source_files == [analysis.drawing.file.uri]
+    # The synthetic sample drawings are shared and read-only: never reported missing.
+    sample = analyse(client, "hall-mm.dxf")
+    (sources / sample.drawing.file.uri).unlink()
+    status, body = validate(client, drawing_project(sample))
+    assert ValidationReport.model_validate(body).missing_source_files == []
 
 
 def test_an_altered_drawing_file_is_refused(client: TestClient, sources: Path) -> None:

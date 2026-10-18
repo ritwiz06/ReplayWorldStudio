@@ -27,8 +27,14 @@ class CatalogFileError(Exception):
     message: str
 
 
-def resolve_catalog_file(root: Path, uri: str) -> Path:
-    """Return the library file for ``uri`` or raise :class:`CatalogFileError`."""
+def resolve_catalog_file(root: Path, uri: str, generated_root: Path | None = None) -> Path:
+    """Return the library file for ``uri`` or raise :class:`CatalogFileError`.
+
+    With ``generated_root`` (a public-preview visitor's own catalog), generated models are read
+    only from there; the shared catalog models are read from ``root``.
+    """
+    if generated_root is not None and uri.startswith("generated/"):
+        root = generated_root
     if not _PATH.fullmatch(uri):
         raise CatalogFileError(
             "unsafe",
@@ -50,7 +56,9 @@ def sha256_of(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def check_model_files(project: Project, root: Path) -> tuple[int, list[dict[str, Any]]]:
+def check_model_files(
+    project: Project, root: Path, generated_root: Path | None = None
+) -> tuple[int, list[dict[str, Any]]]:
     """Check every glTF visual; return (files verified, validation issues)."""
     verified = 0
     issues: list[dict[str, Any]] = []
@@ -60,7 +68,7 @@ def check_model_files(project: Project, root: Path) -> tuple[int, list[dict[str,
             continue
         loc = ("body", "catalog", index, "visual")
         try:
-            path = resolve_catalog_file(root, visual.uri)
+            path = resolve_catalog_file(root, visual.uri, generated_root)
         except CatalogFileError as exc:
             issues.append({"loc": (*loc, "uri"), "msg": exc.message, "type": f"model_{exc.kind}"})
             continue

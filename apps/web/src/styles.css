@@ -2889,3 +2889,76 @@ label.button.disabled {
 .review-object > .button {
   align-self: flex-start;
 }
+
+/* ---------- ADR-054 public preview: the sample guide, the preview label, about ---------- */
+.sample-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 10px;
+  padding: 10px 12px;
+  border: 1px solid #3a76a8;
+  border-radius: 8px;
+  background: #13283a;
+}
+.sample-guide p {
+  margin: 0;
+}
+.sample-guide-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sample-steps {
+  margin: 0;
+  padding-left: 18px;
+}
+.sample-steps li + li {
+  margin-top: 4px;
+}
+.sample-actions {
+  display: flex;
+  gap: 6px;
+}
+.route-fits {
+  color: var(--ok);
+}
+.route-conflict {
+  color: #ff8a85;
+}
+.route-cannot_determine {
+  color: var(--warn);
+}
+.chip-preview {
+  margin-left: 10px;
+  border: 1px solid #7a5c14;
+  background: rgba(212, 167, 44, 0.12);
+  color: #f0c75e;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.chip-preview:hover {
+  background: rgba(212, 167, 44, 0.22);
+}
+.about-preview {
+  max-width: 720px;
+  width: calc(100vw - 48px);
+  max-height: calc(100vh - 40px);
+}
+.about-preview h3 {
+  margin: 14px 0 4px;
+  font-size: 14px;
+}
+.about-preview ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.about-preview li + li {
+  margin-top: 4px;
+}
+.about-actions {
+  justify-content: flex-start;
+  align-items: center;
+}
