@@ -1,6 +1,6 @@
 # Contracts: units, frames, provenance and the schema pipeline
 
-Contract version **0.11.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, 0.4.0 → 0.5.0 in GEN-01, all 2026-10-10; 0.5.0 → 0.6.0 in IMG-01, 2026-10-14; 0.6.0 → 0.7.0 in GEN-02, 2026-10-15; 0.7.0 → 0.8.0 in IMG-02, 2026-10-16; 0.8.0 → 0.9.0 in ONB-01/IMP-01 and 0.9.0 → 0.10.0 in IMP-02, both 2026-10-16; 0.10.0 → 0.11.0 in GEO-01/02, 2026-10-17). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
+Contract version **0.12.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, 0.4.0 → 0.5.0 in GEN-01, all 2026-10-10; 0.5.0 → 0.6.0 in IMG-01, 2026-10-14; 0.6.0 → 0.7.0 in GEN-02, 2026-10-15; 0.7.0 → 0.8.0 in IMG-02, 2026-10-16; 0.8.0 → 0.9.0 in ONB-01/IMP-01 and 0.9.0 → 0.10.0 in IMP-02, both 2026-10-16; 0.10.0 → 0.11.0 in GEO-01/02, 2026-10-17; 0.11.0 → 0.12.0 in IMP-03, 2026-10-18). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
 
 ## One source of truth
 
@@ -92,7 +92,7 @@ Worked example (foundation fixture): the plan is in mm with translation (−10, 
   `uv run python -m replay_world_contracts.migrate OLD.json -o NEW.json`. The command validates the result, writes notes describing every change to stderr, and never modifies the input.
 - 0.1.0 → 0.2.0 is lossless and never strengthens evidence. The single box origin, source and review status are copied to all three axes; `representation: placeholder_box` becomes `asset_id: null`; an empty `catalog` is added. Unknown or newer versions are refused.
 - 0.2.0 → 0.3.0 changes only `schema_version`, because 0.3.0 is additive. Steps run in sequence, so a 0.1.0 file passes through every version and the notes list each step.
-- `POST /api/v1/projects/validate` answers a document of an older version (0.1.0–0.10.0) with a single 422 issue at `/schema_version` that points to the editor's upgrade review and the migrate command, instead of a cascade of field errors.
+- `POST /api/v1/projects/validate` answers a document of an older version (0.1.0–0.11.0) with a single 422 issue at `/schema_version` that points to the editor's upgrade review and the migrate command, instead of a cascade of field errors.
 - 0.3.0 → 0.4.0 adds an empty `scene.edit_log` and changes nothing else. A 0.3.0 document that already has an `edit_log` is refused as malformed.
 - 0.4.0 → 0.5.0 adds `generation: null` to every catalog asset and changes nothing else. A 0.4.0 document whose assets already have `generation` is refused as malformed.
 - 0.5.0 → 0.6.0 adds `image: null` and `photo_import: null` to every source and changes nothing else: every existing source keeps its `source_to_world`. Its note reads `schema_version 0.5.0 -> 0.6.0 (adds 'image: null' and 'photo_import: null' to N source(s); no values or evidence changed)`. A 0.5.0 document whose sources already have either field is refused as malformed.
@@ -104,10 +104,11 @@ Worked example (foundation fixture): the plan is in mm with translation (−10, 
 
   Its note reads `schema_version 0.9.0 -> 0.10.0 (adds an unchecked review to N drawing source(s) and footprint_fit to M drawn object(s); K drawn footprint value(s) recorded as measured become drawn (a design drawing, not a site measurement); nothing is strengthened)`. The edit log's history is not rewritten.
 - 0.10.0 → 0.11.0 adds `omitted: null` to every drawing reading and changes nothing else: where its left-out shapes lie was not recorded, so the layout checks treat them as possibly anywhere (keep-clear zones and routes answer "cannot determine yet" until the drawing is uploaded again). Its note reads `schema_version 0.10.0 -> 0.11.0 (adds 'omitted: null' to N drawing reading(s): where their left-out shapes lie was not recorded, so checks treat them as possibly anywhere)`. A 0.10.0 document whose drawing already has `omitted` is refused as malformed.
+- 0.11.0 → 0.12.0 adds `raster: null` to every drawing reading, and `tolerance: null` to every drawn object and reference length: a DXF's geometry is exact as drawn. Nothing else changes. Its note reads `schema_version 0.11.0 -> 0.12.0 (adds 'raster: null' to N drawing reading(s) and 'tolerance: null' to M drawn outline(s): DXF geometry is exact as drawn; no values or evidence changed)`. A 0.11.0 document whose drawing already has `raster` is refused as malformed.
 - 0.8.0 → 0.9.0 adds `drawing: null` to every source (DXF drawings were not read before 0.9.0) and changes nothing else. Its note reads `schema_version 0.8.0 -> 0.9.0 (adds 'drawing: null' to N source(s); no values or evidence changed)`. A 0.8.0 document whose sources already have `drawing` is refused as malformed. 0.9.0 also refuses a `default` length marked `confirmed`; no earlier editor could write one, and such a document is reported after the upgrade, never silently changed.
 - 0.7.0 → 0.8.0 adds `visibility: "not_recorded"`, `derived_from: null`, `replaced_by: null` and `corrections: []` to every photo observation (0.7.0 did not record how much of an object the photo showed, and could not split or merge observations, so none is claimed). Its note reads `schema_version 0.7.0 -> 0.8.0 (adds 'visibility: not_recorded' and empty corrections to N photo observation(s); no values or evidence changed)`. A 0.7.0 document that already has any of these fields is refused as malformed. Rebuilding missing generated models (`POST /api/v1/catalog/generated-models/restore`) accepts an older document and upgrades it first; upgrades never change a recorded specification, so the rebuilt files keep their recorded hashes.
 - `fixtures/legacy/foundation-scene-0.1.0.json` is the exact 0.1.0 fixture, kept to test this path.
-- **In the editor (WRL-03).** Opening a file whose `schema_version` is any other string sends it to `POST /api/v1/projects/upgrade`. That endpoint runs the same `upgrade_document`, validates the result (contract and model files), and returns an `UpgradeReport` (`from_version`, `to_version`, `notes`, `project`, `validation`) without storing anything. The browser shows the notes and offers **Open upgraded project**, **Download upgraded file** (`<name>-0.11.0.json`) or **Cancel**; nothing is replaced or written before that choice. An unknown version gets one 422 issue at `/schema_version`, a malformed legacy file one issue at the document level, and errors after a successful upgrade are located in the upgraded document. In each case the current scene stays.
+- **In the editor (WRL-03).** Opening a file whose `schema_version` is any other string sends it to `POST /api/v1/projects/upgrade`. That endpoint runs the same `upgrade_document`, validates the result (contract and model files), and returns an `UpgradeReport` (`from_version`, `to_version`, `notes`, `project`, `validation`) without storing anything. The browser shows the notes and offers **Open upgraded project**, **Download upgraded file** (`<name>-0.12.0.json`) or **Cancel**; nothing is replaced or written before that choice. An unknown version gets one 422 issue at `/schema_version`, a malformed legacy file one issue at the document level, and errors after a successful upgrade are located in the upgraded document. In each case the current scene stays.
 
 ## Edits, revisions and the edit log (0.4.0)
 
@@ -346,3 +347,32 @@ Decision: ADR-051. A draft from a drawing carries `DrawingImport.review` (requir
 
 The layout and route checks built on this rule (GEO-01/02) and their three outcomes are described in [docs/drawing-import.md](drawing-import.md#does-this-layout-fit-geo-0102-adr-052).
 
+
+## Plan pictures (0.12.0, IMP-03)
+
+Decision: ADR-053; the journey and its limits: [docs/drawing-import.md](drawing-import.md#plan-pictures-imp-03-adr-053). A floor plan that is a PDF page, a PNG or a JPEG is read as a **drawing in pixels** and reviewed like a DXF draft.
+
+| Record | Fields and rules |
+| --- | --- |
+| `SourceDocument` | `kind` `pdf`, `png` or `jpeg` (new) carries a `drawing` whose `reader` is `rws-plan-image/1`. The stored file is `drawings/<sha256>.<pdf\|png\|jpg>`, matching the kind. |
+| `DrawingImport.raster` (`PlanRaster`) | The picture the reading is in: `uri`, `media_type` (`image/png` or `image/jpeg`), `sha256`, `width_px`, `height_px`, and for a PDF `page`, `page_count` and `dpi` (all three or none). For an image, its own file; for a PDF, `drawings/<sha256>-p<page>.png` as the API rendered it, checked against its own hash when a project opens. Null for a DXF. |
+| Plan units | Pixels of the picture, x to the right and y up from its bottom edge; `extent` is the picture. `units.declared` is null and `units.question` says a known length is needed. |
+| `PlanUnit` | `source_to_world.source_unit` and `review.scale.unit` may be `px` (only for a plan picture, and only for one). Pixels get a scale only from a `reference_length`. |
+| `ReferenceLength.tolerance` | How far each marked point may be from where it was meant, in drawing units; null where points snapped to a DXF's geometry. The scale's relative error is 2 × tolerance / drawing length. |
+| `DrawingRef.entity` | `REGION` (an area or line the vision model proposed), `TRACE` (an outline the person marked), `PAGE` (the edge of the picture, standing in for a floor not proposed). `layer` is `page <n>` or `image`; `handle` is null. |
+| `DrawingObject` | `footprint_fit` `approximate`: proposed from a picture, neither exact nor known to enclose. `tolerance`: set exactly when `refs[0]` is `TRACE` (the outline's marking precision, drawing units); never on an approximate outline. `label_from` `proposed` or `entered`. |
+| `ObjectReview.status` | `added`: an object the person traced that the reading did not propose. |
+| Attached source | A `pdf`, `png`, `jpeg` or `dxf` source with no `drawing` and no `source_to_world` is a file kept with the world, not aligned with its plan (filename and sha256 required). |
+| `SourceAttached` (edit record) | `type` `source_attached`, `revision`, `source_id` (must be in the project), `filename`. No object changes; undo removes the source. |
+
+**API.**
+- `POST /api/v1/sources/plans?filename=` stores a PDF, PNG or JPEG and answers a `PlanUpload`: an image or one-page PDF comes back read (`analysis`); a longer PDF lists its `pages` (size in points, a thumbnail for the first 12).
+- `POST /api/v1/sources/plans/{sha256}/pages/{page}` renders the chosen page and reads it.
+- `POST /api/v1/assist/plan-proposals` (an `ImageAnalysisRequest`) answers a `PlanProposalResult`: the floor outline, `walls` (`ProposedWall`), `objects` (`ProposedPlanObject`: label, `named_on_plan`, kind, box) and `texts`, in fractions of the picture. It is 503 when no vision provider is configured.
+
+**What a check may claim from a plan picture** (`apps/web/src/drawing/readiness.ts`, `apps/web/src/checks/`):
+- an approximate outline is never exact, whatever its review;
+- a traced outline is exact to its tolerance;
+- untraced proposals keep `APPROXIMATE_MARGIN_M` (0.5 m) from a route;
+- the floor must be traced;
+- answers within the precision are "cannot determine yet".

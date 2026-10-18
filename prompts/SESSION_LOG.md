@@ -885,6 +885,62 @@ Append entries in chronological order. If a live repository session log already 
 - **Milestone status:** M5's two issues done against their criteria; M4 continues (IMP-02, AGT-01 open).
 - **Next concrete task:** on the user's priority: the rest of IMP-02, ENR-01/02, or SIM-01.
 
+### 2026-10-18 - IMP-03 floor plans as PDF pages and pictures (contract 0.12.0)
+
+- **Active issue:** IMP-03 (moved ahead of the rest of IMP-02 and ENR-01/02 by ADR-053). Started from `cdbe61f` on `main` (2026-10-17).
+- **Goal:** a first-time user uploads one floor-plan PDF, PNG or JPEG and sees it at once. They mark one known length; the app proposes a basic editable 3D layout (or the user marks it); they correct the floor and objects in the existing review; then walk, move, compare and Check layout. "Fits" only where the boundaries and scale were traced or confirmed to the precision needed.
+- **Work completed:**
+  - **Contract 0.12.0:**
+    - plan-image readings (`rws-plan-image/1`) in pixels with a `PlanRaster`;
+    - `px` scale only from a known length, with its marking tolerance;
+    - `REGION`, `TRACE` and `PAGE` references; `approximate` footprints; traced outlines with tolerances; the `added` status;
+    - attached sources and the `source_attached` record;
+    - migration 0.11.0 → 0.12.0.
+  - **API:**
+    - `plans.py`: store the file, list PDF pages with thumbnails, render the chosen page with PDFium (pypdfium2 5.14.0, BSD-3/Apache-2.0), serve the picture, check it on open;
+    - `assist/plans.py`: the bounded vision draft (prompt `plan-01.1`);
+    - `scripts/evaluate_plan_import.py`: live scoring and recordings.
+  - **Fixtures:** `scripts/build_plan_fixtures.py` writes a clean two-page PDF and a rough, turned, noisy sketch with their true geometry.
+  - **Web:**
+    - the upload dialog's plan path: page choice, the known length, propose/cancel/retry/mark it myself, the draft built ahead of Open;
+    - review: trace the floor, trace an outline, add a missed object, zoom kept per plan;
+    - plan-picture underlay on the plan and the 3D floor;
+    - evidence (`footprintEvidence` tolerances) and precision-aware layout and route checks;
+    - keep a later plan with the world;
+    - the drawing panel docked beside the 3D view on the simple screen;
+    - the stale "route checks unavailable" sentence corrected.
+- **Fixed during the work:**
+  - the route check called a start point "blocked" when only the tracing precision made it too close: it is now "cannot determine";
+  - the hall fixture's aisle was open at both ends, so a move could not block it: the racks now start 0.3 m from the west wall;
+  - the TS generator mangled a nested array type (`walls`), now a `ProposedWall` model;
+  - the review's zoom reset on every tab change, so outlines were traced coarsely (±0.25 m): it is now kept per plan;
+  - traced and added objects were not selected afterwards;
+  - wording that said "drawing" for a plan.
+- **Live model (ASU Voyager, `qwen3-vl-32b-instruct`):** six calls in total, each with the two synthetic plans, after telling the user (the hall page changed twice between runs). Results are in docs/drawing-import.md.
+  - Hall: 6 of 6 objects found, box IoU 0.65–0.93, boxes 0.09–0.31 m too wide.
+  - Sketch: 5 of 5 found, plus the dashed "future cart?" idea.
+  - The injected note was reported as text and not obeyed.
+  - Waiting: 18–31 s.
+- **Commands and outcomes:**
+  - `pnpm check`: exit 0 (pytest 828; Vitest 215 + contracts 10).
+  - Full Playwright suite: 55 passed, 24 skipped. One `improve.spec.ts` failure in an earlier full run passed on rerun (not reproduced).
+  - `e2e/plan-import.spec.ts`: 3 passed.
+- **Timings (scripted, model replayed, three runs each):**
+  - plan on screen: 96–128 ms (PDF page), 34–43 ms (PNG);
+  - checked draft ready: 0.43–0.81 s (one 5.1 s);
+  - open to 3D: 0.56–1.15 s;
+  - live model: 18–31 s.
+- **Visual evidence:** docs/imp-03/ (11 screens at 1440 × 900 and at 1280 × 800).
+- **Decisions:** ADR-053 (backlog order; a plan picture is a drawing in pixels; one known length; the model only drafts; approximate until traced; precision-aware checks; keep a later plan with the world; panel docked).
+- **Known limitations:**
+  - no crop, non-rectangular object outlines, printed scale ratios, PDF vectors, handwriting or symbols;
+  - no zoom when marking the known length in the dialog;
+  - no alignment of a kept plan (ENR-01);
+  - two synthetic plans only: no accuracy claim for real drawings.
+- **Effort:** about 1 h 35 min active, CI not included: 20:12–20:19 UTC on 2026-10-17 (13:12–13:19 MST, reading), then 17:14–18:40 UTC on 2026-10-18 (10:14–11:40 MST). The 21-hour gap between them was idle.
+- **Milestone status:** M4: ONB-01, IMP-01, UX-01 and IMP-03 done; IMP-02 and AGT-01 open (AGT-01 now has a bounded, cancellable model step).
+- **Next concrete task:** on the user's priority: ENR-01, the rest of IMP-02, or SIM-01.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

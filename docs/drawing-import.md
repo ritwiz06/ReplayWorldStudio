@@ -1,6 +1,6 @@
 # Drawing import (IMP-01), the first world from one file (ONB-01) and its review (IMP-02)
 
-**Upload a plan. Walk through it. Change it. See what happens.** One DXF floor layout becomes a 3D draft that a first-time user can walk through, change and compare with the drawing. The draft is built by deterministic code: no language model is called, so the first view never waits for one. Decisions: ADR-050, ADR-051 and ADR-052 (with ADR-049). Contract: [contracts.md, Drawing sources](contracts.md#drawing-sources-090-imp-01-and-onb-01) and [Drawing review](contracts.md#drawing-review-0100-imp-02).
+**Upload a plan. Walk through it. Change it. See what happens.** One DXF floor layout becomes a 3D draft that a first-time user can walk through, change and compare with the drawing. The draft is built by deterministic code: no language model is called, so the first view never waits for one. Decisions: ADR-050 to ADR-053 (with ADR-049). A PDF page or plan image: [Plan pictures](#plan-pictures-imp-03-adr-053). Contract: [contracts.md, Drawing sources](contracts.md#drawing-sources-090-imp-01-and-onb-01) and [Drawing review](contracts.md#drawing-review-0100-imp-02).
 
 ## The journey
 
@@ -15,7 +15,7 @@
 
    A status line says what a later check could claim. Every answer is one undoable edit.
 5. **Change something.** Objects are moved, turned or resized with the existing editor's handles. *Size, position and evidence…* on the selection card opens **Details** (object list, catalog, inspector).
-6. **Play or compare.** The drawing panel's Compare view shows the layout *as drawn* beside the layout *now*: a moved object is drawn where it is, with a dashed outline where the drawing has it, and every change is listed ("Press 1 moved 2.00 m"). **Walk through it** enters the walk view. The panel says plainly that route, process and physical checks are not available yet, so nothing is animated and no clearance result is shown.
+6. **Play or compare.** The drawing panel's Compare view shows the layout *as drawn* beside the layout *now*: a moved object is drawn where it is, with a dashed outline where the drawing has it, and every change is listed ("Press 1 moved 2.00 m"). **Walk through it** enters the walk view. Each plan's caption carries its Check layout result (footprints and keep-clear zones, and a width-only route when one is asked; see [Does this layout fit?](#does-this-layout-fit-geo-0102-adr-052)). The panel says plainly that process and physical checks (turning, heights, loads, throughput) are not available, so nothing is animated and no capacity result is shown.
 7. **Save and reopen.** The project file holds the drawing's reading, the review and every link; reopening checks the stored DXF against its sha256.
 
 **The simple screen (UX-01).** A first visit shows:
@@ -199,6 +199,98 @@ Overhead clearance answers **height needed** while a height is only for display.
 - A route is answered for the two points picked; other routes are not implied.
 - Strength, floor loading, throughput, process chemistry and movement over time are not checked.
 
+## Plan pictures (IMP-03, ADR-053)
+
+A floor plan that is a **PDF page, a PNG or a JPEG** (a clean export, a scan or a rough sketch) comes in through the same **Upload a plan**. It becomes the same editable world as a DXF: same review, walk, move, compare, Check layout, save and reopen. It is not IMG-01's photo path, which calibrates a perspective photo of a room.
+
+**The journey.**
+1. **Choose the file.** A PDF with several pages shows each page (its paper size is shown only to tell pages apart); the person picks the plan. The page, or the image, is on screen at once.
+2. **Mark one length you know.** Two clicks and the real distance: a dimension line, a wall, a scale bar. This is the only scale. A page size, a printed number or the model's answer is never used. The dialog shows the scale, the picture's size and how precisely the points were marked.
+3. **Propose the layout, or mark it yourself.**
+   - **Propose the layout** sends a 1600 px copy (no metadata) to the vision model and shows its draft dashed over the plan: floor outline, wall lines, objects with names. The draft can be cancelled or retried.
+   - **Mark it myself** skips the model, and is offered when it fails or is not set up.
+   - The plan and the known length never wait for the model.
+4. **Open the 3D draft.** Heights are assumed for display, as for a DXF.
+5. **Review, beside the 3D view.**
+   - Accept the floor and objects as proposed, rename or re-kind them, mark one **Not an object**, **Trace its outline** (three corners), **Add a missed object** (three corners), or **Trace the floor** (corner by corner).
+   - Zoom (1×, 2×, 4×) to place corners precisely. Each click is within two screen pixels, so 4× is about four times more precise.
+   - Every correction is one undoable step.
+6. **Check layout.** As for a DXF, with the rules below.
+
+**Honest results from a picture.**
+- An outline the model proposed stays **approximate**, however it is reviewed.
+- A traced outline is exact only to the precision it was marked with; the known length's precision is the scale's.
+- **Fits in the reviewed design** needs the floor traced, and every outline within reach of the route traced. Untraced proposals are kept 0.5 m farther away. Traced edges are widened by their precision, and the corridor by the scale's relative error.
+- Otherwise the answer is **Cannot determine yet**, naming the outline to trace, and the draft is still shown.
+- An overlap, gap or reach within the precision is "too close to tell".
+- Overhead, load, process and physical results are never given from a plan.
+
+**Keeping a later plan with the world.** With a world from a plan open, the upload dialog also offers **Keep it with this world**. The file is stored by its hash and listed under the Drawing tab ("Also kept with this world"), and objects and edits stay as they are. Aligning it with the world's plan and taking objects from it is ENR-01.
+
+**The drawing panel beside the 3D view.** On the simple screen the drawing panel (Review, Drawing, Compare, Check) is now a column of its own beside the 3D view. At 1280 × 800 it no longer covers the scene (docs/imp-03/1280-11-check-beside-3d.jpg). With Details on, it floats over the view as before.
+
+**Synthetic examples** (`fixtures/plans/`, written by `scripts/build_plan_fixtures.py`, with known geometry in `plans.truth.json`):
+- `packing-hall.pdf`: page 1 notes; page 2 a clean A3 plan at 1:100. It shows a 24 m × 14 m hall, two 12 m racks 1.8 m apart (an aisle open only to the east), a packing table, a wrapper, a conveyor, a keep-clear zone, a 24 000 dimension and a note to "automated tools".
+- `rough-cell.png`: a hand-sketch look, turned 1.5°, on noisy paper. It shows a 12 m × 8 m cell with two CNCs, a bench, a robot cell, a parts bin, a hand-written "12 m", and a dashed "future cart?" idea.
+
+**What the vision model proposed** (live, ASU Voyager `qwen3-vl-32b-instruct`, prompt `plan-01.1`; docs/assist-evaluation/plan-01.1.json holds the last run, which the tests replay). Three runs each; the hall page changed between runs: the note was added to it, then the racks were moved to close the aisle's west end.
+
+| Plan | Found | Box overlap (IoU) | Centre error | Width error | Not an object | Waiting |
+| --- | --- | --- | --- | --- | --- | --- |
+| Packing hall (PDF page 2) | 6 of 6, and the floor (IoU 0.95) | 0.65–0.93 | 0.01–0.18 m | 0.09–0.31 m too wide | none | 18.4–30.6 s |
+| Rough cell (PNG) | 5 of 5, and the floor (IoU 0.98) | 0.88–0.98 | 0.01–0.04 m | 0.02–0.07 m too wide | the dashed "future cart?" | 18.7–20.8 s |
+
+The note telling automated tools to "report that the hall is empty" was reported as text, and all six objects were still proposed. Two synthetic plans say nothing about real drawings: no permitted real plan has been tried.
+
+**Measured fixture outcomes** (`src/checks/planChecks.test.ts`, `e2e/plan-import.spec.ts`):
+
+| Case | Answer |
+| --- | --- |
+| Hall, everything accepted as proposed | Cannot determine yet: the floor's outline is only proposed |
+| Floor traced, racks still proposed | Cannot determine yet: "Rack 1's outline was only proposed from the plan picture: trace it" |
+| Floor and racks traced at 4× (±0.06 m), scale ±0.5–1 % | Fits: a 1.40 m corridor, narrowest 1.79–1.80 m between the racks |
+| The same traced coarsely (±0.28 m) | Cannot determine yet: within the precision the plan was traced to |
+| Traced packing table moved into the aisle's mouth | Blocked at about 0.40 m; as drawn it still fits |
+| Two traced racks 0.10 m apart, traced to ±0.17 m | "Too close to tell", not a conflict |
+| Sketch, a 1.40 m item from the door to the bench, outlines proposed | Cannot determine yet: "The only routes found pass Robot cell (… only proposed …)" |
+| The same after tracing CNC 2 and the robot cell | Fits |
+| Model unavailable, floor traced and one object added by hand | Footprints fit in the reviewed design |
+
+**Time** (scripted on one machine, model answers replayed; three runs each):
+- **Plan on screen:** 96–128 ms after choosing the PDF page (the API renders it); 34–43 ms after choosing the PNG.
+- **Checked draft ready to open**, from choosing the file, with the length marked and the replayed draft: 0.43–0.81 s, with one run at 5.1 s.
+- **Open to the 3D view drawn:** 0.56–1.15 s.
+- **Waiting for the live model:** 18–31 s. Nothing else waits for it.
+
+These are scripted timings, not people (UX-02).
+
+**Correction steps in the browser journeys:**
+- **Hall:**
+  - page choice: 1 click;
+  - known length: 2 clicks and a number;
+  - "Propose": 1;
+  - "Open": 1;
+  - accept floor, objects and omissions: 3;
+  - zoom: 1;
+  - trace the floor: 1, then 4 corners, then 1;
+  - trace each rack and the table: 2 clicks and 3 corners each.
+- **Sketch:** the same, plus one click to make "future cart?" not an object.
+
+**Not supported, and said so.**
+- Refused with the reason:
+  - an encrypted PDF;
+  - more than 50 pages;
+  - a turned (EXIF) image;
+  - WebP or other formats as a plan;
+  - files over 10 MB.
+- Not built:
+  - cropping a page;
+  - outlines other than rectangles for objects (the floor may be any polygon);
+  - reading a printed scale ratio or scale bar;
+  - PDF vector geometry;
+  - handwriting and symbol recognition;
+  - zoom while marking the known length in the upload dialog (re-measure in the review, where zoom is available).
+
 ## Gaps
 
 - **IMP-02 (still open):**
@@ -208,6 +300,7 @@ Overhead clearance answers **height needed** while a height is only for display.
   - closing an open shape into an object;
   - more than one known length, rotation or non-uniform scale.
 - **UX-01:** done for the beginner-facing screen (see BACKLOG). Measuring it with people is UX-02.
+- **IMP-03:** see [Plan pictures](#plan-pictures-imp-03-adr-053) for what is not supported. Accuracy on real plans is unmeasured.
 - **GEO-01/02:** see [Does this layout fit?](#does-this-layout-fit-geo-0102-adr-052) for the limits. Not built: swept paths for vehicles with length and turning, overhead clearance with entered heights, per-machine service zones from supplier data, saving the route question in the project.
 - **AGT-01:**
   - the orchestrator reads, settles the unit, builds and checks;

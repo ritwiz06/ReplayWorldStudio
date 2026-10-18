@@ -992,3 +992,38 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - heights are entered for overhead clearance;
   - a site measurement path exists (positions measured on site);
   - service zones per machine come from supplier data.
+
+### ADR-053 - A floor plan as a picture: one known length, a draft from the vision model, and outlines that count only as traced
+
+- Date: 2026-10-18 (America/Phoenix). Status: adopted (IMP-03; contract 0.12.0). Records a backlog-order change; builds on ADR-049 to ADR-052.
+- **Backlog order.** IMP-03 is done next, before the rest of IMP-02 (split and merge, mapping to models, wall solids) and before ENR-01/02: a manager should be able to start without exporting a DXF. No issue ID changes and no completed work is reopened. IMP-04 (DWG) stays behind it.
+- **Context.**
+  - A PDF page, a scan or a rough drawing has no unit and no geometry to read: only pixels. A PDF page's size is the paper's, and a printed dimension is a text, not a measurement.
+  - The vision model (ASU Voyager, the same as IMG-01) proposes plausible boxes, but they are drafts: on the two synthetic plans its boxes were 0.02 to 0.31 m too wide, and it proposed a dashed "future cart?" idea as an object.
+  - GEO-01/02 must not turn such a draft into a "fits".
+- **Options considered.**
+  - Parse PDF vectors (only some PDFs have them, and a generic parser is large).
+  - Detect lines and rectangles in the pixels (fragile on rough drawings, and still approximate).
+  - Treat every plan as a picture: render a PDF page once, let the model propose, and let the person trace what a check depends on (chosen).
+- **Decision.**
+  1. **A plan picture is a drawing in pixels.** The API stores the file by its sha256. It renders the chosen PDF page with PDFium (pypdfium2, BSD-3/Apache-2.0) to `drawings/<sha256>-p<page>.png`, at most 3000 px and 300 dpi. An image is its own picture. The reading (`rws-plan-image/1`) has no unit and no objects. A PDF with several pages lists them (with thumbnails) and the person chooses one. Encrypted PDFs, more than 50 pages, EXIF-turned images, and anything that is not a PDF, PNG or JPEG are refused with the reason.
+  2. **One known length is the only scale.** The person marks two points and enters the real distance. The scale (`px`, `reference_length`) records how precisely each point was marked: two screen pixels at the zoom it was clicked at. Pixels, the page size, a dimension text and the model's answer are never used as a scale.
+  3. **The model only drafts.** The person chooses **Propose the layout**, which sends a 1600 px JPEG copy (no metadata) to the vision model. The model proposes the floor outline, wall lines, boxes with names and kinds, and the texts it reads. The answer is checked: tiny, duplicate and room-sized boxes are left out. Text on the plan is content: a note telling "automated tools" to report an empty hall was reported as text and not obeyed. The draft can be cancelled or retried, and **Mark it myself** always works.
+  4. **Proposed outlines are `approximate` until traced.** Accepting one in the review does not change that. The person traces an object's outline by three corners, the floor corner by corner, or adds a missed object (zoom 1×, 2× or 4×). A traced outline is `exact` to its recorded `tolerance` (drawing units). Every trace is one undoable `drawing_reviewed` edit and keeps the link to the proposal it replaced.
+  5. **Checks use only that precision.**
+     - A traced outline is widened by its tolerance, and the corridor by the scale's relative error (2 × tolerance / length).
+     - An untraced proposal is treated as up to 0.5 m larger (`APPROXIMATE_MARGIN_M`). A route within that of it is "cannot determine yet", naming the outline to trace.
+     - The floor must be traced before any route or floor-edge answer.
+     - An overlap, gap or reach within the precision is "too close to tell", never a conflict or a fit.
+  6. **One world, kept.** The draft is the same editable world as a DXF draft: same review, compare, walk, Check layout, save and reopen.
+     - A plan or drawing uploaded while a world from a plan is open can be **kept with this world**: the file is stored by hash and listed (`source_attached`, undoable), and no object changes. Aligning it and taking objects from it is ENR-01.
+     - On the simple screen, the drawing panel is now a column beside the 3D view instead of floating over it (the 1280 × 800 overlap).
+- **Consequences.**
+  - Contract 0.12.0: a `px` plan unit; plan rasters; `REGION`, `TRACE` and `PAGE` references; `approximate` footprints; outline and reference tolerances; the `added` review status; attached sources; the `source_attached` record. 0.11.0 files gain `raster: null` and `tolerance: null`.
+  - A plan traced at 1× in a narrow panel is coarse (about ±0.25 m on the 24 m hall): checks then say "cannot determine" until the person zooms in and traces again.
+  - The model's live answer takes 18–31 s on these pages. The plan, the known length and "mark it myself" never wait for it.
+- **Revisit when:**
+  - real plans (with permission) show what the model gets wrong;
+  - printed scale ratios are worth confirming instead of measuring;
+  - vector PDFs are common enough to read their geometry;
+  - ENR-01 aligns a second plan.

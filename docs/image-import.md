@@ -12,6 +12,8 @@ This page records:
 
 ADR-036 to ADR-038 in prompts/DECISIONS.md hold the decisions, with the Update to ADR-037 (size basis) and ADR-039 to ADR-041 (improving generated models).
 
+A floor *plan* as a picture (a PDF page, a scan, a sketch) is not this path: see [Plan pictures](drawing-import.md#plan-pictures-imp-03-adr-053) (IMP-03).
+
 ## Supported image type (bounded for IMG-01)
 
 | | |

@@ -525,6 +525,7 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   - enrichment of the existing world: ENR-01, ENR-02;
   - the private view-only scenario: SHR-01.
 - **More first-world adapters follow incrementally:** IMP-04 (DWG route), then IMP-03 (PDF and rough images, through the review path with lower confidence).
+  - Changed 2026-10-18 (ADR-053): IMP-03 came first (done), ahead of IMP-04, the rest of IMP-02 and ENR-01/02, so a manager can start without a DXF.
 - **Process data** unlocks M6. **Engineering data** unlocks M7 and later.
 - **No format or simulation beyond the first** is a launch prerequisite.
 - **IMG-03's measured photos** are a research evaluation, not an onboarding step, and do not gate M4.
@@ -578,6 +579,7 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
     - the orchestrator does not propose changes;
     - no model step exists (optional Voyager naming or grouping), so a cancellable model call is not exercised;
     - no Voyager call was made in ONB-01.
+  - Update (2026-10-18, IMP-03): the plan-picture path adds one bounded model step: the vision model's draft, chosen by the person, cancellable and retryable, with "mark it myself" when it is unavailable. Its result is typed, checked and only ever approximate. Equipment matching and change proposals are still not built.
 - Evidence: e2e/drawing.spec.ts; services/api/tests/test_drawings.py.
 
 ### UX-01 - Three-action main screen
@@ -708,7 +710,30 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
 - Baseline status: planned; reconcile with actual repository
 - Done when: Manual scale and object placement persist; inferred values remain labeled.
 - Note (2026-10-16, ADR-049): PDFs, scanned plans and rough images enter through the review path, with lower confidence shown. They reuse the IMG-01/02 review, with one scale measurement asked for.
-- Evidence: not recorded by this package
+- Order (2026-10-18, ADR-053): done next, before the rest of IMP-02 and ENR-01/02, so a manager can start without a DXF. No IDs changed.
+- Status (2026-10-18): **done against its criterion** (ADR-053; contract 0.12.0).
+  - Manual scale and object placement persist: the known length (with how precisely it was marked), every traced floor and object outline and every added object are saved, reopened, undone and redone.
+  - Inferred values remain labelled: the vision model's boxes stay `approximate`, "proposed from the plan", however they are reviewed, and heights stay "assumed for display".
+  - The journey: one PDF page (chosen when there are several), PNG or JPEG. The plan is shown at once, one known length is marked, the vision model drafts (cancel, retry, or "mark it myself"), and the person corrects the floor and objects in the same review. Then walk, move, compare, Check layout, save and reopen.
+  - It reuses the drawing review and world (not IMG-01's photo calibration, which is for perspective photos).
+- Evidence:
+  - `e2e/plan-import.spec.ts`:
+    - the two-page PDF to a fitted, then blocked, route, saved and reopened, with a later plan kept with the world (`@smoke`);
+    - the rough sketch, with a wrong proposal removed;
+    - the model unavailable: cancel, retry, mark by hand.
+  - `src/checks/planChecks.test.ts`: proposals never fit; traced outlines fit only beyond their precision; coarse tracing cannot tell; add, remove, undo, redo.
+  - `services/api/tests/test_plans.py` and `packages/contracts/tests/test_plan_images.py`.
+  - `docs/assist-evaluation/plan-01.1.json`: live answers on the two synthetic plans.
+  - Screens in `docs/imp-03/` at 1440 × 900 and 1280 × 800.
+- Remaining (not blocking):
+  - cropping a page;
+  - zoom when marking the known length in the upload dialog (the review's re-measure has it);
+  - polygons other than rectangles for objects;
+  - reading a printed scale ratio or scale bar (always one measured length now);
+  - PDF vector geometry;
+  - handwriting and symbol recognition;
+  - aligning a second plan and merging its objects (ENR-01);
+  - accuracy on real plans (none permitted yet; two synthetic plans say nothing about real drawings).
 
 ### UX-02 - Measure the onboarding targets with people
 
