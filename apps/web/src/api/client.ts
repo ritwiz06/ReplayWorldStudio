@@ -12,6 +12,8 @@ import {
   validateImageProposalResult,
   validateModelRevisionProposalResult,
   validateObjectProposalResult,
+  validatePlanProposalResult,
+  validatePlanUpload,
   validateProject,
   validateStoredPhoto,
   validateUpgradeReport,
@@ -210,6 +212,32 @@ export function createApiClient(
         contentType: "application/octet-stream",
         signal,
         timeoutMs: GENERATE_TIMEOUT_MS,
+      }),
+    /** Store a floor-plan PDF, PNG or JPEG (IMP-03; no language model). An image or a one-page
+     * PDF comes back read as a picture in pixels; a longer PDF lists its pages. */
+    uploadPlan: (file: Blob, filename: string, signal?: AbortSignal) =>
+      request(`/api/v1/sources/plans?${new URLSearchParams({ filename }).toString()}`, validatePlanUpload, {
+        method: "POST",
+        body: file,
+        contentType: "application/octet-stream",
+        signal,
+        timeoutMs: GENERATE_TIMEOUT_MS,
+      }),
+    /** Render the chosen page of a stored PDF and read it. */
+    readPlanPage: (sha256: string, page: number, filename: string, signal?: AbortSignal) =>
+      request(`/api/v1/sources/plans/${sha256}/pages/${page}?${new URLSearchParams({ filename }).toString()}`, validateDrawingAnalysis, {
+        method: "POST",
+        signal,
+        timeoutMs: GENERATE_TIMEOUT_MS,
+      }),
+    /** Draft the floor, walls and objects of a plan picture (sent to the configured vision
+     * model); nothing is stored. */
+    proposePlan: (body: ImageAnalysisRequest, signal?: AbortSignal) =>
+      request("/api/v1/assist/plan-proposals", validatePlanProposalResult, {
+        method: "POST",
+        body: JSON.stringify(body),
+        signal,
+        timeoutMs: ASSIST_TIMEOUT_MS,
       }),
     /** Where the API serves a stored source photo. */
     sourceFileUrl: (uri: string) => `${baseUrl}/api/v1/sources/files/${uri}`,

@@ -7,6 +7,7 @@
       "uri": "drawings/a86b4f30dca04e2226a042a34bd80af80ee7918c1b521ae2f2d6e8b97646d997.dxf",
       "bytes": 1749
     },
+    "raster": null,
     "dxf_version": "AC1015",
     "units": {
       "insunits": 0,
@@ -215,6 +216,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 6000.0,
           "y": 4000.0
@@ -260,6 +262,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 2000.0,
           "y": 1600.0
@@ -303,6 +306,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 5400.0,
           "y": 1400.0
@@ -346,6 +350,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 9500.0,
           "y": 5500.0

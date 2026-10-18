@@ -5,10 +5,14 @@
 // Turning, length and height are not evaluated, and nothing here certifies the site.
 //
 // Uncertain geometry (an outline whose box only encloses it, an unreviewed object, an open line,
-// a shape the drawing left out) is avoided first. A route that avoids it too "fits"; one that
-// exists only through it is "cannot determine yet"; none even past it is a blockage.
+// a shape the drawing left out, an outline only proposed from a plan picture) is avoided first.
+// A route that avoids it too "fits"; one that exists only through it is "cannot determine yet";
+// none even past it is a blockage. On a plan picture every boundary keeps the precision it was
+// marked with: a traced outline is widened by its tolerance, a proposed one by
+// APPROXIMATE_MARGIN_M, and the corridor needed by the scale's own uncertainty.
 import type { Project } from "@replay-world/contracts";
 import { bounds, edgeDistance, inside, length, pointDistance, rayDistance, segmentDistance, sub, type Vec } from "./geometry";
+import { APPROXIMATE_MARGIN_M } from "../drawing/readiness";
 import { checkInputs, type CheckInputs } from "./inputs";
 
 export interface RouteRequest {
@@ -52,6 +56,8 @@ interface Solid {
   points: Vec[];
   closed: boolean;
   id?: string;
+  /** How much farther its true edge may be (metres): a route keeps this much more room. */
+  margin: number;
 }
 
 const m = (v: number) => `${v.toFixed(2)} m`;
@@ -75,10 +81,11 @@ export function checkRoute(project: Project, request: RouteRequest): RouteResult
   if (!(request.widthM > 0) || !(request.allowanceM >= 0)) return fail("cannot_determine", "Enter the width of the item that has to pass (above 0 m).", ["no width"]);
   if (inputs.blockers.length > 0) return fail("cannot_determine", `Cannot determine yet: ${inputs.blockers.join("; ")}.`, inputs.blockers);
   if (!inputs.floor) {
-    const why = "the floor is only for display, so its edge is unknown: choose the drawing's floor outline in the review";
+    const why = inputs.floorProblem?.startsWith("the floor's outline") ? inputs.floorProblem : "the floor is only for display, so its edge is unknown: choose the drawing's floor outline in the review";
     return fail("cannot_determine", `Cannot determine yet: ${why}.`, [why]);
   }
   const floor = inputs.floor.poly;
+  const floorMargin = inputs.floor.toleranceM;
   for (const [point, which] of [
     [request.start, "start"],
     [request.end, "destination"],
@@ -87,27 +94,43 @@ export function checkRoute(project: Project, request: RouteRequest): RouteResult
   }
 
   const { certain, uncertain } = solids(inputs);
-  const grid = makeGrid(floor, certain, uncertain);
+  const grid = makeGrid(floor, floorMargin, certain, uncertain);
   base.resolutionM = grid.r;
   base.tested.push(`positions on a ${m(grid.r)} grid; every route found is then checked exactly`, `kept clear of: equipment, structures, keep-clear zones and ${inputs.floor.words}`);
-  const half = needM / 2;
+  const s = Math.min(inputs.scaleError, 0.5);
+  // A passage the plan shows w wide may really be w (1 - s): the corridor must allow for it.
+  const half = needM / 2 / (1 - s);
+  const traced = Math.max(floorMargin, ...certain.map((c) => c.margin));
+  if (traced > 0 || s > 0) {
+    base.tested.push(`traced outlines widened by up to ${m(traced)} and the corridor by ${(s * 100).toFixed(1)} % for the scale, as precisely as they were marked`);
+  }
+  if (uncertain.some((u) => u.margin > 0)) base.tested.push(`outlines only proposed from the picture kept ${m(APPROXIMATE_MARGIN_M)} farther away: their true edges are unknown`);
 
   for (const [point, which] of [
     [request.start, "start"],
     [request.end, "destination"],
   ] as const) {
-    const near = nearest(point, certain, floor);
-    if (near.distance < half) {
+    const near = nearest(point, certain.map((c) => ({ ...c, margin: 0 })), floor);
+    // Too close even on the most generous reading of the marked edges and scale: blocked.
+    // Closer than the precision they were marked to: only "cannot determine".
+    const careful = nearest(point, certain, floor, floorMargin);
+    if (near.distance * (1 + s) >= needM / 2 && careful.distance < half) {
+      return {
+        ...fail("cannot_determine", `Cannot determine yet: the ${which} point is ${m(near.distance)} from ${near.name}, within the precision the plan was traced to of the ${m(needM / 2)} the item needs on each side.`),
+        passage: { at: point, widthM: 2 * near.distance, between: [near.name], objectIds: near.id ? [near.id] : [] },
+      };
+    }
+    if (near.distance * (1 + s) < needM / 2) {
       const where = near.distance === 0 ? `inside ${near.name}` : `${m(near.distance)} from ${near.name}`;
       return {
-        ...fail("conflict", `Blocked at the ${which}: the ${which} point is ${where}, and the item needs ${m(half)} on each side.`),
+        ...fail("conflict", `Blocked at the ${which}: the ${which} point is ${where}, and the item needs ${m(needM / 2)} on each side.`),
         passage: { at: point, widthM: 2 * near.distance, between: [near.name], objectIds: near.id ? [near.id] : [] },
       };
     }
   }
 
   const everything = [...certain, ...uncertain];
-  const clear = route(grid, grid.all, request, half, everything, floor);
+  const clear = route(grid, grid.all, request, half, everything, floor, floorMargin);
   if (clear) {
     const passage = narrowest(clear.path, everything, floor);
     const unplaced = inputs.unplaced;
@@ -133,9 +156,9 @@ export function checkRoute(project: Project, request: RouteRequest): RouteResult
     };
   }
 
-  const throughUncertain = route(grid, grid.certain, request, half, certain, floor);
+  const throughUncertain = route(grid, grid.certain, request, half, certain, floor, floorMargin);
   if (throughUncertain) {
-    const crossed = uncertain.filter((u) => throughUncertain.path.some((p, i) => i > 0 && distanceToSolid(p, u, throughUncertain.path[i - 1]) < half)).map((u) => u.name);
+    const crossed = uncertain.filter((u) => throughUncertain.path.some((p, i) => i > 0 && distanceToSolid(p, u, throughUncertain.path[i - 1]) - u.margin < half)).map((u) => u.name);
     const list = crossed.length > 0 ? crossed : uncertain.map((u) => u.name).slice(0, 3);
     return {
       ...base,
@@ -151,10 +174,14 @@ export function checkRoute(project: Project, request: RouteRequest): RouteResult
 
   // Blocked even past every uncertain shape: where is the best possible way narrowest?
   const passage = widestPassage(grid, grid.certain, request, certain, floor) ?? passageAt(request.start, null, certain, floor);
-  const close = passage.widthM >= needM - 2 * grid.r;
+  // Blocked only if even the most generous reading of the marked edges and scale is too narrow.
+  const close = (passage.widthM + 2 * traced) * (1 + s) >= needM - 2 * grid.r;
   if (close) {
     return {
-      ...fail("cannot_determine", `Cannot determine yet: the narrowest point of the best way is about ${m(passage.widthM)}, within this check's ${m(grid.r)} resolution of the ${m(needM)} needed${passage.between.length ? ` (${passage.between.join(" and ")})` : ""}.`),
+      ...fail(
+        "cannot_determine",
+        `Cannot determine yet: the narrowest point of the best way is about ${m(passage.widthM)}, within ${traced > 0 || s > 0 ? "the precision the plan was traced to" : `this check's ${m(grid.r)} resolution`} of the ${m(needM)} needed${passage.between.length ? ` (${passage.between.join(" and ")})` : ""}.`,
+      ),
       passage,
     };
   }
@@ -169,11 +196,14 @@ function solids(inputs: CheckInputs): { certain: Solid[]; uncertain: Solid[] } {
   const certain: Solid[] = [];
   const uncertain: Solid[] = [];
   for (const shape of [...inputs.obstacles, ...inputs.zones]) {
-    const solid = { name: shape.name, points: shape.poly, closed: true, id: shape.id };
+    const solid = { name: shape.name, points: shape.poly, closed: true, id: shape.id, margin: shape.evidence.toleranceM };
     if (shape.evidence.exact) certain.push(solid);
-    else uncertain.push({ ...solid, name: `${shape.name} (${shape.evidence.problem ?? "approximate"})` });
+    else {
+      const proposed = shape.evidence.source === "proposed (approximate)";
+      uncertain.push({ ...solid, name: `${shape.name} (${shape.evidence.problem ?? "approximate"})`, margin: proposed ? APPROXIMATE_MARGIN_M : solid.margin });
+    }
   }
-  for (const u of inputs.uncertain) uncertain.push({ name: u.label, points: u.points, closed: u.closed });
+  for (const u of inputs.uncertain) uncertain.push({ name: u.label, points: u.points, closed: u.closed, margin: 0 });
   return { certain, uncertain };
 }
 
@@ -200,11 +230,12 @@ function segmentToSegment(a: Vec, b: Vec, c: Vec, d: Vec): number {
   return Math.min(segmentDistance(a, c, d), segmentDistance(b, c, d), segmentDistance(c, a, b), segmentDistance(d, a, b));
 }
 
-/** The nearest solid (or the floor's edge) to a point, and how far. */
-function nearest(p: Vec, solids: readonly Solid[], floor: readonly Vec[]): { name: string; distance: number; id?: string | undefined } {
-  let best: { name: string; distance: number; id?: string | undefined } = { name: "the floor's edge", distance: inside(p, floor) ? edgeDistance(p, floor) : 0 };
+/** The nearest solid (or the floor's edge) to a point, and how far, allowing for how far each
+ * one's true edge may be (its margin). */
+function nearest(p: Vec, solids: readonly Solid[], floor: readonly Vec[], floorMargin = 0): { name: string; distance: number; id?: string | undefined } {
+  let best: { name: string; distance: number; id?: string | undefined } = { name: "the floor's edge", distance: inside(p, floor) ? Math.max(0, edgeDistance(p, floor) - floorMargin) : 0 };
   for (const s of solids) {
-    const d = distanceToSolid(p, s);
+    const d = Math.max(0, distanceToSolid(p, s) - s.margin);
     if (d < best.distance) best = { name: s.name, distance: d, id: s.id };
   }
   return best;
@@ -223,7 +254,7 @@ interface Grid {
   certain: Float64Array;
 }
 
-function makeGrid(floor: readonly Vec[], certain: readonly Solid[], uncertain: readonly Solid[]): Grid {
+function makeGrid(floor: readonly Vec[], floorMargin: number, certain: readonly Solid[], uncertain: readonly Solid[]): Grid {
   const b = bounds(floor);
   const w = b.maxX - b.minX;
   const d = b.maxZ - b.minZ;
@@ -232,17 +263,23 @@ function makeGrid(floor: readonly Vec[], certain: readonly Solid[], uncertain: r
   const nz = Math.ceil(d / r);
   const occCertain = new Uint8Array(nx * nz);
   const centre = (i: number, j: number): Vec => ({ x: b.minX + (i + 0.5) * r, z: b.minZ + (j + 0.5) * r });
-  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) if (!inside(centre(i, j), floor)) occCertain[j * nx + i] = 1;
+  for (let j = 0; j < nz; j++) {
+    for (let i = 0; i < nx; i++) {
+      const c = centre(i, j);
+      if (!inside(c, floor) || (floorMargin > 0 && edgeDistance(c, floor) <= floorMargin)) occCertain[j * nx + i] = 1;
+    }
+  }
   const mark = (occ: Uint8Array, s: Solid) => {
     const sb = bounds(s.points);
-    const i0 = Math.max(0, Math.floor((sb.minX - b.minX) / r) - 1);
-    const i1 = Math.min(nx - 1, Math.ceil((sb.maxX - b.minX) / r) + 1);
-    const j0 = Math.max(0, Math.floor((sb.minZ - b.minZ) / r) - 1);
-    const j1 = Math.min(nz - 1, Math.ceil((sb.maxZ - b.minZ) / r) + 1);
+    const reach = Math.ceil(s.margin / r) + 1;
+    const i0 = Math.max(0, Math.floor((sb.minX - b.minX) / r) - reach);
+    const i1 = Math.min(nx - 1, Math.ceil((sb.maxX - b.minX) / r) + reach);
+    const j0 = Math.max(0, Math.floor((sb.minZ - b.minZ) / r) - reach);
+    const j1 = Math.min(nz - 1, Math.ceil((sb.maxZ - b.minZ) / r) + reach);
     for (let j = j0; j <= j1; j++) {
       for (let i = i0; i <= i1; i++) {
         const c = centre(i, j);
-        const hit = s.closed ? inside(c, s.points) || edgeDistance(c, s.points) <= r / 2 : edgeDistance(c, s.points, false) <= r / 2;
+        const hit = s.closed ? inside(c, s.points) || edgeDistance(c, s.points) <= r / 2 + s.margin : edgeDistance(c, s.points, false) <= r / 2 + s.margin;
         if (hit) occ[j * nx + i] = 1;
       }
     }
@@ -392,7 +429,7 @@ function gridPath(g: Grid, open: (k: number) => boolean, start: number, goal: nu
 }
 
 /** The shortest grid route keeping `half` (plus one cell) clear, smoothed and checked exactly. */
-function route(g: Grid, field: Float64Array, request: RouteRequest, half: number, solids: readonly Solid[], floor: readonly Vec[]): { path: Vec[]; clearance: number } | null {
+function route(g: Grid, field: Float64Array, request: RouteRequest, half: number, solids: readonly Solid[], floor: readonly Vec[], floorMargin: number): { path: Vec[]; clearance: number } | null {
   const threshold = half + g.r;
   const start = cellOf(g, request.start);
   const goal = cellOf(g, request.end);
@@ -427,7 +464,7 @@ function route(g: Grid, field: Float64Array, request: RouteRequest, half: number
     const n = Math.max(1, Math.ceil(length(sub(b, a)) / (g.r / 4)));
     for (let q = 0; q <= n; q++) {
       const p = { x: a.x + ((b.x - a.x) * q) / n, z: a.z + ((b.z - a.z) * q) / n };
-      least = Math.min(least, nearest(p, solids, floor).distance);
+      least = Math.min(least, nearest(p, solids, floor, floorMargin).distance);
     }
   }
   return least >= half - 1e-9 ? { path, clearance: least } : null;

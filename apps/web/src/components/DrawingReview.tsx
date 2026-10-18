@@ -1,11 +1,13 @@
 // The short, plain review of a draft from a drawing (IMP-02): is this the floor, is this the
 // right scale, are these the right objects, and what the drawing leaves out. Every answer is
 // one editor command (undoable); position, rotation and size stay with the editor's handles.
+// On a plan picture (IMP-03) the person also traces the floor and object outlines (zooming in
+// to place corners precisely) and adds objects the proposal missed.
 import type { DrawingObject, PlanPoint, Project } from "@replay-world/contracts";
 import { type KeyboardEvent, useMemo, useState } from "react";
 import { drawingReasons } from "../drawing/readiness";
 import { floorSizeAt, previewReference, type ReviewCorrection, reviewItems, unitChoice } from "../drawing/review";
-import { describeRef, type DrawingSource, drawnFrom, formatScale, type ObjectKind, type Reviewed, statusOf, UNIT_NAME, UNITS } from "../drawing/world";
+import { describeRef, type DrawingSource, drawnFrom, formatLength, formatScale, isPlanImage, type ObjectKind, type Reviewed, statusOf, UNIT_NAME, UNITS } from "../drawing/world";
 import { DrawingPlan } from "./DrawingPlan";
 
 interface Props {
@@ -25,7 +27,14 @@ const STATUS_WORDS: Record<Reviewed, string> = {
   corrected: "corrected",
   not_an_object: "not an object",
   used_as_floor: "the floor",
+  added: "added by you",
 };
+
+type Mode = "select" | "floor" | "measure" | "trace" | "trace_floor" | "add";
+const ZOOMS = [1, 2, 4] as const;
+type Zoom = (typeof ZOOMS)[number];
+/** The zoom chosen for each plan, kept while the app is open (the panel remounts on tab changes). */
+const zooms = new Map<string, Zoom>();
 
 const KINDS: readonly { kind: ObjectKind | "none"; label: string }[] = [
   { kind: "equipment", label: "Equipment" },
@@ -36,8 +45,21 @@ const KINDS: readonly { kind: ObjectKind | "none"; label: string }[] = [
 ];
 
 export function DrawingReview({ project, source, selectedId, focus, onReview, onDrawn }: Props) {
-  const [mode, setMode] = useState<"select" | "floor" | "measure">("select");
+  const [mode, setModeState] = useState<Mode>("select");
   const [marks, setMarks] = useState<PlanPoint[]>([]);
+  const [precision, setPrecision] = useState(0);
+  const [traceTarget, setTraceTarget] = useState<string | null>(null);
+  const [zoom, setZoomState] = useState<Zoom>(() => zooms.get(source.id) ?? 1);
+  const setZoom = (z: Zoom) => {
+    zooms.set(source.id, z);
+    setZoomState(z);
+  };
+  const picture = isPlanImage(source.drawing);
+  const setMode = (next: Mode) => {
+    setModeState(next);
+    setMarks([]);
+    setPrecision(0);
+  };
   const [length, setLength] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
   const review = source.drawing.review;
@@ -49,6 +71,7 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
   const approximate = source.drawing.objects
     .filter((d) => d.footprint_fit === "enclosing" && project.scene.objects.some((o) => o.id === d.object_id && o.dimensions.width.origin === "drawn"))
     .map((d) => project.scene.objects.find((o) => o.id === d.object_id)!.name);
+  const proposedOnly = source.drawing.objects.filter((d) => d.footprint_fit === "approximate" && d.role !== "floor" && project.scene.objects.some((o) => o.id === d.object_id)).length;
   const realLength = Number(length);
   const preview = marks.length === 2 && realLength > 0 ? previewReference(source, marks[0]!, marks[1]!, realLength) : null;
 
@@ -57,8 +80,18 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
     setProblem(refused);
     if (!refused) {
       setMode("select");
-      setMarks([]);
       setLength("");
+    }
+  }
+
+  /** A click on the plan: a known length's two points, or the next corner of an outline. */
+  function point(p: PlanPoint, tolerance: number) {
+    const next = mode === "measure" && marks.length >= 2 ? [p] : [...marks, p];
+    const worst = Math.max(mode === "measure" && marks.length >= 2 ? 0 : precision, tolerance);
+    setMarks(next);
+    setPrecision(worst);
+    if ((mode === "trace" || mode === "add") && next.length === 3) {
+      apply({ kind: "trace", drawnId: mode === "trace" ? traceTarget : null, corners: [next[0]!, next[1]!, next[2]!], tolerance: worst });
     }
   }
 
@@ -79,18 +112,33 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
     <div className="source-drawing-body review-panel" data-testid="drawing-review">
       <p className={`review-ready ${reasons.length === 0 && unchecked === 0 ? "ready" : ""}`} data-testid="review-ready">
         {reasons.length === 0 && unchecked === 0
-          ? `Reviewed: a check can now give a design-layout result for this drawing (not the site as built).${
+          ? `Reviewed: a check can now give a design-layout result for this ${picture ? "plan" : "drawing"} (not the site as built).${
+              proposedOnly > 0 ? ` ${proposedOnly} outline${proposedOnly === 1 ? " is" : "s are"} only proposed: trace the ones a check depends on.` : ""
+            }${
               approximate.length > 0
                 ? ` Except ${approximate.join(", ")}: ${approximate.length === 1 ? "its box only encloses" : "their boxes only enclose"} the drawn shape, so enter ${approximate.length === 1 ? "its" : "their"} size to use ${approximate.length === 1 ? "it" : "them"}.`
                 : ""
             }`
           : `Before any check: ${[...reasons, ...(unchecked > 0 ? [`${unchecked} object${unchecked === 1 ? "" : "s"} not checked yet`] : [])].join("; ")}.`}
       </p>
-      <div className="drawing-plan-frame review-plan">
+      {picture && (
+        <div className="review-zoom" role="group" aria-label="Plan zoom">
+          <span className="small muted">Zoom</span>
+          {ZOOMS.map((z) => (
+            <button key={z} type="button" className="button button-small" aria-pressed={zoom === z} data-testid={`review-zoom-${z}`} onClick={() => setZoom(z)}>
+              {z}×
+            </button>
+          ))}
+          <span className="small muted">Zoom in to place corners precisely; scroll to move around.</span>
+        </div>
+      )}
+      <div className={`drawing-plan-frame review-plan${zoom > 1 ? " zoomed" : ""}`} data-testid="review-plan-frame">
+        <div className="review-plan-inner" style={zoom > 1 ? { width: `${zoom * 100}%`, height: `${zoom * 100}%` } : undefined}>
         <DrawingPlan
           drawing={source.drawing}
           statuses={statuses}
-          mode={mode}
+          mode={mode === "select" || mode === "floor" ? mode : picture ? "point" : "measure"}
+          tracing={mode === "trace" || mode === "add" || mode === "trace_floor"}
           onDrawn={picked}
           selectedId={selectedId}
           focusDrawnId={focused?.id ?? null}
@@ -98,13 +146,35 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
           testId="review-plan"
           title={`Plan of ${source.filename} for the review`}
           metresPerUnit={review.scale.metres_per_unit}
-          onPoint={(p) => setMarks((m) => (m.length >= 2 ? [p] : [...m, p]))}
+          onPoint={point}
           marks={marks}
         />
+        </div>
       </div>
       {mode === "floor" && (
         <p className="review-hint" data-testid="review-hint">
           Click the outline that is the floor.{" "}
+          <button type="button" className="link-button" onClick={() => setMode("select")}>
+            Cancel
+          </button>
+        </p>
+      )}
+      {(mode === "trace" || mode === "add") && (
+        <p className="review-hint" data-testid="review-hint">
+          {mode === "add" ? "Add a missed object: click" : "Trace the outline: click"} three of its corners in turn ({marks.length} of 3)
+          {precision > 0 && `; each is within about ${formatLength(precision * review.scale.metres_per_unit)} at this zoom`}.{" "}
+          <button type="button" className="link-button" onClick={() => setMode("select")}>
+            Cancel
+          </button>
+        </p>
+      )}
+      {mode === "trace_floor" && (
+        <p className="review-hint" data-testid="review-hint">
+          Click each corner of the floor in turn ({marks.length} so far
+          {precision > 0 && `, each within about ${formatLength(precision * review.scale.metres_per_unit)}`}).{" "}
+          <button type="button" className="button button-small" disabled={marks.length < 3} data-testid="review-floor-finish" onClick={() => apply({ kind: "trace_floor", outline: marks, tolerance: precision })}>
+            Finish the floor
+          </button>{" "}
           <button type="button" className="link-button" onClick={() => setMode("select")}>
             Cancel
           </button>
@@ -124,10 +194,16 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
                 Looks right
               </button>
             )}
-            <button type="button" className="button button-small" aria-pressed={mode === "floor"} data-testid="review-floor-pick" onClick={() => setMode(mode === "floor" ? "select" : "floor")}>
-              Use another outline
-            </button>
-            {review.floor.choice !== "automatic" && (
+            {picture ? (
+              <button type="button" className="button button-small" aria-pressed={mode === "trace_floor"} data-testid="review-floor-trace" onClick={() => setMode(mode === "trace_floor" ? "select" : "trace_floor")}>
+                Trace the floor
+              </button>
+            ) : (
+              <button type="button" className="button button-small" aria-pressed={mode === "floor"} data-testid="review-floor-pick" onClick={() => setMode(mode === "floor" ? "select" : "floor")}>
+                Use another outline
+              </button>
+            )}
+            {!picture && review.floor.choice !== "automatic" && (
               <button type="button" className="button button-small" data-testid="review-floor-auto" onClick={() => apply({ kind: "floor", to: "automatic" })}>
                 Size it around the objects
               </button>
@@ -138,11 +214,12 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
         <li className={item("scale").done ? "done" : "todo"} data-testid="review-scale">
           <strong>{item("scale").title}</strong> <span className="muted">{item("scale").detail}</span>
           <div className="review-actions">
-            {review.scale.status === "unchecked" && (
-              <button type="button" className="button button-small" data-testid="review-scale-accept" onClick={() => apply({ kind: "unit", unit: review.scale.unit })}>
+            {review.scale.status === "unchecked" && review.scale.unit !== "px" && (
+              <button type="button" className="button button-small" data-testid="review-scale-accept" onClick={() => apply({ kind: "unit", unit: review.scale.unit as (typeof UNITS)[number] })}>
                 Looks right
               </button>
             )}
+            {!picture && (
             <label className="small">
               Unit{" "}
               <select
@@ -158,6 +235,7 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
                 ))}
               </select>
             </label>
+            )}
             <button type="button" className="button button-small" aria-pressed={mode === "measure"} data-testid="review-measure" onClick={() => (setMode(mode === "measure" ? "select" : "measure"), setMarks([]))}>
               Measure a known length
             </button>
@@ -165,7 +243,9 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
           {mode === "measure" && (
             <div className="review-measure" data-testid="review-measure-panel">
               <p className="small">
-                {marks.length < 2 ? `Click ${marks.length === 0 ? "two points" : "a second point"} on the plan whose real distance you know (they snap to corners and centres).` : "Now type the real distance between the two points."}
+                {marks.length < 2
+                  ? `Click ${marks.length === 0 ? "two points" : "a second point"} on the plan whose real distance you know${picture ? " (zoom in to place them precisely)" : " (they snap to corners and centres)"}.`
+                  : "Now type the real distance between the two points."}
               </p>
               <label className="small">
                 Real length{" "}
@@ -180,18 +260,31 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
                 />{" "}
                 m
               </label>
-              {preview && (
+              {preview && preview.agrees === null && (
+                <div className="review-preview agrees" data-testid="review-preview">
+                  <p>
+                    Your {realLength.toFixed(2)} m gives 1 px = {formatScale(preview.metresPerUnit)}: the floor is {floorSizeAt(source, preview.metresPerUnit)}, and the scale is good to about{" "}
+                    {((2 * precision) / preview.drawingLength * 100).toFixed(1)} % (the two points are each within {formatLength(precision * preview.metresPerUnit)}).
+                  </p>
+                  <div className="review-actions">
+                    <button type="button" className="button button-small button-primary" data-testid="review-reference-use" onClick={() => apply({ kind: "reference", a: marks[0]!, b: marks[1]!, realLengthM: realLength, use: "reference", tolerance: precision })}>
+                      Use my measurement
+                    </button>
+                  </div>
+                </div>
+              )}
+              {preview && preview.agrees !== null && (
                 <div className={`review-preview ${preview.agrees ? "agrees" : "conflict"}`} data-testid="review-preview" data-agrees={preview.agrees}>
                   {preview.agrees ? (
                     <p>
-                      Your {realLength.toFixed(2)} m gives 1 unit = {formatScale(preview.metresPerUnit)}: it agrees with {UNIT_NAME[review.scale.unit]} (
-                      {(preview.difference * 100).toFixed(1)} % apart).
+                      Your {realLength.toFixed(2)} m gives 1 unit = {formatScale(preview.metresPerUnit)}: it agrees with {UNIT_NAME[review.scale.unit as (typeof UNITS)[number]]} (
+                      {((preview.difference ?? 0) * 100).toFixed(1)} % apart).
                     </p>
                   ) : (
                     <p>
                       Your {realLength.toFixed(2)} m gives 1 unit = {formatScale(preview.metresPerUnit)}, but {review.scale.basis === "drawing_unit" ? "the drawing says" : "the unit in use is"} 1 unit = 1{" "}
-                      {review.scale.unit}. With your measurement the floor is {floorSizeAt(source, preview.metresPerUnit)}; with {UNIT_NAME[review.scale.unit]} it is{" "}
-                      {floorSizeAt(source, preview.unitMetresPerUnit)}. Which is right?
+                      {review.scale.unit}. With your measurement the floor is {floorSizeAt(source, preview.metresPerUnit)}; with {UNIT_NAME[review.scale.unit as (typeof UNITS)[number]]} it is{" "}
+                      {floorSizeAt(source, preview.unitMetresPerUnit ?? preview.metresPerUnit)}. Which is right?
                     </p>
                   )}
                   <div className="review-actions">
@@ -227,6 +320,15 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
               source={source}
               drawn={focused}
               apply={apply}
+              tracing={mode === "trace" && traceTarget === focused.id}
+              onTrace={
+                picture
+                  ? () => {
+                      setMode(mode === "trace" && traceTarget === focused.id ? "select" : "trace");
+                      setTraceTarget(focused.id);
+                    }
+                  : null
+              }
             />
           ) : (
             <p className="small muted">Click an object on the plan or in the 3D view to check its name and kind.</p>
@@ -245,13 +347,18 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
               {unchecked > proposedNames.length && ` and ${unchecked - proposedNames.length} more`}
             </p>
           )}
-          {unchecked > 0 && (
-            <div className="review-actions">
+          <div className="review-actions">
+            {unchecked > 0 && (
               <button type="button" className="button button-small" data-testid="review-accept-remaining" onClick={() => apply({ kind: "accept_remaining" })}>
-                Accept the remaining {unchecked} as drawn
+                Accept the remaining {unchecked} as {picture ? "proposed" : "drawn"}
               </button>
-            </div>
-          )}
+            )}
+            {picture && (
+              <button type="button" className="button button-small" aria-pressed={mode === "add"} data-testid="review-add-object" onClick={() => setMode(mode === "add" ? "select" : "add")}>
+                Add a missed object
+              </button>
+            )}
+          </div>
         </li>
 
         <li className={item("omissions").done ? "done" : "todo"} data-testid="review-omissions">
@@ -269,7 +376,21 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
   );
 }
 
-function ObjectCard({ project, source, drawn, apply }: { project: Project; source: DrawingSource; drawn: DrawingObject; apply: (c: ReviewCorrection) => void }) {
+function ObjectCard({
+  project,
+  source,
+  drawn,
+  apply,
+  tracing,
+  onTrace,
+}: {
+  project: Project;
+  source: DrawingSource;
+  drawn: DrawingObject;
+  apply: (c: ReviewCorrection) => void;
+  tracing: boolean;
+  onTrace: (() => void) | null;
+}) {
   const status = statusOf(source, drawn.id);
   const live = project.scene.objects.find((o) => o.id === drawn.object_id) ?? null;
   const [name, setName] = useState(live?.name ?? drawn.label);
@@ -282,7 +403,14 @@ function ObjectCard({ project, source, drawn, apply }: { project: Project; sourc
       <p className="small">
         <strong>{live?.name ?? drawn.label}</strong> · {STATUS_WORDS[status]} · from {describeRef(drawn.refs[0]!)}
         {drawn.footprint_fit === "enclosing" && " · its box only encloses the drawn shape"}
+        {drawn.footprint_fit === "approximate" && " · outline only proposed (approximate)"}
+        {drawn.tolerance !== null && ` · traced to within ${formatLength(drawn.tolerance * source.drawing.review.scale.metres_per_unit)}`}
       </p>
+      {onTrace && (
+        <button type="button" className="button button-small" aria-pressed={tracing} data-testid="review-trace" onClick={onTrace}>
+          {drawn.tolerance !== null ? "Trace it again" : "Trace its outline"}
+        </button>
+      )}
       {live && (
         <label className="small review-name">
           Name{" "}

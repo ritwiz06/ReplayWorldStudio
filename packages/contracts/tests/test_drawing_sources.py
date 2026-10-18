@@ -50,6 +50,7 @@ def drawing_source(object_id: str, status: str = "proposed", **units: Any) -> di
         "drawing": {
             "reader": "rws-dxf/1",
             "file": {"uri": f"drawings/{SHA}.dxf", "bytes": 1234},
+            "raster": None,
             "dxf_version": "AC1015",
             "units": {
                 "insunits": 4,
@@ -75,6 +76,7 @@ def drawing_source(object_id: str, status: str = "proposed", **units: Any) -> di
                     "refs": [ref("2A")],
                     "outline": square,
                     "footprint_fit": "exact",
+                    "tolerance": None,
                     "centre": {"x": 500.0, "y": 400.0},
                     "width": 1000.0,
                     "depth": 800.0,
@@ -182,6 +184,7 @@ def reference(real: float, compared_with: float | None) -> dict[str, Any]:
         "metres_per_unit": mpu,
         "compared_with": compared_with,
         "agrees": agrees,
+        "tolerance": None,
     }
 
 
@@ -246,7 +249,7 @@ def test_the_stored_file_is_named_by_its_hash(fixture_data: dict[str, Any]) -> N
 def test_only_a_dxf_source_carries_a_drawing(fixture_data: dict[str, Any]) -> None:
     source = drawing_source(object_id(fixture_data))
     source["kind"] = "synthetic"
-    with pytest.raises(ValidationError, match="only a dxf source carries a drawing"):
+    with pytest.raises(ValidationError, match="only a dxf, pdf, png or jpeg source carries"):
         Project.model_validate(with_source(fixture_data, source))
 
 
@@ -315,8 +318,10 @@ def test_a_0_9_0_drawing_is_reviewed_as_unchecked_and_its_drawn_sizes_are_weaken
     drawing = old["sources"][-1]["drawing"]
     del drawing["review"]
     del drawing["omitted"]
+    del drawing["raster"]
     for drawn in drawing["objects"]:
         del drawn["footprint_fit"]
+        del drawn["tolerance"]
     press = old["scene"]["objects"][0]
     for axis in ("width", "depth"):
         press["dimensions"][axis].update(
@@ -329,6 +334,9 @@ def test_a_0_9_0_drawing_is_reviewed_as_unchecked_and_its_drawn_sizes_are_weaken
         "drawn (a design drawing, not a site measurement); nothing is strengthened)",
         "schema_version 0.10.0 -> 0.11.0 (adds 'omitted: null' to 1 drawing reading: where their "
         "left-out shapes lie was not recorded, so checks treat them as possibly anywhere)",
+        "schema_version 0.11.0 -> 0.12.0 (adds 'raster: null' to 1 drawing reading and "
+        "'tolerance: null' to 1 drawn outline: DXF geometry is exact as drawn; no values or "
+        "evidence changed)",
     ]
     project = Project.model_validate(upgrade.document)
     review = project.sources[-1].drawing.review  # type: ignore[union-attr]

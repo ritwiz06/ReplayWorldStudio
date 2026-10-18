@@ -195,6 +195,15 @@ def note_0_11_0(readings: int = 0) -> str:
     )
 
 
+def note_0_12_0(readings: int = 0, outlines: int = 0) -> str:
+    return (
+        f"schema_version 0.11.0 -> 0.12.0 (adds 'raster: null' to {readings} drawing "
+        f"reading{'' if readings == 1 else 's'} and 'tolerance: null' to {outlines} drawn "
+        f"outline{'' if outlines == 1 else 's'}: DXF geometry is exact as drawn; no values or "
+        "evidence changed)"
+    )
+
+
 def test_0_8_0_documents_gain_a_null_drawing_on_each_source(
     fixture_data: dict[str, Any],
 ) -> None:
@@ -204,7 +213,7 @@ def test_0_8_0_documents_gain_a_null_drawing_on_each_source(
     assert [s["drawing"] for s in upgrade.document["sources"]] == [None]
     assert (upgrade.from_version, upgrade.notes) == (
         "0.8.0",
-        [note_0_9_0(1), note_0_10_0(), note_0_11_0()],
+        [note_0_9_0(1), note_0_10_0(), note_0_11_0(), note_0_12_0()],
     )
     assert all("drawing" not in source for source in old["sources"])  # input untouched
 
@@ -246,6 +255,7 @@ def test_0_2_0_documents_gain_only_the_version_and_an_empty_edit_log(
         note_0_9_0(1),
         note_0_10_0(),
         note_0_11_0(),
+        note_0_12_0(),
     ]
 
 
@@ -265,6 +275,7 @@ def test_0_3_0_documents_gain_an_empty_edit_log(fixture_data: dict[str, Any]) ->
             note_0_9_0(1),
             note_0_10_0(),
             note_0_11_0(),
+            note_0_12_0(),
         ],
     )
     assert "edit_log" not in old["scene"]  # input untouched
@@ -287,6 +298,7 @@ def test_0_4_0_documents_gain_a_null_generation_on_each_asset(
             note_0_9_0(1),
             note_0_10_0(),
             note_0_11_0(),
+            note_0_12_0(),
         ],
     )
     assert all("generation" not in asset for asset in old["catalog"])  # input untouched
@@ -308,6 +320,7 @@ def test_0_5_0_documents_gain_a_null_image_and_photo_import_on_each_source(
             note_0_9_0(1),
             note_0_10_0(),
             note_0_11_0(),
+            note_0_12_0(),
         ],
     )
     assert all("image" not in source for source in old["sources"])  # input untouched
@@ -338,7 +351,7 @@ def test_a_0_3_0_document_claiming_an_edit_log_is_refused(fixture_data: dict[str
 def test_legacy_upgrade_runs_every_step_in_order(legacy: dict[str, Any]) -> None:
     notes = upgrade_document(legacy).notes
     assert notes[0] == "schema_version 0.1.0 -> 0.2.0"
-    assert notes[-9:] == [
+    assert notes[-10:] == [
         NOTE_0_3_0,
         NOTE_0_4_0,
         note_0_5_0(0),
@@ -348,6 +361,7 @@ def test_legacy_upgrade_runs_every_step_in_order(legacy: dict[str, Any]) -> None
         note_0_9_0(1),
         note_0_10_0(),
         note_0_11_0(),
+        note_0_12_0(),
     ]
     upgraded = Project.model_validate(upgrade_document(legacy).document)
     assert upgraded.scene.edit_log == []
@@ -358,7 +372,7 @@ def test_current_documents_pass_through_unchanged(fixture_data: dict[str, Any]) 
     assert (upgrade.document, upgrade.changed, upgrade.notes) == (fixture_data, False, [])
 
 
-@pytest.mark.parametrize("version", ["0.0.1", "0.12.0", "1.0.0", None])
+@pytest.mark.parametrize("version", ["0.0.1", "0.13.0", "1.0.0", None])
 def test_unknown_versions_are_refused(legacy: dict[str, Any], version: str | None) -> None:
     legacy["schema_version"] = version
     with pytest.raises(MigrationError, match="unsupported schema_version"):
@@ -386,7 +400,7 @@ def test_migrate_command_writes_a_validated_upgrade(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert "note: schema_version 0.1.0 -> 0.2.0" in result.stderr
     project = Project.model_validate_json(out.read_text())
-    assert project.schema_version == "0.11.0"
+    assert project.schema_version == "0.12.0"
     assert "note: schema_version 0.2.0 -> 0.3.0" in result.stderr
     assert "note: schema_version 0.3.0 -> 0.4.0" in result.stderr
     assert "note: schema_version 0.4.0 -> 0.5.0" in result.stderr
@@ -396,6 +410,7 @@ def test_migrate_command_writes_a_validated_upgrade(tmp_path: Path) -> None:
     assert "note: schema_version 0.8.0 -> 0.9.0" in result.stderr
     assert "note: schema_version 0.9.0 -> 0.10.0" in result.stderr
     assert "note: schema_version 0.10.0 -> 0.11.0" in result.stderr
+    assert "note: schema_version 0.11.0 -> 0.12.0" in result.stderr
     assert LEGACY.read_text().startswith('{\n  "schema_version": "0.1.0"')  # input untouched
 
 
@@ -490,6 +505,7 @@ def test_0_7_0_photo_observations_gain_not_recorded_visibility_and_no_correction
         note_0_9_0(2),
         note_0_10_0(),
         note_0_11_0(),
+        note_0_12_0(),
     ]
     Project.model_validate(upgrade.document)
     claimed = copy.deepcopy(old)

@@ -15,6 +15,8 @@ import type {
   StoredPhoto,
   ModelRevisionProposalResult,
   ObjectProposalResult,
+  PlanProposalResult,
+  PlanUpload,
   Project,
   UpgradeReport,
   ValidationErrorResponse,
@@ -23,7 +25,7 @@ import type {
 
 export type * from "./generated/contracts";
 
-export const SCHEMA_VERSION: Project["schema_version"] = "0.11.0";
+export const SCHEMA_VERSION: Project["schema_version"] = "0.12.0";
 
 /** One structural problem, located by a JSON Pointer such as `/scene/objects/2/dimensions`. */
 export interface ContractIssue {
@@ -78,3 +80,5 @@ export const validateImageProposalResult = validatorFor<ImageProposalResult>("Im
 export const validateStoredPhoto = validatorFor<StoredPhoto>("StoredPhoto");
 export const validateModelRevisionProposalResult = validatorFor<ModelRevisionProposalResult>("ModelRevisionProposalResult");
 export const validateDrawingAnalysis = validatorFor<DrawingAnalysis>("DrawingAnalysis");
+export const validatePlanUpload = validatorFor<PlanUpload>("PlanUpload");
+export const validatePlanProposalResult = validatorFor<PlanProposalResult>("PlanProposalResult");

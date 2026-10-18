@@ -45,7 +45,13 @@ export function SelectionCard({ project, selected, onCheck, tool, onTool, onDeta
     );
   }
   const link = drawnFrom(project, selected.id);
-  const footprint = FOOTPRINT_WORDS[selected.dimensions.width.origin] ?? "";
+  const picture = link?.source.drawing.reader === "rws-plan-image/1";
+  const footprint =
+    selected.dimensions.width.origin === "drawn" && picture
+      ? link?.drawn.tolerance != null
+        ? "footprint traced on the plan"
+        : "footprint proposed from the plan (approximate)"
+      : (FOOTPRINT_WORDS[selected.dimensions.width.origin] ?? "");
   return (
     <section className="selection-card" aria-label="Selected object" data-testid="selection-card">
       <h2 className="panel-title">{selected.name}</h2>

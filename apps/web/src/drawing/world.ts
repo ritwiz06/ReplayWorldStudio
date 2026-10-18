@@ -1,10 +1,17 @@
 // From a DXF reading to an editable draft world (ONB-01). The API reads the drawing (IMP-01);
 // this module settles the unit, maps drawing units to world metres, and builds one scene object
 // per drawn object with its evidence: the footprint as drawn, a height assumed only for display,
-// and a link back to the drawing entity it came from. Nothing here talks to the API.
+// and a link back to the drawing entity it came from. A plan image (IMP-03: a PDF page, PNG or
+// JPEG) is the same kind of drawing in pixels: its scale comes from one known length, and its
+// objects are the vision model's approximate boxes or outlines the person traced. Nothing here
+// talks to the API.
 import {
   SCHEMA_VERSION,
   type DrawingAnalysis,
+  type PlanLabel,
+  type PlanLine,
+  type PlanPoint,
+  type PlanProposal,
   type DrawingImport,
   type DrawingObject,
   type DrawingRef,
@@ -19,7 +26,10 @@ import {
 import { quantizeMetres } from "../editing/units";
 import { worldBounds } from "../scene/placement";
 
-export type DrawingUnit = SourceToWorldTransform["source_unit"];
+/** A plan's own unit: a length unit, or pixels for a plan image. */
+export type PlanUnit = SourceToWorldTransform["source_unit"];
+/** The length units a DXF can be drawn in. */
+export type DrawingUnit = Exclude<PlanUnit, "px">;
 export type UnitBasis = NonNullable<DrawingImport["units"]["basis"]>;
 export type ScaleReview = DrawingReview["scale"];
 export type Reviewed = DrawingReview["objects"][number]["status"];
@@ -71,7 +81,7 @@ export function formatSize(drawing: DrawingImport, unit: DrawingUnit): string {
 }
 
 /** Centre the drawing on the world origin; its +X is world +X and its +Y is world -Z. */
-export function sourceToWorld(drawing: DrawingImport, unit: DrawingUnit, metresPerUnit: number = METRES_PER_UNIT[unit]): SourceToWorldTransform {
+export function sourceToWorld(drawing: DrawingImport, unit: PlanUnit, metresPerUnit: number = unit === "px" ? NaN : METRES_PER_UNIT[unit]): SourceToWorldTransform {
   const s = metresPerUnit;
   const cx = (drawing.extent_min.x + drawing.extent_max.x) / 2;
   const cy = (drawing.extent_min.y + drawing.extent_max.y) / 2;
@@ -137,15 +147,22 @@ export function displayHeight(drawn: { kind: DrawingObject["kind"]; label: strin
   return match ? { height: match[1], what: match[2] } : { height: 1.2, what: "piece of equipment" };
 }
 
+/** "on page 2" or "on the image", for a plan image's layer. */
+const onPicture = (layer: string) => (layer.startsWith("page") ? `on ${layer}` : "on the image");
+
 export function describeRef(ref: DrawingRef): string {
+  if (ref.entity === "REGION") return `an area the vision model proposed ${onPicture(ref.layer)}`;
+  if (ref.entity === "TRACE") return `an outline you traced ${onPicture(ref.layer)}`;
+  if (ref.entity === "PAGE") return `the edge of the picture ${onPicture(ref.layer)}`;
   return `${ref.entity}${ref.handle ? ` ${ref.handle}` : ""} on layer ${ref.layer}${ref.block ? ` (in block ${ref.block})` : ""}`;
 }
 
 /** How the scale was established, in the words evidence text uses. */
 export function scalePhrase(scale: ScaleReview): string {
   if (scale.basis === "reference_length" && scale.reference) {
-    return `1 unit = ${formatScale(scale.metres_per_unit)} (from your known length of ${scale.reference.real_length_m.toFixed(2)} m)`;
+    return `1 ${scale.unit === "px" ? "px" : "unit"} = ${formatScale(scale.metres_per_unit)} (from your known length of ${scale.reference.real_length_m.toFixed(2)} m)`;
   }
+  if (scale.unit === "px") return "no scale yet"; // never stored: a plan image is always measured
   return scale.basis === "drawing_unit"
     ? `1 unit = ${UNIT_SINGULAR[scale.unit]} (the drawing's own unit, $INSUNITS)`
     : `1 unit = ${UNIT_SINGULAR[scale.unit]} (your choice of unit)`;
@@ -192,6 +209,15 @@ export function displayHeightLength(kind: ObjectKind, name: string, refs: readon
 /** A drawn footprint axis: design geometry read from the drawing at the reviewed scale. */
 function drawnLength(value: number, filename: string, drawn: DrawingObject, scale: ScaleReview): Length {
   const ref = drawn.refs[0]!;
+  if (scale.unit === "px") {
+    const shape =
+      ref.entity === "TRACE"
+        ? `the outline you traced, to within ${formatLength((drawn.tolerance ?? 0) * scale.metres_per_unit)}`
+        : ref.entity === "PAGE"
+          ? "the edge of the picture, not a floor outline (approximate)"
+          : "a box the vision model proposed (approximate)";
+    return length(value, "drawn", `From the plan picture ${filename}: ${describeRef(ref)}, ${shape}; ${scalePhrase(scale)}. A plan's size, not a site measurement.`);
+  }
   const shape =
     drawn.footprint_fit === "exact"
       ? "the outline as drawn"
@@ -272,11 +298,129 @@ const stem = (filename: string) => filename.replace(/\.[^.]+$/, "") || filename;
 /** The draft project: one drawing source with its review (nothing checked yet), the floor, and
  * one scene object per drawn object. */
 export function buildDrawingProject(analysis: DrawingAnalysis, unit: DrawingUnit): Project {
+  return buildDraft(analysis, initialScale(analysis.drawing, unit), unitBasis(analysis.drawing, unit));
+}
+
+/** Is this the reading of a plan picture (a PDF page, PNG or JPEG) rather than a DXF? */
+export const isPlanImage = (drawing: DrawingImport) => drawing.reader === "rws-plan-image/1";
+
+/** The source kind of a plan picture, from its stored file. */
+const PLAN_KIND = { pdf: "pdf", png: "png", jpg: "jpeg" } as const;
+
+/** A known length on a plan picture: the only way pixels get a scale. */
+export function pictureScale(a: PlanPoint, b: PlanPoint, realLengthM: number, tolerance: number): ScaleReview {
+  const drawingLength = Math.hypot(b.x - a.x, b.y - a.y);
+  const metresPerUnit = realLengthM / drawingLength;
+  return {
+    basis: "reference_length",
+    unit: "px",
+    metres_per_unit: metresPerUnit,
+    status: "measured",
+    reference: { a: { ...a }, b: { ...b }, drawing_length: drawingLength, real_length_m: realLengthM, metres_per_unit: metresPerUnit, compared_with: null, agrees: null, tolerance },
+  };
+}
+
+/** The relative error a known length's marking allows: both ends off by the tolerance. */
+export function scaleError(scale: ScaleReview): number {
+  const ref = scale.reference;
+  return ref?.tolerance ? (2 * ref.tolerance) / ref.drawing_length : 0;
+}
+
+/**
+ * A plan picture's reading with the vision model's draft in it (or none, to mark everything by
+ * hand): boxes become approximate footprints, the floor outline a proposed floor (else the
+ * picture's edge, which is no floor outline), wall lines plan lines and texts plan labels, all
+ * in the picture's pixels (y up). Text from the plan is content, kept as written.
+ */
+export function proposedDrawing(analysis: DrawingAnalysis, proposal: PlanProposal | null): DrawingImport {
   const drawing = analysis.drawing;
-  const scale = initialScale(drawing, unit);
-  const t = sourceToWorld(drawing, unit);
+  const W = drawing.extent_max.x;
+  const H = drawing.extent_max.y;
+  const layer = drawing.layers[0] ?? "image";
+  const region = (entity: "REGION" | "PAGE" = "REGION"): DrawingRef => ({ handle: null, layer, entity, block: null });
+  const at = (p: { u: number; v: number }): PlanPoint => ({ x: Number((p.u * W).toFixed(2)), y: Number(((1 - p.v) * H).toFixed(2)) });
+  const rectangle = (x0: number, y0: number, x1: number, y1: number) => ({
+    outline: [
+      { x: x0, y: y0 },
+      { x: x1, y: y0 },
+      { x: x1, y: y1 },
+      { x: x0, y: y1 },
+    ] as DrawingObject["outline"],
+    centre: { x: (x0 + x1) / 2, y: (y0 + y1) / 2 },
+    width: x1 - x0,
+    depth: y1 - y0,
+    rotation_rad: 0,
+  });
+  const objects: DrawingObject[] = [];
+  const floor = proposal?.floor?.map(at);
+  if (floor && floor.length >= 3) {
+    const xs = floor.map((p) => p.x);
+    const ys = floor.map((p) => p.y);
+    objects.push({
+      ...rectangle(Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)),
+      outline: floor as DrawingObject["outline"],
+      id: "plan-floor",
+      object_id: "obj-plan-floor-outline",
+      role: "floor",
+      label: "Floor outline (proposed)",
+      label_from: "proposed",
+      kind: "structure",
+      refs: [region()],
+      footprint_fit: "approximate",
+      tolerance: null,
+      notes: ["Proposed by the vision model: approximate. Trace the floor to check against its edge."],
+    });
+  } else {
+    objects.push({
+      ...rectangle(0, 0, W, H),
+      id: "plan-page",
+      object_id: "obj-plan-page",
+      role: "floor",
+      label: "Edge of the picture (not a floor outline)",
+      label_from: "generic",
+      kind: "structure",
+      refs: [region("PAGE")],
+      footprint_fit: "approximate",
+      tolerance: null,
+      notes: ["No floor outline was proposed; the picture's edge stands in. Trace the floor."],
+    });
+  }
+  (proposal?.objects ?? []).forEach((o, i) => {
+    const { left, right, top, bottom } = o.box;
+    objects.push({
+      ...rectangle(Number((left * W).toFixed(2)), Number(((1 - bottom) * H).toFixed(2)), Number((right * W).toFixed(2)), Number(((1 - top) * H).toFixed(2))),
+      id: `plan-${i + 1}`,
+      object_id: `obj-plan-${i + 1}`,
+      role: "footprint",
+      label: o.label.slice(0, 500),
+      label_from: "proposed",
+      kind: o.kind,
+      refs: [region()],
+      footprint_fit: "approximate",
+      tolerance: null,
+      notes: [
+        o.named_on_plan ? "Named as written on the plan." : "Named by the vision model (not written on the plan).",
+        "Proposed by the vision model: approximate. Trace its outline to check it exactly.",
+      ],
+    });
+  });
+  const lines: PlanLine[] = (proposal?.walls ?? []).map((wall) => ({ ref: region(), points: wall.points.map(at) as PlanLine["points"], closed: false }));
+  const labels: PlanLabel[] = (proposal?.texts ?? []).map((t) => ({ ref: region(), text: t.text.slice(0, 500), at: at(t.at) }));
+  return { ...drawing, objects, lines, labels };
+}
+
+/** The draft from a plan picture: the reading (with the proposal or none) at the scale of the
+ * person's known length. */
+export function buildPlanProject(analysis: DrawingAnalysis, drawing: DrawingImport, scale: ScaleReview): Project {
+  return buildDraft({ ...analysis, drawing }, scale, "user_supplied");
+}
+
+function buildDraft(analysis: DrawingAnalysis, scale: ScaleReview, basis: UnitBasis): Project {
+  const drawing = analysis.drawing;
+  const plan = isPlanImage(drawing);
+  const t = sourceToWorld(drawing, scale.unit, scale.metres_per_unit);
   const tag = analysis.sha256.slice(0, 12);
-  const name = `${stem(analysis.filename)} (draft from drawing)`.slice(0, 500);
+  const name = `${stem(analysis.filename)} (draft from ${plan ? "plan" : "drawing"})`.slice(0, 500);
   const floorOutline = drawing.objects.find((o) => o.role === "floor") ?? null;
   const objects = drawing.objects.filter((o) => o !== floorOutline).map((drawn) => drawnObject(analysis.filename, t, scale, drawn));
   // The floor first, so the floor slab is drawn under everything and listed first.
@@ -289,26 +433,26 @@ export function buildDrawingProject(analysis: DrawingAnalysis, unit: DrawingUnit
   };
   return {
     schema_version: SCHEMA_VERSION,
-    id: `proj-dxf-${tag}`,
+    id: `proj-${plan ? "plan" : "dxf"}-${tag}`,
     name,
     units: { length: "m", time: "s", mass: "kg", angle: "rad" },
     world_frame: { handedness: "right", up_axis: "+Y", floor_plane: "XZ" },
     fixture: null,
     sources: [
       {
-        id: `src-dxf-${tag}`,
-        kind: "dxf",
+        id: `src-${plan ? "plan" : "dxf"}-${tag}`,
+        kind: plan ? PLAN_KIND[drawing.file.uri.split(".").pop() as keyof typeof PLAN_KIND] : "dxf",
         filename: analysis.filename,
         sha256: analysis.sha256,
         source_to_world: t,
         import_warnings: analysis.warnings.map((w) => w.slice(0, 500)),
         image: null,
         photo_import: null,
-        drawing: { ...drawing, units: { ...drawing.units, basis: unitBasis(drawing, unit) }, review },
+        drawing: { ...drawing, units: { ...drawing.units, basis }, review },
       },
     ],
     catalog: [],
-    scene: { id: `scene-dxf-${tag}`, name, revision: 0, objects: [floor, ...objects], edit_log: [] },
+    scene: { id: `scene-${plan ? "plan" : "dxf"}-${tag}`, name, revision: 0, objects: [floor, ...objects], edit_log: [] },
   };
 }
 

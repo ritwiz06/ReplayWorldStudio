@@ -2789,3 +2789,103 @@ label.button.disabled {
   stroke: none;
   font-weight: 700;
 }
+
+/* ---------- IMP-03 plan pictures; the drawing panel docked on the simple screen ---------- */
+.app.simple.docked {
+  grid-template-columns: 272px minmax(0, 1fr) clamp(380px, 38vw, 560px);
+}
+.panel-drawing {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 10px 12px;
+}
+.panel-drawing .source-drawing {
+  position: static;
+  width: auto;
+  max-height: none;
+  overflow: visible;
+}
+.panel-drawing .source-drawing.wide {
+  width: auto;
+}
+.drawing-plan image.plan-raster {
+  opacity: 0.92;
+}
+.drawing-plan .plan-lines-proposed polyline,
+.drawing-plan .plan-lines-proposed polygon {
+  stroke: #2fb5a6;
+  stroke-dasharray: 6 4;
+  stroke-width: 1.5;
+}
+.drawing-plan .plan-approx > polygon:not(.plan-original) {
+  stroke-dasharray: 7 4;
+  fill-opacity: 0.55;
+}
+.drawing-plan .plan-traced > polygon:not(.plan-original) {
+  stroke-width: 2;
+}
+.drawing-plan .plan-floor.plan-approx polygon {
+  stroke: #e6aa28;
+  stroke-dasharray: 9 5;
+}
+.drawing-plan .plan-marks polyline {
+  fill: none;
+  stroke: var(--warn);
+  stroke-width: 2;
+}
+.review-zoom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+.drawing-plan-frame.review-plan.zoomed {
+  overflow: auto;
+}
+.review-plan-inner {
+  width: 100%;
+  height: 100%;
+}
+.drawing-question.settled {
+  border-color: var(--border);
+}
+.plan-pages ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+.plan-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-raised);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.plan-page:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.plan-page img {
+  max-width: 220px;
+  max-height: 160px;
+  background: #fff;
+}
+.plan-page-blank {
+  display: grid;
+  place-items: center;
+  width: 160px;
+  height: 110px;
+  background: #fff;
+  color: #333;
+}
+.review-object > .button {
+  align-self: flex-start;
+}

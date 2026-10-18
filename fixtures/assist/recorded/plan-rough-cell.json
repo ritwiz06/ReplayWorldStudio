@@ -1,0 +1,13 @@
+{
+  "task": "plan",
+  "key": "4e6c200c2e2656074790c0d0147b0d685cab6c7fae561cf478fc8153da9c2738",
+  "plan": "rough-cell.png",
+  "service": "ASU Voyager",
+  "model": "qwen3-vl-32b-instruct",
+  "prompt_version": "plan-01.1",
+  "recorded_at": "2026-10-18",
+  "note": "Raw answers from the live vision model for the synthetic plan named above, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"floor\": [\n    [104, 87],\n    [864, 87],\n    [864, 834],\n    [104, 834]\n  ],\n  \"objects\": [\n    {\n      \"box\": [167, 197, 297, 340],\n      \"kind\": \"equipment\",\n      \"label\": \"CNC 1\",\n      \"named_on_plan\": true\n    },\n    {\n      \"box\": [353, 190, 485, 334],\n      \"kind\": \"equipment\",\n      \"label\": \"CNC 2\",\n      \"named_on_plan\": true\n    },\n    {\n      \"box\": [605, 124, 795, 205],\n      \"kind\": \"equipment\",\n      \"label\": \"Bench\",\n      \"named_on_plan\": true\n    },\n    {\n      \"box\": [578, 452, 773, 732],\n      \"kind\": \"equipment\",\n      \"label\": \"Robot cell\",\n      \"named_on_plan\": true\n    },\n    {\n      \"box\": [297, 509, 397, 608],\n      \"kind\": \"equipment\",\n      \"label\": \"future cart?\",\n      \"named_on_plan\": true\n    },\n    {\n      \"box\": [175, 668, 242, 748],\n      \"kind\": \"equipment\",\n      \"label\": \"Parts bin\",\n      \"named_on_plan\": true\n    }\n  ],\n  \"picture\": \"floor_plan\",\n  \"texts\": [\n    {\n      \"at\": [478, 30],\n      \"text\": \"12 m\"\n    },\n    {\n      \"at\": [468, 864],\n      \"text\": \"door\"\n    },\n    {\n      \"at\": [478, 918],\n      \"text\": \"Line 3 cell - rough sketch\"\n    }\n  ],\n  \"walls\": [\n    [\n      [104, 87],\n      [864, 87]\n    ],\n    [\n      [864, 87],\n      [864, 834]\n    ],\n    [\n      [864, 834],\n      [104, 834]\n    ],\n    [\n      [104, 834],\n      [104, 87]\n    ]\n  ]\n}"
+  ]
+}

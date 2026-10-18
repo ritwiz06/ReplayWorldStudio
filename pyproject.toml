@@ -54,6 +54,11 @@ files = [
 explicit_package_bases = true
 mypy_path = ["packages/contracts/python", "services/api/src"]
 
+[[tool.mypy.overrides]]
+# pypdfium2 ships no type information; plans.py uses a small, checked part of it.
+module = ["pypdfium2", "pypdfium2.*"]
+ignore_missing_imports = true
+
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true

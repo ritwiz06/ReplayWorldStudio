@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.11.0",
+  "$id": "urn:replay-world:contracts:0.12.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.11.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.12.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -70,6 +70,12 @@
     },
     "DrawingAnalysis": {
       "$ref": "#/$defs/DrawingAnalysis"
+    },
+    "PlanUpload": {
+      "$ref": "#/$defs/PlanUpload"
+    },
+    "PlanProposalResult": {
+      "$ref": "#/$defs/PlanProposalResult"
     }
   },
   "required": [
@@ -94,7 +100,9 @@
     "GeneratedAssetRevisionRequest",
     "ModelRevisionProposalRequest",
     "ModelRevisionProposalResult",
-    "DrawingAnalysis"
+    "DrawingAnalysis",
+    "PlanUpload",
+    "PlanProposalResult"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -626,7 +634,7 @@
     },
     "DrawingAnalysis": {
       "additionalProperties": false,
-      "description": "A DXF drawing stored in the source library and read deterministically (IMP-01).\n\nNothing is in a project yet. ``drawing.units.basis`` is null: when ``units.question`` is set\nthe person chooses the unit before any real size is assigned.",
+      "description": "A DXF drawing stored in the source library and read deterministically (IMP-01), or a\nplan image (IMP-03): a PNG, JPEG or one PDF page, read as a picture in pixels with no\nobjects yet.\n\nNothing is in a project yet. ``drawing.units.basis`` is null: when ``units.question`` is set\nthe person chooses the unit (DXF) or marks a known length (plan image) before any real size\nis assigned.",
       "properties": {
         "filename": {
           "maxLength": 500,
@@ -663,7 +671,7 @@
       "additionalProperties": false,
       "properties": {
         "uri": {
-          "pattern": "^drawings/[0-9a-f]{64}\\.dxf$",
+          "pattern": "^drawings/[0-9a-f]{64}\\.(?:dxf|pdf|png|jpg)$",
           "type": "string"
         },
         "bytes": {
@@ -681,14 +689,28 @@
     },
     "DrawingImport": {
       "additionalProperties": false,
-      "description": "The deterministic reading of one DXF drawing (IMP-01), kept with the project.",
+      "description": "The deterministic reading of one DXF drawing (IMP-01), or of one plan image (IMP-03,\n0.12.0: a PNG, a JPEG or one PDF page, its objects proposed by the vision model or traced by\nthe person), kept with the project.",
       "properties": {
         "reader": {
-          "const": "rws-dxf/1",
+          "enum": [
+            "rws-dxf/1",
+            "rws-plan-image/1"
+          ],
           "type": "string"
         },
         "file": {
           "$ref": "#/$defs/DrawingFile"
+        },
+        "raster": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlanRaster"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The picture a plan image reading is in (0.12.0); null for a DXF drawing."
         },
         "dxf_version": {
           "anyOf": [
@@ -777,6 +799,7 @@
       "required": [
         "reader",
         "file",
+        "raster",
         "dxf_version",
         "units",
         "layers",
@@ -820,13 +843,15 @@
           "type": "string"
         },
         "label_from": {
-          "description": "Where the name came from: a block attribute, a text inside the outline, the block name, the layer name, or a plain description such as 'Floor'.",
+          "description": "Where the name came from: a block attribute, a text inside the outline, the block name, the layer name, a plain description such as 'Floor', the vision model's proposal (0.12.0), or the person (0.12.0).",
           "enum": [
             "attribute",
             "text",
             "block",
             "layer",
-            "generic"
+            "generic",
+            "proposed",
+            "entered"
           ],
           "type": "string"
         },
@@ -857,12 +882,25 @@
           "type": "array"
         },
         "footprint_fit": {
-          "description": "'exact': the footprint rectangle is the drawn shape; 'enclosing': the rectangle encloses a shape that is not one (or a block's extent), so it is approximate.",
+          "description": "'exact': the footprint rectangle is the drawn shape; 'enclosing': the rectangle encloses a shape that is not one (or a block's extent), so it is approximate; 'approximate' (0.12.0): proposed from a plan image, neither exact nor known to enclose.",
           "enum": [
             "exact",
-            "enclosing"
+            "enclosing",
+            "approximate"
           ],
           "type": "string"
+        },
+        "tolerance": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "For an outline the person traced on a plan image (0.12.0): how far its edges may be from the true ones, in drawing units (the marking precision). Null for a DXF outline (exact as drawn) and for a proposal (unknown)."
         },
         "centre": {
           "$ref": "#/$defs/PlanPoint"
@@ -899,6 +937,7 @@
         "refs",
         "outline",
         "footprint_fit",
+        "tolerance",
         "centre",
         "width",
         "depth",
@@ -938,7 +977,10 @@
             "TEXT",
             "MTEXT",
             "CIRCLE",
-            "ARC"
+            "ARC",
+            "REGION",
+            "TRACE",
+            "PAGE"
           ],
           "type": "string"
         },
@@ -2063,7 +2105,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.11.0",
+          "const": "0.12.0",
           "type": "string"
         }
       },
@@ -2931,7 +2973,8 @@
             "accepted",
             "corrected",
             "not_an_object",
-            "used_as_floor"
+            "used_as_floor",
+            "added"
           ],
           "type": "string"
         }
@@ -3287,9 +3330,48 @@
       "title": "PlanLine",
       "type": "object"
     },
+    "PlanPage": {
+      "additionalProperties": false,
+      "description": "One page of an uploaded PDF, for choosing the floor-plan page.",
+      "properties": {
+        "page": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "width_pt": {
+          "description": "The paper's width in PDF points (1/72 inch).",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "height_pt": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "thumbnail": {
+          "anyOf": [
+            {
+              "maxLength": 400000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A small PNG of the page as a data: URL; null past the first pages."
+        }
+      },
+      "required": [
+        "page",
+        "width_pt",
+        "height_pt",
+        "thumbnail"
+      ],
+      "title": "PlanPage",
+      "type": "object"
+    },
     "PlanPoint": {
       "additionalProperties": false,
-      "description": "A point on the drawing, in drawing units (DXF world coordinates).",
+      "description": "A point on the drawing, in drawing units (DXF world coordinates; for a plan image, its\npixels, x to the right and y up from the bottom edge).",
       "properties": {
         "x": {
           "type": "number"
@@ -3305,11 +3387,244 @@
       "title": "PlanPoint",
       "type": "object"
     },
+    "PlanProposal": {
+      "additionalProperties": false,
+      "description": "The vision model's draft of a plan: the floor's outline, wall lines, object boxes and\ntexts, in fractions of the picture.",
+      "properties": {
+        "floor": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ImagePoint"
+              },
+              "maxItems": 40,
+              "minItems": 3,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "walls": {
+          "items": {
+            "$ref": "#/$defs/ProposedWall"
+          },
+          "maxItems": 60,
+          "type": "array"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/ProposedPlanObject"
+          },
+          "maxItems": 60,
+          "type": "array"
+        },
+        "texts": {
+          "items": {
+            "$ref": "#/$defs/ProposedPlanText"
+          },
+          "maxItems": 60,
+          "type": "array"
+        }
+      },
+      "required": [
+        "floor",
+        "walls",
+        "objects",
+        "texts"
+      ],
+      "title": "PlanProposal",
+      "type": "object"
+    },
+    "PlanProposalResult": {
+      "additionalProperties": false,
+      "description": "The API's answer to a plan image: a draft, or why there is none.",
+      "properties": {
+        "outcome": {
+          "enum": [
+            "proposal",
+            "unsupported"
+          ],
+          "type": "string"
+        },
+        "proposal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlanProposal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checks": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "provider": {
+          "$ref": "#/$defs/ProviderRun"
+        }
+      },
+      "required": [
+        "outcome",
+        "proposal",
+        "message",
+        "checks",
+        "provider"
+      ],
+      "title": "PlanProposalResult",
+      "type": "object"
+    },
+    "PlanRaster": {
+      "additionalProperties": false,
+      "description": "The picture of a plan image reading (0.12.0): the PNG or JPEG itself, or one PDF page as\nthe API rendered it. Its pixels are the reading's drawing units. A PDF page's size says how\nbig the paper is, never how big the room is.",
+      "properties": {
+        "uri": {
+          "pattern": "^drawings/[0-9a-f]{64}(?:-p[1-9][0-9]{0,3})?\\.(?:png|jpg)$",
+          "type": "string"
+        },
+        "media_type": {
+          "enum": [
+            "image/png",
+            "image/jpeg"
+          ],
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "width_px": {
+          "maximum": 20000,
+          "minimum": 16,
+          "type": "integer"
+        },
+        "height_px": {
+          "maximum": 20000,
+          "minimum": 16,
+          "type": "integer"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The PDF page shown (from 1); null for an image."
+        },
+        "page_count": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Pages in the PDF; null for an image."
+        },
+        "dpi": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Render resolution of the PDF page."
+        }
+      },
+      "required": [
+        "uri",
+        "media_type",
+        "sha256",
+        "width_px",
+        "height_px",
+        "page",
+        "page_count",
+        "dpi"
+      ],
+      "title": "PlanRaster",
+      "type": "object"
+    },
+    "PlanUpload": {
+      "additionalProperties": false,
+      "description": "A stored plan file: read when it is an image or a one-page PDF; otherwise its pages are\nlisted and the person chooses one.",
+      "properties": {
+        "filename": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "pdf",
+            "png",
+            "jpeg"
+          ],
+          "type": "string"
+        },
+        "pages": {
+          "items": {
+            "$ref": "#/$defs/PlanPage"
+          },
+          "maxItems": 50,
+          "type": "array"
+        },
+        "analysis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DrawingAnalysis"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "filename",
+        "sha256",
+        "kind",
+        "pages",
+        "analysis"
+      ],
+      "title": "PlanUpload",
+      "type": "object"
+    },
     "Project": {
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.11.0",
+          "const": "0.12.0",
           "type": "string"
         },
         "id": {
@@ -3598,6 +3913,86 @@
       "title": "ProposedPhotoObject",
       "type": "object"
     },
+    "ProposedPlanObject": {
+      "additionalProperties": false,
+      "description": "Something the vision model marked on the plan: a box around it and what it is called.\nA draft only, never a measurement or a complete list.",
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "named_on_plan": {
+          "description": "The label is text printed on the plan.",
+          "type": "boolean"
+        },
+        "kind": {
+          "enum": [
+            "equipment",
+            "structure",
+            "keep_clear",
+            "walkway"
+          ],
+          "type": "string"
+        },
+        "box": {
+          "$ref": "#/$defs/ImageBox"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "named_on_plan",
+        "kind",
+        "box"
+      ],
+      "title": "ProposedPlanObject",
+      "type": "object"
+    },
+    "ProposedPlanText": {
+      "additionalProperties": false,
+      "description": "Text the model read on the plan, as content (never an instruction).",
+      "properties": {
+        "text": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        "at": {
+          "$ref": "#/$defs/ImagePoint"
+        }
+      },
+      "required": [
+        "text",
+        "at"
+      ],
+      "title": "ProposedPlanText",
+      "type": "object"
+    },
+    "ProposedWall": {
+      "additionalProperties": false,
+      "description": "A wall or partition line the model drew along, as points on the picture.",
+      "properties": {
+        "points": {
+          "items": {
+            "$ref": "#/$defs/ImagePoint"
+          },
+          "maxItems": 20,
+          "minItems": 2,
+          "type": "array"
+        }
+      },
+      "required": [
+        "points"
+      ],
+      "title": "ProposedWall",
+      "type": "object"
+    },
     "ProviderRun": {
       "additionalProperties": false,
       "description": "Which model answered, how, and how often it had to be asked.",
@@ -3698,6 +4093,18 @@
             }
           ],
           "description": "Whether the two scales are within 2 %."
+        },
+        "tolerance": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "How far each marked point may be from where it was meant, in drawing units (0.12.0, for a plan image); null where the points snapped to the drawing's geometry."
         }
       },
       "required": [
@@ -3707,7 +4114,8 @@
         "real_length_m",
         "metres_per_unit",
         "compared_with",
-        "agrees"
+        "agrees",
+        "tolerance"
       ],
       "title": "ReferenceLength",
       "type": "object"
@@ -4048,13 +4456,14 @@
           "type": "string"
         },
         "unit": {
-          "description": "The drawing's nominal unit (also for a reference).",
+          "description": "The drawing's nominal unit (also for a reference); 'px' for a plan image.",
           "enum": [
             "m",
             "cm",
             "mm",
             "in",
-            "ft"
+            "ft",
+            "px"
           ],
           "type": "string"
         },
@@ -4137,6 +4546,9 @@
               },
               {
                 "$ref": "#/$defs/DrawingReviewed"
+              },
+              {
+                "$ref": "#/$defs/SourceAttached"
               }
             ],
             "type": "object"
@@ -4275,6 +4687,39 @@
       "title": "SkippedEntities",
       "type": "object"
     },
+    "SourceAttached": {
+      "additionalProperties": false,
+      "description": "A file kept with the world (IMP-03, 0.12.0): a later plan or drawing, stored by its\nhash and listed with the world without replacing it. It is not aligned with the world's\nplan and nothing is merged from it (that is ENR-01); no object changes.",
+      "properties": {
+        "type": {
+          "const": "source_attached",
+          "type": "string"
+        },
+        "revision": {
+          "description": "Scene revision this edit produced.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "source_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "filename": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "revision",
+        "source_id",
+        "filename"
+      ],
+      "title": "SourceAttached",
+      "type": "object"
+    },
     "SourceDocument": {
       "additionalProperties": false,
       "description": "Where scene content came from.\n\nA drawing or plan has a single ``source_to_world`` transform. A ``photo`` has none - a\nperspective photo maps to the floor only through its calibration - and instead carries its\nstored ``image`` and the reviewed ``photo_import``. An imported DXF drawing also carries its\n``drawing`` reading (0.9.0); its transform uses the unit that reading settled.",
@@ -4290,6 +4735,7 @@
             "dxf",
             "pdf",
             "png",
+            "jpeg",
             "photo"
           ],
           "type": "string"
@@ -4438,7 +4884,8 @@
             "cm",
             "mm",
             "in",
-            "ft"
+            "ft",
+            "px"
           ],
           "type": "string"
         },
@@ -4654,7 +5101,7 @@
           "type": "string"
         },
         "to_version": {
-          "const": "0.11.0",
+          "const": "0.12.0",
           "type": "string"
         },
         "notes": {
@@ -4796,7 +5243,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.11.0",
+          "const": "0.12.0",
           "type": "string"
         },
         "project_id": {

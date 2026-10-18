@@ -8,7 +8,9 @@
 //   drawing leaves out accepted);
 // - a display default (a height assumed for display, a floor sized for display), an estimate,
 //   an unchecked scale, an approximate outline or unaccepted omissions never support "fits";
-// - a check that needs a height and has only a display height answers "height needed".
+// - a check that needs a height and has only a display height answers "height needed";
+// - on a plan picture (IMP-03), an outline the vision model proposed is approximate however it
+//   is reviewed; one the person traced is exact to within the precision it was marked with.
 import type { Project, SceneObject } from "@replay-world/contracts";
 import { omissionsMatter } from "./review";
 import { type DrawingSource, drawingSource, drawnFrom } from "./world";
@@ -31,7 +33,7 @@ export function drawingReasons(source: DrawingSource): string[] {
   const reasons: string[] = [];
   if (review.scale.status === "unchecked") reasons.push("the scale is not checked yet");
   if (review.floor.status === "proposed") reasons.push("the floor is only proposed");
-  if (review.omissions !== "accepted" && omissionsMatter(source)) reasons.push("what the drawing leaves out is not yet accepted");
+  if (review.omissions !== "accepted" && omissionsMatter(source)) reasons.push(`what the ${source.drawing.reader === "rws-plan-image/1" ? "plan" : "drawing"} leaves out is not yet accepted`);
   return reasons;
 }
 
@@ -46,28 +48,43 @@ export interface FootprintEvidence {
   encloses: boolean;
   /** Plain words for where the size comes from. */
   source: string;
+  /** How far the true edges may be from the footprint's (metres): a traced outline's marking
+   * precision; 0 for a drawing's own geometry or an entered size. */
+  toleranceM: number;
 }
+
+/** How much larger an outline proposed from a plan picture may really be, for a route: its
+ * true edges are unknown, so a route must keep this much more room from it to fit. */
+export const APPROXIMATE_MARGIN_M = 0.5;
 
 export function footprintEvidence(project: Project, object: SceneObject): FootprintEvidence {
   const d = object.dimensions;
   const origins = new Set([d.width.origin, d.depth.origin]);
+  const link = drawnFrom(project, object.id);
+  // A traced outline places the object only as precisely as it was marked, whatever its size.
+  const traced = link?.drawn.tolerance != null ? link.drawn.tolerance * link.source.drawing.review.scale.metres_per_unit : 0;
+  const no = (problem: string, source: string, encloses = false): FootprintEvidence => ({ exact: false, encloses, problem, source, toleranceM: traced });
   const tilted = Math.abs(object.transform.rotation_rad.x) > 1e-9 || Math.abs(object.transform.rotation_rad.z) > 1e-9;
-  if (tilted) return { exact: false, encloses: false, problem: `${object.name} is tilted, so its footprint is not a rectangle on the floor`, source: "tilted" };
-  if (origins.has("default")) return { exact: false, encloses: false, problem: `${object.name}'s size is only for display`, source: "display only" };
-  if (origins.has("inferred")) return { exact: false, encloses: false, problem: `${object.name}'s size is an estimate`, source: "estimated" };
+  if (tilted) return no(`${object.name} is tilted, so its footprint is not a rectangle on the floor`, "tilted");
+  if (origins.has("default")) return no(`${object.name}'s size is only for display`, "display only");
+  if (origins.has("inferred")) return no(`${object.name}'s size is an estimate`, "estimated");
   if (origins.has("drawn")) {
-    const link = drawnFrom(project, object.id);
-    if (!link) return { exact: false, encloses: false, problem: `${object.name}'s drawn size has no drawing to check it against`, source: "drawn" };
+    if (!link) return no(`${object.name}'s drawn size has no drawing to check it against`, "drawn");
     const isFloor = link.source.drawing.review.floor.object_id === object.id;
-    if (!isFloor && link.status === "proposed") return { exact: false, encloses: false, problem: `${object.name} is not reviewed yet`, source: "drawn" };
+    if (link.drawn.footprint_fit === "approximate") {
+      const what = link.drawn.refs[0]?.entity === "PAGE" ? "is only the edge of the picture" : "was only proposed from the plan picture";
+      return no(`${object.name}'s outline ${what}: trace it in the review to check it`, "proposed (approximate)");
+    }
+    if (!isFloor && link.status === "proposed") return no(`${object.name} is not reviewed yet`, "drawn");
     if (link.drawn.footprint_fit === "enclosing") {
       const what = link.drawn.refs[0]?.entity === "CIRCLE" ? "a round shape" : link.drawn.refs[0]?.entity === "INSERT" ? "a block's drawing" : "an outline that is not a rectangle";
-      return { exact: false, encloses: true, problem: `${object.name}'s box only encloses ${what}: enter its real size to check it exactly`, source: "drawn (approximate)" };
+      return no(`${object.name}'s box only encloses ${what}: enter its real size to check it exactly`, "drawn (approximate)", true);
     }
-    return { exact: true, encloses: false, problem: null, source: `drawn in ${link.source.filename}` };
+    const where = link.drawn.refs[0]?.entity === "TRACE" ? `traced on ${link.source.filename}` : `drawn in ${link.source.filename}`;
+    return { exact: true, encloses: false, problem: null, source: where, toleranceM: traced };
   }
   const words = origins.has("user_supplied") ? "entered by you" : origins.has("supplier") ? "supplier data" : "measured";
-  return { exact: true, encloses: false, problem: null, source: words };
+  return { exact: true, encloses: false, problem: null, source: words, toleranceM: traced };
 }
 
 /** Classify the values a check would use: footprints (width, depth) and, if needed, heights. */

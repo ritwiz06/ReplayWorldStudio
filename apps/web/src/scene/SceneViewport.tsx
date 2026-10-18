@@ -2,7 +2,22 @@ import type { Project, SceneObject } from "@replay-world/contracts";
 import { GizmoHelper, GizmoViewport, Grid, Html, Line, useCursor } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
-import { type Box3, BufferGeometry, type DirectionalLight, DoubleSide, Float32BufferAttribute, type Intersection, PMREMGenerator, Shape, ShapeGeometry, Vector2, Vector3 } from "three";
+import {
+  type Box3,
+  BufferGeometry,
+  type DirectionalLight,
+  DoubleSide,
+  Float32BufferAttribute,
+  type Intersection,
+  PMREMGenerator,
+  Shape,
+  ShapeGeometry,
+  SRGBColorSpace,
+  type Texture,
+  TextureLoader,
+  Vector2,
+  Vector3,
+} from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { SceneChecks } from "../checks/results";
 import { AXIS_ORDER, type CommandRequest } from "../editing/commands";
@@ -45,6 +60,8 @@ interface Props {
   underlay?: Float32Array | null;
   /** What the layout checks found, highlighted while they are open (GEO-01/02). */
   checks?: SceneChecks | null;
+  /** A plan picture laid on the floor (IMP-03): where its corners are, in world metres. */
+  picture?: { url: string; corners: { x: number; z: number }[] } | null;
 }
 
 const BACKGROUND = "#1f2329";
@@ -88,6 +105,7 @@ export function SceneViewport({
   onHandleProbe,
   underlay = null,
   checks = null,
+  picture = null,
 }: Props) {
   const objects = project.scene.objects;
   // While a handle is dragged, the object is drawn from this preview; the scene is unchanged
@@ -151,7 +169,8 @@ export function SceneViewport({
         infiniteGrid
       />
       <HandlesFirst />
-      {underlay && <DrawingUnderlay positions={underlay} />}
+      {picture && <PictureUnderlay url={picture.url} corners={picture.corners} />}
+      {underlay && !picture && <DrawingUnderlay positions={underlay} />}
       {checks && <CheckHighlights checks={checks} />}
       {objects.map((o) => (
         <ObjectVisual
@@ -277,6 +296,44 @@ function CheckHighlights({ checks }: { checks: SceneChecks }) {
         </mesh>
       )}
     </group>
+  );
+}
+
+/** A plan picture on the floor, under everything: where each object was marked, so a moved one
+ * visibly leaves its place on the plan. Not pickable. */
+function PictureUnderlay({ url, corners }: { url: string; corners: { x: number; z: number }[] }) {
+  const [texture, setTexture] = useState<Texture | null>(null);
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    let alive = true;
+    const loader = new TextureLoader();
+    loader.setCrossOrigin("anonymous");
+    loader.load(url, (t) => {
+      if (!alive) return t.dispose();
+      t.colorSpace = SRGBColorSpace;
+      t.anisotropy = 4;
+      setTexture(t);
+      invalidate();
+    });
+    return () => {
+      alive = false;
+    };
+  }, [url, invalidate]);
+  useEffect(() => () => texture?.dispose(), [texture]);
+  const geometry = useMemo(() => {
+    const g = new BufferGeometry();
+    const [a, b, c, d] = corners;
+    g.setAttribute("position", new Float32BufferAttribute([a!.x, 0.004, a!.z, b!.x, 0.004, b!.z, c!.x, 0.004, c!.z, d!.x, 0.004, d!.z], 3));
+    g.setAttribute("uv", new Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 1], 2));
+    g.setIndex([0, 2, 1, 0, 3, 2]);
+    return g;
+  }, [corners]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  if (!texture) return null;
+  return (
+    <mesh geometry={geometry} renderOrder={1} raycast={() => null} name="plan-picture">
+      <meshBasicMaterial map={texture} transparent opacity={0.9} depthWrite={false} side={DoubleSide} />
+    </mesh>
   );
 }
 

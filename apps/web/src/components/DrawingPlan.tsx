@@ -5,9 +5,13 @@
 // the floor, and marks two points (snapped to the drawing's corners and centres) for a known
 // length. For the layout checks (GEO-01/02) it highlights the objects a finding names, the
 // overlapping areas, a route and its narrowest passage, and lets the person pick route points.
+// A plan picture (IMP-03) is shown under its outlines; outlines only proposed from it are drawn
+// dashed, and points clicked on it are never snapped (each comes with how precisely it was
+// marked: two screen pixels at the zoom it was clicked at).
 import type { DrawingImport, DrawingObject, PlanPoint, Project } from "@replay-world/contracts";
 import { type KeyboardEvent, type MouseEvent, useMemo } from "react";
-import { type DrawingSource, footprintOnPlan, type Reviewed } from "../drawing/world";
+import { API_BASE_URL } from "../config";
+import { type DrawingSource, footprintOnPlan, isPlanImage, type Reviewed } from "../drawing/world";
 
 interface Props {
   drawing: DrawingImport;
@@ -31,9 +35,12 @@ interface Props {
   /** A drawn object focused in the review that has no scene object. */
   focusDrawnId?: string | null | undefined;
   /** Measure mode: a clicked point, snapped to the nearest corner or centre within 12 px (in
-   * point mode, not snapped). */
-  onPoint?: ((point: PlanPoint) => void) | undefined;
+   * point mode, or on a plan picture, not snapped), with how precisely it was marked (drawing
+   * units). */
+  onPoint?: ((point: PlanPoint, tolerance: number) => void) | undefined;
   marks?: readonly PlanPoint[] | undefined;
+  /** Join the marks into an outline being traced (rather than one known length). */
+  tracing?: boolean | undefined;
   /** Layout check results to draw over the plan. */
   checks?: PlanChecks | undefined;
 }
@@ -54,6 +61,8 @@ export interface PlanChecks {
 }
 
 const SNAP_PX = 12;
+/** How precisely a click lands, in screen pixels: a traced point is within this of the true one. */
+export const MARK_PX = 2;
 
 const KIND_CLASS: Record<DrawingObject["kind"], string> = {
   equipment: "plan-equipment",
@@ -121,7 +130,8 @@ function scaleLength(spanM: number): number {
   return [1, 2, 5, 10].map((k) => k * step).filter((v) => v <= target).at(-1) ?? step;
 }
 
-export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId, title, metresPerUnit, statuses, mode = "select", onDrawn, focusDrawnId, onPoint, marks, checks }: Props) {
+export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId, title, metresPerUnit, statuses, mode = "select", onDrawn, focusDrawnId, onPoint, marks, checks, tracing }: Props) {
+  const picture = isPlanImage(drawing) ? drawing.raster : null;
   const { extent_min: lo, extent_max: hi } = drawing;
   const span = Math.max(hi.x - lo.x, hi.y - lo.y, 1e-9);
   const margin = span * 0.04;
@@ -165,8 +175,9 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
     pt.x = e.clientX;
     pt.y = e.clientY;
     const local = pt.matrixTransform(ctm.inverse());
-    const clicked = { x: local.x, y: -local.y };
-    if (mode === "point") return onPoint(clicked);
+    const clicked = { x: Number(local.x.toFixed(2)), y: Number((-local.y).toFixed(2)) };
+    const precision = Math.max(1, MARK_PX / Math.abs(ctm.a));
+    if (mode === "point" || picture) return onPoint(clicked, Number(precision.toFixed(3)));
     const tolerance = SNAP_PX / Math.abs(ctm.a);
     let best: PlanPoint | null = null;
     let bestDistance = tolerance;
@@ -177,7 +188,7 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
         bestDistance = distance;
       }
     }
-    onPoint(best ? { x: best.x, y: best.y } : clicked);
+    onPoint(best ? { x: best.x, y: best.y } : clicked, 0);
   }
 
   return (
@@ -191,7 +202,10 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
       onClick={mark}
     >
       <title>{title}</title>
-      <g className="plan-lines">
+      {picture && (
+        <image className="plan-raster" href={`${API_BASE_URL}/api/v1/sources/files/${picture.uri}`} x={0} y={-picture.height_px} width={picture.width_px} height={picture.height_px} preserveAspectRatio="none" />
+      )}
+      <g className={picture ? "plan-lines plan-lines-proposed" : "plan-lines"}>
         {drawing.lines.map((line, i) =>
           line.closed ? <polygon key={i} points={points(line.points)} vectorEffect="non-scaling-stroke" /> : <polyline key={i} points={points(line.points)} vectorEffect="non-scaling-stroke" />,
         )}
@@ -208,11 +222,12 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
         const interactive =
           mode === "floor" ? onDrawn !== undefined : mode === "select" && !floor && (onDrawn !== undefined || (!removed && !notObject && onSelect !== undefined));
         const kindClass = notObject ? "plan-not-object" : KIND_CLASS[current?.kind ?? drawn.kind];
+        const approx = drawn.footprint_fit === "approximate" ? " plan-approx" : drawn.refs[0]?.entity === "TRACE" ? " plan-traced" : "";
         const flag = checks?.flagged.get(drawn.object_id);
         return (
           <g
             key={drawn.id}
-            className={`plan-object ${floor ? "plan-floor" : kindClass} plan-${state}${selected ? " selected" : ""}${flag ? ` plan-flag-${flag}` : ""}`}
+            className={`plan-object ${floor ? "plan-floor" : kindClass} plan-${state}${approx}${selected ? " selected" : ""}${flag ? ` plan-flag-${flag}` : ""}`}
             data-testid={`${testId}-object-${drawn.object_id}`}
             data-drawn={drawn.id}
             data-state={floor ? "floor" : state}
@@ -258,7 +273,8 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
       </g>
       {marks && marks.length > 0 && (
         <g className="plan-marks" data-testid={`${testId}-marks`}>
-          {marks.length === 2 && <line x1={marks[0]!.x} y1={-marks[0]!.y} x2={marks[1]!.x} y2={-marks[1]!.y} vectorEffect="non-scaling-stroke" />}
+          {tracing && marks.length >= 2 && <polyline points={points(marks)} vectorEffect="non-scaling-stroke" />}
+          {!tracing && marks.length === 2 && <line x1={marks[0]!.x} y1={-marks[0]!.y} x2={marks[1]!.x} y2={-marks[1]!.y} vectorEffect="non-scaling-stroke" />}
           {marks.map((m, i) => (
             <circle key={i} cx={m.x} cy={-m.y} r={font * 0.35} vectorEffect="non-scaling-stroke" />
           ))}
@@ -273,6 +289,7 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
         </g>
       )}
       {labels === "all" &&
+        !picture &&
         drawing.labels
           .filter((label) => !drawing.objects.some((o) => o.role !== "floor" && o.label === label.text))
           .map((label, i) => (

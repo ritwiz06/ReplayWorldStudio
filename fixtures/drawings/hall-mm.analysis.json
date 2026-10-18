@@ -7,6 +7,7 @@
       "uri": "drawings/ea330817dd9e297160b0cce1f2aa4faec1aa6a6bb96b53c70934d3f9d510da11.dxf",
       "bytes": 4509
     },
+    "raster": null,
     "dxf_version": "AC1015",
     "units": {
       "insunits": 4,
@@ -515,6 +516,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 12000.0,
           "y": 8000.0
@@ -560,6 +562,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 10000.0,
           "y": 8000.0
@@ -603,6 +606,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 18000.0,
           "y": 8000.0
@@ -646,6 +650,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 3500.0,
           "y": 3000.0
@@ -689,6 +694,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 3500.0,
           "y": 6500.0
@@ -732,6 +738,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 13000.0,
           "y": 14050.0
@@ -775,6 +782,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 23200.0,
           "y": 7200.0
@@ -818,6 +826,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 11999.999999999998,
           "y": 3999.9999999999995
@@ -869,6 +878,7 @@
           }
         ],
         "footprint_fit": "enclosing",
+        "tolerance": null,
         "centre": {
           "x": 19500.0,
           "y": 3250.0
@@ -914,6 +924,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 14000.0,
           "y": 10250.0
@@ -957,6 +968,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 7400.0,
           "y": 8000.0
@@ -1000,6 +1012,7 @@
           }
         ],
         "footprint_fit": "exact",
+        "tolerance": null,
         "centre": {
           "x": 22200.0,
           "y": 7200.0

@@ -1,10 +1,12 @@
 // What the layout and route checks see (GEO-01/02): the current objects' footprints on the
 // floor, the reviewed floor's edge, keep-clear zones, and the geometry the drawing leaves
-// uncertain (open lines, shapes not imported, outlines whose boxes only enclose them). All in
-// world metres; the arrangement is the edited one unless an as-drawn project is passed in.
+// uncertain (open lines, shapes not imported, outlines whose boxes only enclose them, outlines
+// proposed from a plan picture). Traced outlines carry how precisely they were marked, and a
+// known length on a picture how precisely it was marked (a relative scale error). All in world
+// metres; the arrangement is the edited one unless an as-drawn project is passed in.
 import type { Project, SceneObject } from "@replay-world/contracts";
 import { drawingReasons, type FootprintEvidence, footprintEvidence } from "../drawing/readiness";
-import { describeRef, type DrawingSource, drawingSource, floorOnOutline, toWorld } from "../drawing/world";
+import { describeRef, type DrawingSource, drawingSource, floorOnOutline, scaleError, toWorld } from "../drawing/world";
 import { isSlab } from "../scene/sceneBounds";
 import { footprint, type Vec } from "./geometry";
 
@@ -25,8 +27,12 @@ export interface Uncertain {
 
 export interface CheckInputs {
   source: DrawingSource;
-  /** The reviewed floor's edge, or null when the floor is only for display. */
-  floor: { poly: Vec[]; words: string } | null;
+  /** The reviewed floor's edge (with how precisely it was traced, metres), or null when the
+   * floor is only for display or only proposed (`floorProblem` says which). */
+  floor: { poly: Vec[]; words: string; toleranceM: number } | null;
+  floorProblem: string | null;
+  /** The scale's relative uncertainty from how its known length was marked (0 for a unit). */
+  scaleError: number;
   obstacles: Shape[];
   zones: Shape[];
   uncertain: Uncertain[];
@@ -51,9 +57,14 @@ export function checkInputs(project: Project): CheckInputs | null {
   const zones = live.filter((o) => o.kind === "keep_clear").map(shapes);
 
   let floor: CheckInputs["floor"] = null;
+  let floorProblem: string | null = review.floor.choice === "outline" ? null : "the floor is only for display, so nothing is checked against its edge";
   const floorObject = live.find((o) => o.id === floorId);
-  if (review.floor.choice === "outline" && review.floor.drawn_id && floorObject) {
-    const outline = source.drawing.objects.find((d) => d.id === review.floor.drawn_id)!;
+  const floorOutline = review.floor.drawn_id ? source.drawing.objects.find((d) => d.id === review.floor.drawn_id) : undefined;
+  if (floorOutline?.footprint_fit === "approximate") {
+    floorProblem = `the floor's outline is ${floorOutline.refs[0]?.entity === "PAGE" ? "only the edge of the picture" : "only proposed from the picture"}: trace the floor in the review`;
+  } else if (review.floor.choice === "outline" && review.floor.drawn_id && floorObject) {
+    const outline = floorOutline!;
+    const toleranceM = (outline.tolerance ?? 0) * t.metres_per_source_unit;
     const drawnFloor = floorOnOutline(source.filename, t, review.scale, outline, floorObject.id);
     const sameSize = floorObject.dimensions.width.origin === "drawn" && floorObject.dimensions.depth.origin === "drawn";
     if (sameSize) {
@@ -69,8 +80,8 @@ export function checkInputs(project: Project): CheckInputs | null {
         const dz = w.z - c0.z;
         return { x: c1.x + dx * c + dz * s, z: c1.z - dx * s + dz * c };
       });
-      floor = { poly, words: `the floor outline ${describeRef(outline.refs[0]!)}` };
-    } else floor = { poly: footprint(floorObject), words: "the floor's entered size" };
+      floor = { poly, words: `the floor outline (${describeRef(outline.refs[0]!)})`, toleranceM };
+    } else floor = { poly: footprint(floorObject), words: "the floor's entered size", toleranceM };
   }
 
   const uncertain: Uncertain[] = [];
@@ -98,5 +109,5 @@ export function checkInputs(project: Project): CheckInputs | null {
       uncertain.push({ label, points: corners, closed: true });
     }
   }
-  return { source, floor, obstacles, zones, uncertain, unplaced, blockers: drawingReasons(source) };
+  return { source, floor, floorProblem, scaleError: scaleError(review.scale), obstacles, zones, uncertain, unplaced, blockers: drawingReasons(source) };
 }

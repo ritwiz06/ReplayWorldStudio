@@ -16,7 +16,7 @@
     "assets:build": "pnpm --filter @replay-world/web exec node scripts/catalog/build.ts",
     "assets:check": "pnpm --filter @replay-world/web exec node scripts/catalog/build.ts --check",
     "fixtures:build": "uv run python scripts/build_demo_fixture.py",
-    "fixtures:check": "uv run python scripts/build_demo_fixture.py --check && uv run python scripts/build_dxf_fixtures.py --check",
+    "fixtures:check": "uv run python scripts/build_demo_fixture.py --check && uv run python scripts/build_dxf_fixtures.py --check && uv run python scripts/build_plan_fixtures.py --check",
     "lint": "eslint . && uv run ruff check && uv run ruff format --check",
     "typecheck": "pnpm -r typecheck && uv run mypy",
     "test": "pnpm -r test && uv run pytest",

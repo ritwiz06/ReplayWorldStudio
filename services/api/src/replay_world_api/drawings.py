@@ -1175,6 +1175,7 @@ def read_drawing(data: bytes, filename: str) -> tuple[DrawingImport, list[str]]:
                 refs=[ref],
                 outline=[PlanPoint(x=x, y=y) for x, y in outline],
                 footprint_fit="exact" if fp.exact else "enclosing",
+                tolerance=None,
                 centre=PlanPoint(x=fp.centre[0], y=fp.centre[1]),
                 width=fp.width,
                 depth=fp.depth,
@@ -1208,6 +1209,7 @@ def read_drawing(data: bytes, filename: str) -> tuple[DrawingImport, list[str]]:
         reader=READER,
         review=None,
         file=DrawingFile(uri=drawing_uri(hashlib.sha256(data).hexdigest()), bytes=len(data)),
+        raster=None,
         dxf_version=_clean_name(header.get("$ACADVER", "")) or None,
         units=_units(header, extent),
         layers=sorted({*layers, *(line.ref.layer for line in lines)}),
@@ -1278,7 +1280,7 @@ def analyse_drawing(data: bytes, filename: str, sources_dir: Path) -> DrawingAna
 
 def drawing_file(sources_dir: Path, uri: str) -> Path | None:
     """The library file for a drawing ``uri``, or None when it is not there (or unsafe)."""
-    if not re.fullmatch(r"drawings/[0-9a-f]{64}\.dxf", uri):
+    if not re.fullmatch(r"drawings/[0-9a-f]{64}(?:-p[1-9][0-9]{0,3})?\.(?:dxf|pdf|png|jpg)", uri):
         return None
     library = sources_dir.resolve()
     candidate = (library / PurePosixPath(uri)).resolve()
@@ -1301,22 +1303,30 @@ def check_drawing_files(
         drawing = source.drawing
         if drawing is None or source.sha256 is None:
             continue
-        path = drawing_file(sources_dir, drawing.file.uri)
-        if path is None:
-            missing.append(drawing.file.uri)
-            continue
-        with path.open("rb") as handle:
-            digest = hashlib.file_digest(handle, "sha256").hexdigest()
-        if digest != source.sha256:
-            issues.append(
-                {
-                    "loc": ("body", "sources", index, "sha256"),
-                    "msg": (
-                        f"Source drawing '{source.filename}' in the source library differs from "
-                        f"the recorded file (sha256 {source.sha256[:12]}…); a different file is "
-                        "never used in its place."
-                    ),
-                    "type": "source_hash_mismatch",
-                }
-            )
+        files: list[tuple[str, str, tuple[str | int, ...]]] = [
+            (drawing.file.uri, source.sha256, ("sources", index, "sha256"))
+        ]
+        raster = drawing.raster
+        if raster is not None and raster.uri != drawing.file.uri:
+            # A PDF page as the API rendered it: checked against its own recorded hash.
+            files.append((raster.uri, raster.sha256, ("sources", index, "drawing", "raster")))
+        for uri, expected, loc in files:
+            path = drawing_file(sources_dir, uri)
+            if path is None:
+                missing.append(uri)
+                continue
+            with path.open("rb") as handle:
+                digest = hashlib.file_digest(handle, "sha256").hexdigest()
+            if digest != expected:
+                issues.append(
+                    {
+                        "loc": ("body", *loc),
+                        "msg": (
+                            f"Source drawing '{source.filename}' in the source library differs "
+                            f"from the recorded file (sha256 {expected[:12]}…); a different file "
+                            "is never used in its place."
+                        ),
+                        "type": "source_hash_mismatch",
+                    }
+                )
     return issues, missing

@@ -3,7 +3,9 @@
 // review and, for the scale, its transform, and records itself in the edit log as one
 // `drawing_reviewed` step, so undo and redo restore it exactly and a saved file still describes
 // its scene. The drawing's own reading (units, kinds, names as read) is never changed: the
-// review holds the person's decisions beside it.
+// review holds the person's decisions beside it. On a plan picture (IMP-03) the person can also
+// trace an object's outline, add one the proposal missed, and trace the floor: a traced outline
+// records how precisely it was marked, and only then may a check rely on it.
 import type { DrawingObject, DrawingReview, PlanPoint, Project, SceneObject, SourceDocument } from "@replay-world/contracts";
 import type { Change, ObjectPatch, Result } from "../editing/commands";
 import { quantizeMetres } from "../editing/units";
@@ -21,6 +23,7 @@ import {
   formatScale,
   fromWorld,
   isMarking,
+  isPlanImage,
   METRES_PER_UNIT,
   type ObjectKind,
   type Reviewed,
@@ -38,8 +41,14 @@ export type ReviewCorrection =
   | { kind: "accept_floor" }
   /** Use (or confirm) a unit: the drawing's own, or one the person chooses. */
   | { kind: "unit"; unit: DrawingUnit }
-  /** A known length between two points; use it as the scale, or keep the unit and record it. */
-  | { kind: "reference"; a: PlanPoint; b: PlanPoint; realLengthM: number; use: "reference" | "unit" }
+  /** A known length between two points; use it as the scale, or keep the unit and record it.
+   * `tolerance`: how precisely each point was marked, in drawing units (a plan picture). */
+  | { kind: "reference"; a: PlanPoint; b: PlanPoint; realLengthM: number; use: "reference" | "unit"; tolerance?: number }
+  /** Trace an object's outline on a plan picture by three of its corners: correct a proposed
+   * outline (`drawnId`), or add an object the proposal missed (`drawnId` null). */
+  | { kind: "trace"; drawnId: string | null; corners: readonly [PlanPoint, PlanPoint, PlanPoint]; tolerance: number; name?: string; objectKind?: ObjectKind }
+  /** Trace the floor's outline on a plan picture, corner by corner. */
+  | { kind: "trace_floor"; outline: readonly PlanPoint[]; tolerance: number }
   | { kind: "object"; drawnId: string; action: "accept" }
   | { kind: "object"; drawnId: string; action: "correct"; name?: string; objectKind?: ObjectKind }
   | { kind: "object"; drawnId: string; action: "not_an_object" }
@@ -63,20 +72,47 @@ const reject = (message: string, kind: "invalid" | "not_found" | "no_change" = "
 export interface ReferencePreview {
   drawingLength: number;
   metresPerUnit: number;
-  /** The drawing's (or chosen) unit it is compared with. */
-  unitMetresPerUnit: number;
-  agrees: boolean;
+  /** The drawing's (or chosen) unit it is compared with; null for a plan picture (pixels). */
+  unitMetresPerUnit: number | null;
+  agrees: boolean | null;
   /** Relative difference, e.g. 0.004 for 0.4 %. */
-  difference: number;
+  difference: number | null;
 }
 
 export function previewReference(source: DrawingSource, a: PlanPoint, b: PlanPoint, realLengthM: number): ReferencePreview | null {
   const drawingLength = Math.hypot(b.x - a.x, b.y - a.y);
   if (!(drawingLength > 0) || !(realLengthM > 0) || !Number.isFinite(realLengthM)) return null;
   const metresPerUnit = realLengthM / drawingLength;
-  const unitMetresPerUnit = METRES_PER_UNIT[source.drawing.review.scale.unit];
+  const unit = source.drawing.review.scale.unit;
+  if (unit === "px") return { drawingLength, metresPerUnit, unitMetresPerUnit: null, agrees: null, difference: null };
+  const unitMetresPerUnit = METRES_PER_UNIT[unit];
   const difference = Math.abs(metresPerUnit / unitMetresPerUnit - 1);
   return { drawingLength, metresPerUnit, unitMetresPerUnit, agrees: difference <= SCALE_AGREEMENT, difference };
+}
+
+/** A footprint rectangle from three of its corners: the first two give one side, the third how
+ * deep it is (only its distance across that side counts, so a slightly skewed click still gives
+ * a rectangle). In drawing units, rotation counter-clockwise from +X. */
+export function rectangleFrom(corners: readonly [PlanPoint, PlanPoint, PlanPoint]) {
+  const [a, b, c] = corners;
+  const ux = b.x - a.x;
+  const uy = b.y - a.y;
+  const side = Math.hypot(ux, uy);
+  if (!(side > 0)) return null;
+  const nx = -uy / side;
+  const ny = ux / side;
+  const deep = (c.x - b.x) * nx + (c.y - b.y) * ny;
+  if (!(Math.abs(deep) > 0)) return null;
+  const r = (v: number) => Number(v.toFixed(3));
+  const p3 = { x: r(b.x + nx * deep), y: r(b.y + ny * deep) };
+  const p4 = { x: r(a.x + nx * deep), y: r(a.y + ny * deep) };
+  return {
+    outline: [{ x: r(a.x), y: r(a.y) }, { x: r(b.x), y: r(b.y) }, p3, p4] as DrawingObject["outline"],
+    centre: { x: r((a.x + p3.x) / 2), y: r((a.y + p3.y) / 2) },
+    width: side,
+    depth: Math.abs(deep),
+    rotation_rad: Number(Math.atan2(uy, ux).toFixed(6)),
+  };
 }
 
 /** The floor's size (or the drawing's extent when there is no floor) at a scale, for people. */
@@ -96,7 +132,7 @@ function usedIds(project: Project): Set<string> {
   for (const record of project.scene.edit_log) {
     if (record.type === "object_removed") ids.add(record.object.id);
     else if (record.type === "asset_revised" || record.type === "drawing_reviewed") for (const o of record.objects) ids.add(o.object_id);
-    else ids.add(record.object_id);
+    else if (record.type !== "source_attached") ids.add(record.object_id);
   }
   return ids;
 }
@@ -271,6 +307,7 @@ function prepare(project: Project, source: DrawingSource, c: ReviewCorrection): 
     }
 
     case "unit": {
+      if (isPlanImage(source.drawing)) return reject("A plan picture has no unit: mark a length you know instead.");
       const scale = review.scale;
       const basis = c.unit === source.drawing.units.declared ? "drawing_unit" : "chosen_unit";
       const next: ScaleReview = { basis, unit: c.unit, metres_per_unit: METRES_PER_UNIT[c.unit], status: "confirmed", reference: null };
@@ -293,18 +330,109 @@ function prepare(project: Project, source: DrawingSource, c: ReviewCorrection): 
         metres_per_unit: preview.metresPerUnit,
         compared_with: preview.unitMetresPerUnit,
         agrees: preview.agrees,
+        tolerance: c.tolerance ?? null,
       };
-      const measured = `your known length of ${c.realLengthM.toFixed(2)} m (${Number(preview.drawingLength.toPrecision(6))} drawing units) gives 1 unit = ${formatScale(preview.metresPerUnit)}`;
+      const pixels = scale.unit === "px";
+      const measured = `your known length of ${c.realLengthM.toFixed(2)} m (${Number(preview.drawingLength.toPrecision(6))} ${pixels ? "px" : "drawing units"}) gives 1 ${pixels ? "px" : "unit"} = ${formatScale(preview.metresPerUnit)}`;
+      if (pixels) {
+        const next: ScaleReview = { basis: "reference_length", unit: "px", metres_per_unit: preview.metresPerUnit, status: "measured", reference };
+        return rescale(project, source, edit, next, "Set the scale from a known length", `Scale: ${measured}, instead of ${scalePhrase(scale)}`);
+      }
       if (c.use === "reference") {
         const next: ScaleReview = { basis: "reference_length", unit: scale.unit, metres_per_unit: preview.metresPerUnit, status: "measured", reference };
-        return rescale(project, source, edit, next, "Set the scale from a known length", `Scale: ${measured}; the ${scale.basis === "reference_length" ? "previous measurement" : `drawing's unit said 1 ${scale.unit}`} (${preview.agrees ? "agrees" : `${(preview.difference * 100).toFixed(1)} % apart`})`);
+        return rescale(project, source, edit, next, "Set the scale from a known length", `Scale: ${measured}; the ${scale.basis === "reference_length" ? "previous measurement" : `drawing's unit said 1 ${scale.unit}`} (${preview.agrees ? "agrees" : `${((preview.difference ?? 0) * 100).toFixed(1)} % apart`})`);
       }
       const unitBasis = scale.unit === source.drawing.units.declared ? "drawing_unit" : "chosen_unit";
-      const next: ScaleReview = { basis: unitBasis, unit: scale.unit, metres_per_unit: METRES_PER_UNIT[scale.unit], status: preview.agrees ? "measured" : "confirmed", reference };
+      const next: ScaleReview = { basis: unitBasis, unit: scale.unit, metres_per_unit: preview.unitMetresPerUnit!, status: preview.agrees ? "measured" : "confirmed", reference };
       const words = preview.agrees
-        ? `Scale checked: ${measured}, which agrees with 1 unit = 1 ${scale.unit} (${(preview.difference * 100).toFixed(1)} % apart)`
-        : `Scale kept at 1 unit = 1 ${scale.unit} although ${measured} (${(preview.difference * 100).toFixed(1)} % apart)`;
+        ? `Scale checked: ${measured}, which agrees with 1 unit = 1 ${scale.unit} (${((preview.difference ?? 0) * 100).toFixed(1)} % apart)`
+        : `Scale kept at 1 unit = 1 ${scale.unit} although ${measured} (${((preview.difference ?? 0) * 100).toFixed(1)} % apart)`;
       return rescale(project, source, edit, next, preview.agrees ? "Check the scale" : "Keep the drawing's unit", words);
+    }
+
+    case "trace": {
+      if (!isPlanImage(source.drawing)) return reject("Outlines are traced only on a plan picture; a drawing's outlines are exact as drawn.");
+      const rect = rectangleFrom(c.corners);
+      if (!rect) return reject("Click three different corners of the outline.");
+      const layer = source.drawing.layers[0] ?? "image";
+      const trace = { handle: null, layer, entity: "TRACE" as const, block: null };
+      const notes = [`Traced by you on the plan: its edges are within ${formatLength(c.tolerance * review.scale.metres_per_unit)} of where you clicked.`];
+      const old = c.drawnId ? find(c.drawnId) : null;
+      if (c.drawnId && !old) return reject(`No drawn object '${c.drawnId}'.`, "not_found");
+      if (old && statusOf(source, old.id) === "used_as_floor") return reject("This outline is the floor; trace the floor instead.");
+      const taken = takenIds(project, source);
+      const n = (() => {
+        let i = 1;
+        while (source.drawing.objects.some((o) => o.id === `trace-${i}`) || taken.has(`obj-trace-${i}`)) i += 1;
+        return i;
+      })();
+      const drawn: DrawingObject = old
+        ? { ...old, ...rect, footprint_fit: "exact", tolerance: c.tolerance, refs: [trace, ...old.refs.filter((r) => r.entity !== "TRACE")].slice(0, 20) as DrawingObject["refs"], notes }
+        : {
+            ...rect,
+            id: `trace-${n}`,
+            object_id: `obj-trace-${n}`,
+            role: "footprint",
+            label: (c.name?.trim() || `Added object ${n}`).slice(0, 500),
+            label_from: "entered",
+            kind: c.objectKind ?? "equipment",
+            refs: [trace],
+            footprint_fit: "exact",
+            tolerance: c.tolerance,
+            notes: [...notes, "Added by you: the proposal did not mark it."],
+          };
+      const objects = old ? source.drawing.objects.map((o) => (o.id === old.id ? drawn : o)) : [...source.drawing.objects, drawn];
+      const live = edit.current(drawn.object_id);
+      const placed = drawnObject(source.filename, t, review.scale, drawn, { id: drawn.object_id, kind: live?.kind ?? drawn.kind, name: live?.name ?? drawn.label });
+      if (live && old) {
+        // Keep the person's move, and a height they entered.
+        const was = drawnObject(source.filename, t, review.scale, old, { id: live.id });
+        edit.set({ ...placed, transform: offset(live.transform, was.transform, placed.transform), dimensions: { ...placed.dimensions, height: live.dimensions.height.origin === "default" ? placed.dimensions.height : live.dimensions.height } });
+      } else edit.set(placed);
+      const status: Reviewed = old ? (statusOf(source, old.id) === "added" ? "added" : "corrected") : "added";
+      const next = old ? setStatus(review, old.id, status) : { ...review, objects: [...review.objects, { drawn_id: drawn.id, status }] };
+      const name = live?.name ?? drawn.label;
+      const size = `${formatLength(rect.width * review.scale.metres_per_unit)} × ${formatLength(rect.depth * review.scale.metres_per_unit)}`;
+      return ok(
+        withReview(source, next, {}, objects),
+        edit,
+        old ? `Trace ${name}` : `Add ${name}`,
+        old ? `${name}: outline traced, ${size} (was ${describeRef(old.refs[0]!)})` : `${name}: added and traced, ${size}`,
+        drawn.object_id,
+      );
+    }
+
+    case "trace_floor": {
+      if (!isPlanImage(source.drawing)) return reject("The floor is traced only on a plan picture.");
+      if (c.outline.length < 3) return reject("Click at least three corners of the floor.");
+      const xs = c.outline.map((p) => p.x);
+      const ys = c.outline.map((p) => p.y);
+      const r = (v: number) => Number(v.toFixed(3));
+      const box = c.outline.length === 4 ? rectangleFrom([c.outline[0]!, c.outline[1]!, c.outline[2]!]) : null;
+      const square = box && box.outline.every((q, i) => Math.hypot(q.x - c.outline[i]!.x, q.y - c.outline[i]!.y) <= 3 * c.tolerance);
+      const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+      const taken = takenIds(project, source);
+      let n = 1;
+      while (source.drawing.objects.some((o) => o.id === `floor-trace-${n}`) || taken.has(`obj-floor-trace-${n}`)) n += 1;
+      const floorDrawn: DrawingObject = {
+        id: `floor-trace-${n}`,
+        object_id: `obj-floor-trace-${n}`,
+        role: "footprint",
+        label: "Floor (traced)",
+        label_from: "entered",
+        kind: "structure",
+        refs: [{ handle: null, layer: source.drawing.layers[0] ?? "image", entity: "TRACE", block: null }],
+        outline: c.outline.map((q) => ({ x: r(q.x), y: r(q.y) })) as DrawingObject["outline"],
+        ...(square && box ? { centre: box.centre, width: box.width, depth: box.depth, rotation_rad: box.rotation_rad } : { centre: { x: r((x0 + x1) / 2), y: r((y0 + y1) / 2) }, width: x1 - x0, depth: y1 - y0, rotation_rad: 0 }),
+        footprint_fit: square ? "exact" : "enclosing",
+        tolerance: c.tolerance,
+        notes: [`Traced by you: its edges are within ${formatLength(c.tolerance * review.scale.metres_per_unit)} of where you clicked.`],
+      };
+      const traced = withReview(source, { ...review, objects: [...review.objects, { drawn_id: floorDrawn.id, status: "proposed" }] }, {}, [...source.drawing.objects, floorDrawn]) as DrawingSource;
+      const done = prepare(project, traced, { kind: "floor", to: floorDrawn.id });
+      if (!done.ok) return done;
+      const area = `${formatLength((x1 - x0) * review.scale.metres_per_unit)} × ${formatLength((y1 - y0) * review.scale.metres_per_unit)}`;
+      return { ...done, label: "Trace the floor", correction: `Floor traced: ${c.outline.length} corners, ${area} overall` };
     }
 
     case "accept_remaining": {
@@ -422,6 +550,15 @@ function mapped(t1: DrawingSource["source_to_world"], t2: DrawingSource["source_
 /** What the drawing leaves out, in words. */
 export function omissions(source: DrawingSource): string[] {
   const drawing = source.drawing;
+  if (isPlanImage(drawing)) {
+    const walls = drawing.lines.filter((l) => !l.closed).length;
+    return [
+      "heights and appearance (assumed for display)",
+      "anything the proposal did not mark: compare the outlines with the plan and add what is missing",
+      "fine detail, handwriting and symbols (not read)",
+      ...(walls > 0 ? [`${walls} proposed wall line${walls === 1 ? "" : "s"} shown on the plan only`] : []),
+    ];
+  }
   const shapes = drawing.skipped.filter((s) => s.layout);
   const count = shapes.reduce((n, s) => n + s.count, 0);
   const open = drawing.lines.filter((l) => !l.closed && l.ref.block === null).length;
@@ -435,6 +572,7 @@ export function omissions(source: DrawingSource): string[] {
 
 /** Whether the person has to accept what the drawing leaves out before a check may use it. */
 export function omissionsMatter(source: DrawingSource): boolean {
+  if (isPlanImage(source.drawing)) return true;
   return source.drawing.skipped.some((s) => s.layout) || source.drawing.lines.some((l) => !l.closed && l.ref.block === null);
 }
 
@@ -457,19 +595,19 @@ export function reviewItems(source: DrawingSource): ReviewItem[] {
     {
       id: "scale",
       done: review.scale.status !== "unchecked",
-      title: review.scale.status === "unchecked" ? "Is this the right scale?" : review.scale.status === "measured" ? "Scale checked against a known length" : "Scale confirmed by you",
+      title: review.scale.status === "unchecked" ? "Is this the right scale?" : review.scale.unit === "px" ? "Scale from your known length" : review.scale.status === "measured" ? "Scale checked against a known length" : "Scale confirmed by you",
       detail: scaleWords,
     },
     {
       id: "objects",
       done: counts("proposed") === 0,
       title: counts("proposed") > 0 ? "Are these the right objects?" : "Objects reviewed",
-      detail: `${counts("proposed")} to check · ${counts("accepted")} accepted · ${counts("corrected")} corrected · ${counts("not_an_object")} ${counts("not_an_object") === 1 ? "not an object" : "not objects"}`,
+      detail: `${counts("proposed")} to check · ${counts("accepted")} accepted · ${counts("corrected")} corrected${counts("added") > 0 ? ` · ${counts("added")} added` : ""} · ${counts("not_an_object")} ${counts("not_an_object") === 1 ? "not an object" : "not objects"}`,
     },
     {
       id: "omissions",
       done: review.omissions === "accepted" || !omissionsMatter(source),
-      title: review.omissions === "accepted" ? "You accepted what the drawing leaves out" : "What the drawing leaves out",
+      title: `${review.omissions === "accepted" ? "You accepted what the " : "What the "}${isPlanImage(source.drawing) ? "plan" : "drawing"} leaves out`,
       detail: omissions(source).join("; "),
     },
   ];

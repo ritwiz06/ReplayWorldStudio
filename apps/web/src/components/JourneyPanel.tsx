@@ -21,7 +21,7 @@ export function JourneyPanel({ stage, hasDrawing, reviewOpen, disabled, onUpload
       id: "upload",
       n: 1,
       label: "Upload a plan",
-      hint: reviewOpen ? "Now check the draft: floor, scale and objects, in the Review panel." : "A DXF floor layout becomes a 3D draft.",
+      hint: reviewOpen ? "Now check the draft: floor, scale and objects, in the Review panel." : "A DXF, PDF or plan picture becomes a 3D draft.",
       onClick: onUpload,
     },
     { id: "change", n: 2, label: "Change something", hint: "Select an object and drag it to move it.", onClick: onChange },

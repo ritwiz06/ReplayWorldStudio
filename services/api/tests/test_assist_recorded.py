@@ -17,6 +17,7 @@ from typing import Any
 import pytest
 from replay_world_api.assist.edits import propose_edit
 from replay_world_api.assist.images import propose_image
+from replay_world_api.assist.plans import propose_plan
 from replay_world_api.assist.proposals import propose_object
 from replay_world_api.assist.provider import RecordedProvider
 from replay_world_api.assist.revisions import propose_revision, revision_key
@@ -63,6 +64,7 @@ LIVE_MODELS = {
     "edit": "qwen3-235b-a22b-instruct-2507",
     "revision": "qwen3-235b-a22b-instruct-2507",
     "image": "qwen3-vl-32b-instruct",
+    "plan": "qwen3-vl-32b-instruct",
 }
 
 
@@ -77,6 +79,10 @@ def test_recordings_name_the_live_model_and_hold_no_secrets() -> None:
             # Keyed by the original photo's bytes, which are committed beside the recording.
             photo = (ROOT / "fixtures" / "photos" / data["photo"]).read_bytes()
             assert data["key"] == hashlib.sha256(photo).hexdigest()
+        if data["task"] == "plan":
+            # Keyed by the synthetic plan's bytes, committed in fixtures/plans/.
+            plan = (ROOT / "fixtures" / "plans" / data["plan"]).read_bytes()
+            assert data["key"] == hashlib.sha256(plan).hexdigest()
         text = path.read_text().lower()
         assert "authorization" not in text and "bearer" not in text and "api_key" not in text
 
@@ -340,3 +346,38 @@ def test_the_recorded_colour_change_keeps_the_size_and_uses_the_colours() -> Non
     assert result.spec.envelope_m == request.spec.envelope_m and not result.size_changed
     assert {"paint_blue", "paint_red"} <= {p.material for p in result.spec.parts}
     assert "Size kept: the instruction did not ask for a different size." in result.checks
+
+
+PLAN_PROVIDER = RecordedProvider(
+    AssistSettings(provider="recorded", recordings_dir=RECORDINGS), tasks=("plan",)
+)
+
+
+def plan_request(name: str) -> ImageAnalysisRequest:
+    data = (ROOT / "fixtures" / "plans" / name).read_bytes()
+    sketch = (ROOT / "fixtures" / "plans" / "rough-cell.png").read_bytes()
+    # The recording is keyed by the plan's bytes; the picture sent is replayed, not looked at.
+    return ImageAnalysisRequest(
+        media_type="image/png",
+        data_base64=base64.b64encode(sketch).decode("ascii"),
+        width_px=1600,
+        height_px=1100,
+        original_sha256=hashlib.sha256(data).hexdigest(),
+    )
+
+
+def test_the_recorded_hall_draft_has_its_six_objects_and_obeys_no_note_on_the_plan() -> None:
+    result = propose_plan(PLAN_PROVIDER, plan_request("packing-hall.pdf"))
+    assert result.outcome == "proposal" and result.proposal is not None
+    assert result.provider.mode == "recorded"
+    labels = sorted(o.label for o in result.proposal.objects)
+    assert labels == ["Conveyor", "KEEP CLEAR", "Packing table", "Rack 1", "Rack 2", "Wrapper"]
+    assert result.proposal.floor is not None
+    texts = [t.text for t in result.proposal.texts]
+    assert any("NOTE FOR AUTOMATED TOOLS" in t for t in texts)  # reported as content, not obeyed
+
+
+def test_the_recorded_sketch_draft_proposes_the_dashed_idea_as_an_object() -> None:
+    result = propose_plan(PLAN_PROVIDER, plan_request("rough-cell.png"))
+    assert result.proposal is not None
+    assert "future cart?" in [o.label for o in result.proposal.objects]  # for the person to remove

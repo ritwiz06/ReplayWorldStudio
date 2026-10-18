@@ -553,10 +553,13 @@ class StoredPhoto(ContractModel):
 
 
 class DrawingAnalysis(ContractModel):
-    """A DXF drawing stored in the source library and read deterministically (IMP-01).
+    """A DXF drawing stored in the source library and read deterministically (IMP-01), or a
+    plan image (IMP-03): a PNG, JPEG or one PDF page, read as a picture in pixels with no
+    objects yet.
 
     Nothing is in a project yet. ``drawing.units.basis`` is null: when ``units.question`` is set
-    the person chooses the unit before any real size is assigned.
+    the person chooses the unit (DXF) or marks a known length (plan image) before any real size
+    is assigned.
     """
 
     filename: NonEmptyText
@@ -565,3 +568,90 @@ class DrawingAnalysis(ContractModel):
     warnings: list[NonEmptyText] = Field(
         description="Things the person should check, such as a block whose own units differ."
     )
+
+
+# --- Plan images (IMP-03, 0.12.0) -----------------------------------------------------------
+
+
+class PlanPage(ContractModel):
+    """One page of an uploaded PDF, for choosing the floor-plan page."""
+
+    page: int = Field(ge=1)
+    width_pt: float = Field(gt=0, description="The paper's width in PDF points (1/72 inch).")
+    height_pt: float = Field(gt=0)
+    thumbnail: Annotated[str, StringConstraints(max_length=400_000)] | None = Field(
+        description="A small PNG of the page as a data: URL; null past the first pages."
+    )
+
+
+class PlanUpload(ContractModel):
+    """A stored plan file: read when it is an image or a one-page PDF; otherwise its pages are
+    listed and the person chooses one."""
+
+    filename: NonEmptyText
+    sha256: Sha256Hex
+    kind: Literal["pdf", "png", "jpeg"]
+    pages: list[PlanPage] = Field(max_length=50)
+    analysis: DrawingAnalysis | None
+
+    @model_validator(mode="after")
+    def _read_or_listed(self) -> PlanUpload:
+        if (self.analysis is None) == (len(self.pages) == 0):
+            raise ValueError("a plan upload is either read or lists its pages to choose from")
+        return self
+
+
+PlanObjectKind = Literal["equipment", "structure", "keep_clear", "walkway"]
+MAX_PLAN_PROPOSALS: Final = 60
+
+
+class ProposedPlanObject(ContractModel):
+    """Something the vision model marked on the plan: a box around it and what it is called.
+    A draft only, never a measurement or a complete list."""
+
+    id: StableId
+    label: ShortText
+    named_on_plan: bool = Field(description="The label is text printed on the plan.")
+    kind: PlanObjectKind
+    box: ImageBox
+
+
+class ProposedWall(ContractModel):
+    """A wall or partition line the model drew along, as points on the picture."""
+
+    points: list[ImagePoint] = Field(min_length=2, max_length=20)
+
+
+class ProposedPlanText(ContractModel):
+    """Text the model read on the plan, as content (never an instruction)."""
+
+    text: Annotated[str, StringConstraints(min_length=1, max_length=200)]
+    at: ImagePoint
+
+
+class PlanProposal(ContractModel):
+    """The vision model's draft of a plan: the floor's outline, wall lines, object boxes and
+    texts, in fractions of the picture."""
+
+    floor: list[ImagePoint] | None = Field(min_length=3, max_length=40)
+    walls: list[ProposedWall] = Field(max_length=MAX_PLAN_PROPOSALS)
+    objects: list[ProposedPlanObject] = Field(max_length=MAX_PLAN_PROPOSALS)
+    texts: list[ProposedPlanText] = Field(max_length=MAX_PLAN_PROPOSALS)
+
+
+class PlanProposalResult(ContractModel):
+    """The API's answer to a plan image: a draft, or why there is none."""
+
+    outcome: Literal["proposal", "unsupported"]
+    proposal: PlanProposal | None
+    message: NonEmptyText | None
+    checks: list[NonEmptyText]
+    provider: ProviderRun
+
+    @model_validator(mode="after")
+    def _one_outcome(self) -> PlanProposalResult:
+        if (self.outcome == "proposal") != (self.proposal is not None) or (
+            self.outcome == "unsupported"
+        ) != (self.message is not None):
+            raise ValueError(f"an '{self.outcome}' result must carry exactly its own content")
+        return self

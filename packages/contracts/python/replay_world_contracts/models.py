@@ -58,7 +58,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.11.0"]
+SchemaVersion = Literal["0.12.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -113,6 +113,9 @@ Axis = Literal["width", "height", "depth"]
 ObjectKind = Literal["structure", "equipment", "reference", "walkway", "keep_clear"]
 """'walkway' marks circulation space; 'keep_clear' marks floor area that must stay unobstructed."""
 LengthUnit = Literal["m", "cm", "mm", "in", "ft"]
+PlanUnit = Literal["m", "cm", "mm", "in", "ft", "px"]
+"""A plan's own unit: a length unit, or ``px`` for the pixels of a plan image (0.12.0), whose
+scale only a known length can give."""
 ParameterUnit = Literal["m", "s", "kg", "rad", "m/s", "1"]
 """SI units used internally. '1' marks a dimensionless quantity."""
 
@@ -871,8 +874,19 @@ class DrawingReviewed(ContractModel):
         return self
 
 
+class SourceAttached(ContractModel):
+    """A file kept with the world (IMP-03, 0.12.0): a later plan or drawing, stored by its
+    hash and listed with the world without replacing it. It is not aligned with the world's
+    plan and nothing is merged from it (that is ENR-01); no object changes."""
+
+    type: Literal["source_attached"]
+    revision: int = Field(ge=1, description="Scene revision this edit produced.")
+    source_id: StableId
+    filename: NonEmptyText
+
+
 EditRecord = Annotated[
-    ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed,
+    ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed | SourceAttached,
     Field(discriminator="type"),
 ]
 
@@ -933,7 +947,7 @@ class Scene(ContractModel):
         # followed through every revision of that asset.
         asset_ref: dict[str, tuple[int, str | None]] = {}
         for record in self.edit_log:
-            if isinstance(record, ObjectRemoved):
+            if isinstance(record, ObjectRemoved | SourceAttached):
                 continue
             object_ids = (
                 [o.object_id for o in record.objects]
@@ -1014,7 +1028,7 @@ class SourceToWorldTransform(ContractModel):
     """
 
     convention: Literal["plan_xy_to_world_x_neg_z"]
-    source_unit: LengthUnit
+    source_unit: PlanUnit
     metres_per_source_unit: PositiveLength = Field(description="Metres per one source unit.")
     rotation_about_world_y_rad: float
     translation_m: Vec3
@@ -1234,8 +1248,15 @@ class PhotoImport(ContractModel):
 
 # --- Drawing sources -------------------------------------------------------------------------
 
-DRAWING_PATH_PATTERN: Final = r"^drawings/[0-9a-f]{64}\.dxf$"
-"""Source-library-relative path of a stored drawing: ``drawings/<sha256>.dxf``."""
+DRAWING_PATH_PATTERN: Final = r"^drawings/[0-9a-f]{64}\.(?:dxf|pdf|png|jpg)$"
+"""Source-library-relative path of a stored drawing or plan: ``drawings/<sha256>.<extension>``
+(a PDF, PNG or JPEG floor plan from 0.12.0)."""
+RASTER_PATH_PATTERN: Final = r"^drawings/[0-9a-f]{64}(?:-p[1-9][0-9]{0,3})?\.(?:png|jpg)$"
+"""A plan image's picture: the image itself, or ``drawings/<sha256>-p<page>.png`` for a PDF
+page rendered by the API."""
+RasterPath = Annotated[str, StringConstraints(pattern=RASTER_PATH_PATTERN)]
+DRAWING_EXTENSION: Final[dict[str, str]] = {"dxf": "dxf", "pdf": "pdf", "png": "png", "jpeg": "jpg"}
+"""The stored file's extension for each drawing source kind."""
 DrawingPath = Annotated[str, StringConstraints(pattern=DRAWING_PATH_PATTERN)]
 MAX_DRAWING_BYTES: Final = 10 * 1024 * 1024
 MAX_DRAWING_LINES: Final = 5000
@@ -1251,16 +1272,29 @@ METRES_PER_UNIT: Final[dict[str, float]] = {
 """Exact metres per drawing unit; a drawing's ``source_to_world`` uses one of these."""
 DxfHandle = Annotated[str, StringConstraints(pattern=r"^[0-9A-F]{1,16}$")]
 DrawingEntity = Literal[
-    "LINE", "LWPOLYLINE", "POLYLINE", "INSERT", "TEXT", "MTEXT", "CIRCLE", "ARC"
+    "LINE",
+    "LWPOLYLINE",
+    "POLYLINE",
+    "INSERT",
+    "TEXT",
+    "MTEXT",
+    "CIRCLE",
+    "ARC",
+    "REGION",
+    "TRACE",
+    "PAGE",
 ]
-"""Entity types in the supported subset (TEXT and MTEXT only name things; CIRCLE and ARC, from
-0.10.0, are drawn as many-sided outlines and lines)."""
+"""Entity types in the supported DXF subset (TEXT and MTEXT only name things; CIRCLE and ARC,
+from 0.10.0, are drawn as many-sided outlines and lines), and for a plan image (0.12.0):
+``REGION``, an area or line the vision model proposed; ``TRACE``, an outline the person marked;
+``PAGE``, the edge of the image or page."""
 SCALE_AGREEMENT: Final = 0.02
 """A reference length agrees with a unit when the scales differ by at most 2 %."""
 
 
 class PlanPoint(ContractModel):
-    """A point on the drawing, in drawing units (DXF world coordinates)."""
+    """A point on the drawing, in drawing units (DXF world coordinates; for a plan image, its
+    pixels, x to the right and y up from the bottom edge)."""
 
     x: float
     y: float
@@ -1310,22 +1344,40 @@ class DrawingObject(ContractModel):
         "standing or marked on the floor."
     )
     label: NonEmptyText
-    label_from: Literal["attribute", "text", "block", "layer", "generic"] = Field(
-        description="Where the name came from: a block attribute, a text inside the outline, "
-        "the block name, the layer name, or a plain description such as 'Floor'."
+    label_from: Literal["attribute", "text", "block", "layer", "generic", "proposed", "entered"] = (
+        Field(
+            description="Where the name came from: a block attribute, a text inside the outline, "
+            "the block name, the layer name, a plain description such as 'Floor', the vision "
+            "model's proposal (0.12.0), or the person (0.12.0)."
+        )
     )
     kind: ObjectKind
     refs: list[DrawingRef] = Field(min_length=1, max_length=20)
     outline: list[PlanPoint] = Field(min_length=3, max_length=2000)
-    footprint_fit: Literal["exact", "enclosing"] = Field(
+    footprint_fit: Literal["exact", "enclosing", "approximate"] = Field(
         description="'exact': the footprint rectangle is the drawn shape; 'enclosing': the "
-        "rectangle encloses a shape that is not one (or a block's extent), so it is approximate."
+        "rectangle encloses a shape that is not one (or a block's extent), so it is approximate; "
+        "'approximate' (0.12.0): proposed from a plan image, neither exact nor known to enclose."
+    )
+    tolerance: float | None = Field(
+        ge=0,
+        description="For an outline the person traced on a plan image (0.12.0): how far its "
+        "edges may be from the true ones, in drawing units (the marking precision). Null for a "
+        "DXF outline (exact as drawn) and for a proposal (unknown).",
     )
     centre: PlanPoint
     width: float = Field(gt=0, description="Footprint along its rotated X, in drawing units.")
     depth: float = Field(gt=0, description="Footprint along its rotated Y, in drawing units.")
     rotation_rad: float
     notes: list[NonEmptyText]
+
+    @model_validator(mode="after")
+    def _tolerance(self) -> DrawingObject:
+        if self.footprint_fit == "approximate" and self.tolerance is not None:
+            raise ValueError("an approximate outline has no known tolerance")
+        if (self.refs[0].entity == "TRACE") != (self.tolerance is not None):
+            raise ValueError("an outline the person traced records its tolerance, and only that")
+        return self
 
 
 class SkippedEntities(ContractModel):
@@ -1396,6 +1448,33 @@ class DrawingFile(ContractModel):
     bytes: int = Field(ge=1, le=MAX_DRAWING_BYTES)
 
 
+class PlanRaster(ContractModel):
+    """The picture of a plan image reading (0.12.0): the PNG or JPEG itself, or one PDF page as
+    the API rendered it. Its pixels are the reading's drawing units. A PDF page's size says how
+    big the paper is, never how big the room is."""
+
+    uri: RasterPath
+    media_type: Literal["image/png", "image/jpeg"]
+    sha256: Sha256Hex
+    width_px: int = Field(ge=16, le=20000)
+    height_px: int = Field(ge=16, le=20000)
+    page: int | None = Field(ge=1, description="The PDF page shown (from 1); null for an image.")
+    page_count: int | None = Field(ge=1, description="Pages in the PDF; null for an image.")
+    dpi: float | None = Field(gt=0, description="Render resolution of the PDF page.")
+
+    @model_validator(mode="after")
+    def _consistent(self) -> PlanRaster:
+        pdf = (self.page is not None, self.page_count is not None, self.dpi is not None)
+        if len(set(pdf)) != 1:
+            raise ValueError("a rendered PDF page records its page, page count and resolution")
+        if self.page is not None and self.page_count is not None and self.page > self.page_count:
+            raise ValueError("the page shown is beyond the PDF's last page")
+        extension = "png" if self.media_type == "image/png" else "jpg"
+        if not self.uri.endswith("." + extension):
+            raise ValueError(f"raster '{self.uri}' has the wrong extension for {self.media_type}")
+        return self
+
+
 class ReferenceLength(ContractModel):
     """A length the person knows, marked on the drawing with two points (IMP-02)."""
 
@@ -1408,6 +1487,11 @@ class ReferenceLength(ContractModel):
         description="Metres per unit of the drawing's or chosen unit when it was entered."
     )
     agrees: bool | None = Field(description="Whether the two scales are within 2 %.")
+    tolerance: float | None = Field(
+        ge=0,
+        description="How far each marked point may be from where it was meant, in drawing units "
+        "(0.12.0, for a plan image); null where the points snapped to the drawing's geometry.",
+    )
 
     @model_validator(mode="after")
     def _consistent(self) -> ReferenceLength:
@@ -1433,7 +1517,9 @@ class ScaleReview(ContractModel):
     (the person accepted or chose it), 'measured' (a reference length set it or agrees)."""
 
     basis: Literal["drawing_unit", "chosen_unit", "reference_length"]
-    unit: LengthUnit = Field(description="The drawing's nominal unit (also for a reference).")
+    unit: PlanUnit = Field(
+        description="The drawing's nominal unit (also for a reference); 'px' for a plan image."
+    )
     metres_per_unit: PositiveLength
     status: Literal["unchecked", "confirmed", "measured"]
     reference: ReferenceLength | None
@@ -1447,6 +1533,10 @@ class ScaleReview(ContractModel):
             if abs(self.metres_per_unit - ref.metres_per_unit) > 1e-12 * self.metres_per_unit:
                 raise ValueError("a scale from a reference length uses the reference's scale")
             return self
+        if self.unit == "px":
+            raise ValueError(
+                "pixels have no length of their own: a plan image needs a known length"
+            )
         if abs(self.metres_per_unit - METRES_PER_UNIT[self.unit]) > 1e-12:
             raise ValueError(f"{self.unit} is {METRES_PER_UNIT[self.unit]} m per unit")
         if self.status == "measured" and (ref is None or ref.agrees is not True):
@@ -1477,7 +1567,8 @@ class ObjectReview(ContractModel):
     """What the person decided about one drawn object."""
 
     drawn_id: StableId
-    status: Literal["proposed", "accepted", "corrected", "not_an_object", "used_as_floor"]
+    status: Literal["proposed", "accepted", "corrected", "not_an_object", "used_as_floor", "added"]
+    """``added`` (0.12.0): an object the person traced that the reading did not propose."""
 
 
 class DrawingReview(ContractModel):
@@ -1496,10 +1587,15 @@ class DrawingReview(ContractModel):
 
 
 class DrawingImport(ContractModel):
-    """The deterministic reading of one DXF drawing (IMP-01), kept with the project."""
+    """The deterministic reading of one DXF drawing (IMP-01), or of one plan image (IMP-03,
+    0.12.0: a PNG, a JPEG or one PDF page, its objects proposed by the vision model or traced by
+    the person), kept with the project."""
 
-    reader: Literal["rws-dxf/1"]
+    reader: Literal["rws-dxf/1", "rws-plan-image/1"]
     file: DrawingFile
+    raster: PlanRaster | None = Field(
+        description="The picture a plan image reading is in (0.12.0); null for a DXF drawing."
+    )
     dxf_version: NonEmptyText | None = Field(description="The header's $ACADVER, if present.")
     units: DrawingUnits
     layers: list[NonEmptyText]
@@ -1526,6 +1622,13 @@ class DrawingImport(ContractModel):
             raise ValueError("a drawing has at most one floor outline")
         if self.extent_min.x > self.extent_max.x or self.extent_min.y > self.extent_max.y:
             raise ValueError("the drawing extent's minimum exceeds its maximum")
+        image = self.reader == "rws-plan-image/1"
+        if image != (self.raster is not None):
+            raise ValueError("a plan image reading, and only one, records its raster")
+        if image != (self.file.uri.rsplit(".", 1)[1] != "dxf"):
+            raise ValueError("a DXF reading is of a .dxf file; a plan image reading is not")
+        if image and self.units.declared is not None:
+            raise ValueError("a plan image declares no unit")
         review = self.review
         if review is None:
             return self
@@ -1533,6 +1636,8 @@ class DrawingImport(ContractModel):
         reviewed = {o.drawn_id for o in review.objects}
         if reviewed != drawn:
             raise ValueError("the review has exactly one entry per drawn object")
+        if (review.scale.unit == "px") != image:
+            raise ValueError("a plan image, and only one, is scaled in pixels")
         on_floor = [o.drawn_id for o in review.objects if o.status == "used_as_floor"]
         expected = [review.floor.drawn_id] if review.floor.choice == "outline" else []
         if on_floor != expected:
@@ -1550,7 +1655,7 @@ class SourceDocument(ContractModel):
     """
 
     id: StableId
-    kind: Literal["synthetic", "dxf", "pdf", "png", "photo"]
+    kind: Literal["synthetic", "dxf", "pdf", "png", "jpeg", "photo"]
     filename: NonEmptyText | None
     sha256: Sha256Hex | None
     source_to_world: SourceToWorldTransform | None
@@ -1564,14 +1669,32 @@ class SourceDocument(ContractModel):
         drawing = self.drawing
         if drawing is None:
             return self
-        if self.kind != "dxf":
-            raise ValueError(f"only a dxf source carries a drawing reading ('{self.id}')")
+        if self.kind not in DRAWING_EXTENSION:
+            raise ValueError(
+                f"only a dxf, pdf, png or jpeg source carries a drawing reading ('{self.id}')"
+            )
         if self.filename is None or self.sha256 is None:
             raise ValueError(f"drawing source '{self.id}' needs its filename and sha256")
-        if drawing.file.uri != f"drawings/{self.sha256}.dxf":
+        if drawing.file.uri != f"drawings/{self.sha256}.{DRAWING_EXTENSION[self.kind]}":
             raise ValueError(
                 f"drawing source '{self.id}': the stored file name must be its sha256 "
-                f"({self.sha256})"
+                f"({self.sha256}) with the extension of a {self.kind} file"
+            )
+        raster = drawing.raster
+        if (
+            raster is not None
+            and self.kind != "pdf"
+            and (raster.uri != drawing.file.uri or raster.sha256 != self.sha256)
+        ):
+            raise ValueError(f"plan image source '{self.id}': its raster is the image itself")
+        if (
+            raster is not None
+            and self.kind == "pdf"
+            and (raster.page is None or raster.uri != f"drawings/{self.sha256}-p{raster.page}.png")
+        ):
+            raise ValueError(
+                f"plan source '{self.id}': a PDF's raster is its page rendered as "
+                f"drawings/<sha256>-p<page>.png"
             )
         units, transform, review = drawing.units, self.source_to_world, drawing.review
         if units.basis is None:
@@ -1633,9 +1756,19 @@ class SourceDocument(ContractModel):
                     f"({self.sha256})"
                 )
         else:
-            if self.source_to_world is None:
+            attached = self.drawing is None and self.kind in DRAWING_EXTENSION
+            if self.source_to_world is None and not attached:
                 raise ValueError(
                     f"source '{self.id}' ({self.kind}) needs a source_to_world transform"
+                )
+            if (
+                attached
+                and self.source_to_world is None
+                and (self.filename is None or self.sha256 is None)
+            ):
+                raise ValueError(
+                    f"attached source '{self.id}' (not aligned with the plan) needs its filename "
+                    "and sha256"
                 )
             if self.image is not None or self.photo_import is not None:
                 raise ValueError("only a photo source carries an image and a photo import")
@@ -1701,6 +1834,13 @@ class Project(ContractModel):
             for change in r.objects
             if change.after is None
         }
+        source_ids = {source.id for source in self.sources}
+        for record in self.scene.edit_log:
+            if isinstance(record, SourceAttached) and record.source_id not in source_ids:
+                raise ValueError(
+                    f"edit_log revision {record.revision} attaches source '{record.source_id}', "
+                    "which is not in the project"
+                )
         for source in self.sources:
             drawing = source.drawing
             if drawing is None:

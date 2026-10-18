@@ -55,6 +55,7 @@ export function SourceDrawing({ project, selectedId, view, open, underlay, onVie
   const statuses = new Map(drawing.review.objects.map((o) => [o.drawn_id, o.status]));
   const changed = comparison.changes.filter((c) => c.status !== "unchanged");
   const missing = missingFiles.includes(drawing.file.uri);
+  const kept = project.sources.filter((s) => s !== source && s.drawing === null && s.source_to_world === null && s.kind !== "photo");
 
   return (
     <section className={`source-drawing${open ? " open" : ""}${view !== "drawing" && open ? " wide" : ""}`} aria-label="Source drawing" data-testid="source-drawing">
@@ -98,6 +99,11 @@ export function SourceDrawing({ project, selectedId, view, open, underlay, onVie
           <label className="check-row small">
             <input type="checkbox" checked={underlay} data-testid="drawing-underlay" onChange={(e) => onUnderlay(e.target.checked)} /> Show the drawing on the 3D floor
           </label>
+          {kept.length > 0 && (
+            <p className="small muted" data-testid="drawing-kept">
+              Also kept with this world: {kept.map((k) => k.filename).join(", ")}. Not aligned with this plan yet, and nothing is taken from {kept.length === 1 ? "it" : "them"} (that comes with enrichment).
+            </p>
+          )}
         </div>
       )}
       {open && view === "compare" && (

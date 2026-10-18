@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.11.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.12.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -31,9 +31,11 @@ export interface ReplayWorldContracts {
   ModelRevisionProposalRequest: ModelRevisionProposalRequest;
   ModelRevisionProposalResult: ModelRevisionProposalResult;
   DrawingAnalysis: DrawingAnalysis;
+  PlanUpload: PlanUpload;
+  PlanProposalResult: PlanProposalResult;
 }
 export interface Project {
-  schema_version: "0.11.0";
+  schema_version: "0.12.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -77,7 +79,7 @@ export interface SourceDocument {
    * Stable, lowercase identifier. Never reused for a different entity.
    */
   id: string;
-  kind: "synthetic" | "dxf" | "pdf" | "png" | "photo";
+  kind: "synthetic" | "dxf" | "pdf" | "png" | "jpeg" | "photo";
   filename: string | null;
   sha256: string | null;
   source_to_world: SourceToWorldTransform | null;
@@ -97,7 +99,7 @@ export interface SourceDocument {
  */
 export interface SourceToWorldTransform {
   convention: "plan_xy_to_world_x_neg_z";
-  source_unit: "m" | "cm" | "mm" | "in" | "ft";
+  source_unit: "m" | "cm" | "mm" | "in" | "ft" | "px";
   /**
    * Metres per one source unit.
    */
@@ -300,11 +302,17 @@ export interface ImageBox {
   bottom: number;
 }
 /**
- * The deterministic reading of one DXF drawing (IMP-01), kept with the project.
+ * The deterministic reading of one DXF drawing (IMP-01), or of one plan image (IMP-03,
+ * 0.12.0: a PNG, a JPEG or one PDF page, its objects proposed by the vision model or traced by
+ * the person), kept with the project.
  */
 export interface DrawingImport {
-  reader: "rws-dxf/1";
+  reader: "rws-dxf/1" | "rws-plan-image/1";
   file: DrawingFile;
+  /**
+   * The picture a plan image reading is in (0.12.0); null for a DXF drawing.
+   */
+  raster: PlanRaster | null;
   /**
    * The header's $ACADVER, if present.
    */
@@ -340,6 +348,30 @@ export interface DrawingFile {
   bytes: number;
 }
 /**
+ * The picture of a plan image reading (0.12.0): the PNG or JPEG itself, or one PDF page as
+ * the API rendered it. Its pixels are the reading's drawing units. A PDF page's size says how
+ * big the paper is, never how big the room is.
+ */
+export interface PlanRaster {
+  uri: string;
+  media_type: "image/png" | "image/jpeg";
+  sha256: string;
+  width_px: number;
+  height_px: number;
+  /**
+   * The PDF page shown (from 1); null for an image.
+   */
+  page: number | null;
+  /**
+   * Pages in the PDF; null for an image.
+   */
+  page_count: number | null;
+  /**
+   * Render resolution of the PDF page.
+   */
+  dpi: number | null;
+}
+/**
  * What the drawing says about its units, and how the unit used was established.
  */
 export interface DrawingUnits {
@@ -365,7 +397,8 @@ export interface DrawingUnits {
   basis: ("drawing_header" | "user_supplied") | null;
 }
 /**
- * A point on the drawing, in drawing units (DXF world coordinates).
+ * A point on the drawing, in drawing units (DXF world coordinates; for a plan image, its
+ * pixels, x to the right and y up from the bottom edge).
  */
 export interface PlanPoint {
   x: number;
@@ -392,7 +425,8 @@ export interface DrawingRef {
    */
   handle: string | null;
   layer: string;
-  entity: "LINE" | "LWPOLYLINE" | "POLYLINE" | "INSERT" | "TEXT" | "MTEXT" | "CIRCLE" | "ARC";
+  entity:
+    "LINE" | "LWPOLYLINE" | "POLYLINE" | "INSERT" | "TEXT" | "MTEXT" | "CIRCLE" | "ARC" | "REGION" | "TRACE" | "PAGE";
   /**
    * For geometry inside a block: the block names from the drawing down, separated by ' > '; null for an entity drawn directly in model space.
    */
@@ -429,9 +463,9 @@ export interface DrawingObject {
   role: "floor" | "footprint";
   label: string;
   /**
-   * Where the name came from: a block attribute, a text inside the outline, the block name, the layer name, or a plain description such as 'Floor'.
+   * Where the name came from: a block attribute, a text inside the outline, the block name, the layer name, a plain description such as 'Floor', the vision model's proposal (0.12.0), or the person (0.12.0).
    */
-  label_from: "attribute" | "text" | "block" | "layer" | "generic";
+  label_from: "attribute" | "text" | "block" | "layer" | "generic" | "proposed" | "entered";
   kind: "structure" | "equipment" | "reference" | "walkway" | "keep_clear";
   /**
    * @minItems 1
@@ -640,9 +674,13 @@ export interface DrawingObject {
    */
   outline: [PlanPoint, PlanPoint, PlanPoint, ...PlanPoint[]];
   /**
-   * 'exact': the footprint rectangle is the drawn shape; 'enclosing': the rectangle encloses a shape that is not one (or a block's extent), so it is approximate.
+   * 'exact': the footprint rectangle is the drawn shape; 'enclosing': the rectangle encloses a shape that is not one (or a block's extent), so it is approximate; 'approximate' (0.12.0): proposed from a plan image, neither exact nor known to enclose.
    */
-  footprint_fit: "exact" | "enclosing";
+  footprint_fit: "exact" | "enclosing" | "approximate";
+  /**
+   * For an outline the person traced on a plan image (0.12.0): how far its edges may be from the true ones, in drawing units (the marking precision). Null for a DXF outline (exact as drawn) and for a proposal (unknown).
+   */
+  tolerance: number | null;
   centre: PlanPoint;
   /**
    * Footprint along its rotated X, in drawing units.
@@ -737,9 +775,9 @@ export interface FloorReview {
 export interface ScaleReview {
   basis: "drawing_unit" | "chosen_unit" | "reference_length";
   /**
-   * The drawing's nominal unit (also for a reference).
+   * The drawing's nominal unit (also for a reference); 'px' for a plan image.
    */
-  unit: "m" | "cm" | "mm" | "in" | "ft";
+  unit: "m" | "cm" | "mm" | "in" | "ft" | "px";
   /**
    * Strictly positive length in metres.
    */
@@ -773,6 +811,10 @@ export interface ReferenceLength {
    * Whether the two scales are within 2 %.
    */
   agrees: boolean | null;
+  /**
+   * How far each marked point may be from where it was meant, in drawing units (0.12.0, for a plan image); null where the points snapped to the drawing's geometry.
+   */
+  tolerance: number | null;
 }
 /**
  * What the person decided about one drawn object.
@@ -782,7 +824,7 @@ export interface ObjectReview {
    * Stable, lowercase identifier. Never reused for a different entity.
    */
   drawn_id: string;
-  status: "proposed" | "accepted" | "corrected" | "not_an_object" | "used_as_floor";
+  status: "proposed" | "accepted" | "corrected" | "not_an_object" | "used_as_floor" | "added";
 }
 /**
  * A reusable definition that scene objects instantiate by referencing its ``id``.
@@ -1193,7 +1235,7 @@ export interface Scene {
    */
   revision: number;
   objects: SceneObject[];
-  edit_log: (ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed)[];
+  edit_log: (ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed | SourceAttached)[];
 }
 export interface SceneObject {
   /**
@@ -1388,18 +1430,35 @@ export interface ReviewedObjectChange {
   before: SceneObject | null;
   after: SceneObject | null;
 }
+/**
+ * A file kept with the world (IMP-03, 0.12.0): a later plan or drawing, stored by its
+ * hash and listed with the world without replacing it. It is not aligned with the world's
+ * plan and nothing is merged from it (that is ENR-01); no object changes.
+ */
+export interface SourceAttached {
+  type: "source_attached";
+  /**
+   * Scene revision this edit produced.
+   */
+  revision: number;
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  source_id: string;
+  filename: string;
+}
 export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.11.0";
+  schema_version: "0.12.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.11.0";
+  schema_version: "0.12.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -1436,7 +1495,7 @@ export interface UpgradeReport {
    * Schema version of the submitted document.
    */
   from_version: string;
-  to_version: "0.11.0";
+  to_version: "0.12.0";
   notes: string[];
   project: Project;
   validation: ValidationReport;
@@ -2221,10 +2280,13 @@ export interface RevisionAdjustment {
   text: string;
 }
 /**
- * A DXF drawing stored in the source library and read deterministically (IMP-01).
+ * A DXF drawing stored in the source library and read deterministically (IMP-01), or a
+ * plan image (IMP-03): a PNG, JPEG or one PDF page, read as a picture in pixels with no
+ * objects yet.
  *
  * Nothing is in a project yet. ``drawing.units.basis`` is null: when ``units.question`` is set
- * the person chooses the unit before any real size is assigned.
+ * the person chooses the unit (DXF) or marks a known length (plan image) before any real size
+ * is assigned.
  */
 export interface DrawingAnalysis {
   filename: string;
@@ -2234,4 +2296,291 @@ export interface DrawingAnalysis {
    * Things the person should check, such as a block whose own units differ.
    */
   warnings: string[];
+}
+/**
+ * A stored plan file: read when it is an image or a one-page PDF; otherwise its pages are
+ * listed and the person chooses one.
+ */
+export interface PlanUpload {
+  filename: string;
+  sha256: string;
+  kind: "pdf" | "png" | "jpeg";
+  /**
+   * @maxItems 50
+   */
+  pages: PlanPage[];
+  analysis: DrawingAnalysis | null;
+}
+/**
+ * One page of an uploaded PDF, for choosing the floor-plan page.
+ */
+export interface PlanPage {
+  page: number;
+  /**
+   * The paper's width in PDF points (1/72 inch).
+   */
+  width_pt: number;
+  height_pt: number;
+  /**
+   * A small PNG of the page as a data: URL; null past the first pages.
+   */
+  thumbnail: string | null;
+}
+/**
+ * The API's answer to a plan image: a draft, or why there is none.
+ */
+export interface PlanProposalResult {
+  outcome: "proposal" | "unsupported";
+  proposal: PlanProposal | null;
+  message: string | null;
+  checks: string[];
+  provider: ProviderRun;
+}
+/**
+ * The vision model's draft of a plan: the floor's outline, wall lines, object boxes and
+ * texts, in fractions of the picture.
+ */
+export interface PlanProposal {
+  floor: [ImagePoint, ImagePoint, ImagePoint, ...ImagePoint[]] | null;
+  /**
+   * @maxItems 60
+   */
+  walls: ProposedWall[];
+  /**
+   * @maxItems 60
+   */
+  objects: ProposedPlanObject[];
+  /**
+   * @maxItems 60
+   */
+  texts: ProposedPlanText[];
+}
+/**
+ * A wall or partition line the model drew along, as points on the picture.
+ */
+export interface ProposedWall {
+  /**
+   * @minItems 2
+   * @maxItems 20
+   */
+  points:
+    | [ImagePoint, ImagePoint]
+    | [ImagePoint, ImagePoint, ImagePoint]
+    | [ImagePoint, ImagePoint, ImagePoint, ImagePoint]
+    | [ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint]
+    | [ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint]
+    | [ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint]
+    | [ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint]
+    | [ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint, ImagePoint]
+    | [
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint
+      ]
+    | [
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint
+      ]
+    | [
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint
+      ]
+    | [
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint
+      ]
+    | [
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint
+      ]
+    | [
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint
+      ]
+    | [
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint
+      ]
+    | [
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint
+      ]
+    | [
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint
+      ]
+    | [
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint
+      ]
+    | [
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint,
+        ImagePoint
+      ];
+}
+/**
+ * Something the vision model marked on the plan: a box around it and what it is called.
+ * A draft only, never a measurement or a complete list.
+ */
+export interface ProposedPlanObject {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  id: string;
+  label: string;
+  /**
+   * The label is text printed on the plan.
+   */
+  named_on_plan: boolean;
+  kind: "equipment" | "structure" | "keep_clear" | "walkway";
+  box: ImageBox;
+}
+/**
+ * Text the model read on the plan, as content (never an instruction).
+ */
+export interface ProposedPlanText {
+  text: string;
+  at: ImagePoint;
 }

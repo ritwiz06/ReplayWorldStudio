@@ -1,18 +1,41 @@
 // Upload a floor plan (ONB-01): the plan appears as soon as the drawing is read, while the 3D
 // draft is prepared; the one question asked is the unit, and only when the drawing does not
-// settle it. Cancel and every failure leave the open project exactly as it was.
-import type { DrawingAnalysis, Project } from "@replay-world/contracts";
+// settle it. A PDF, PNG or JPEG plan (IMP-03) is shown as a picture: a PDF with several pages
+// first asks which page, and the one question is a length the person knows. Cancel and every
+// failure leave the open project exactly as it was.
+import type { DrawingAnalysis, PlanUpload, Project, SourceDocument } from "@replay-world/contracts";
 import { useEffect, useRef, useState } from "react";
 import type { ApiClient } from "../api/client";
 import { type Outcome, prepareDraft, readDrawing, STEPS, type StepId, settledUnit } from "../drawing/orchestrator";
 import { type DrawingUnit, formatSize, headerUnit, METRES_PER_UNIT, UNIT_NAME, UNITS } from "../drawing/world";
+import { isPlanFile, readPage, readPlan } from "../drawing/planImport";
 import { DrawingPlan } from "./DrawingPlan";
+import { PlanReading } from "./PlanReading";
 
 interface Props {
   client: ApiClient;
   onClose: () => void;
   /** The checked draft; the editor decides whether it may replace the open project. */
   onCreated: (project: Project, filename: string) => void;
+  /** When a world from a plan is open: keep the file with it instead (not aligned, ENR-01). */
+  onAttach?: ((source: SourceDocument) => void) | undefined;
+}
+
+/** A later plan or drawing kept with the open world: stored by hash, not aligned or merged. */
+function attachedSource(analysis: DrawingAnalysis): SourceDocument {
+  const extension = analysis.drawing.file.uri.split(".").pop();
+  const kind = extension === "pdf" ? "pdf" : extension === "png" ? "png" : extension === "jpg" ? "jpeg" : "dxf";
+  return {
+    id: `src-kept-${analysis.sha256.slice(0, 12)}`,
+    kind,
+    filename: analysis.filename,
+    sha256: analysis.sha256,
+    source_to_world: null,
+    import_warnings: ["Kept with this world as a reference: not aligned with its plan, and nothing is merged from it yet (ENR-01)."],
+    image: null,
+    photo_import: null,
+    drawing: null,
+  };
 }
 
 type Draft = { status: "waiting" } | { status: "building" } | { status: "ready"; project: Project } | { status: "failed"; message: string };
@@ -20,18 +43,20 @@ type Draft = { status: "waiting" } | { status: "building" } | { status: "ready";
 type Step =
   | { kind: "choose"; error: string | null; dwg: boolean }
   | { kind: "reading"; filename: string }
-  | { kind: "read"; analysis: DrawingAnalysis; unit: DrawingUnit | null; draft: Draft };
+  | { kind: "read"; analysis: DrawingAnalysis; unit: DrawingUnit | null; draft: Draft }
+  | { kind: "pages"; upload: PlanUpload; reading: number | null }
+  | { kind: "plan"; analysis: DrawingAnalysis };
 
 /** Milliseconds from choosing the file to the plan on screen and to the checked draft; read by
  * the browser journey to record the measurements. */
-type Timing = { startedAt: number; planMs: number | null; draftMs: number | null };
+type Timing = { startedAt: number; pageAt: number | null; planMs: number | null; modelMs: number | null; draftMs: number | null };
 
-export function DrawingImport({ client, onClose, onCreated }: Props) {
+export function DrawingImport({ client, onClose, onCreated, onAttach }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const controller = useRef<AbortController | null>(null);
   const [step, setStep] = useState<Step>({ kind: "choose", error: null, dwg: false });
-  const [timing, setTiming] = useState<Timing>({ startedAt: 0, planMs: null, draftMs: null });
+  const [timing, setTiming] = useState<Timing>({ startedAt: 0, pageAt: null, planMs: null, modelMs: null, draftMs: null });
 
   useEffect(() => {
     const element = dialog.current;
@@ -42,11 +67,22 @@ export function DrawingImport({ client, onClose, onCreated }: Props) {
     };
   }, []);
 
-  // The plan is on screen after the next paint.
-  const planShown = step.kind === "read";
+  // The plan is on screen after the next paint (a picture: once it has loaded). For a PDF with
+  // several pages, it is timed from choosing the page.
+  const planShown = step.kind === "read" || step.kind === "plan";
   useEffect(() => {
     if (!planShown || timing.planMs !== null) return;
-    const frame = requestAnimationFrame(() => setTiming((t) => ({ ...t, planMs: Math.round(performance.now() - t.startedAt) })));
+    let frame = 0;
+    const done = () => {
+      frame = requestAnimationFrame(() => setTiming((t) => ({ ...t, planMs: Math.round(performance.now() - (t.pageAt ?? t.startedAt)) })));
+    };
+    const picture = dialog.current?.querySelector<SVGImageElement>(".plan-raster");
+    if (picture) {
+      const image = new Image();
+      image.onload = done;
+      image.onerror = done;
+      image.src = picture.href.baseVal;
+    } else done();
     return () => cancelAnimationFrame(frame);
   }, [planShown, timing.planMs]);
 
@@ -57,9 +93,20 @@ export function DrawingImport({ client, onClose, onCreated }: Props) {
   }
 
   async function choose(file: File) {
-    setTiming({ startedAt: performance.now(), planMs: null, draftMs: null });
+    setTiming({ startedAt: performance.now(), pageAt: null, planMs: null, modelMs: null, draftMs: null });
     setStep({ kind: "reading", filename: file.name });
     const signal = fresh();
+    if (isPlanFile(file)) {
+      let upload;
+      try {
+        upload = await readPlan(client, file, signal);
+      } catch {
+        return;
+      }
+      if (!upload.ok) return setStep({ kind: "choose", error: upload.message, dwg: false });
+      setStep(upload.value.analysis ? { kind: "plan", analysis: upload.value.analysis } : { kind: "pages", upload: upload.value, reading: null });
+      return;
+    }
     let read: Outcome<DrawingAnalysis>;
     try {
       read = await readDrawing(client, file, signal);
@@ -87,6 +134,19 @@ export function DrawingImport({ client, onClose, onCreated }: Props) {
     setStep((s) => (s.kind === "read" && s.analysis === analysis && s.unit === unit ? { ...s, draft: prepared.ok ? { status: "ready", project: prepared.value } : { status: "failed", message: prepared.message } } : s));
   }
 
+  async function choosePage(upload: PlanUpload, page: number) {
+    setTiming((t) => ({ ...t, pageAt: performance.now(), planMs: null }));
+    setStep({ kind: "pages", upload, reading: page });
+    let read;
+    try {
+      read = await readPage(client, upload, page, fresh());
+    } catch {
+      return;
+    }
+    if (!read.ok) return setStep({ kind: "choose", error: read.message, dwg: false });
+    setStep({ kind: "plan", analysis: read.value });
+  }
+
   function cancel() {
     controller.current?.abort();
     setStep({ kind: "choose", error: "Cancelled.", dwg: false });
@@ -102,6 +162,7 @@ export function DrawingImport({ client, onClose, onCreated }: Props) {
       aria-labelledby="drawing-title"
       data-testid="drawing-import"
       data-plan-ms={timing.planMs ?? undefined}
+      data-model-ms={timing.modelMs ?? undefined}
       data-draft-ms={timing.draftMs ?? undefined}
       onCancel={(e) => {
         e.preventDefault();
@@ -127,11 +188,12 @@ export function DrawingImport({ client, onClose, onCreated }: Props) {
           }}
         >
           <p>
-            <strong>Choose a floor layout saved as DXF.</strong> Its walls, outlines and blocks become a 3D draft you can walk through and change. The original file
+            <strong>Choose a floor layout: a DXF, or a PDF, PNG or JPEG of the plan.</strong> It becomes a 3D draft you can walk through and change. The original file
             stays linked, so every object shows where it came from.
           </p>
           <p className="muted small">
-            DXF (ASCII) up to 10 MB · read here, no AI involved · a DWG has to be exported as DXF first (Save As &gt; DXF in your CAD program).
+            Up to 10 MB · a DXF is read here, no AI involved · a PDF page or plan image is shown at once; you mark one length you know, and can ask the vision model to
+            draft the objects · a DWG has to be exported as DXF first (Save As &gt; DXF in your CAD program).
           </p>
           {reading ? (
             <div className="drawing-reading" role="status" data-testid="drawing-reading">
@@ -148,7 +210,7 @@ export function DrawingImport({ client, onClose, onCreated }: Props) {
           <input
             ref={fileInput}
             type="file"
-            accept=".dxf,.dwg"
+            accept=".dxf,.dwg,.pdf,.png,.jpg,.jpeg"
             hidden
             data-testid="drawing-file-input"
             onChange={(e) => {
@@ -164,6 +226,41 @@ export function DrawingImport({ client, onClose, onCreated }: Props) {
             </div>
           )}
         </div>
+      )}
+
+      {step.kind === "pages" && (
+        <div className="plan-pages" data-testid="plan-pages">
+          <p>
+            <strong>{step.upload.filename} has {step.upload.pages.length} pages.</strong> Which one is the floor plan?
+          </p>
+          <ul>
+            {step.upload.pages.map((p) => (
+              <li key={p.page}>
+                <button type="button" className="plan-page" data-testid={`plan-page-${p.page}`} disabled={step.reading !== null} onClick={() => void choosePage(step.upload, p.page)}>
+                  {p.thumbnail ? <img src={p.thumbnail} alt={`Page ${p.page}`} /> : <span className="plan-page-blank">Page {p.page}</span>}
+                  <span>
+                    Page {p.page} · {Math.round((p.width_pt / 72) * 25.4)} × {Math.round((p.height_pt / 72) * 25.4)} mm paper
+                    {step.reading === p.page && " · opening…"}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="muted small">The paper's size is shown to tell the pages apart; it says nothing about the room's size.</p>
+        </div>
+      )}
+
+      {step.kind === "plan" && (
+        <PlanReading
+          key={step.analysis.drawing.raster?.uri}
+          client={client}
+          analysis={step.analysis}
+          onModelMs={(ms) => setTiming((t) => ({ ...t, modelMs: ms }))}
+          onDraftReady={() => setTiming((t) => (t.draftMs === null ? { ...t, draftMs: Math.round(performance.now() - t.startedAt) } : t))}
+          onCreated={(project) => onCreated(project, step.analysis.filename)}
+          onAttach={onAttach ? () => onAttach(attachedSource(step.analysis)) : undefined}
+          onAnother={() => setStep({ kind: "choose", error: null, dwg: false })}
+        />
       )}
 
       {step.kind === "read" && (
@@ -215,10 +312,20 @@ export function DrawingImport({ client, onClose, onCreated }: Props) {
               >
                 {step.draft.status === "building" ? "Preparing the 3D draft…" : step.draft.status === "waiting" ? "Choose the unit first" : "Open the 3D draft"}
               </button>
+              {onAttach && (
+                <button type="button" className="button" data-testid="drawing-attach" onClick={() => onAttach(attachedSource(step.analysis))}>
+                  Keep it with this world
+                </button>
+              )}
               <button type="button" className="button" data-testid="drawing-another" onClick={() => setStep({ kind: "choose", error: null, dwg: false })}>
                 Choose another file
               </button>
             </div>
+            {onAttach && (
+              <p className="muted small">
+                <q>Open</q> starts a new world from this file; <q>Keep it with this world</q> keeps the world you have and stores this file with it, not yet aligned with its plan.
+              </p>
+            )}
           </div>
         </div>
       )}

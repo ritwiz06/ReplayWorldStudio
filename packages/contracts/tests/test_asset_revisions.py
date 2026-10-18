@@ -290,6 +290,9 @@ def test_0_6_0_documents_gain_a_null_revision_and_an_unstated_size_basis(
         "drawn (a design drawing, not a site measurement); nothing is strengthened)",
         "schema_version 0.10.0 -> 0.11.0 (adds 'omitted: null' to 0 drawing readings: where their "
         "left-out shapes lie was not recorded, so checks treat them as possibly anywhere)",
+        "schema_version 0.11.0 -> 0.12.0 (adds 'raster: null' to 0 drawing readings and "
+        "'tolerance: null' to 0 drawn outlines: DXF geometry is exact as drawn; no values or "
+        "evidence changed)",
     ]
     assert "revision" not in old["catalog"][-1]["generation"]  # input untouched
     Project.model_validate(upgrade.document)

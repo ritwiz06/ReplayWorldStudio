@@ -1,10 +1,13 @@
 // GEO-01: does this layout fit? Footprint overlaps between equipment and structures, objects
 // standing in keep-clear zones, and objects reaching past the floor's edge, on the current
 // (edited) positions, sizes and turns. A 2D design-layout check on the reviewed drawing, with
-// an explicit 1 mm tolerance: touching is not a conflict. It never certifies the site as built.
+// an explicit 1 mm tolerance: touching is not a conflict. Outlines traced on a plan picture are
+// only as precise as they were marked, and its scale as its known length: an overlap or gap
+// within that precision is "cannot determine yet", never a conflict or a fit. It never
+// certifies the site as built.
 import type { Project } from "@replay-world/contracts";
 import { type CheckState } from "../drawing/readiness";
-import { bounds as box, inside, overlapDepth, overlapRegion, outsideBy, polygonGap, type Vec } from "./geometry";
+import { bounds as box, edgeDistance, inside, overlapDepth, overlapRegion, outsideBy, polygonGap, type Vec } from "./geometry";
 import { checkInputs, type Shape, TOLERANCE_M } from "./inputs";
 
 export type FindingState = "conflict" | "not_accurate" | "cannot_determine";
@@ -44,6 +47,11 @@ function accuracy(a: Shape, b: Shape): { state: FindingState; problem: string | 
   return { state: "cannot_determine", problem: blocking.problem, fix: blocking.problem?.includes("not reviewed") ? "check it in the review" : null };
 }
 
+/** How far apart two edges may really be from what the plan shows: both outlines' marking
+ * precision, and the scale's relative error applied to the distance itself. */
+const precision = (a: Shape, b: { evidence: { toleranceM: number } } | null, distance: number, scaleError: number) =>
+  a.evidence.toleranceM + (b?.evidence.toleranceM ?? 0) + scaleError * Math.abs(distance);
+
 export function checkLayout(project: Project): LayoutResult | null {
   const inputs = checkInputs(project);
   if (!inputs) return null;
@@ -63,6 +71,24 @@ export function checkLayout(project: Project): LayoutResult | null {
       const bb = box(b.poly);
       const apart = ba.maxX < bb.minX - TOLERANCE_M || bb.maxX < ba.minX - TOLERANCE_M || ba.maxZ < bb.minZ - TOLERANCE_M || bb.maxZ < ba.minZ - TOLERANCE_M;
       const depth = apart ? 0 : overlapDepth(a.poly, b.poly);
+      const exact = a.evidence.exact && b.evidence.exact;
+      const near = exact && depth <= TOLERANCE_M ? polygonGap(a.poly, b.poly) : 0;
+      const within = precision(a, b, Math.max(depth, near), inputs.scaleError);
+      if (exact && within > 0 && (depth > TOLERANCE_M ? depth <= within + TOLERANCE_M : near < within)) {
+        findings.push({
+          kind: "overlap",
+          state: "cannot_determine",
+          objectIds: [a.id, b.id],
+          metres: depth,
+          message:
+            depth > TOLERANCE_M
+              ? `${a.name} and ${b.name} overlap by ${m(depth)} on the plan, which is within the ±${m(within)} the outlines and scale were marked to: too close to tell.`
+              : `${a.name} and ${b.name} are ${m(near)} apart on the plan, within the ±${m(within)} the outlines and scale were marked to: too close to tell.`,
+          fix: "trace both outlines more closely, or measure the gap on site",
+          region: depth > TOLERANCE_M ? overlapRegion(a.poly, b.poly) : [...a.poly],
+        });
+        continue;
+      }
       if (depth > TOLERANCE_M) {
         const { state, problem, fix } = accuracy(a, b);
         const message =
@@ -86,6 +112,20 @@ export function checkLayout(project: Project): LayoutResult | null {
     }
     for (const o of obstacles) {
       const depth = overlapDepth(o.poly, zone.poly);
+      const within = o.evidence.exact ? precision(o, zone, depth, inputs.scaleError) : 0;
+      const gap = within > 0 && depth <= TOLERANCE_M ? polygonGap(o.poly, zone.poly) : Infinity;
+      if (within > 0 && (depth > TOLERANCE_M ? depth <= within + TOLERANCE_M : gap < within)) {
+        findings.push({
+          kind: "zone",
+          state: "cannot_determine",
+          objectIds: [o.id, zone.id],
+          metres: depth,
+          message: `${o.name} is within ±${m(within)} of ${zone.name}'s edge as traced: too close to tell whether it stands in it.`,
+          fix: "trace both outlines more closely, or measure on site",
+          region: depth > TOLERANCE_M ? overlapRegion(o.poly, zone.poly) : [...o.poly],
+        });
+        continue;
+      }
       if (depth <= TOLERANCE_M) continue;
       const { state, problem, fix } = accuracy(o, zone);
       const message =
@@ -115,6 +155,21 @@ export function checkLayout(project: Project): LayoutResult | null {
   if (floor) {
     for (const o of obstacles) {
       const reach = outsideBy(o.poly, floor.poly);
+      const within = o.evidence.exact ? o.evidence.toleranceM + floor.toleranceM + inputs.scaleError * reach : 0;
+      // Inside, but nearer the traced edge than the tracing can tell apart.
+      const inside = within > 0 && reach <= TOLERANCE_M ? Math.min(...o.poly.map((q) => edgeDistance(q, floor.poly))) : Infinity;
+      if (within > 0 && (reach > TOLERANCE_M ? reach <= within + TOLERANCE_M : inside < within)) {
+        findings.push({
+          kind: "floor_edge",
+          state: "cannot_determine",
+          objectIds: [o.id],
+          metres: reach,
+          message: `${o.name} is within ±${m(within)} of the floor's edge as traced: too close to tell whether it reaches past it.`,
+          fix: "trace the floor and the object more closely, or measure on site",
+          region: o.poly,
+        });
+        continue;
+      }
       if (reach <= TOLERANCE_M) continue;
       const exact = o.evidence.exact;
       findings.push({
@@ -132,7 +187,7 @@ export function checkLayout(project: Project): LayoutResult | null {
   const blockers: string[] = [];
   const unreviewed = obstacles.filter((o) => o.evidence.problem?.includes("not reviewed")).length;
   if (unreviewed > 0) blockers.push(`${unreviewed} object${unreviewed === 1 ? " is" : "s are"} not reviewed yet`);
-  if (!floor) blockers.push("the floor is only for display, so nothing is checked against its edge");
+  if (!floor && inputs.floorProblem) blockers.push(inputs.floorProblem);
   if (zones.length > 0 && inputs.unplaced.length > 0) blockers.push(`keep-clear zones cannot be confirmed clear: ${inputs.unplaced.join("; ")} could be anywhere`);
 
   const conflicts = findings.filter((f) => f.state === "conflict");

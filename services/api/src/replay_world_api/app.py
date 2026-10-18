@@ -10,7 +10,7 @@ from typing import Annotated, Any, Final, Literal, NoReturn
 
 import anyio
 import anyio.to_thread
-from fastapi import Body, FastAPI, HTTPException, Query, Request
+from fastapi import Body, FastAPI, HTTPException, Path, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -36,6 +36,8 @@ from replay_world_contracts import (
     ModelRevisionProposalResult,
     ObjectProposalRequest,
     ObjectProposalResult,
+    PlanProposalResult,
+    PlanUpload,
     Project,
     StoredPhoto,
     UpgradeReport,
@@ -52,6 +54,7 @@ from replay_world_contracts.migrations import (
 from . import __version__
 from .assist.edits import propose_edit
 from .assist.images import propose_image
+from .assist.plans import propose_plan
 from .assist.proposals import AssistError, propose_object
 from .assist.provider import (
     Provider,
@@ -75,6 +78,7 @@ from .photos import (
     resolve_source_file,
     store_photo,
 )
+from .plans import PlanError, library_file, read_pdf_page, store_plan
 from .settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -103,6 +107,10 @@ _ANY_PROJECT_BODY_DOC: Final[dict[str, Any]] = {
         "content": {"application/json": {"schema": {"type": "object"}}},
     }
 }
+
+
+def _plan_status(exc: PlanError) -> int:
+    return {"too_large": 413, "unsupported": 415, "missing": 404}.get(exc.kind, 422)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -350,6 +358,75 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except (ProviderError, AssistError) as exc:
             _assist_failure(exc)
 
+    @app.post("/api/v1/assist/plan-proposals")
+    def plan_proposals(body: ImageAnalysisRequest) -> PlanProposalResult:
+        """Draft the floor, walls and objects of a plan image. Nothing is stored or logged."""
+        if vision is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Plan proposals are off (no provider configured). Mark the floor and "
+                "objects yourself, or set VOYAGER_API_KEY in .env and restart the API.",
+            )
+        try:
+            return propose_plan(vision, body)
+        except (ProviderError, AssistError) as exc:
+            _assist_failure(exc)
+
+    @app.post(
+        "/api/v1/sources/plans",
+        openapi_extra={
+            "requestBody": {
+                "required": True,
+                "content": {
+                    media: {"schema": {"type": "string", "format": "binary"}}
+                    for media in ("application/pdf", "image/png", "image/jpeg")
+                },
+            }
+        },
+    )
+    async def upload_plan(
+        request: Request,
+        filename: Annotated[str, Query(min_length=1, max_length=255)],
+    ) -> PlanUpload:
+        """Store a floor-plan PDF, PNG or JPEG by its sha256 (IMP-03). An image or a one-page
+        PDF comes back read as a picture in pixels; a longer PDF lists its pages. No language
+        model is called and nothing is added to a project."""
+        chunks: list[bytes] = []
+        size = 0
+        async for chunk in request.stream():
+            size += len(chunk)
+            if size > MAX_DRAWING_BYTES:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"The plan is larger than {MAX_DRAWING_BYTES // 1048576} MB.",
+                )
+            chunks.append(chunk)
+        data = b"".join(chunks)
+        try:
+            return await anyio.to_thread.run_sync(
+                lambda: store_plan(data, filename, settings.sources_dir)
+            )
+        except PlanError as exc:
+            raise HTTPException(status_code=_plan_status(exc), detail=exc.message) from None
+        except PhotoError as exc:
+            raise HTTPException(status_code=400, detail=exc.message) from None
+
+    @app.post("/api/v1/sources/plans/{sha256}/pages/{page}")
+    async def read_plan_page(
+        sha256: Annotated[str, Path(pattern=r"^[0-9a-f]{64}$")],
+        page: Annotated[int, Path(ge=1, le=50)],
+        filename: Annotated[str, Query(min_length=1, max_length=255)],
+    ) -> DrawingAnalysis:
+        """Render the chosen page of a stored PDF and read it as a picture in pixels."""
+        try:
+            return await anyio.to_thread.run_sync(
+                lambda: read_pdf_page(sha256, page, filename, settings.sources_dir)
+            )
+        except PlanError as exc:
+            raise HTTPException(status_code=_plan_status(exc), detail=exc.message) from None
+        except PhotoError as exc:
+            raise HTTPException(status_code=400, detail=exc.message) from None
+
     @app.post(
         "/api/v1/sources/photos",
         openapi_extra={
@@ -436,6 +513,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/api/v1/sources/files/{uri:path}", response_class=FileResponse)
     def get_source_file(uri: str) -> FileResponse:
+        if uri.startswith("drawings/"):
+            # A plan image's picture (the image itself, or a rendered PDF page).
+            plan = library_file(settings.sources_dir, uri)
+            if plan is None or plan.suffix not in (".png", ".jpg"):
+                raise HTTPException(status_code=404, detail="That plan picture is not here.")
+            media = "image/png" if plan.suffix == ".png" else "image/jpeg"
+            return FileResponse(plan, media_type=media, headers={"Cache-Control": "no-cache"})
         try:
             path = resolve_source_file(settings.sources_dir, uri)
         except PhotoError as exc:

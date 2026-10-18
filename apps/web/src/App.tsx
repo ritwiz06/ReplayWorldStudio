@@ -23,7 +23,7 @@ import { TopBar } from "./components/TopBar";
 import { FixtureBanner, ModelNotice, PlanOverlay, ViewToolbar, WalkHud } from "./components/ViewControls";
 import { compareWithDrawing } from "./drawing/compare";
 import { type ReviewCorrection, reviewItems } from "./drawing/review";
-import { drawingSource, toWorld } from "./drawing/world";
+import { drawingSource, isPlanImage, toWorld } from "./drawing/world";
 import type { Axis, CommandRequest, EditCommand } from "./editing/commands";
 import type { Outcome } from "./editing/history";
 import { copyId, copyName, instanceId, instanceName } from "./editing/newObjects";
@@ -97,6 +97,21 @@ const TOOL_FIRST: Record<Exclude<EditTool, "select">, string> = {
   rotate: "Rotate: click an object in the view or the list first, then drag the ring",
   resize: "Resize: click an object in the view or the list first, then drag a face handle",
 };
+
+/** A plan picture laid on the 3D floor (IMP-03): its URL and its corners in world metres. */
+function pictureOf(project: Project | null): { url: string; corners: { x: number; z: number }[] } | null {
+  const source = project ? drawingSource(project) : null;
+  const raster = source && isPlanImage(source.drawing) ? source.drawing.raster : null;
+  if (!source || !raster) return null;
+  const t = source.source_to_world;
+  const corners = [
+    { x: 0, y: 0 },
+    { x: raster.width_px, y: 0 },
+    { x: raster.width_px, y: raster.height_px },
+    { x: 0, y: raster.height_px },
+  ].map((p) => toWorld(t, p));
+  return { url: client.sourceFileUrl(raster.uri), corners };
+}
 
 /** The source drawing's lines as floor-level segments in world metres, for the 3D underlay. */
 function underlayOf(project: Project | null): Float32Array | null {
@@ -173,6 +188,7 @@ export function App() {
 
   const sourceDrawing = project ? drawingSource(project) : null;
   const underlay = useMemo(() => underlayOf(sourceDrawing ? project : null), [sourceDrawing]); // eslint-disable-line react-hooks/exhaustive-deps
+  const picture = useMemo(() => pictureOf(sourceDrawing ? project : null), [sourceDrawing]); // eslint-disable-line react-hooks/exhaustive-deps
   const reviewOpen = sourceDrawing !== null && reviewItems(sourceDrawing).some((item) => !item.done);
   const journeyStage = useMemo(() => {
     if (!project || !sourceDrawing || reviewOpen) return "upload" as const;
@@ -336,7 +352,7 @@ export function App() {
         select(null);
       } else if (id && outcome.state.project.scene.objects.some((o) => o.id === id)) {
         setReviewFocus(null);
-        if (correction.kind === "object") select(id);
+        if (correction.kind === "object" || correction.kind === "trace") select(id);
       }
       return null;
     },
@@ -468,11 +484,14 @@ export function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [activePlacement, dragging, editable, issue, mode, overlayOpen, prompt, remove, save, select, selected, startDuplicate, step]);
 
+  // On the simple screen the drawing panel is a column of its own beside the 3D view, so it
+  // never covers the scene; with Details on it floats over the view as before.
+  const docked = !details && project !== null && sourceDrawing !== null && mode !== "walk" && drawingPanel.open;
   const help = MODES.find((m) => m.id === mode)!.help;
   const hint = mode !== "walk" && tool !== "select" ? (selected ? TOOL_HELP[tool](snapOn) : TOOL_FIRST[tool]) : help;
 
   return (
-    <div className={`app${details ? "" : " simple"}`}>
+    <div className={`app${details ? "" : " simple"}${docked ? " docked" : ""}`}>
       <TopBar
         scene={scene}
         fixtureName={source?.kind === "fixture" || scene.status !== "loaded" ? session.fixtureName : null}
@@ -571,6 +590,7 @@ export function App() {
             onDragChange={setDragging}
             onHandleProbe={onHandleProbe}
             underlay={underlayShown ? underlay : null}
+            picture={underlayShown ? picture : null}
             checks={highlights}
           />
         )}
@@ -609,7 +629,7 @@ export function App() {
         )}
         {project && mode === "top" && <PlanOverlay pixelsPerMetre={pixelsPerMetre} />}
         {project && mode === "walk" && <WalkHud onReset={() => issue("reset-walk")} onExit={() => setMode("orbit")} />}
-        {project && sourceDrawing && mode !== "walk" && (
+        {project && sourceDrawing && mode !== "walk" && !docked && (
           <SourceDrawing
             project={project}
             selectedId={selected?.id ?? null}
@@ -649,6 +669,29 @@ export function App() {
           </p>
         )}
       </main>
+      {docked && project && (
+        <aside className="panel panel-right panel-drawing" aria-label="Drawing panel">
+          <SourceDrawing
+            project={project}
+            selectedId={selected?.id ?? null}
+            view={drawingPanel.view}
+            open={drawingPanel.open}
+            underlay={underlayShown}
+            onView={(view) => setDrawingPanel({ open: true, view })}
+            onOpen={(open) => setDrawingPanel((p) => ({ ...p, open }))}
+            onUnderlay={setUnderlayShown}
+            onSelect={select}
+            onWalk={() => setMode("walk")}
+            missingFiles={source?.kind === "file" ? source.report.missing_source_files : []}
+            focus={selected ? null : focusedDrawn}
+            onReview={applyReview}
+            onDrawn={pickDrawn}
+            checks={checks}
+            routeAsk={routeAsk}
+            onRouteAsk={setRouteAsk}
+          />
+        </aside>
+      )}
       {details && (
       <aside className="panel panel-right">
         <Inspector
@@ -741,6 +784,16 @@ export function App() {
             setReviewFocus(null);
             session.loadCreated(created, filename, "drawing");
           }}
+          onAttach={
+            project && sourceDrawing
+              ? (attached) => {
+                  const outcome = run({ baseRevision: project.scene.revision, command: { type: "attach_source", source: attached } });
+                  if (outcome && !outcome.ok) setRejection(outcome.rejection.message);
+                  setDrawingImport(false);
+                  setDrawingPanel({ open: true, view: "drawing" });
+                }
+              : undefined
+          }
         />
       )}
       {improve && project && !prompt && project.scene.objects.some((o) => o.id === improve && project.catalog.some((a) => a.id === o.asset_id && a.generation)) && (

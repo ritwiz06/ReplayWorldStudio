@@ -18,6 +18,7 @@ import {
   type ObjectRemoved,
   type Project,
   type SceneObject,
+  type SourceAttached,
   type SourceDocument,
   type Transform,
 } from "@replay-world/contracts";
@@ -47,7 +48,10 @@ export type EditCommand =
   /** A correction made while reviewing a draft from a drawing (IMP-02): the floor, the scale,
    * an object's name or kind, or "not an object". It may change many objects and the drawing
    * source's review in one step. */
-  | ReviewCommand;
+  | ReviewCommand
+  /** Keep a later plan or drawing with the world (IMP-03): stored and listed with it, not
+   * aligned or merged (ENR-01); no object changes. */
+  | { type: "attach_source"; source: SourceDocument };
 
 /** One object to switch to a revised asset; axes not listed keep the object's own value. */
 export interface RevisedObjectRequest {
@@ -70,7 +74,7 @@ export interface Rejection {
   field?: string;
 }
 
-export type EditRecord = ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed;
+export type EditRecord = ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed | SourceAttached;
 type DraftOf<T> = T extends unknown ? Omit<T, "revision"> : never;
 export type EditRecordDraft = DraftOf<EditRecord>;
 
@@ -95,10 +99,11 @@ export interface CatalogPatch {
 }
 
 /** A project source before and after a change (a drawing's review and transform). */
+/** A source changed (`before` and `after`), added (`before` null) or taken out (`after` null). */
 export interface SourcePatch {
   index: number;
-  before: SourceDocument;
-  after: SourceDocument;
+  before: SourceDocument | null;
+  after: SourceDocument | null;
 }
 
 /** A reversible change produced by one accepted command. */
@@ -178,7 +183,7 @@ export function usedObjectIds(project: Project): Set<string> {
   for (const record of project.scene.edit_log) {
     if (record.type === "object_removed") ids.add(record.object.id);
     else if (record.type === "asset_revised" || record.type === "drawing_reviewed") for (const o of record.objects) ids.add(o.object_id);
-    else ids.add(record.object_id);
+    else if (record.type !== "source_attached") ids.add(record.object_id);
     if (record.type === "object_added" && record.duplicate_of) ids.add(record.duplicate_of);
   }
   return ids;
@@ -405,6 +410,23 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
     case "review_drawing":
       return prepareReview(project, command);
 
+    case "attach_source": {
+      const source = command.source;
+      if (project.sources.some((s) => s.id === source.id || (s.sha256 !== null && s.sha256 === source.sha256))) {
+        return reject("no_change", `${source.filename ?? "This file"} is already kept with this world.`);
+      }
+      return {
+        ok: true,
+        change: {
+          label: `Keep ${source.filename ?? "the file"} with this world`,
+          objectId: "",
+          patches: [],
+          sourcePatch: { index: project.sources.length, before: null, after: source },
+          record: { type: "source_attached", source_id: source.id, filename: source.filename ?? source.id },
+        },
+      };
+    }
+
     case "remove_object": {
       const index = indexOf(command.objectId);
       const before = objects[index];
@@ -461,12 +483,16 @@ function patchesApply(objects: readonly SceneObject[], patches: readonly ObjectP
 }
 
 function sourcePatchApplies(project: Project, patch: SourcePatch | undefined): boolean {
-  return !patch || project.sources[patch.index] === patch.before;
+  if (!patch) return true;
+  return patch.before === null ? patch.index === project.sources.length : project.sources[patch.index] === patch.before;
 }
 
 function patchSources(sources: readonly SourceDocument[], patch: SourcePatch | undefined): SourceDocument[] {
   const next = [...sources];
-  if (patch) next[patch.index] = patch.after;
+  if (!patch) return next;
+  if (patch.after === null) next.splice(patch.index, 1);
+  else if (patch.before === null) next.splice(patch.index, 0, patch.after);
+  else next[patch.index] = patch.after;
   return next;
 }
 

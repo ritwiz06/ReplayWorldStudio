@@ -29,6 +29,8 @@ from .assist import (
     ModelRevisionProposalResult,
     ObjectProposalRequest,
     ObjectProposalResult,
+    PlanProposalResult,
+    PlanUpload,
     StoredPhoto,
 )
 from .models import (
@@ -64,6 +66,8 @@ ROOT_MODELS: Final[tuple[type[BaseModel], ...]] = (
     ModelRevisionProposalRequest,
     ModelRevisionProposalResult,
     DrawingAnalysis,
+    PlanUpload,
+    PlanProposalResult,
 )
 BUNDLE_ID: Final = f"urn:replay-world:contracts:{SCHEMA_VERSION}"
 

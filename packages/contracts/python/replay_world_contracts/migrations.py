@@ -389,6 +389,33 @@ def _from_0_10_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     return upgraded, [note]
 
 
+def _from_0_11_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    upgraded = copy.deepcopy(dict(old))
+    readings = outlines = 0
+    for source in upgraded["sources"]:
+        drawing = source.get("drawing")
+        if drawing is None:
+            continue
+        if "raster" in drawing:
+            raise MigrationError("malformed 0.11.0 document: plan rasters only exist from 0.12.0")
+        drawing["raster"] = None
+        readings += 1
+        for drawn in drawing.get("objects", []):
+            drawn["tolerance"] = None
+            outlines += 1
+        reference = (drawing.get("review") or {}).get("scale", {}).get("reference")
+        if reference is not None:
+            reference["tolerance"] = None
+    upgraded["schema_version"] = "0.12.0"
+    note = (
+        f"schema_version 0.11.0 -> 0.12.0 (adds 'raster: null' to {readings} drawing "
+        f"reading{'' if readings == 1 else 's'} and 'tolerance: null' to {outlines} drawn "
+        f"outline{'' if outlines == 1 else 's'}: DXF geometry is exact as drawn; no values or "
+        "evidence changed)"
+    )
+    return upgraded, [note]
+
+
 _STEPS: Final[dict[str, Step]] = {
     "0.1.0": _from_0_1_0,
     "0.2.0": _from_0_2_0,
@@ -400,5 +427,6 @@ _STEPS: Final[dict[str, Step]] = {
     "0.8.0": _from_0_8_0,
     "0.9.0": _from_0_9_0,
     "0.10.0": _from_0_10_0,
+    "0.11.0": _from_0_11_0,
 }
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)
