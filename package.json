@@ -9,6 +9,7 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "start": "node scripts/start.mjs",
     "dev:api": "uv run python -m replay_world_api --reload",
     "dev:web": "pnpm --filter @replay-world/web dev",
     "contracts:generate": "node scripts/contracts.mjs",

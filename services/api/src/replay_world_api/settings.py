@@ -83,7 +83,7 @@ class Settings:
     data_dir: Path = _REPO_ROOT / "data" / "public"
     #: The built web app to serve on the same origin (``apps/web/dist``), if any.
     web_dir: Path | None = None
-    #: Behind a proxy that appends the client to X-Forwarded-For (Railway): use its last entry.
+    #: Behind a proxy that appends the client to X-Forwarded-For (a host): use its last entry.
     trust_proxy: bool = False
     limits: PublicLimits = field(default_factory=PublicLimits)
     fixtures_dir: Path = _REPO_ROOT / "fixtures"
@@ -104,7 +104,7 @@ class Settings:
         if "*" in origins:
             raise ValueError("RWS_CORS_ORIGINS must list explicit origins; '*' is not allowed")
         public = env.get("RWS_PUBLIC", "").strip().lower() in ("1", "true", "yes")
-        # Railway (and most hosts) say which port to listen on in PORT.
+        # Hosting platforms say which port to listen on in PORT.
         port = _integer(env, "RWS_API_PORT", _integer(env, "PORT", defaults.port))
         fixtures = env.get("RWS_FIXTURES_DIR", "").strip()
         catalog = env.get("RWS_CATALOG_DIR", "").strip()

@@ -2,27 +2,31 @@
 
 Turn a floor plan into a 3D layout you can walk through, change and check. Upload a plan, move a machine, and see whether the layout still fits. Factory production areas are the first example; the world contracts stay generic.
 
-> **Status: early preview (v0.1).** It works on synthetic examples and supported files; it has not been tried on real plans yet. It does **not** convert every drawing into an accurate 3D model automatically, simulate production or physics, or certify anything about a real site.
+> **Status: v0.1, for running on your own computer.** It works on synthetic examples and supported files; it has not been tried on real plans yet. It does **not** convert every drawing into an accurate 3D model automatically, simulate production or physics, or certify anything about a real site.
 
-## Try it
+## Run it on your computer
 
-The public preview opens on a **synthetic sample factory hall**. Move *Machine B* into the aisle (drag it, or press **move it for me**) and watch **Check layout** say whether a 1.20 m cart can still get along the aisle. The before/after table compares the drawing with your layout. Then upload your own plan.
+After [Setup](#setup), one command builds the app and serves it on your computer only:
+
+```bash
+pnpm start                      # then open http://127.0.0.1:8000
+RWS_API_PORT=8001 pnpm start    # if port 8000 is taken (for example by an older API you left running)
+pnpm start --no-build           # reuse the last build
+```
+
+It listens on `127.0.0.1` only, so other machines cannot reach it. Your uploads stay in `data/sources/` (git-ignored) until you delete them. The API reads your `.env` as in development: with a Voyager key there, the optional AI features (drafting objects and plan pictures) are on, and only you use them.
+
+Start with **Try the sample**. Move *Machine B* into the aisle (drag it, or press **move it for me**) and watch **Check layout** say whether a 1.20 m cart can still get along the aisle; the before/after table compares the drawing with your layout. Then upload your own plan.
 
 What you can do:
 
 | | |
 | --- | --- |
-| **Upload a plan** | **DXF** (ASCII, up to 10 MB): read into a draft that you review (floor, scale, each object). **PDF, PNG or JPEG** (up to 10 MB): shown as a picture. You mark one length you know, then trace the floor and each object yourself. A DWG must be exported as DXF first. |
+| **Upload a plan** | **DXF** (ASCII, up to 10 MB): read into a draft that you review (floor, scale, each object). **PDF, PNG or JPEG** (up to 10 MB): shown as a picture. You mark one length you know, then trace the floor and objects (or let the AI draft them if your key is set). A DWG must be exported as DXF first. |
 | **Walk and change it** | Orbit, plan and walk views. Move, turn, resize, add, duplicate and remove, with undo and redo. Heights are *assumed for display* unless you enter them. |
 | **Compare** | The drawing's own arrangement beside your edited one, with every change listed. |
-| **Check layout** | Footprint overlaps, objects in keep-clear zones, and whether an item of a width you enter can get from A to B. These are 2D checks of the **reviewed design**: **width only; turning is not evaluated**, heights are not checked, and outlines on a PDF or picture count only as precisely as you traced them. The three answers are *fits in the reviewed design*, *conflict or blockage found* and *cannot determine yet*. |
-| **Save** | **Save project** downloads the project as a file that stays yours. Reopen it any time with **Open project**. |
-
-**Your files in the public preview.** Uploads go to the preview's server, into a folder only your browser can reach (a private cookie, no account). Other visitors cannot read them, even knowing a file's name or hash. They are deleted 24 hours after upload, and you can delete them sooner from **Early preview · about & privacy**. The preview runs without volume backups. A downloaded project still opens after its plan has been deleted; upload the plan again if you need it. Upload only plans you are allowed to share with a test service.
-
-**AI is off in the public preview.** Development builds can use ASU Voyager to draft objects and plans; the public build never reads a key and offers no AI buttons (ADR-054).
-
-**Feedback:** [GitHub Issues](https://github.com/ritwiz06/ReplayWorldStudio/issues/new). Issues are public, so please do not post private drawings or details of a real site.
+| **Check layout** | Footprint overlaps, objects in keep-clear zones, and whether an item of a width you enter can get from A to B. These are 2D checks of the **reviewed design**: **width only; turning is not evaluated**, heights are not checked, and outlines on a PDF or picture count only as precisely as you traced them. |
+| **Save** | **Save project** downloads the project as a file. Reopen it with **Open project**. |
 
 ## What exists today
 
@@ -188,16 +192,11 @@ API docs (OpenAPI) are served at <http://127.0.0.1:8000/docs> while the API runs
 | `uv run python scripts/evaluate_model_revisions.py [CASES] [--record]` | **Live** evaluation of proposed model changes against ASU Voyager (needs `VOYAGER_API_KEY`), on the cases in `scripts/model_revision_cases.json` by default. Writes `docs/assist-evaluation/gen-02.*.json`; `--record` refreshes `fixtures/assist/recorded/revision-*.json` |
 | `uv run python scripts/evaluate_gen03.py [--retry-errors] [--build-targets]` | **Live** GEN-03 held-out evaluation against ASU Voyager (needs `VOYAGER_API_KEY`): descriptions, edits and model revisions for two text models through the API endpoints, one request at a time. Writes `docs/assist-evaluation/gen-03/results/`; an interrupted run resumes and keeps recorded errors unless `--retry-errors`. Scoring and the blind review: [docs/assist-evaluation/gen-03/README.md](docs/assist-evaluation/gen-03/README.md) |
 
-| `pnpm --filter @replay-world/web test:e2e:public` | The public preview's journeys on the **production build** (built with the preview's settings, served by the API in public mode as one origin): the sample's move-and-check, no AI with a key present, DXF and plan picture saved and reopened by another visitor, cross-visitor isolation, the API unreachable. With `PUBLIC_URL=...` the same journeys run against a running container or the staging site |
+| `pnpm --filter @replay-world/web test:e2e:public` | The container mode's journeys on the **production build** (built with the preview's settings, served by the API in public mode as one origin): the sample's move-and-check, no AI with a key present, DXF and plan picture saved and reopened by another visitor, cross-visitor isolation, the API unreachable. With `PUBLIC_URL=...` the same journeys run against a running container or the staging site |
 
-## Public preview container (ADR-054)
+## Optional: the container
 
-```bash
-docker build -t replay-world-studio .
-docker run -p 8000:8000 -v rws-data:/data replay-world-studio   # http://127.0.0.1:8000
-```
-
-One container serves the built web app and the API on one origin, with `RWS_PUBLIC=1`: AI is off, each visitor's files are isolated, and files are deleted after 24 hours. Railway setup, limits and costs: [docs/public-preview.md](docs/public-preview.md).
+`docker build -t replay-world-studio .` then `docker run -p 127.0.0.1:8000:8000 -v rws-data:/data replay-world-studio` runs the same app in a container, in the stricter mode built for a hosted preview (`RWS_PUBLIC=1`, ADR-054): AI off, files deleted after 24 hours. Hosting is not planned (ADR-055); `pnpm start` is the way to run it.
 
 After changing a model in `packages/contracts/python/replay_world_contracts/models.py`, run `pnpm contracts:generate` and commit the regenerated files. After changing equipment geometry, run `pnpm assets:build` and then `pnpm fixtures:build`.
 

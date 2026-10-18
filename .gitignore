@@ -2,6 +2,7 @@
 node_modules/
 dist/
 dist-public/
+dist-local/
 build/
 *.tsbuildinfo
 .venv/

@@ -1,4 +1,6 @@
-# Public preview v0.1 (ADR-054)
+# Public preview mode (ADR-054): built, not deployed
+
+> **Not hosted (2026-10-18, ADR-055).** The user runs the app on their own computer with `pnpm start` (README). The container and the `RWS_PUBLIC=1` mode below stay in the repository, tested in CI, in case hosting is wanted later; the Railway configuration was removed.
 
 The first public version: an **early preview** that opens on a synthetic sample, lets anyone upload a supported plan, and checks a layout without AI. This page is the deployment and privacy record.
 

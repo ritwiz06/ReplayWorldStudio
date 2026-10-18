@@ -10,6 +10,7 @@ export default defineConfig(
     ignores: [
       "**/dist/**",
       "**/dist-public/**",
+      "**/dist-local/**",
       "**/node_modules/**",
       "**/test-results/**",
       "bench-results/**",

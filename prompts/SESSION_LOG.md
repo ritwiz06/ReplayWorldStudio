@@ -988,6 +988,22 @@ Append entries in chronological order. If a live repository session log already 
 - **Effort:** about 38 min active, including one CI run (19:10–19:48 UTC, 12:10–12:48 MST).
 - **Next concrete task:** create the Railway service, run `PUBLIC_URL=… test:e2e:public` against it, run the newcomer trial.
 
+### 2026-10-18 - v0.1 runs locally with `pnpm start`; no hosting (ADR-055)
+
+- Starting branch and relevant commit: `main` at `60d09ce`.
+- Goal: the user does not want Railway ("public means runnable for me only"). Give a one-command way to run the finished app on their computer, reachable only from it.
+- Work completed:
+  - `scripts/start.mjs` and the root `pnpm start` script: builds the web app into `apps/web/dist-local` (same-origin API) and serves it from the API on `127.0.0.1:8000`.
+    - `--no-build` reuses the build; `RWS_API_PORT` changes the port.
+    - It stops with a clear message if the port is taken.
+  - `railway.json` removed. README "Run it on your computer" replaces "Try it" and the container section. docs/public-preview.md is marked "built, not deployed". ADR-055.
+- Commands run and outcomes:
+  - `RWS_API_PORT=8001 pnpm start`: health reports schema 0.12.0; the page and the sample load; AI live through the user's `.env`.
+  - Listening on 127.0.0.1 only; the LAN address is refused.
+  - Browser check: the sample loaded, Machine B moved, route "conflict".
+- Known limitations: port 8000 was held by an older API from 2026-10-15 (left running; not stopped by us).
+- Next concrete task: use v0.1 locally and record what gets in the way.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

@@ -895,6 +895,7 @@ Supported model: rigid bodies with stated mass, friction and restitution at a fi
 - Done when: A fresh environment reproduces the flagship workflow and can read the exported evidence.
 - Evidence: not recorded by this package
 - Note (2026-10-18, ADR-054): **public preview v0.1 release candidate built; not published.** It is a single Railway container that opens on the synthetic sample. Visitors are isolated, files are deleted after 24 h, and AI is off. Docs: docs/public-preview.md. Still to do: the staging URL (your Railway account), a short newcomer trial, a licence decision, and the public-AI authorization question (for the user to ask). REL-01 itself (an exported, reproducible demo) stays open.
+- Note (2026-10-18, ADR-055): **not hosted.** The user runs v0.1 on their own computer with `pnpm start` (loopback only, their `.env`). The Railway steps, staging URL and public-AI question are dropped; the container stays optional.
 
 ## Later
 

@@ -1059,3 +1059,16 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - A downloaded project reopens after its plan expired, with the original reported missing.
   - Public AI needs an independently authorized provider. The question to ask is recorded in docs/public-preview.md.
 - **Revisit when:** the newcomer trial reports blockers; traffic needs more than one replica; a provider is authorized; accounts or shared links (TEAM-01, SHR-01) are built.
+
+### ADR-055 - v0.1 runs on the user's own computer; no hosting
+
+- Date: 2026-10-18 (America/Phoenix). Status: adopted. Supersedes ADR-054's hosting decision; ADR-054's public mode stays in the code, unused.
+- **Context.** The user does not want the app on Railway or any host: "public" means a finished version they can run themselves.
+- **Decision.**
+  1. **`pnpm start`** builds the web app and serves it from the API on `http://127.0.0.1:8000`.
+     - The API listens on loopback only.
+     - `--no-build` reuses the last build; `RWS_API_PORT` picks another port.
+     - It refuses to start, with a clear message, when the port is taken.
+  2. **Normal local mode.** Files stay in `data/sources/`, and the API reads `.env`, so a Voyager key enables the AI features for the user's own use, as in development.
+  3. **Not used for local running:** the 24-hour deletion, visitor cookies and AI-off mode of ADR-054. The `RWS_PUBLIC=1` container stays available and tested; `railway.json` is removed.
+- **Consequences.** No hosting costs, privacy policy or backup question. The authorization question about public AI no longer applies, since only the user uses their key.
