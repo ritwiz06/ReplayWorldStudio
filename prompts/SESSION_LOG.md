@@ -984,7 +984,8 @@ Append entries in chronological order. If a live repository session log already 
   - the newcomer trial;
   - a licence;
   - asking about public AI.
-- **Effort:** about 30 min active so far (19:10–19:40 UTC, 12:10–12:40 MST); final time below after CI.
+- **CI:** CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39159977862 green on all three jobs, including the new public-preview container job (`3f3bda0`).
+- **Effort:** about 38 min active, including one CI run (19:10–19:48 UTC, 12:10–12:48 MST).
 - **Next concrete task:** create the Railway service, run `PUBLIC_URL=… test:e2e:public` against it, run the newcomer trial.
 
 ## Copy this template for a coding session
