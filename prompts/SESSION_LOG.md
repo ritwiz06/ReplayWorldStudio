@@ -925,6 +925,7 @@ Append entries in chronological order. If a live repository session log already 
   - `pnpm check`: exit 0 (pytest 828; Vitest 215 + contracts 10).
   - Full Playwright suite: 55 passed, 24 skipped. One `improve.spec.ts` failure in an earlier full run passed on rerun (not reproduced).
   - `e2e/plan-import.spec.ts`: 3 passed.
+  - CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39154370360 green on both jobs (`8333eda`).
 - **Timings (scripted, model replayed, three runs each):**
   - plan on screen: 96–128 ms (PDF page), 34–43 ms (PNG);
   - checked draft ready: 0.43–0.81 s (one 5.1 s);
@@ -937,7 +938,7 @@ Append entries in chronological order. If a live repository session log already 
   - no zoom when marking the known length in the dialog;
   - no alignment of a kept plan (ENR-01);
   - two synthetic plans only: no accuracy claim for real drawings.
-- **Effort:** about 1 h 35 min active, CI not included: 20:12–20:19 UTC on 2026-10-17 (13:12–13:19 MST, reading), then 17:14–18:40 UTC on 2026-10-18 (10:14–11:40 MST). The 21-hour gap between them was idle.
+- **Effort:** about 1 h 28 min active, including one CI run: 20:12–20:19 UTC on 2026-10-17 (13:12–13:19 MST, reading), then 17:14–18:35 UTC on 2026-10-18 (10:14–11:35 MST). The 21-hour gap between them was idle.
 - **Milestone status:** M4: ONB-01, IMP-01, UX-01 and IMP-03 done; IMP-02 and AGT-01 open (AGT-01 now has a bounded, cancellable model step).
 - **Next concrete task:** on the user's priority: ENR-01, the rest of IMP-02, or SIM-01.
 
