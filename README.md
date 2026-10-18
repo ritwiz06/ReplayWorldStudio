@@ -1,22 +1,39 @@
 # Replay World Studio
 
-An AI-assisted platform for turning drawings, photos, videos and specifications into realistic, editable worlds you can walk through, change and simulate. **Factory production-area planning is the first application**; the world contracts are kept generic so later applications can reuse them.
+Turn a floor plan into a 3D layout you can walk through, change and check. Upload a plan, move a machine, and see whether the layout still fits. Factory production areas are the first example; the world contracts stay generic.
 
-> **Status: M1 and M2 (guided creation) complete; M3 (image to editable world) in progress with IMG-01.** `qwen3-235b-a22b-instruct-2507` stays the default text model ([GEN-03 report](docs/assist-evaluation/gen-03/report.md)). Since GEN-04, a model change that mixes drawable and undrawable requests draws what it can and lists the rest before you apply it. A fresh 20-case test passed every revision gate except two: the visual review mean (1.15, gate 1.2) and timeouts (2/20, both while the test computer was asleep). When you improve a model, glass and clear plastic are drawn with readable edges. A small part you asked for without a size is enlarged as a listed estimate. The dialog opens on a view that shows the change (from behind or low down when needed), with any part a warning names outlined. A fresh 26-case test passed every revision gate, so M2 is complete; the visual margin was narrow (1.24 against 1.2), and some misleading results still carry no warning ([GEN-08 report](docs/assist-evaluation/gen-08/report.md)). The app opens with a short guided start: **explore the demo**, **describe an object**, **open a project**, or **start from a photo**. You can describe a missing object in ordinary words ("a guarded conveyor about 2.2 m long with a control screen"). You get a reviewed proposal, an original provisional 3D model at the confirmed size, and a placement you can undo, save and reopen. You can also change the scene with words ("move the selected cabinet 1 metre left") after seeing the exact change, and **improve a placed generated model** afterwards, in words or by hand, as a new version for one or all of its objects. You can also turn **one photo of a room or work area** into an editable 3D world: a vision model proposes the objects, you mark a floor rectangle of known (measured or assumed) size to set the scale and say which it is, and you check every object before anything is built. Descriptions, photos and requested model changes go to **ASU Voyager** only when a key is configured and you ask for it; the **object builder**, **Mark objects myself** and changing a model by hand work without it. The detailed editor from M1 is unchanged: orbit, plan and walk views; move, rotate, resize, add, duplicate, remove; undo/redo; save and reopen. It is **not** yet a CAD importer, a general image importer (one indoor photo with a floor rectangle of known size only; no walls, several photos or outdoor scenes), a clearance checker or a simulator. Generated models are pictures at a stated size, not product models: their mass, strength, chemistry and behaviour stay unknown. Nothing in the demo, and no layout edited from it, is verified engineering data or checked for clearance or feasibility. See [What exists today](#what-exists-today).
+> **Status: early preview (v0.1).** It works on synthetic examples and supported files; it has not been tried on real plans yet. It does **not** convert every drawing into an accurate 3D model automatically, simulate production or physics, or certify anything about a real site.
+
+## Try it
+
+The public preview opens on a **synthetic sample factory hall**. Move *Machine B* into the aisle (drag it, or press **move it for me**) and watch **Check layout** say whether a 1.20 m cart can still get along the aisle. The before/after table compares the drawing with your layout. Then upload your own plan.
+
+What you can do:
+
+| | |
+| --- | --- |
+| **Upload a plan** | **DXF** (ASCII, up to 10 MB): read into a draft that you review (floor, scale, each object). **PDF, PNG or JPEG** (up to 10 MB): shown as a picture. You mark one length you know, then trace the floor and each object yourself. A DWG must be exported as DXF first. |
+| **Walk and change it** | Orbit, plan and walk views. Move, turn, resize, add, duplicate and remove, with undo and redo. Heights are *assumed for display* unless you enter them. |
+| **Compare** | The drawing's own arrangement beside your edited one, with every change listed. |
+| **Check layout** | Footprint overlaps, objects in keep-clear zones, and whether an item of a width you enter can get from A to B. These are 2D checks of the **reviewed design**: **width only; turning is not evaluated**, heights are not checked, and outlines on a PDF or picture count only as precisely as you traced them. The three answers are *fits in the reviewed design*, *conflict or blockage found* and *cannot determine yet*. |
+| **Save** | **Save project** downloads the project as a file that stays yours. Reopen it any time with **Open project**. |
+
+**Your files in the public preview.** Uploads go to the preview's server, into a folder only your browser can reach (a private cookie, no account). Other visitors cannot read them, even knowing a file's name or hash. They are deleted 24 hours after upload, and you can delete them sooner from **Early preview · about & privacy**. The preview runs without volume backups. A downloaded project still opens after its plan has been deleted; upload the plan again if you need it. Upload only plans you are allowed to share with a test service.
+
+**AI is off in the public preview.** Development builds can use ASU Voyager to draft objects and plans; the public build never reads a key and offers no AI buttons (ADR-054).
+
+**Feedback:** [GitHub Issues](https://github.com/ritwiz06/ReplayWorldStudio/issues/new). Issues are public, so please do not post private drawings or details of a real site.
 
 ## What exists today
 
-| Area | Implemented (M0) | Planned (not built) |
+| Area | Built | Not built |
 | --- | --- | --- |
-| Contracts (v0.7.0) | Versioned Project / Scene / Object / Parameter models in SI units, right-handed Y-up world, explicit source-to-world transform; per-axis evidence on every dimension; catalog assets with explicit source and license and validated references; glTF visuals with declared units, axes, origin, bounds, hash and fit rule; walkway and keep-clear markings; explicit *unknown* parameters; **a scene edit log** that keeps the transform, value and evidence each edit replaced; **generated catalog assets** with their geometry specification, description, language model and unknown properties (0.5.0); **photo sources** with the stored image's hash, the user's floor rectangle, the calibration and every observation linked to its object (0.6.0); **revised generated assets** as new versions linked to the asset they correct, a one-step `asset_revised` edit record, and whether the photo scale was measured or assumed (0.7.0); tested migrations from 0.1.0–0.6.0 | Process graph, scenarios, runs, findings (M5–M6) |
-| API | `GET /health`; `GET /api/v1/fixtures/{industrial-demo,foundation}`; `GET /api/v1/catalog/files/{path}` (confined to the catalog library); `POST /api/v1/projects/validate` (contract, edit-log, model-file and hash checks; one actionable message for older schema versions); `POST /api/v1/projects/upgrade` (runs the migration chain for review, stores nothing); `POST /api/v1/assist/image-proposals`; `POST /api/v1/assist/model-revisions` (a proposed change to a generated model; nothing is built); `POST /api/v1/catalog/generated-assets/revisions` (builds a revision as a new asset); `POST /api/v1/sources/photos` and `GET /api/v1/sources/files/photos/…` (local source photo library, hash-checked); loopback-only; CORS limited to dev origins | Project storage, import and simulation jobs |
-| Web | Industrial demo with 4 original glTF models (verified by hash and bounds before drawing, with labelled fallbacks); orbit, top (plan with scale bar and orientation) and walk cameras; PBR lighting with shadows; floor markings; inspector with evidence, asset rights, model file, fit and load state; **editing** with numeric fields and 3D handles through one command path, catalog placement, duplicate, remove, undo/redo, edit records, save as JSON, reopen, unsaved-change protection and reviewed upgrades of older files; on-demand rendering with a reproducible GPU benchmark (`pnpm bench`) | Drawing overlay, playback, instancing for very large layouts |
-| Guided creation (GEN-01) | Start panel; **describe an object** → typed proposal (name, parts, appearance, W/H/D, stated vs inferred, unknowns) → confirm estimated sizes → verified preview → place, undo, save, reopen; **object builder** with the same bounded geometry specification; generated models built by the API's own deterministic generator, stored by sha256 and rebuildable from the project file; **one language edit** (move or turn one object) shown exactly before it is applied; **Improve model (GEN-02):** correct a placed generated object (described, builder or photo) in words or by hand, saved as a new version and applied to one or all of its objects in one undo step; a request mixing drawable and undrawable features becomes a partial proposal that lists, in the user's words, what cannot be shown; nothing drawable, or already shown, changes nothing (GEN-04); added parts that cannot be seen are checked, retried once within one 150 s budget, and listed before Apply (GEN-05) | Warnings for revisions that look done but are not, and one-part actions for beginners (GEN-09) |
-| Import | **One photo to an editable world (IMG-01):** one indoor photo with a floor rectangle of known (measured or assumed) size; proposed objects reviewed one by one (accept, reject, re-box, resize, add); provisional models with evidence citing the photo; the photo kept beside the 3D view, with a view from its camera | Several objects and occlusion review, walls, several photos (IMG-02); held-out evaluation (IMG-03); DXF (IMP-01, M4), calibrated PDF/PNG reference (M4) |
-| Checks | Spatial: none. Operational: none. | Footprint/clearance/route checks (M5), discrete-event production (M6), rigid-body interactions (M7) |
-| AI | ASU Voyager (`qwen3-235b-a22b-instruct-2507`, configurable) drafts object proposals and one move/turn edit through the local API; `qwen3-vl-32b-instruct` proposes the objects in a photo (boxes and labels only; scale and geometry come from the user and from code); the text model also proposes changes to a placed generated model, checked so that nothing it cannot show is imitated. Answers are schema-checked, and stated values are checked against the user's words. Nothing is applied without review. An offline replay of recorded answers is used only by tests and is labelled as such | Full command coverage, grounded explanations and held-out evaluation (M8) |
+| Plans | DXF reading (`rws-dxf/1`), a four-question review (floor, scale with a known length, objects, omissions), plan pictures from a PDF page, PNG or JPEG, traced outlines with their precision | DWG, page cropping, PDF vectors, printed scale ratios, aligning a second plan |
+| Checks | Overlaps, keep-clear zones, floor edge, width-only routes on the reviewed design, before/after | Turning (swept paths), overhead heights, loads, throughput, physics |
+| World and editor | Evidence on every value, edit log, undo/redo, save/reopen, walk view, provisional models | Matching equipment to real models (ENR-01), shared private links (SHR-01), accounts |
+| AI (development only) | ASU Voyager drafts described objects, plan pictures and photo objects; nothing is applied unreviewed | Any AI in the public preview |
 
-Both scenes are synthetic: the industrial demo is a labelled demonstration, and the **foundation fixture** is a set of labelled placeholder boxes that prove units, coordinates and schema handling. Their values are not engineering data, and edited or saved copies keep that label.
+Older capabilities (described and hand-built objects, one-photo import, improving generated models) remain in development builds; see the sections below and [prompts/PROJECT_STATE.md](prompts/PROJECT_STATE.md).
 
 ## Prerequisites
 
@@ -171,6 +188,17 @@ API docs (OpenAPI) are served at <http://127.0.0.1:8000/docs> while the API runs
 | `uv run python scripts/evaluate_model_revisions.py [CASES] [--record]` | **Live** evaluation of proposed model changes against ASU Voyager (needs `VOYAGER_API_KEY`), on the cases in `scripts/model_revision_cases.json` by default. Writes `docs/assist-evaluation/gen-02.*.json`; `--record` refreshes `fixtures/assist/recorded/revision-*.json` |
 | `uv run python scripts/evaluate_gen03.py [--retry-errors] [--build-targets]` | **Live** GEN-03 held-out evaluation against ASU Voyager (needs `VOYAGER_API_KEY`): descriptions, edits and model revisions for two text models through the API endpoints, one request at a time. Writes `docs/assist-evaluation/gen-03/results/`; an interrupted run resumes and keeps recorded errors unless `--retry-errors`. Scoring and the blind review: [docs/assist-evaluation/gen-03/README.md](docs/assist-evaluation/gen-03/README.md) |
 
+| `pnpm --filter @replay-world/web test:e2e:public` | The public preview's journeys on the **production build** (built with the preview's settings, served by the API in public mode as one origin): the sample's move-and-check, no AI with a key present, DXF and plan picture saved and reopened by another visitor, cross-visitor isolation, the API unreachable. With `PUBLIC_URL=...` the same journeys run against a running container or the staging site |
+
+## Public preview container (ADR-054)
+
+```bash
+docker build -t replay-world-studio .
+docker run -p 8000:8000 -v rws-data:/data replay-world-studio   # http://127.0.0.1:8000
+```
+
+One container serves the built web app and the API on one origin, with `RWS_PUBLIC=1`: AI is off, each visitor's files are isolated, and files are deleted after 24 hours. Railway setup, limits and costs: [docs/public-preview.md](docs/public-preview.md).
+
 After changing a model in `packages/contracts/python/replay_world_contracts/models.py`, run `pnpm contracts:generate` and commit the regenerated files. After changing equipment geometry, run `pnpm assets:build` and then `pnpm fixtures:build`.
 
 ## Repository layout
@@ -202,7 +230,7 @@ prompts/               Project context, milestones, backlog, decisions and sessi
 
 ## Data care
 
-Keep credentials, customer drawings, model weights and run outputs out of commits (see `.gitignore`). Use synthetic or permissioned inputs in `fixtures/`. The API binds to `127.0.0.1` by default; do not expose it without a deliberate decision. Uploaded document content is data, never instructions.
+Keep credentials, customer drawings, model weights and run outputs out of commits (see `.gitignore`). Use synthetic or permissioned inputs in `fixtures/`. The API binds to `127.0.0.1` by default. Only the public-preview mode (`RWS_PUBLIC=1`, ADR-054) is meant to be exposed, with its visitor isolation, limits and AI off. Uploaded document content is data, never instructions.
 
 ## Project records
 
