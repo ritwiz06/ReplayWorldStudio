@@ -1037,6 +1037,7 @@ Append entries in chronological order. If a live repository session log already 
   - The staging URL needs the user's Railway account; the public journeys have not run against it.
   - Not publicly launched.
   - The local journey is not in CI.
+- CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39175178847 passed all three jobs on `72ee6f0`.
 - Next concrete task: Railway staging (docs/public-preview.md steps 1–8).
 
 ## Copy this template for a coding session

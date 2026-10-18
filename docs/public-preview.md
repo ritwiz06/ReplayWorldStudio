@@ -5,7 +5,7 @@ The release goal is an **online public preview**: an early preview that opens on
 | Stage | Status (2026-10-18) |
 | --- | --- |
 | Runs locally | **Yes.** `pnpm start` serves the app on `127.0.0.1` for you alone (your `.env`, AI on with your key). This is a convenience, not the release. |
-| Ready to deploy | **Yes, pending CI on the correction.** The production container (`RWS_PUBLIC=1`) and `railway.json`; the public journeys pass against the container. |
+| Ready to deploy | **Yes.** The production container (`RWS_PUBLIC=1`) and `railway.json`. CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39175178847 passed all three jobs on `72ee6f0`, including the container on a root-owned volume (uid 10001) and the public journeys against it. |
 | Staging URL | **Not created.** Needs your Railway account (steps below). |
 | Publicly launched | **No.** Only after the public journeys pass against the staging URL and we decide to publish it. |
 
