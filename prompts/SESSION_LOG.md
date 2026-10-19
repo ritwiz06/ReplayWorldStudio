@@ -1065,6 +1065,7 @@ Append entries in chronological order. If a live repository session log already 
 - Known limitations and blockers:
   - **Staging is not deployed and no URL exists.** The journeys, screens, volume and log checks against Railway are still to do.
   - Not publicly launched.
+- CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39180776215 passed all three jobs on `799c5e9`.
 - Next concrete task: the user creates the Railway service with the dashboard settings and sends the URL and deploy log line; then verify against the URL.
 
 ## Copy this template for a coding session
