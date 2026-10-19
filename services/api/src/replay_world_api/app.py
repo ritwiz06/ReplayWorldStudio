@@ -43,6 +43,8 @@ from replay_world_contracts import (
     ObjectProposalResult,
     PlanProposalResult,
     PlanUpload,
+    ProcessSuggestionRequest,
+    ProcessSuggestionResult,
     Project,
     StoredPhoto,
     UpgradeReport,
@@ -68,6 +70,7 @@ from .assist.provider import (
     vision_provider_from_settings,
 )
 from .assist.revisions import propose_revision
+from .assist.setup import suggest_setup
 from .catalog_files import CatalogFileError, check_model_files, resolve_catalog_file
 from .drawings import DrawingError, analyse_drawing, check_drawing_files, shared_drawings
 from .generated_assets import (
@@ -410,6 +413,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if failure is not None or result is None:
             _assist_failure(failure or AssistError(502, "No revision was produced."))
         return result
+
+    @app.post("/api/v1/assist/process-suggestions")
+    def process_suggestions(body: ProcessSuggestionRequest) -> ProcessSuggestionResult:
+        """Suggest station roles, order and questions for Run a day from the person's
+        description and the reviewed objects. No operating value is suggested; nothing is
+        applied or stored."""
+        try:
+            return suggest_setup(_provider(), body)
+        except (ProviderError, AssistError) as exc:
+            _assist_failure(exc)
 
     @app.post("/api/v1/assist/image-proposals")
     def image_proposals(body: ImageAnalysisRequest) -> ImageProposalResult:

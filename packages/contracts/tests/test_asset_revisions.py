@@ -296,6 +296,9 @@ def test_0_6_0_documents_gain_a_null_revision_and_an_unstated_size_basis(
         "evidence changed)",
         "schema_version 0.12.0 -> 0.13.0 (adds 'process: null': no process for Run a day was set "
         "up; no values or evidence changed)",
+        "schema_version 0.13.0 -> 0.14.0 (adds 'symbol_layers: []' to 0 drawing "
+        "reviews: no layer is treated as drawing symbols; no values or "
+        "evidence changed)",
     ]
     assert "revision" not in old["catalog"][-1]["generation"]  # input untouched
     Project.model_validate(upgrade.document)

@@ -1,0 +1,14 @@
+{
+  "task": "setup",
+  "key": "07a8616de279028c318815966e4c40ce4ea54d1c29c2af9f2d18dcb97f86dd85",
+  "case": "layout-checks",
+  "description": "Material is taken from Rack A, mixed in the Mixer, formed on Machine B and packed at the packing table.",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "setup-01",
+  "recorded_at": "2026-10-19",
+  "note": "Raw answers from the live language model for the synthetic drawing named above, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"item\": \"raw material\",\n  \"message\": \"\",\n  \"questions\": [\n    \"How long does mixing take in the Mixer?\",\n    \"How long does forming take on Machine B?\",\n    \"How long does packing take at the Packing table?\",\n    \"How many workers are assigned to each station?\"\n  ],\n  \"stations\": [\n    {\n      \"name\": \"Rack A\",\n      \"object_id\": \"obj-dxf-106\",\n      \"role\": \"supply\",\n      \"why\": \"Named as the source of material in the description and is a storage rack.\"\n    },\n    {\n      \"name\": \"Mixer\",\n      \"object_id\": \"obj-dxf-10a\",\n      \"role\": \"process\",\n      \"why\": \"Used to mix the material, as stated in the work description.\"\n    },\n    {\n      \"name\": \"Machine B\",\n      \"object_id\": \"obj-dxf-111\",\n      \"role\": \"process\",\n      \"why\": \"Processes the mixed material into shape, as described in the workflow.\"\n    },\n    {\n      \"name\": \"Packing table\",\n      \"object_id\": \"obj-dxf-113\",\n      \"role\": \"process\",\n      \"why\": \"Final step where the formed product is packed, as stated in the description.\"\n    }\n  ],\n  \"understood\": true\n}"
+  ]
+}

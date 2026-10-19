@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.13.0",
+  "$id": "urn:replay-world:contracts:0.14.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.13.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.14.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -76,6 +76,12 @@
     },
     "PlanProposalResult": {
       "$ref": "#/$defs/PlanProposalResult"
+    },
+    "ProcessSuggestionRequest": {
+      "$ref": "#/$defs/ProcessSuggestionRequest"
+    },
+    "ProcessSuggestionResult": {
+      "$ref": "#/$defs/ProcessSuggestionResult"
     }
   },
   "required": [
@@ -102,7 +108,9 @@
     "ModelRevisionProposalResult",
     "DrawingAnalysis",
     "PlanUpload",
-    "PlanProposalResult"
+    "PlanProposalResult",
+    "ProcessSuggestionRequest",
+    "ProcessSuggestionResult"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -900,7 +908,7 @@
               "type": "null"
             }
           ],
-          "description": "For an outline the person traced on a plan image (0.12.0): how far its edges may be from the true ones, in drawing units (the marking precision). Null for a DXF outline (exact as drawn) and for a proposal (unknown)."
+          "description": "For an outline the person traced (0.12.0 on a plan image; a floor traced on a DXF, 0.14.0): how far its edges may be from the true ones, in drawing units (the marking precision; 0 on the drawing's own corners). Null for an outline read from a DXF (exact as drawn) and for a proposal (unknown)."
         },
         "centre": {
           "$ref": "#/$defs/PlanPoint"
@@ -1030,13 +1038,24 @@
             "accepted"
           ],
           "type": "string"
+        },
+        "symbol_layers": {
+          "description": "Layers the person says hold drawing symbols (door swings, wall fill, notes), not things on the floor (0.14.0): their loose lines and left-out shapes are not treated as possible obstacles by the checks. Their closed outlines are reviewed like any other.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 200,
+          "type": "array"
         }
       },
       "required": [
         "floor",
         "scale",
         "objects",
-        "omissions"
+        "omissions",
+        "symbol_layers"
       ],
       "title": "DrawingReview",
       "type": "object"
@@ -2105,7 +2124,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.13.0",
+          "const": "0.14.0",
           "type": "string"
         }
       },
@@ -3912,6 +3931,128 @@
       "title": "ProcessStation",
       "type": "object"
     },
+    "ProcessSuggestion": {
+      "additionalProperties": false,
+      "description": "Station roles and order, what moves, and questions to ask the person. It has no place for\na cycle time, a staffing level or any other operating value: those are entered or accepted\nas illustrative examples by the person, never suggested as facts.",
+      "properties": {
+        "item_name": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stations": {
+          "items": {
+            "$ref": "#/$defs/SuggestedStation"
+          },
+          "maxItems": 12,
+          "minItems": 2,
+          "type": "array"
+        },
+        "questions": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 6,
+          "type": "array"
+        }
+      },
+      "required": [
+        "item_name",
+        "stations",
+        "questions"
+      ],
+      "title": "ProcessSuggestion",
+      "type": "object"
+    },
+    "ProcessSuggestionRequest": {
+      "additionalProperties": false,
+      "description": "The person's description of the work and the reviewed objects (SIM-01, \"Suggest setup\").\nObject names are content from the plan, never instructions.",
+      "properties": {
+        "description": {
+          "maxLength": 1000,
+          "minLength": 3,
+          "type": "string"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/SetupObject"
+          },
+          "maxItems": 200,
+          "minItems": 2,
+          "type": "array"
+        }
+      },
+      "required": [
+        "description",
+        "objects"
+      ],
+      "title": "ProcessSuggestionRequest",
+      "type": "object"
+    },
+    "ProcessSuggestionResult": {
+      "additionalProperties": false,
+      "description": "The API's answer to \"Suggest setup\": a suggestion for the person to review, or why\nthere is none.",
+      "properties": {
+        "outcome": {
+          "enum": [
+            "suggestion",
+            "unsupported"
+          ],
+          "type": "string"
+        },
+        "suggestion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProcessSuggestion"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checks": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "provider": {
+          "$ref": "#/$defs/ProviderRun"
+        }
+      },
+      "required": [
+        "outcome",
+        "suggestion",
+        "message",
+        "checks",
+        "provider"
+      ],
+      "title": "ProcessSuggestionResult",
+      "type": "object"
+    },
     "ProcessTransfer": {
       "additionalProperties": false,
       "description": "Items carried by a worker from one station to the next along a route that has to be\nclear for ``item_width_m`` with ``allowance_m`` on each side (the route check decides).\n``handling_s`` is spent picking the item up, and again setting it down.",
@@ -4005,7 +4146,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.13.0",
+          "const": "0.14.0",
           "type": "string"
         },
         "id": {
@@ -5052,6 +5193,51 @@
       "title": "SceneObject",
       "type": "object"
     },
+    "SetupObject": {
+      "additionalProperties": false,
+      "description": "One reviewed object offered to \"Suggest setup\": its name, kind and footprint only.",
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "structure",
+            "equipment",
+            "reference",
+            "walkway",
+            "keep_clear"
+          ],
+          "type": "string"
+        },
+        "width_m": {
+          "description": "Strictly positive length in metres.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "depth_m": {
+          "description": "Strictly positive length in metres.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "width_m",
+        "depth_m"
+      ],
+      "title": "SetupObject",
+      "type": "object"
+    },
     "Shift": {
       "additionalProperties": false,
       "description": "``start_clock_s`` is the clock time the shift starts, in seconds after midnight.",
@@ -5406,6 +5592,41 @@
       "title": "StoredPhoto",
       "type": "object"
     },
+    "SuggestedStation": {
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "supply",
+            "process"
+          ],
+          "type": "string"
+        },
+        "why": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "object_id",
+        "name",
+        "role",
+        "why"
+      ],
+      "title": "SuggestedStation",
+      "type": "object"
+    },
     "Transform": {
       "additionalProperties": false,
       "description": "World placement; ``position_m`` locates the bounding-box bottom-centre.",
@@ -5571,7 +5792,7 @@
           "type": "string"
         },
         "to_version": {
-          "const": "0.13.0",
+          "const": "0.14.0",
           "type": "string"
         },
         "notes": {
@@ -5713,7 +5934,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.13.0",
+          "const": "0.14.0",
           "type": "string"
         },
         "project_id": {

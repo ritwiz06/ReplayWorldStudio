@@ -65,6 +65,7 @@ LIVE_MODELS = {
     "revision": "qwen3-235b-a22b-instruct-2507",
     "image": "qwen3-vl-32b-instruct",
     "plan": "qwen3-vl-32b-instruct",
+    "setup": "qwen3-235b-a22b-instruct-2507",
 }
 
 

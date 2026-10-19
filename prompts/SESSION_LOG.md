@@ -1131,6 +1131,49 @@ Append entries in chronological order. If a live repository session log already 
 - CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39203602939 passed all three jobs on `4feb9d8`; both `run-day.spec.ts` tests ran in the browser job.
 - Next concrete task: use Run a day locally; M6 follow-ups when wanted.
 
+### 2026-10-18/19 - Run a day on your own plan: guided setup, real drawings (ADR-060, contract 0.14.0)
+
+- Starting branch and relevant commit: `main` at `9607eac`.
+- Goal:
+  - Make Run a day easy on a user's own reviewed plan: stations picked in order, plain words, typed pace and people, labelled illustrative assumptions accepted explicitly, route corrections, and an optional AI suggestion.
+  - Test it with downloaded third-party drawings.
+  - No second engine.
+- Work completed:
+  - **Guided setup** (`apps/web/src/run/guided.ts`, `components/GuidedSetup.tsx`) in the Run tab:
+    - stations added from the 3D view, the plan or a list, with reorder, remove and rename; ambiguous names ("Fixtures 5") must be renamed;
+    - item in plain words; pace and people;
+    - examples offered as "Example assumption — please accept or change", with Accept all;
+    - Run disabled until all are accepted and the routes fit; the route preflight names its correction;
+    - "Full form…" opens the existing form prefilled.
+  - **Basis kept:** a typed pace stays "entered" (attended the whole time is the example). The Run tab shows "you entered" against "illustrative, accepted".
+  - **Suggest setup:** `/api/v1/assist/process-suggestions`, task `setup`, prompt setup-01.
+    - Typed validation: unknown or repeated objects dropped, the first station is the supply, and no field for times or staffing.
+    - One live answer recorded for our synthetic fixture (14.8 s; text only: the fixture's object names and a sentence).
+  - **Contract 0.14.0:** `DrawingReview.symbol_layers`, with a review choice per layer; checks ignore those layers' loose lines and left-out shapes. Floors can be traced on a DXF (snapped corners are exact).
+  - **Fixes:** the stale notice moved where the floating panel cannot cover it; production wording updated in the Compare tab, the throughput answer, local-v0.1.md and drawing-import.md; the compare hint no longer names Machine B outside the sample.
+  - **Tests:**
+    - guided unit tests; setup-suggestion API tests; symbol-layer contract tests;
+    - e2e: guided setup with the recorded suggestion, a duplicate name, reorder, accept-all, run, both badges, undo and redo;
+    - the local journey checks the no-key guided path (no AI button);
+    - local-only external checks (`test:e2e:external`, their own one-worker config).
+- **External drawings** (docs/external-drawings.md; files in the git-ignored data/external/, none committed):
+  - **Hilti `floor_UG1.dxf`:** imported, 36 objects and 1,416 open lines; no floor outline; no stations.
+  - **Hilti PNG** (100 MP) **and LOC TIFF→PNG** (139 MP): refused (limit 50 MP). The 8000 px copies are shown: Hilti with no scale; LOC scaled from its printed 10 m bar (1 px = 1.419 cm), with the Machine Shop traced.
+  - **CC0 workshop DXF:** the full guided journey — 66 kits; a 1.5 m bench move blocks Workbench ↔ Kit cabinet (0 kits, explained); a 1.0 m move shortens both routes with the same output; undo, save and reopen give the same fingerprint. 42 clicks, 43 characters, scripted.
+  - **CC0 DWG:** refused with the export instruction; open project kept; no installed converter.
+- Commands run and outcomes:
+  - `pnpm check`: passed (850 pytest, 245 Vitest, 10 contracts).
+  - The external checks: 6 passed (alone).
+  - The full browser suite first ran with the external checks in parallel, and `review.spec.ts:202` timed out after its page reset. It passes alone (18 s). The cause was load from the external checks (45 MP pictures in software WebGL), so they now run in their own one-worker config.
+  - After that change: `pnpm test:e2e` 57 passed, 24 skipped (the review test included); `test:e2e:local` 1 passed; `test:e2e:public` 7 passed. One earlier chained public run reported 6 passed and 2 skipped with a non-zero exit and no failure line; its full output was not kept, so the cause is not known.
+- Known limitations:
+  - Pictures over 50 MP are refused.
+  - Floors must be traced on most CAD files.
+  - Layer names need renaming.
+  - Exact moves need Details.
+  - DWG needs an export.
+- Next concrete task: REL-01, the exportable demo.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

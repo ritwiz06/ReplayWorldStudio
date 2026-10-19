@@ -84,17 +84,21 @@ export function checkInputs(project: Project): CheckInputs | null {
     } else floor = { poly: footprint(floorObject), words: "the floor's entered size", toleranceM };
   }
 
+  // Layers the reviewer marked as drawing symbols (door swings, wall fill, notes) are not
+  // possible obstacles; everything else the drawing leaves loose or out still is.
+  const symbols = new Set(review.symbol_layers);
   const uncertain: Uncertain[] = [];
   for (const line of source.drawing.lines) {
-    if (line.closed || line.ref.block !== null) continue;
+    if (line.closed || line.ref.block !== null || symbols.has(line.ref.layer)) continue;
     uncertain.push({ label: `an open line on layer ${line.ref.layer} (${describeRef(line.ref)})`, points: line.points.map((p) => toWorld(t, p)), closed: false });
   }
   const unplaced: string[] = [];
-  const layoutSkipped = source.drawing.skipped.filter((s) => s.layout).reduce((n, s) => n + s.count, 0);
+  const layoutSkipped = source.drawing.skipped.filter((s) => s.layout && !symbols.has(s.layer)).reduce((n, s) => n + s.count, 0);
   if (source.drawing.omitted === null) {
     if (layoutSkipped > 0) unplaced.push(`${layoutSkipped} shape${layoutSkipped === 1 ? "" : "s"} not imported (read before positions were recorded: upload the drawing again)`);
   } else {
     for (const shape of source.drawing.omitted) {
+      if (symbols.has(shape.layer)) continue;
       const label = `an omitted ${shape.entity}${shape.handle ? ` ${shape.handle}` : ""} on layer ${shape.layer}`;
       if (!shape.min || !shape.max) {
         unplaced.push(label);

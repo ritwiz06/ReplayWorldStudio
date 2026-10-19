@@ -86,22 +86,32 @@ Every value below is an **example assumption** made up for this synthetic hall. 
   - The explanation is computed from the two runs: blocked or cleared routes, route length changes with the time they cost at the entered speed, and the busiest station.
   - If no route changed, the runs are identical and it says so: moving equipment alone does not change the result.
 
-## Set up a day on your own layout
+## Set up a day on your own plan (guided)
 
-On an uploaded plan, reviewed (floor and scale), the Run tab offers **Set up a day**. Every field starts empty; nothing is read from the drawing. You enter:
+On an uploaded plan, the Run tab opens **Set up a day**. The review must be finished first, with the floor traced or chosen; the Run tab says so if it is not.
 
-1. What moves through the process (for example "tray").
-2. Where material is taken from (an object, the side where it is picked, and how far out). You confirm that material is always available there.
-3. The stations, in order. For each one:
-   - the time with a worker and the time on its own;
-   - the queue in front and the finished items beside it;
-   - where the worker stands;
-   - optional planned stops, and optional unplanned stops (mean gap and length).
-4. How items are carried to each station: the width carried, the room kept clear on each side, the speed, and the pick-up and set-down time.
-5. The workers: name, walking speed, path width, and their tasks in priority order.
-6. The shift (start and length) and its breaks, and a seed.
+1. **Stations, in process order.** Click an object in the 3D view or on the plan and **Add** it, or choose one from the list.
+   - The first is where material comes from. Reorder with ↑ ↓; remove with ✕.
+   - A name that does not say which object it is (for example "Fixtures 5" among Fixtures 1–7) must be renamed; the object keeps its own name.
+2. **What moves between them**, in plain words (for example "kit"). Items are carried by hand.
+3. **Pace and people,** if you know them: the time for one item at each step, in minutes or seconds, and how many people work the process.
+4. **Example assumptions.** Everything not typed is offered as an example, shown as "Example assumption — please accept or change":
+   - the pace not typed (2 min) and the people (one per step);
+   - a worker present the whole time;
+   - queues of 2;
+   - carrying 0.6 m wide with 0.1 m clear each side, at 1.0 m/s, with 10 s to pick up and to set down;
+   - walking at 1.2 m/s through 0.8 m;
+   - where a worker stands (the first side of the object clear on the plan);
+   - the shift 06:00 for 8 h, with breaks at 09:00 (15 min) and 12:00 (30 min);
+   - who does what (each person works a station and carries into it).
 
-The list under the form says exactly what is still missing, for example "Packing table: how far from its back side the worker stands (m)". Saving is one undoable step, recorded in the edit log as `process_set`. Values entered here are marked **entered**; changing the example turns its values into entered ones.
+   Change one under **Review assumptions** and it becomes a value you entered. **Run stays off until each example is accepted**; one button accepts all of those shown.
+5. **Routes.** The setup checks every route the shift needs on the layout, and says how to correct one that is blocked or cannot be determined: choose another side, move an object, or mark door and hatch layers as drawing symbols in the review. Nothing is assumed to pass.
+6. **Save and run the day:** one undoable step (`process_set`). The Run tab then counts the values you entered and the illustrative assumptions you accepted, and marks each in **What this run assumes**.
+
+**Suggest setup (optional).** With a Voyager key, describe the work in a sentence and the language model suggests stations, their order and questions to answer, from the reviewed objects' names. It never sets times or staffing (its answer has no place for them). Nothing is applied until you press **Use these stations**, and you review them. Without a key, everything above works by hand. **Full form…** opens every field at once.
+
+Real drawings and what they need first (a traced floor, symbol layers, renamed stations) are recorded in [external-drawings.md](external-drawings.md).
 
 ## Saved with the project
 

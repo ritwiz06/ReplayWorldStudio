@@ -98,7 +98,7 @@ test("run a day: play the example shift, edit the layout, run again, compare, sa
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("save").click()]);
   const text = readFileSync((await download.path())!, "utf8");
   const saved = JSON.parse(text) as { schema_version: string; process: { name: string; seed: number } | null };
-  expect(saved.schema_version).toBe("0.13.0");
+  expect(saved.schema_version).toBe("0.14.0");
   expect(saved.process).toMatchObject({ name: "Example shift: mixing, forming and packing", seed: 1 });
   await page.goto("/");
   await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 15 objects");
@@ -109,7 +109,7 @@ test("run a day: play the example shift, edit the layout, run again, compare, sa
   await expect(panel).toHaveAttribute("data-fingerprint", blockedFingerprint!);
 });
 
-test("set up a day on an uploaded plan: nothing is filled in, and what is missing is named", { tag: "@smoke" }, async ({ page }) => {
+test("guided set up a day on an uploaded plan: suggested stations reviewed, one typed pace, examples accepted, undo", { tag: "@smoke" }, async ({ page }) => {
   test.setTimeout(process.env.CI ? 180_000 : 90_000);
   await page.goto("/");
   await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 15 objects");
@@ -124,52 +124,56 @@ test("set up a day on an uploaded plan: nothing is filled in, and what is missin
   await review.getByTestId("review-omissions-accept").click();
 
   await page.getByTestId("journey-run").click();
-  await expect(page.getByTestId("run-panel")).toContainText("This layout has no process yet");
-  await page.getByTestId("run-setup").click();
-  const setup = page.getByTestId("setup-day");
-  await expect(setup.getByTestId("setup-needs")).toContainText("What moves through the process");
-  await expect(setup.getByTestId("setup-save")).toBeDisabled();
-  // Every field starts empty: nothing is read from the drawing.
-  await expect(setup.getByTestId("setup-item")).toHaveValue("");
+  const guided = page.getByTestId("guided-setup");
+  await expect(guided.getByTestId("guided-needs")).toContainText("Choose the stations in process order");
+  await expect(guided.getByTestId("guided-run")).toBeDisabled();
 
-  await setup.getByTestId("setup-item").fill("tray");
-  await setup.getByTestId("setup-supply").selectOption({ label: "Rack A" });
-  await setup.getByTestId("setup-supply-side").selectOption("front");
-  await setup.getByTestId("setup-supply-clearance").fill("1.0");
-  await setup.getByTestId("setup-supply-confirm").check();
-  await setup.getByTestId("setup-add-station").click();
-  await setup.getByTestId("setup-station-0-object").selectOption({ label: "Packing table" });
-  await setup.getByTestId("setup-station-0-worker").fill("90");
-  await setup.getByTestId("setup-station-0-machine").fill("0");
-  await setup.getByTestId("setup-station-0-in").fill("2");
-  await setup.getByTestId("setup-station-0-side").selectOption("back");
-  await expect(setup.getByTestId("setup-needs")).toContainText("Packing table: how far from its back side the worker stands (m)");
-  await setup.getByTestId("setup-station-0-clearance").fill("0.5");
-  for (const [field, value] of [["width", "0.6"], ["allowance", "0.1"], ["speed", "1"], ["handling", "5"]] as const) await setup.getByTestId(`setup-carry-0-${field}`).fill(value);
-  await expect(setup.getByTestId("setup-needs")).toContainText("At least one worker");
-  await setup.getByTestId("setup-add-worker").click();
-  await setup.getByTestId("setup-worker-0-name").fill("Packer");
-  await setup.getByTestId("setup-worker-0-speed").fill("1.2");
-  await setup.getByTestId("setup-worker-0-width").fill("0.8");
-  await setup.getByTestId("setup-worker-0-transfer-0").check();
-  await setup.getByTestId("setup-worker-0-station-0").check();
-  await expect(setup.getByTestId("setup-needs")).toContainText("When the shift starts (hh:mm)");
-  await setup.getByTestId("setup-shift-start").fill("07:00");
-  await setup.getByTestId("setup-shift-hours").fill("4");
-  await expect(setup.getByTestId("setup-ready")).toBeVisible();
-  await setup.getByTestId("setup-save").click();
-  await expect(setup).toBeHidden();
-  await expect(page.getByTestId("save-state")).toHaveText("Unsaved changes");
+  // Suggest setup (a recorded live answer): stations and order only, reviewed before use.
+  await guided.getByTestId("guided-suggest").locator("summary").click();
+  await guided.getByTestId("guided-suggest-text").fill("Material is taken from Rack A, mixed in the Mixer, formed on Machine B and packed at the packing table.");
+  await guided.getByTestId("guided-suggest-button").click();
+  const suggestion = guided.getByTestId("guided-suggestion");
+  await expect(suggestion).toContainText("a recorded answer, not live");
+  await expect(suggestion).toContainText("Rack A → Mixer → Machine B → Packing table");
+  await expect(guided.getByTestId("guided-questions")).toContainText("How long does mixing take in the Mixer?");
+  await expect(guided.getByTestId("guided-stations").locator("li")).toHaveCount(0); // nothing applied yet
+  await guided.getByTestId("guided-use-suggestion").click();
+  await expect(guided.getByTestId("guided-stations").locator("li")).toHaveCount(4);
 
-  await page.getByTestId("run-start").click();
+  // Reorder, remove, and a duplicate name, each said plainly.
+  await guided.getByTestId("guided-station-3-remove").click();
+  await guided.getByTestId("guided-station-2-up").click();
+  await expect(guided.getByTestId("guided-station-1-name")).toHaveValue("Machine B");
+  await guided.getByTestId("guided-station-1-down").click();
+  await guided.getByTestId("guided-station-2-name").fill("Mixer");
+  await expect(guided.getByTestId("guided-needs")).toContainText("Two stations are called “Mixer”: give each its own name");
+  await guided.getByTestId("guided-station-2-name").fill("Former");
+
+  // One typed value; everything else is an example to accept.
+  await guided.getByTestId("guided-item").fill("batch");
+  const mixerPace = guided.locator('[data-testid^="guided-pace-"]').first();
+  await mixerPace.fill("4");
+  await expect(guided.getByTestId("guided-pending")).toContainText("to accept or change before Run");
+  await expect(guided.locator('[data-basis="example"][data-accepted="false"]').first()).toContainText("Example assumption — please accept or change");
+  await expect(guided.getByTestId("guided-run")).toBeDisabled();
+  await guided.getByTestId("guided-accept-all").click();
+  await expect(guided.getByTestId("guided-routes-clear")).toContainText("Routes checked on the layout");
+  await expect(guided.getByTestId("guided-run")).toBeEnabled();
+  await guided.getByTestId("guided-run").click();
+
+  // The run: the panel separates typed values from accepted illustrative ones.
   const panel = page.getByTestId("run-panel");
   await expect(panel).toHaveAttribute("data-outcome", "ready");
-  await expect(panel).not.toContainText("Example shift");
-  expect(Number(await page.getByTestId("run-completed").textContent())).toBeGreaterThan(100);
+  await expect(page.getByTestId("run-value-counts")).toContainText(/you entered 1 value · illustrative, accepted \d+ assumptions/);
   await page.getByTestId("run-assumptions").locator("summary").click();
-  await expect(page.getByTestId("run-assumptions")).toContainText("Packing table: 90 s with a worker, then 0 s on its own");
-  await expect(page.getByTestId("run-assumptions").locator(".basis-entered").first()).toBeVisible();
-  // One undo removes the process again.
+  await expect(page.getByTestId("run-assumptions").locator(".basis-entered").first()).toHaveText("you entered");
+  await expect(page.getByTestId("run-assumptions").locator(".basis-example").first()).toHaveText("illustrative, accepted");
+  expect(Number(await page.getByTestId("run-completed").textContent())).toBeGreaterThan(50);
+  await expect(page.getByTestId("save-state")).toHaveText("Unsaved changes");
+
+  // One undo removes the process again; redo restores it.
   await page.getByTestId("undo").click();
-  await expect(panel).toContainText("This layout has no process yet");
+  await expect(page.getByTestId("guided-setup")).toBeVisible();
+  await page.getByTestId("redo").click();
+  await expect(page.getByTestId("run-change-setup")).toBeVisible();
 });

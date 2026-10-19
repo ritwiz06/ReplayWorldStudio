@@ -89,7 +89,7 @@ cp .env.example .env    # then set VOYAGER_API_KEY=... in .env, and restart pnpm
 ## Limits
 
 - It has been tried on synthetic examples and supported files, not yet on real plans.
-- It does not convert every drawing into an accurate 3D model, simulate production or physics, or certify anything about a real site.
+- It does not convert every drawing into an accurate 3D model, simulate physics, verify real output or worker safety, or certify anything about a real site. **Run a day** plays a production-event shift only under the assumptions you state.
 - Heights are *assumed for display* unless you enter them.
 
 ## Checks

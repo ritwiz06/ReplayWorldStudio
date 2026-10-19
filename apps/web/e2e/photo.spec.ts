@@ -188,7 +188,7 @@ test("a photo becomes a reviewed, editable 3D world that saves, reopens and surv
   // Save: the photo is an identified, hash-checked source; image-inferred and user values differ.
   const file = await save(page);
   const saved = JSON.parse(file.text) as Saved;
-  expect(saved.schema_version).toBe("0.13.0");
+  expect(saved.schema_version).toBe("0.14.0");
   const source = saved.sources[0]!;
   expect([source.kind, source.filename, source.sha256, source.source_to_world]).toEqual(["photo", "factory-walk.png", FACTORY_SHA, null]);
   expect(source.image).toMatchObject({ uri: `photos/${FACTORY_SHA}.png`, media_type: "image/png", width_px: 1328, height_px: 1000 });

@@ -54,7 +54,10 @@ export type ReviewCorrection =
   | { kind: "object"; drawnId: string; action: "not_an_object" }
   | { kind: "object"; drawnId: string; action: "make_object"; objectKind: ObjectKind }
   | { kind: "accept_remaining" }
-  | { kind: "accept_omissions" };
+  | { kind: "accept_omissions" }
+  /** A layer holds drawing symbols (door swings, wall fill, notes), not things on the floor
+   * (0.14.0): its loose lines and left-out shapes stop counting as possible obstacles. */
+  | { kind: "symbols"; layer: string; symbols: boolean };
 
 export interface ReviewCommand {
   type: "review_drawing";
@@ -403,7 +406,6 @@ function prepare(project: Project, source: DrawingSource, c: ReviewCorrection): 
     }
 
     case "trace_floor": {
-      if (!isPlanImage(source.drawing)) return reject("The floor is traced only on a plan picture.");
       if (c.outline.length < 3) return reject("Click at least three corners of the floor.");
       const xs = c.outline.map((p) => p.x);
       const ys = c.outline.map((p) => p.y);
@@ -421,12 +423,12 @@ function prepare(project: Project, source: DrawingSource, c: ReviewCorrection): 
         label: "Floor (traced)",
         label_from: "entered",
         kind: "structure",
-        refs: [{ handle: null, layer: source.drawing.layers[0] ?? "image", entity: "TRACE", block: null }],
+        refs: [{ handle: null, layer: isPlanImage(source.drawing) ? (source.drawing.layers[0] ?? "image") : "drawing", entity: "TRACE", block: null }],
         outline: c.outline.map((q) => ({ x: r(q.x), y: r(q.y) })) as DrawingObject["outline"],
         ...(square && box ? { centre: box.centre, width: box.width, depth: box.depth, rotation_rad: box.rotation_rad } : { centre: { x: r((x0 + x1) / 2), y: r((y0 + y1) / 2) }, width: x1 - x0, depth: y1 - y0, rotation_rad: 0 }),
         footprint_fit: square ? "exact" : "enclosing",
         tolerance: c.tolerance,
-        notes: [`Traced by you: its edges are within ${formatLength(c.tolerance * review.scale.metres_per_unit)} of where you clicked.`],
+        notes: [c.tolerance > 0 ? `Traced by you: its edges are within ${formatLength(c.tolerance * review.scale.metres_per_unit)} of where you clicked.` : "Traced by you on the drawing's own corners: exact as drawn."],
       };
       const traced = withReview(source, { ...review, objects: [...review.objects, { drawn_id: floorDrawn.id, status: "proposed" }] }, {}, [...source.drawing.objects, floorDrawn]) as DrawingSource;
       const done = prepare(project, traced, { kind: "floor", to: floorDrawn.id });
@@ -445,6 +447,20 @@ function prepare(project: Project, source: DrawingSource, c: ReviewCorrection): 
     case "accept_omissions": {
       if (review.omissions === "accepted") return reject("Already accepted.", "no_change");
       return ok(withReview(source, { ...review, omissions: "accepted" }), edit, "Accept what the drawing leaves out", `Accepted what the drawing leaves out: ${omissions(source).join("; ")}`, "");
+    }
+
+    case "symbols": {
+      if (!source.drawing.layers.includes(c.layer)) return reject(`The drawing has no layer “${c.layer}”.`, "not_found");
+      const marked = review.symbol_layers.includes(c.layer);
+      if (marked === c.symbols) return reject(c.symbols ? "Already marked as drawing symbols." : "Not marked as drawing symbols.", "no_change");
+      const layers = c.symbols ? [...review.symbol_layers, c.layer] : review.symbol_layers.filter((l) => l !== c.layer);
+      return ok(
+        withReview(source, { ...review, symbol_layers: layers }),
+        edit,
+        c.symbols ? `Layer ${c.layer}: drawing symbols` : `Layer ${c.layer}: possible obstacles`,
+        c.symbols ? `Layer ${c.layer} marked as drawing symbols (door swings, wall fill, notes), not things on the floor` : `Layer ${c.layer}: its loose lines and left-out shapes count as possible obstacles again`,
+        "",
+      );
     }
 
     case "object": {

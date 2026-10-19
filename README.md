@@ -51,7 +51,7 @@ What you can do:
 | **Walk and change it** | Orbit, plan and walk views. Move, turn, resize, add, duplicate and remove, with undo and redo. Heights are *assumed for display* unless you enter them. |
 | **Compare** | The drawing's own arrangement beside your edited one, with every change listed. |
 | **Check layout** | Footprint overlaps, objects in keep-clear zones, and whether an item of a width you enter can get from A to B. These are 2D checks of the **reviewed design**: **width only; turning is not evaluated**, heights are not checked, and outlines on a PDF or picture count only as precisely as you traced them. |
-| **Run a day** | Plays a shift: workers, items, machine states, queues and a shift clock, with Play/Pause, speed, Restart and a timeline in every camera mode. Run again after an edit and compare with the original layout. **Set up a day** on your own plan: you enter the stations, times, buffers, workers, shift and breaks; nothing is read from the drawing. |
+| **Run a day** | Plays a shift: workers, items, machine states, queues and a shift clock, with Play/Pause, speed, Restart and a timeline in every camera mode. Run again after an edit and compare with the original layout. **Set up a day** on your own plan, guided: pick the stations in order on the plan, say what moves, type the pace and people you know, and accept or change clearly labelled example assumptions for the rest. Nothing is read from the drawing; an optional **Suggest setup** (with a Voyager key) proposes stations and order only. |
 | **Save** | **Save project** downloads the project as a file, with its process. Reopen it with **Open project**. |
 
 ## What exists today
@@ -60,7 +60,7 @@ What you can do:
 | --- | --- | --- |
 | Plans | DXF reading (`rws-dxf/1`), a four-question review (floor, scale with a known length, objects, omissions), plan pictures from a PDF page, PNG or JPEG, traced outlines with their precision | DWG, page cropping, PDF vectors, printed scale ratios, aligning a second plan |
 | Checks | Overlaps, keep-clear zones, floor edge, width-only routes on the reviewed design, before/after | Turning (swept paths), overhead heights, loads, physics |
-| Run a day | One bounded process: stations tied to objects, carrying by hand along route-checked paths, workers with priorities and breaks, finite buffers, planned and seeded stops, deterministic events (`rws-run/1`), playback, comparison with the original layout, setup on your own plan | Conveyors and other transport, branching flows, several products, worker congestion, event-log export |
+| Run a day | One bounded process: stations tied to objects, carrying by hand along route-checked paths, workers with priorities and breaks, finite buffers, planned and seeded stops, deterministic events (`rws-run/1`), playback, comparison with the original layout, guided setup on your own plan with accepted illustrative assumptions | Conveyors and other transport, branching flows, several products, worker congestion, event-log export |
 | World and editor | Evidence on every value, edit log, undo/redo, save/reopen, walk view, provisional models | Matching equipment to real models (ENR-01), shared private links (SHR-01), accounts |
 | AI (optional, your own key) | ASU Voyager drafts described objects, plan pictures and photo objects; nothing is applied unreviewed | Any hosted AI |
 

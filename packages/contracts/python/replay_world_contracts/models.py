@@ -63,7 +63,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.13.0"]
+SchemaVersion = Literal["0.14.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -1380,9 +1380,10 @@ class DrawingObject(ContractModel):
     )
     tolerance: float | None = Field(
         ge=0,
-        description="For an outline the person traced on a plan image (0.12.0): how far its "
-        "edges may be from the true ones, in drawing units (the marking precision). Null for a "
-        "DXF outline (exact as drawn) and for a proposal (unknown).",
+        description="For an outline the person traced (0.12.0 on a plan image; a floor traced on "
+        "a DXF, 0.14.0): how far its edges may be from the true ones, in drawing units (the "
+        "marking precision; 0 on the drawing's own corners). Null for an outline read from a DXF "
+        "(exact as drawn) and for a proposal (unknown).",
     )
     centre: PlanPoint
     width: float = Field(gt=0, description="Footprint along its rotated X, in drawing units.")
@@ -1598,10 +1599,18 @@ class DrawingReview(ContractModel):
     scale: ScaleReview
     objects: list[ObjectReview] = Field(max_length=MAX_DRAWING_OBJECTS)
     omissions: Literal["proposed", "accepted"]
+    symbol_layers: list[NonEmptyText] = Field(
+        max_length=200,
+        description="Layers the person says hold drawing symbols (door swings, wall fill, "
+        "notes), not things on the floor (0.14.0): their loose lines and left-out shapes are not "
+        "treated as possible obstacles by the checks. Their closed outlines are reviewed like any "
+        "other.",
+    )
 
     @model_validator(mode="after")
     def _unique(self) -> DrawingReview:
         _require_unique((o.drawn_id for o in self.objects), "reviewed drawing object")
+        _require_unique(self.symbol_layers, "symbol layer")
         return self
 
 
@@ -1657,6 +1666,9 @@ class DrawingImport(ContractModel):
             raise ValueError("the review has exactly one entry per drawn object")
         if (review.scale.unit == "px") != image:
             raise ValueError("a plan image, and only one, is scaled in pixels")
+        unknown = set(review.symbol_layers) - set(self.layers)
+        if unknown:
+            raise ValueError(f"symbol layers {sorted(unknown)} are not layers of the drawing")
         on_floor = [o.drawn_id for o in review.objects if o.status == "used_as_floor"]
         expected = [review.floor.drawn_id] if review.floor.choice == "outline" else []
         if on_floor != expected:

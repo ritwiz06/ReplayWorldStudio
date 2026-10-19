@@ -56,7 +56,7 @@ export function answer(project: Project, question: CheckQuestion): CheckAnswer {
     clearance:
       "Check layout answers part of this: whether footprints overlap or stand in a keep-clear zone, and whether an item of a width you enter can get from one point to another (width only; turning is not evaluated). Working room around a machine is checked only where the drawing or the review marks it as a keep-clear zone; access and service zones are never assumed.",
     throughput:
-      "Throughput needs each station's cycle time, the order work moves between stations, and the shift pattern. A drawing contains none of these, and they are never guessed.",
+      "Throughput needs each station's cycle time, the order work moves between stations, the people and the shift pattern. A drawing contains none of these, and they are never guessed: enter them in Run a day (Set up a day), which then plays a shift under exactly those assumptions.",
     strength:
       "A floor-load check needs each machine's mass and the floor's rated load. Nothing here records mass or strength, and neither is ever inferred from a drawing or a name.",
   };

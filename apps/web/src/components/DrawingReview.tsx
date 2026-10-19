@@ -68,6 +68,15 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
   const item = (id: string) => items.find((i) => i.id === id)!;
   const reasons = drawingReasons(source);
   const unchecked = review.objects.filter((o) => o.status === "proposed").length;
+  // Layers with loose lines or left-out shapes, and how many: the person may mark them as symbols.
+  const looseLayers = useMemo(() => {
+    const counts = new Map<string, number>();
+    const add = (layer: string, n = 1) => counts.set(layer, (counts.get(layer) ?? 0) + n);
+    for (const line of source.drawing.lines) if (!line.closed && line.ref.block === null) add(line.ref.layer);
+    for (const shape of source.drawing.omitted ?? []) add(shape.layer);
+    if (source.drawing.omitted === null) for (const skip of source.drawing.skipped) if (skip.layout) add(skip.layer, skip.count);
+    return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([layer, n]) => [layer, `${n} item${n === 1 ? "" : "s"}`] as const);
+  }, [source.drawing]);
   const approximate = source.drawing.objects
     .filter((d) => d.footprint_fit === "enclosing" && project.scene.objects.some((o) => o.id === d.object_id && o.dimensions.width.origin === "drawn"))
     .map((d) => project.scene.objects.find((o) => o.id === d.object_id)!.name);
@@ -170,7 +179,7 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
       )}
       {mode === "trace_floor" && (
         <p className="review-hint" data-testid="review-hint">
-          Click each corner of the floor in turn ({marks.length} so far
+          Click each corner of the floor in turn{picture ? "" : ", for example the outside corners of the walls (clicks snap to the drawing's corners)"} ({marks.length} so far
           {precision > 0 && `, each within about ${formatLength(precision * review.scale.metres_per_unit)}`}).{" "}
           <button type="button" className="button button-small" disabled={marks.length < 3} data-testid="review-floor-finish" onClick={() => apply({ kind: "trace_floor", outline: marks, tolerance: precision })}>
             Finish the floor
@@ -194,11 +203,10 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
                 Looks right
               </button>
             )}
-            {picture ? (
-              <button type="button" className="button button-small" aria-pressed={mode === "trace_floor"} data-testid="review-floor-trace" onClick={() => setMode(mode === "trace_floor" ? "select" : "trace_floor")}>
-                Trace the floor
-              </button>
-            ) : (
+            <button type="button" className="button button-small" aria-pressed={mode === "trace_floor"} data-testid="review-floor-trace" onClick={() => setMode(mode === "trace_floor" ? "select" : "trace_floor")}>
+              Trace the floor
+            </button>
+            {!picture && (
               <button type="button" className="button button-small" aria-pressed={mode === "floor"} data-testid="review-floor-pick" onClick={() => setMode(mode === "floor" ? "select" : "floor")}>
                 Use another outline
               </button>
@@ -368,6 +376,25 @@ export function DrawingReview({ project, source, selectedId, focus, onReview, on
               <button type="button" className="button button-small" data-testid="review-omissions-accept" onClick={() => apply({ kind: "accept_omissions" })}>
                 I understand
               </button>
+            </div>
+          )}
+          {looseLayers.length > 0 && (
+            <div className="review-symbols" data-testid="review-symbols">
+              <p className="small muted">
+                Loose lines and shapes left out count as possible obstacles in Check layout and Run a day, so a route past them “cannot be determined”. If a layer only holds drawing
+                symbols, say so:
+              </p>
+              {looseLayers.map(([layer, count]) => (
+                <label key={layer} className="check-row small">
+                  <input
+                    type="checkbox"
+                    checked={review.symbol_layers.includes(layer)}
+                    data-testid={`review-symbols-${layer}`}
+                    onChange={(e) => apply({ kind: "symbols", layer, symbols: e.target.checked })}
+                  />{" "}
+                  <strong>{layer}</strong> ({count}): drawing symbols (door swings, wall fill, notes), not things on the floor
+                </label>
+              ))}
             </div>
           )}
         </li>

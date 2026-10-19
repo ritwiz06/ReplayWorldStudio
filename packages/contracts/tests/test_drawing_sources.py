@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 from replay_world_contracts import DESIGN_ORIGINS, Length, Project, is_verified
-from replay_world_contracts.migrations import upgrade_document
+from replay_world_contracts.migrations import MigrationError, upgrade_document
 
 SHA = "b" * 64
 
@@ -113,6 +113,7 @@ def drawing_source(object_id: str, status: str = "proposed", **units: Any) -> di
                 "scale": scale(),
                 "objects": [{"drawn_id": "dxf-2a", "status": status}],
                 "omissions": "proposed",
+                "symbol_layers": [],
             },
         },
     }
@@ -340,6 +341,9 @@ def test_a_0_9_0_drawing_is_reviewed_as_unchecked_and_its_drawn_sizes_are_weaken
         "evidence changed)",
         "schema_version 0.12.0 -> 0.13.0 (adds 'process: null': no process for Run a day was set "
         "up; no values or evidence changed)",
+        "schema_version 0.13.0 -> 0.14.0 (adds 'symbol_layers: []' to 1 drawing "
+        "review: no layer is treated as drawing symbols; no values or "
+        "evidence changed)",
     ]
     project = Project.model_validate(upgrade.document)
     review = project.sources[-1].drawing.review  # type: ignore[union-attr]
@@ -380,3 +384,32 @@ def test_an_omitted_shape_has_a_whole_extent_or_none(fixture_data: dict[str, Any
         Project.model_validate(with_source(fixture_data, source))
     source["drawing"]["omitted"][0]["min"] = None
     Project.model_validate(with_source(fixture_data, source))  # position unknown: allowed
+
+
+def test_symbol_layers_are_layers_of_the_drawing_once_each(fixture_data: dict[str, Any]) -> None:
+    project = with_source(fixture_data, drawing_source(object_id(fixture_data)))
+    review = project["sources"][-1]["drawing"]["review"]
+    review["symbol_layers"] = ["EQUIPMENT"]
+    Project.model_validate(project)
+    review["symbol_layers"] = ["DOORS"]
+    with pytest.raises(ValidationError, match=r"symbol layers \['DOORS'\] are not layers"):
+        Project.model_validate(project)
+    review["symbol_layers"] = ["EQUIPMENT", "EQUIPMENT"]
+    with pytest.raises(ValidationError, match="duplicate symbol layer"):
+        Project.model_validate(project)
+
+
+def test_a_0_13_0_review_gains_no_symbol_layers(fixture_data: dict[str, Any]) -> None:
+    current = with_source(fixture_data, drawing_source(object_id(fixture_data)))
+    old = copy.deepcopy(current)
+    old["schema_version"] = "0.13.0"
+    del old["sources"][-1]["drawing"]["review"]["symbol_layers"]
+    upgrade = upgrade_document(old)
+    assert upgrade.document == current
+    assert upgrade.notes == [
+        "schema_version 0.13.0 -> 0.14.0 (adds 'symbol_layers: []' to 1 drawing review: no layer "
+        "is treated as drawing symbols; no values or evidence changed)"
+    ]
+    old["sources"][-1]["drawing"]["review"]["symbol_layers"] = []
+    with pytest.raises(MigrationError, match=r"symbol layers only exist from 0\.14\.0"):
+        upgrade_document(old)

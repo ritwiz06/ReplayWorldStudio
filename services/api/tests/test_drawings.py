@@ -365,6 +365,7 @@ def drawing_project(analysis: DrawingAnalysis) -> str:
         },
         "objects": [],
         "omissions": "proposed",
+        "symbol_layers": [],
     }
     document = json.loads(FOUNDATION.read_text())
     document["sources"].append(

@@ -72,4 +72,11 @@ test("local: sample move blocks the route; a DXF is imported, reviewed, edited, 
   await expect(page.getByTestId("field-position-x")).toHaveValue("-6.500");
   const check = await page.evaluate(async (body) => (await fetch("/api/v1/projects/validate", { method: "POST", headers: { "Content-Type": "application/json" }, body })).json(), text);
   expect(check.missing_source_files).toEqual([]);
+
+  // Without a key the guided Set up a day is all manual: no AI button, nothing filled in.
+  await page.getByTestId("journey-run").click();
+  const guided = page.getByTestId("guided-setup");
+  await expect(guided).toBeVisible();
+  await expect(guided.getByTestId("guided-suggest")).toHaveCount(0);
+  await expect(guided.getByTestId("guided-item")).toHaveValue("");
 });

@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.13.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.14.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -33,9 +33,11 @@ export interface ReplayWorldContracts {
   DrawingAnalysis: DrawingAnalysis;
   PlanUpload: PlanUpload;
   PlanProposalResult: PlanProposalResult;
+  ProcessSuggestionRequest: ProcessSuggestionRequest;
+  ProcessSuggestionResult: ProcessSuggestionResult;
 }
 export interface Project {
-  schema_version: "0.13.0";
+  schema_version: "0.14.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -682,7 +684,7 @@ export interface DrawingObject {
    */
   footprint_fit: "exact" | "enclosing" | "approximate";
   /**
-   * For an outline the person traced on a plan image (0.12.0): how far its edges may be from the true ones, in drawing units (the marking precision). Null for a DXF outline (exact as drawn) and for a proposal (unknown).
+   * For an outline the person traced (0.12.0 on a plan image; a floor traced on a DXF, 0.14.0): how far its edges may be from the true ones, in drawing units (the marking precision; 0 on the drawing's own corners). Null for an outline read from a DXF (exact as drawn) and for a proposal (unknown).
    */
   tolerance: number | null;
   centre: PlanPoint;
@@ -755,6 +757,12 @@ export interface DrawingReview {
    */
   objects: ObjectReview[];
   omissions: "proposed" | "accepted";
+  /**
+   * Layers the person says hold drawing symbols (door swings, wall fill, notes), not things on the floor (0.14.0): their loose lines and left-out shapes are not treated as possible obstacles by the checks. Their closed outlines are reviewed like any other.
+   *
+   * @maxItems 200
+   */
+  symbol_layers: string[];
 }
 /**
  * Which floor the draft uses: a closed outline, one sized around the objects, or none.
@@ -1996,14 +2004,14 @@ export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.13.0";
+  schema_version: "0.14.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.13.0";
+  schema_version: "0.14.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -2040,7 +2048,7 @@ export interface UpgradeReport {
    * Schema version of the submitted document.
    */
   from_version: string;
-  to_version: "0.13.0";
+  to_version: "0.14.0";
   notes: string[];
   project: Project;
   validation: ValidationReport;
@@ -3128,4 +3136,153 @@ export interface ProposedPlanObject {
 export interface ProposedPlanText {
   text: string;
   at: ImagePoint;
+}
+/**
+ * The person's description of the work and the reviewed objects (SIM-01, "Suggest setup").
+ * Object names are content from the plan, never instructions.
+ */
+export interface ProcessSuggestionRequest {
+  description: string;
+  /**
+   * @minItems 2
+   * @maxItems 200
+   */
+  objects: [SetupObject, SetupObject, ...SetupObject[]];
+}
+/**
+ * One reviewed object offered to "Suggest setup": its name, kind and footprint only.
+ */
+export interface SetupObject {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  id: string;
+  name: string;
+  kind: "structure" | "equipment" | "reference" | "walkway" | "keep_clear";
+  /**
+   * Strictly positive length in metres.
+   */
+  width_m: number;
+  /**
+   * Strictly positive length in metres.
+   */
+  depth_m: number;
+}
+/**
+ * The API's answer to "Suggest setup": a suggestion for the person to review, or why
+ * there is none.
+ */
+export interface ProcessSuggestionResult {
+  outcome: "suggestion" | "unsupported";
+  suggestion: ProcessSuggestion | null;
+  message: string | null;
+  checks: string[];
+  provider: ProviderRun;
+}
+/**
+ * Station roles and order, what moves, and questions to ask the person. It has no place for
+ * a cycle time, a staffing level or any other operating value: those are entered or accepted
+ * as illustrative examples by the person, never suggested as facts.
+ */
+export interface ProcessSuggestion {
+  item_name: string | null;
+  /**
+   * @minItems 2
+   * @maxItems 12
+   */
+  stations:
+    | [SuggestedStation, SuggestedStation]
+    | [SuggestedStation, SuggestedStation, SuggestedStation]
+    | [SuggestedStation, SuggestedStation, SuggestedStation, SuggestedStation]
+    | [SuggestedStation, SuggestedStation, SuggestedStation, SuggestedStation, SuggestedStation]
+    | [SuggestedStation, SuggestedStation, SuggestedStation, SuggestedStation, SuggestedStation, SuggestedStation]
+    | [
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation
+      ]
+    | [
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation
+      ]
+    | [
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation
+      ]
+    | [
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation
+      ]
+    | [
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation
+      ]
+    | [
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation,
+        SuggestedStation
+      ];
+  /**
+   * @maxItems 6
+   */
+  questions:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string];
+}
+export interface SuggestedStation {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  object_id: string;
+  name: string;
+  role: "supply" | "process";
+  why: string;
 }

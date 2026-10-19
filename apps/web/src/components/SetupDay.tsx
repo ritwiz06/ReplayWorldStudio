@@ -8,6 +8,8 @@ import { buildProcess, type DayDraft, draftFrom, emptyDraft, emptyStation, empty
 
 interface Props {
   project: Project;
+  /** The process to start from (the one set up, or the guided draft's), if any. */
+  initial: ProcessModel | null;
   onClose: () => void;
   /** Store the process (one undoable step); returns why it was refused, or null. */
   onSave: (process: ProcessModel, summary: string) => string | null;
@@ -15,9 +17,9 @@ interface Props {
 
 const SIDES: Side[] = ["front", "back", "left", "right"];
 
-export function SetupDay({ project, onClose, onSave }: Props) {
+export function SetupDay({ project, initial, onClose, onSave }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [draft, setDraft] = useState<DayDraft>(() => (project.process ? draftFrom(project.process) : emptyDraft()));
+  const [draft, setDraft] = useState<DayDraft>(() => (initial ? draftFrom(initial) : emptyDraft()));
   const [refused, setRefused] = useState<string | null>(null);
   const objects = useMemo(() => stationObjects(project), [project]);
   const built = useMemo(() => buildProcess(project, draft), [project, draft]);

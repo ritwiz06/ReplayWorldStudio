@@ -148,7 +148,7 @@ export function displayHeight(drawn: { kind: DrawingObject["kind"]; label: strin
 }
 
 /** "on page 2" or "on the image", for a plan image's layer. */
-const onPicture = (layer: string) => (layer.startsWith("page") ? `on ${layer}` : "on the image");
+const onPicture = (layer: string) => (layer.startsWith("page") ? `on ${layer}` : layer === "drawing" ? "on the drawing" : "on the image");
 
 export function describeRef(ref: DrawingRef): string {
   if (ref.entity === "REGION") return `an area the vision model proposed ${onPicture(ref.layer)}`;
@@ -430,6 +430,7 @@ function buildDraft(analysis: DrawingAnalysis, scale: ScaleReview, basis: UnitBa
     scale,
     objects: drawing.objects.map((o) => ({ drawn_id: o.id, status: o === floorOutline ? "used_as_floor" : "proposed" })),
     omissions: "proposed",
+    symbol_layers: [],
   };
   return {
     schema_version: SCHEMA_VERSION,

@@ -807,6 +807,7 @@ Supported model: production events (discrete-event queues and resources). It doe
 - Done when: Required timing, buffer and routing fields validate; missing inputs are actionable.
 - Evidence: not recorded by this package
 - Status (2026-10-18, ADR-059): **done** for one bounded process. Contract 0.13.0 `process` covers stations tied to object IDs (with access points), carries, workers with priorities, the shift with breaks, stops and the seed; every value is `example` or `entered`. Set up a day names exactly what is missing (`apps/web/src/run/setup.ts`, tests; e2e `run-day.spec.ts`). Not yet: conveyors, branches, several products.
+- Status (2026-10-18, ADR-060): **guided setup** on your own plan (stations picked in order, plain-words item, typed pace and people, accepted illustrative examples, route corrections), optional Suggest setup (stations and order only; recorded answers replay offline), DXF floor tracing and review symbol layers (contract 0.14.0). Tried on real third-party drawings: docs/external-drawings.md.
 
 ### SIM-02 - Implement event-based production
 

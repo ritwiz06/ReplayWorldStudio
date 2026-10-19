@@ -1,4 +1,4 @@
-import type { CatalogAsset, DrawingObject, Project, SceneObject, Transform } from "@replay-world/contracts";
+import type { CatalogAsset, DrawingObject, ProcessModel, Project, SceneObject, Transform } from "@replay-world/contracts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createApiClient } from "./api/client";
 import type { ResolvedEdit } from "./assist/editIntent";
@@ -46,11 +46,13 @@ import type { GhostSpec } from "./scene/PlacementGhost";
 import { worldBounds } from "./scene/placement";
 import { SceneViewport } from "./scene/SceneViewport";
 import { RunBar } from "./components/RunBar";
+import { GuidedSetup } from "./components/GuidedSetup";
 import { RunLabels } from "./components/RunLabels";
 import { RunPanel } from "./components/RunPanel";
 import { SetupDay } from "./components/SetupDay";
 import { usePlayback } from "./hooks/usePlayback";
 import { compareDays, type DayComparison, type DayRun, runDay, runOriginal } from "./run/day";
+import { emptyGuided, type GuidedDraft, guidedFrom } from "./run/guided";
 
 const client = createApiClient();
 
@@ -193,6 +195,10 @@ export function App() {
   const [runShown, setRunShown] = useState(false);
   const [pendingRun, setPendingRun] = useState(false);
   const [setupDay, setSetupDay] = useState(false);
+  /** The process the full form starts from (the guided draft's, when opened from it). */
+  const [setupFrom, setSetupFrom] = useState<ProcessModel | null>(null);
+  /** The guided setup's draft, and whether it is open over an existing process. */
+  const [guidedState, setGuidedState] = useState<{ loadId: number; draft: GuidedDraft; open: boolean } | null>(null);
   /** The run that should start playing as soon as it is shown. */
   const [autoPlayKey, setAutoPlayKey] = useState<string | null>(null);
   const overlayOpen = start || about || create !== null || photoImport || drawingImport || improve !== null || setupDay;
@@ -316,6 +322,19 @@ export function App() {
     setDrawingPanel({ open: true, view: "check" });
   }, [mode, project, run, sampleMachine, sourceDrawing]);
 
+  /** Run the project's process on its layout as it is, and play it from the shift start. */
+  const runOn = useCallback(
+    (target: Project) => {
+      if (!target.process) return;
+      const made = runDay(target, target.process, "edited");
+      setDay({ loadId, run: made });
+      setDayComparison(null);
+      setRunShown(true);
+      setAutoPlayKey(made.result ? `${loadId}:${made.sceneRevision}:${made.result.fingerprint}` : null);
+      if (mode !== "walk") issue("frame-all");
+    },
+    [issue, loadId, mode],
+  );
   /** Run a day: run the project's process on the layout as it is now (or open the sample hall
    * and its example shift when there is no reviewed plan), then play it from the shift start. */
   const startRun = useCallback(() => {
@@ -326,14 +345,8 @@ export function App() {
       return;
     }
     setDrawingPanel({ open: true, view: "run" });
-    if (!project.process) return;
-    const made = runDay(project, project.process, "edited");
-    setDay({ loadId, run: made });
-    setDayComparison(null);
-    setRunShown(true);
-    setAutoPlayKey(made.result ? `${loadId}:${made.sceneRevision}:${made.result.fingerprint}` : null);
-    if (mode !== "walk") issue("frame-all");
-  }, [issue, loadId, mode, project, session, sourceDrawing]);
+    runOn(project);
+  }, [project, runOn, session, sourceDrawing]);
   if (pendingRun && isSample && sourceDrawing && project?.process && sampleFor === loadId) {
     setPendingRun(false);
     setDrawingPanel({ open: true, view: "run" });
@@ -581,6 +594,32 @@ export function App() {
   // On the simple screen the drawing panel is a column of its own beside the 3D view, so it
   // never covers the scene; with Details on it floats over the view as before.
   const docked = !details && project !== null && sourceDrawing !== null && mode !== "walk" && drawingPanel.open;
+  const guidedFor = guidedState?.loadId === loadId ? guidedState : null;
+  const guidedDraft = guidedFor?.draft ?? (project?.process ? guidedFrom(project.process) : emptyGuided());
+  const guidedNode =
+    project && sourceDrawing && (!project.process || guidedFor?.open) ? (
+      <GuidedSetup
+        project={project}
+        selected={selected}
+        client={client}
+        suggestions={assistOn}
+        draft={guidedDraft}
+        onDraft={(draft) => setGuidedState({ loadId, draft, open: guidedFor?.open ?? false })}
+        onSave={(process, summary) => {
+          const outcome = run({ baseRevision: project.scene.revision, command: { type: "set_process", process, summary } });
+          if (!outcome) return "The scene is not editable right now.";
+          if (!outcome.ok && outcome.rejection.kind !== "no_change") return outcome.rejection.message;
+          setGuidedState({ loadId, draft: guidedDraft, open: false });
+          runOn(outcome.ok ? outcome.state.project : project);
+          return null;
+        }}
+        onFullForm={(process) => {
+          setSetupFrom(process);
+          setSetupDay(true);
+        }}
+        onCancel={project.process ? () => setGuidedState({ loadId, draft: guidedDraft, open: false }) : null}
+      />
+    ) : null;
   const runPanel = project ? (
     <RunPanel
       project={project}
@@ -591,7 +630,8 @@ export function App() {
       comparison={dayComparison && dayComparison.key === runKey ? dayComparison : null}
       onRun={startRun}
       onCompare={compareDay}
-      onSetUp={() => setSetupDay(true)}
+      guided={guidedNode}
+      onChangeSetup={() => setGuidedState({ loadId, draft: project.process ? guidedFrom(project.process) : emptyGuided(), open: true })}
     />
   ) : null;
   const help = MODES.find((m) => m.id === mode)!.help;
@@ -723,14 +763,6 @@ export function App() {
           {project?.fixture && <FixtureBanner fixture={project.fixture} edited={project.scene.edit_log.length > 0} />}
           {ghost && editable && <PlacementBanner label={ghost.label} onCancel={() => setPlacement(null)} />}
           {rejection && <EditRejectedNotice message={rejection} onDismiss={() => setRejection(null)} />}
-          {runShown && activeDay && dayStale && (
-            <div className="notice run-stale-notice" data-testid="run-stale-notice">
-              The layout changed since this run.{" "}
-              <button type="button" className="link-button" data-testid="run-again-bar" onClick={startRun}>
-                Run the same shift again
-              </button>
-            </div>
-          )}
           {project && (
             <ModelNotice catalog={project.catalog} models={models} onRetry={retry} onRebuild={() => void rebuildModels()} rebuild={rebuild} />
           )}
@@ -762,6 +794,14 @@ export function App() {
         )}
         {project && mode === "top" && <PlanOverlay pixelsPerMetre={pixelsPerMetre} />}
         {runFrame && <RunLabels frame={runFrame} layer={runLabels} />}
+        {runShown && activeDay && dayStale && (
+          <div className="notice run-stale-notice" data-testid="run-stale-notice">
+            The layout changed since this run.{" "}
+            <button type="button" className="link-button" data-testid="run-again-bar" onClick={startRun}>
+              Run the same shift again
+            </button>
+          </div>
+        )}
         {runShownNow && project?.process && activeDay && (
           <RunBar
             playback={playback}
@@ -980,12 +1020,18 @@ export function App() {
       {setupDay && project && !prompt && (
         <SetupDay
           project={project}
-          onClose={() => setSetupDay(false)}
+          initial={setupFrom ?? project.process}
+          onClose={() => {
+            setSetupDay(false);
+            setSetupFrom(null);
+          }}
           onSave={(process, summary) => {
             const outcome = run({ baseRevision: project.scene.revision, command: { type: "set_process", process, summary } });
             if (!outcome) return "The scene is not editable right now.";
             if (!outcome.ok && outcome.rejection.kind !== "no_change") return outcome.rejection.message;
             setSetupDay(false);
+            setSetupFrom(null);
+            setGuidedState({ loadId, draft: guidedDraft, open: false });
             setDrawingPanel({ open: true, view: "run" });
             return null;
           }}

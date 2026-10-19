@@ -64,6 +64,10 @@ each change, and the result is then validated like any other document.
 0.12.0 -> 0.13.0
     * the project gains ``process: null``: no process for "Run a day" was set up before 0.13.0.
 
+0.13.0 -> 0.14.0
+    * every drawing review gains ``symbol_layers: []``: no layer was marked as drawing symbols, so
+      the checks keep treating every loose line and left-out shape as a possible obstacle.
+
 Steps run in sequence, so a 0.1.0 document passes through 0.2.0 on its way to the current
 version and its notes describe every step.
 """
@@ -434,6 +438,25 @@ def _from_0_12_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     ]
 
 
+def _from_0_13_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    upgraded = copy.deepcopy(dict(old))
+    reviews = 0
+    for source in upgraded["sources"]:
+        review = (source.get("drawing") or {}).get("review")
+        if review is None:
+            continue
+        if "symbol_layers" in review:
+            raise MigrationError("malformed 0.13.0 document: symbol layers only exist from 0.14.0")
+        review["symbol_layers"] = []
+        reviews += 1
+    upgraded["schema_version"] = "0.14.0"
+    return upgraded, [
+        f"schema_version 0.13.0 -> 0.14.0 (adds 'symbol_layers: []' to {reviews} drawing "
+        f"review{'' if reviews == 1 else 's'}: no layer is treated as drawing symbols; no values "
+        "or evidence changed)"
+    ]
+
+
 _STEPS: Final[dict[str, Step]] = {
     "0.1.0": _from_0_1_0,
     "0.2.0": _from_0_2_0,
@@ -447,5 +470,6 @@ _STEPS: Final[dict[str, Step]] = {
     "0.10.0": _from_0_10_0,
     "0.11.0": _from_0_11_0,
     "0.12.0": _from_0_12_0,
+    "0.13.0": _from_0_13_0,
 }
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)

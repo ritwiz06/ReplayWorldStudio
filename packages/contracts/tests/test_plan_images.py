@@ -116,6 +116,7 @@ def plan_source(kind: str = "pdf", **raster: Any) -> dict[str, Any]:
                 },
                 "objects": [{"drawn_id": "plan-1", "status": "proposed"}],
                 "omissions": "proposed",
+                "symbol_layers": [],
             },
         },
     }

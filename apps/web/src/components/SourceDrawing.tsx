@@ -189,7 +189,7 @@ export function SourceDrawing({ project, selectedId, view, open, underlay, onVie
           </div>
           <div className="not-yet" data-testid="not-available">
             <p>
-              <strong>Not available yet:</strong> process and physical checks (turning, heights, loads, throughput). Nothing is animated and no capacity result is shown. Check layout answers overlaps, keep-clear zones and width-only routes.
+              <strong>Not available yet:</strong> physical checks (turning, heights, loads). Check layout answers overlaps, keep-clear zones and width-only routes; Run a day plays a production shift under the times, people and breaks you enter.
             </p>
             <details data-testid="check-questions">
               <summary>Ask about a check…</summary>

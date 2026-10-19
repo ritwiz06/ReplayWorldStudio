@@ -328,6 +328,7 @@ def plan_project(digest: str, raster_sha: str) -> Project:
                     },
                     "objects": [],
                     "omissions": "proposed",
+                    "symbol_layers": [],
                 },
             },
         }

@@ -3,9 +3,9 @@
 // the comparison with the original layout, and the run's identity. Layout checks answer whether
 // things fit; Walk changes where you look; Run advances the entered process through time.
 import type { OperatingValue, ProcessModel, Project } from "@replay-world/contracts";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import type { Playback } from "../hooks/usePlayback";
-import { type DayComparison, type DayRun, plural } from "../run/day";
+import { type DayComparison, type DayRun, plural, valueCounts } from "../run/day";
 import type { WorkerState } from "../run/engine";
 import { clockText } from "../run/replay";
 import { SCOPE, STATE_COLOUR, STATE_WORDS } from "../run/words";
@@ -21,7 +21,9 @@ interface Props {
   comparison: { original: DayRun; result: DayComparison } | null;
   onRun: () => void;
   onCompare: () => void;
-  onSetUp: () => void;
+  /** The guided setup, shown instead of the run while there is no process or it is being changed. */
+  guided: ReactNode | null;
+  onChangeSetup: () => void;
 }
 
 const pct = (v: number) => `${Math.round(v * 100)} %`;
@@ -32,29 +34,31 @@ function seconds(v: number): string {
   return `${v} s`;
 }
 
-function Basis({ value }: { value: OperatingValue | null }) {
+/** "you entered" for a typed value; for an example: "example" in a shipped example shift, or
+ * "illustrative, accepted" in a process the person set up and accepted. */
+function Basis({ value, shipped }: { value: OperatingValue | null; shipped: boolean }) {
   if (!value) return null;
-  return <span className={`basis basis-${value.basis}`}>{value.basis === "example" ? "example" : "entered"}</span>;
+  return <span className={`basis basis-${value.basis}`}>{value.basis === "entered" ? "you entered" : shipped ? "example" : "illustrative, accepted"}</span>;
 }
 
-export function RunPanel({ project, day, playback, stale, edited, comparison, onRun, onCompare, onSetUp }: Props) {
+export function RunPanel({ project, day, playback, stale, edited, comparison, onRun, onCompare, guided, onChangeSetup }: Props) {
   const process = project.process;
   const frame = useMemo(() => (day?.replay && !stale ? day.replay.frame(playback.t) : null), [day, playback.t, stale]);
-  if (!process) {
+  if (!process || guided) {
     return (
-      <div className="source-drawing-body run-panel" data-testid="run-panel">
-        <p>
-          <strong>Run a day</strong> advances a production process through a shift on this layout: workers going to their tasks, items moving between stations, machines
-          working or waiting, queues forming.
-        </p>
-        <p className="small muted">This layout has no process yet. Its operating facts (which stations, in what order, how long each step takes, who does what, the shift and its breaks) are never read from the drawing: you enter them.</p>
-        <button type="button" className="button button-primary" data-testid="run-setup" onClick={onSetUp}>
-          Set up a day…
-        </button>
+      <div data-testid="run-panel" data-outcome="none">
+        {!process && (
+          <p className="small run-intro">
+            <strong>Run a day</strong> plays a production shift on this layout under assumptions you state: workers going to their tasks, items moving between stations, machines working or waiting, queues forming. This layout has no process yet.
+          </p>
+        )}
+        {guided}
         <p className="small muted">{SCOPE}</p>
       </div>
     );
   }
+  const counts = valueCounts(process);
+  const shipped = process.example_note !== null;
   const item = process.item_name;
   const result = day?.result ?? null;
   const metrics = result?.metrics ?? null;
@@ -69,6 +73,15 @@ export function RunPanel({ project, day, playback, stale, edited, comparison, on
           {process.example_note}
         </p>
       )}
+      {!shipped && (
+        <p className="small" data-testid="run-value-counts">
+          <span className="basis basis-entered">you entered</span> {counts.entered} value{counts.entered === 1 ? "" : "s"} ·{" "}
+          <span className="basis basis-example">illustrative, accepted</span> {counts.examples} assumption{counts.examples === 1 ? "" : "s"}. Results hold only under these values.
+        </p>
+      )}
+      <button type="button" className="link-button small" data-testid="run-change-setup" onClick={onChangeSetup}>
+        Change the setup
+      </button>
       {!day && (
         <button type="button" className="button button-primary" data-testid="run-start" onClick={onRun}>
           Run a day
@@ -185,7 +198,7 @@ export function RunPanel({ project, day, playback, stale, edited, comparison, on
       {day && !stale && result && (
         <div className="run-compare" data-testid="run-compare">
           <h4>Compare with the original layout</h4>
-          {!edited && <p className="small muted">The layout is as drawn. Move something (for example Machine B), run again, and compare the two runs here.</p>}
+          {!edited && <p className="small muted">The layout is as drawn. Move a station or something beside a route, run the same shift again, and compare the two runs here.</p>}
           {edited && !comparison && (
             <button type="button" className="button" data-testid="run-compare-button" onClick={onCompare}>
               Compare with the original layout
@@ -194,7 +207,7 @@ export function RunPanel({ project, day, playback, stale, edited, comparison, on
           {edited && comparison && <Comparison comparison={comparison.result} />}
         </div>
       )}
-      <Assumptions process={process} />
+      <Assumptions process={process} shipped={shipped} />
       {day && result && (
         <p className="small muted run-record" data-testid="run-record">
           Run record: engine {day.engine} · seed {day.seed} · layout revision {day.sceneRevision} · {result.events.length} events · fingerprint {result.fingerprint}. Running it again on the same
@@ -245,7 +258,7 @@ function Comparison({ comparison }: { comparison: DayComparison }) {
   );
 }
 
-function Assumptions({ process }: { process: ProcessModel }) {
+function Assumptions({ process, shipped }: { process: ProcessModel; shipped: boolean }) {
   const stations = new Map(process.stations.map((s) => [s.id, s.name]));
   const task = (t: string) => {
     const [kind, id] = t.split(":") as [string, string];
@@ -259,7 +272,7 @@ function Assumptions({ process }: { process: ProcessModel }) {
       <summary>What this run assumes</summary>
       <ul className="small">
         <li>
-          Shift {clockText(sh.start_clock_s.value, 0)}–{clockText(sh.start_clock_s.value, sh.duration_s.value * 1000)} ({seconds(sh.duration_s.value)}) <Basis value={sh.duration_s} />
+          Shift {clockText(sh.start_clock_s.value, 0)}–{clockText(sh.start_clock_s.value, sh.duration_s.value * 1000)} ({seconds(sh.duration_s.value)}) <Basis shipped={shipped} value={sh.duration_s} />
           {sh.breaks.map((b) => (
             <span key={b.id}>
               {" "}
@@ -270,25 +283,25 @@ function Assumptions({ process }: { process: ProcessModel }) {
         {process.stations.map((s) =>
           s.role === "supply" ? (
             <li key={s.id}>
-              {s.name}: material is always available here (an assumption) <span className={`basis basis-${s.access_basis}`}>{s.access_basis}</span>
+              {s.name}: material is always available here (an assumption) <span className={`basis basis-${s.access_basis}`}>{s.access_basis === "entered" ? "you entered" : shipped ? "example" : "illustrative, accepted"}</span>
             </li>
           ) : (
             <li key={s.id}>
               {s.name}: {seconds(s.worker_s!.value)} with a worker, then {seconds(s.machine_s!.value)} on its own; queue {s.input_capacity!.value}, output {s.output_capacity!.value}
               {s.planned_stops.map((p) => ` · ${p.reason} at ${clockText(sh.start_clock_s.value, p.start_s.value * 1000)} for ${seconds(p.duration_s.value)}`)}
-              {s.random_stops && ` · unplanned stops about every ${seconds(s.random_stops.mean_between_s.value)}, about ${seconds(s.random_stops.mean_duration_s.value)} long`} <Basis value={s.worker_s} />
+              {s.random_stops && ` · unplanned stops about every ${seconds(s.random_stops.mean_between_s.value)}, about ${seconds(s.random_stops.mean_duration_s.value)} long`} <Basis shipped={shipped} value={s.worker_s} />
             </li>
           ),
         )}
         {process.transfers.map((t) => (
           <li key={t.id}>
             {stations.get(t.from_station)} → {stations.get(t.to_station)}: carried by hand at {t.speed_m_s.value} m/s, {t.handling_s.value} s to pick up and to set down, needing a clear{" "}
-            {(t.item_width_m.value + 2 * t.allowance_m.value).toFixed(2)} m path (checked on the layout) <Basis value={t.speed_m_s} />
+            {(t.item_width_m.value + 2 * t.allowance_m.value).toFixed(2)} m path (checked on the layout) <Basis shipped={shipped} value={t.speed_m_s} />
           </li>
         ))}
         {process.workers.map((w) => (
           <li key={w.id}>
-            {w.name}: {w.tasks.map(task).join(", then ")} (in that order of priority); walks at {w.walk_speed_m_s.value} m/s through {w.width_m.value} m <Basis value={w.walk_speed_m_s} />
+            {w.name}: {w.tasks.map(task).join(", then ")} (in that order of priority); walks at {w.walk_speed_m_s.value} m/s through {w.width_m.value} m <Basis shipped={shipped} value={w.walk_speed_m_s} />
           </li>
         ))}
         <li>Seed {process.seed} (used only for unplanned stops, if any are entered).</li>

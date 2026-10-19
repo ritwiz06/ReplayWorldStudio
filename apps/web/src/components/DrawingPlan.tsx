@@ -188,7 +188,9 @@ export function DrawingPlan({ drawing, now, selectedId, onSelect, labels, testId
         bestDistance = distance;
       }
     }
-    onPoint(best ? { x: best.x, y: best.y } : clicked, 0);
+    // A corner or centre of the drawing is exact; a point between them is only as precise as the
+    // click when it traces an outline.
+    onPoint(best ? { x: best.x, y: best.y } : clicked, best || !tracing ? 0 : Number(precision.toFixed(3)));
   }
 
   return (

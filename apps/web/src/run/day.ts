@@ -133,3 +133,11 @@ export function compareDays(a: DayRun, b: DayRun, process: ProcessModel): DayCom
   }
   return { rows, explanation, identical: false };
 }
+
+/** How many operating values were typed and how many are illustrative assumptions. */
+export function valueCounts(process: ProcessModel): { entered: number; examples: number } {
+  const bases = (JSON.stringify(process).match(/"basis":"(example|entered)"/g) ?? []).map((m) => m.includes("entered"));
+  const access = process.stations.map((s) => s.access_basis === "entered");
+  const all = [...bases, ...access];
+  return { entered: all.filter(Boolean).length, examples: all.filter((x) => !x).length };
+}

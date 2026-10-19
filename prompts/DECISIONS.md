@@ -1191,3 +1191,36 @@ For a new decision, append: ID, date, status, context, options considered, decis
     - worker congestion and skills;
     - export of the event log (REL-01).
   - Docs: docs/run-a-day.md.
+
+### ADR-060 - Run a day on your own plan: guided setup, accepted illustrative assumptions, symbol layers (contract 0.14.0)
+
+- Date: 2026-10-18 (America/Phoenix). Status: adopted. Extends ADR-059; same engine, process, `process_set`, replay and comparison.
+- **Context.**
+  - Setting up a day on an uploaded plan needed the full form: every value, side and capacity typed.
+  - Real drawings showed two blockers (docs/external-drawings.md):
+    - many DXFs have **no closed floor outline**, and floors could be traced only on pictures;
+    - **door swings and wall hatches** count as possible obstacles, so every route through a doorway was "cannot determine".
+- **Decision.**
+  1. **Guided setup in the Run tab** (not a dialog, so stations can be picked in the 3D view or on the plan). The person chooses:
+     - stations in process order (reorder, remove, and rename where a name does not say which object it is);
+     - what moves between them, in plain words;
+     - the pace and number of people, if known.
+
+     Everything else is offered as an **example assumption to accept or change**: the pace not typed, people, attendance, queues, carrying and walking widths and speeds, where a worker stands (the first side clear on the plan), the shift and breaks, who does what.
+     - Run is off until every example is accepted (one button accepts all of those shown) and every route the shift needs fits.
+     - A blocked or undetermined route names its correction.
+     - The full form stays under "Full form…".
+  2. **Basis is kept, not inferred.** A typed value is `entered`; an accepted example is `example` in a process without `example_note` (shown as "illustrative, accepted"); the shipped sample stays "example". The Run tab counts both.
+  3. **Suggest setup** (optional, only with a configured provider): the model suggests station order, roles and questions from the description and the reviewed objects' names. The answer schema has no place for times, staffing or capacities.
+     - Unknown or repeated objects are dropped.
+     - The first station is the supply.
+     - Nothing is applied until the person uses it.
+     - Recorded live answers replay offline (`setup` task).
+  4. **Contract 0.14.0:** `DrawingReview.symbol_layers`. These are layers the reviewer marks as drawing symbols (door swings, wall fill, notes); their loose lines and left-out shapes stop counting as possible obstacles, and closed outlines are still reviewed. The migration adds `[]`.
+  5. **Floors on a DXF.** The floor can be traced on a DXF as on a picture: clicks snap to the drawing's corners, which are exact; elsewhere they record the click's precision.
+- **Consequences.**
+  - The CC0 workshop drawing runs end to end: typed pace, accepted examples, a move that blocks a route or only shortens it, and the comparison explains which.
+  - Real plans still need a floor traced and symbol layers marked.
+  - Pictures over 50 MP are refused with an instruction.
+  - DWG needs an export to DXF.
+  - A run predicts outcomes under the stated assumptions only.

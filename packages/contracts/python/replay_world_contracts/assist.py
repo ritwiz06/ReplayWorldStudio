@@ -40,6 +40,7 @@ from .models import (
     StableId,
     UnknownProperty,
     Vec3,
+    _require_unique,
 )
 
 DESCRIPTION_MAX_CHARS: Final = 500
@@ -651,6 +652,79 @@ class PlanProposalResult(ContractModel):
     @model_validator(mode="after")
     def _one_outcome(self) -> PlanProposalResult:
         if (self.outcome == "proposal") != (self.proposal is not None) or (
+            self.outcome == "unsupported"
+        ) != (self.message is not None):
+            raise ValueError(f"an '{self.outcome}' result must carry exactly its own content")
+        return self
+
+
+SETUP_DESCRIPTION_MAX_CHARS: Final = 1000
+MAX_SETUP_OBJECTS: Final = 200
+MAX_SUGGESTED_STATIONS: Final = 12
+
+
+class SetupObject(ContractModel):
+    """One reviewed object offered to "Suggest setup": its name, kind and footprint only."""
+
+    id: StableId
+    name: NonEmptyText
+    kind: ObjectKind
+    width_m: PositiveLength
+    depth_m: PositiveLength
+
+
+class ProcessSuggestionRequest(ContractModel):
+    """The person's description of the work and the reviewed objects (SIM-01, "Suggest setup").
+    Object names are content from the plan, never instructions."""
+
+    description: Annotated[
+        str, StringConstraints(min_length=3, max_length=SETUP_DESCRIPTION_MAX_CHARS)
+    ]
+    objects: list[SetupObject] = Field(min_length=2, max_length=MAX_SETUP_OBJECTS)
+
+    @model_validator(mode="after")
+    def _unique(self) -> ProcessSuggestionRequest:
+        _require_unique((o.id for o in self.objects), "object id")
+        return self
+
+
+class SuggestedStation(ContractModel):
+    object_id: StableId
+    name: ShortText
+    role: Literal["supply", "process"]
+    why: NonEmptyText
+
+
+class ProcessSuggestion(ContractModel):
+    """Station roles and order, what moves, and questions to ask the person. It has no place for
+    a cycle time, a staffing level or any other operating value: those are entered or accepted
+    as illustrative examples by the person, never suggested as facts."""
+
+    item_name: ShortText | None
+    stations: list[SuggestedStation] = Field(min_length=2, max_length=MAX_SUGGESTED_STATIONS)
+    questions: list[NonEmptyText] = Field(max_length=6)
+
+    @model_validator(mode="after")
+    def _ordered(self) -> ProcessSuggestion:
+        _require_unique((s.object_id for s in self.stations), "suggested station")
+        if self.stations[0].role != "supply" or any(s.role == "supply" for s in self.stations[1:]):
+            raise ValueError("the first suggested station, and only the first, is the supply")
+        return self
+
+
+class ProcessSuggestionResult(ContractModel):
+    """The API's answer to "Suggest setup": a suggestion for the person to review, or why
+    there is none."""
+
+    outcome: Literal["suggestion", "unsupported"]
+    suggestion: ProcessSuggestion | None
+    message: NonEmptyText | None
+    checks: list[NonEmptyText]
+    provider: ProviderRun
+
+    @model_validator(mode="after")
+    def _one_outcome(self) -> ProcessSuggestionResult:
+        if (self.outcome == "suggestion") != (self.suggestion is not None) or (
             self.outcome == "unsupported"
         ) != (self.message is not None):
             raise ValueError(f"an '{self.outcome}' result must carry exactly its own content")

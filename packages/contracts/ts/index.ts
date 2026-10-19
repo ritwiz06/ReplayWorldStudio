@@ -16,6 +16,7 @@ import type {
   ModelRevisionProposalResult,
   ObjectProposalResult,
   PlanProposalResult,
+  ProcessSuggestionResult,
   PlanUpload,
   Project,
   UpgradeReport,
@@ -25,7 +26,7 @@ import type {
 
 export type * from "./generated/contracts";
 
-export const SCHEMA_VERSION: Project["schema_version"] = "0.13.0";
+export const SCHEMA_VERSION: Project["schema_version"] = "0.14.0";
 
 /** One structural problem, located by a JSON Pointer such as `/scene/objects/2/dimensions`. */
 export interface ContractIssue {
@@ -82,3 +83,4 @@ export const validateModelRevisionProposalResult = validatorFor<ModelRevisionPro
 export const validateDrawingAnalysis = validatorFor<DrawingAnalysis>("DrawingAnalysis");
 export const validatePlanUpload = validatorFor<PlanUpload>("PlanUpload");
 export const validatePlanProposalResult = validatorFor<PlanProposalResult>("PlanProposalResult");
+export const validateProcessSuggestionResult = validatorFor<ProcessSuggestionResult>("ProcessSuggestionResult");

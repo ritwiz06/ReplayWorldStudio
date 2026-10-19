@@ -13,6 +13,7 @@ import {
   validateModelRevisionProposalResult,
   validateObjectProposalResult,
   validatePlanProposalResult,
+  validateProcessSuggestionResult,
   validatePlanUpload,
   validateProject,
   validateStoredPhoto,
@@ -25,6 +26,7 @@ import {
   type GeneratedAssetRevisionRequest,
   type GeometryDraft,
   type ImageAnalysisRequest,
+  type ProcessSuggestionRequest,
   type ModelRevisionProposalRequest,
   type ValidationIssue,
   type ValidationResult,
@@ -246,6 +248,15 @@ export function createApiClient(
      * model); nothing is stored. */
     proposePlan: (body: ImageAnalysisRequest, signal?: AbortSignal) =>
       request("/api/v1/assist/plan-proposals", validatePlanProposalResult, {
+        method: "POST",
+        body: JSON.stringify(body),
+        signal,
+        timeoutMs: ASSIST_TIMEOUT_MS,
+      }),
+    /** Suggest station roles, order and questions for Run a day (sent to the configured
+     * language model); nothing is applied or stored, and no operating value is suggested. */
+    suggestProcess: (body: ProcessSuggestionRequest, signal?: AbortSignal) =>
+      request("/api/v1/assist/process-suggestions", validateProcessSuggestionResult, {
         method: "POST",
         body: JSON.stringify(body),
         signal,

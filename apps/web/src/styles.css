@@ -3155,6 +3155,11 @@ label.button.disabled {
   background: rgba(17, 19, 22, 0.7);
 }
 .run-stale-notice {
+  position: absolute;
+  left: 50%;
+  bottom: 38px;
+  transform: translateX(-50%);
+  z-index: 45;
   pointer-events: auto;
 }
 .setup-day {

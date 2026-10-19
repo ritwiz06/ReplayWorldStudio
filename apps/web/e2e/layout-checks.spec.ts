@@ -134,7 +134,7 @@ test("does this layout fit? overlaps, a keep-clear zone and a width-only route, 
   // Save and reopen in a fresh page: the same answers come back from the saved layout.
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("save").click()]);
   const text = readFileSync((await download.path())!, "utf8");
-  expect((JSON.parse(text) as { schema_version: string }).schema_version).toBe("0.13.0");
+  expect((JSON.parse(text) as { schema_version: string }).schema_version).toBe("0.14.0");
   await page.goto("/");
   await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 15 objects");
   await page.getByTestId("scene-file-input").setInputFiles({ name: download.suggestedFilename(), mimeType: "application/json", buffer: Buffer.from(text) });
