@@ -67,6 +67,17 @@ describe("api client", () => {
     });
   });
 
+  it("reports a body that arrives after the timeout as a timeout, not as malformed", async () => {
+    const late: typeof fetch = (_input, init) =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => new Promise((_resolve, reject) => init?.signal?.addEventListener("abort", () => reject(init.signal!.reason))),
+      } as unknown as Response);
+    const result = await createApiClient(BASE, late).getHealth(AbortSignal.timeout(5));
+    expect(result).toEqual({ ok: false, error: { kind: "network", message: "The API at http://api.test did not respond within 8 s." } });
+  });
+
   it("reports a non-JSON 2xx body as a parse failure", async () => {
     const result = await createApiClient(BASE, respond(200, "<html>proxy</html>")).getHealth();
     expect(!result.ok && result.error.kind).toBe("parse");

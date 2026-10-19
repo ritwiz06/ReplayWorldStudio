@@ -95,6 +95,8 @@ export function createApiClient(
       data = await response.json();
     } catch (err) {
       if (isAbortError(err)) throw err;
+      // The timeout also covers reading the body: a slow answer is not a malformed one.
+      if (isTimeoutError(err)) return failure({ kind: "network", message: `The API at ${baseUrl} did not respond within ${timeoutMs / 1000} s.` });
       return failure(
         response.ok
           ? { kind: "parse", message: `${path} returned a response that is not JSON.` }
@@ -127,6 +129,8 @@ export function createApiClient(
         method: "POST",
         body: text,
         signal,
+        // The API reads and checks every model and source file the project names.
+        timeoutMs: GENERATE_TIMEOUT_MS,
       }),
     /** Upgrades an older document through the API's migration chain, for review; nothing is stored. */
     upgradeProjectDocument: (text: string, signal?: AbortSignal) =>
@@ -134,6 +138,7 @@ export function createApiClient(
         method: "POST",
         body: text,
         signal,
+        timeoutMs: GENERATE_TIMEOUT_MS,
       }),
     /** Whether language proposals are available, and where requests would go. */
     getAssistStatus: (signal?: AbortSignal) => request("/api/v1/assist/status", validateAssistStatus, { signal }),
