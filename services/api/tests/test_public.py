@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from fastapi import Request
 from fastapi.testclient import TestClient
 from replay_world_api.app import create_app
 from replay_world_api.public import COOKIE, sweep
@@ -187,6 +188,34 @@ def test_the_public_preview_refuses_to_serve_as_root(
     monkeypatch.setattr(os, "geteuid", lambda: 0)
     with pytest.raises(SystemExit, match="Refusing to run the public preview as root"):
         __main__._check_public(settings(tmp_path))
+
+
+def test_behind_railways_edge_each_visitor_is_counted_by_their_own_address() -> None:
+    from replay_world_api.public import client_of
+
+    def request(headers: dict[str, str]) -> Any:
+        scope = {
+            "type": "http",
+            "headers": [(k.lower().encode(), v.encode()) for k, v in headers.items()],
+            "client": ("10.0.0.9", 1234),
+        }
+        return Request(scope)
+
+    edge = {"X-Real-IP": "203.0.113.7", "X-Forwarded-For": "198.51.100.1, 10.0.0.2"}
+    assert client_of(request(edge), trust_proxy=True) == "203.0.113.7"
+    assert client_of(request({"X-Forwarded-For": "198.51.100.1, 10.0.0.2"}), True) == "10.0.0.2"
+    assert client_of(request(edge), trust_proxy=False) == "10.0.0.9"  # never trusted otherwise
+
+
+def test_an_uploads_name_travels_in_a_header_not_the_url(a: TestClient) -> None:
+    from urllib.parse import quote
+
+    name = "Halle Süd (Entwurf) №2.png"
+    stored = a.post("/api/v1/sources/plans", content=SKETCH, headers={"X-Filename": quote(name)})
+    assert stored.status_code == 200, stored.text
+    assert name in stored.text
+    missing = a.post("/api/v1/sources/plans", content=SKETCH)
+    assert missing.status_code == 422
 
 
 def test_writes_stop_before_the_volume_fills(tmp_path: Path) -> None:

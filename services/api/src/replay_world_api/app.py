@@ -10,10 +10,11 @@ import threading
 from collections.abc import AsyncIterator
 from pathlib import Path as FilePath
 from typing import Annotated, Any, Final, Literal, NoReturn
+from urllib.parse import unquote
 
 import anyio
 import anyio.to_thread
-from fastapi import Body, FastAPI, HTTPException, Path, Query, Request
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Path, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -124,6 +125,19 @@ def _plan_status(exc: PlanError) -> int:
     return {"too_large": 413, "unsupported": 415, "missing": 404}.get(exc.kind, 422)
 
 
+def source_filename(
+    x_filename: Annotated[str | None, Header(max_length=1024)] = None,
+    filename: Annotated[str | None, Query(max_length=255)] = None,
+) -> str:
+    """An upload's original name: from the ``X-Filename`` header (percent-encoded UTF-8; what the
+    web app sends, so the name never appears in a request line that a proxy may log), else from
+    the ``filename`` query parameter (older clients)."""
+    name = unquote(x_filename, errors="strict") if x_filename is not None else filename
+    if not name or len(name) > 255:
+        raise HTTPException(status_code=422, detail="A file name of 1 to 255 characters is needed.")
+    return name
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
 
@@ -150,7 +164,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             CORSMiddleware,
             allow_origins=list(settings.cors_origins),
             allow_methods=["GET", "POST"],
-            allow_headers=["Content-Type"],
+            allow_headers=["Content-Type", "X-Filename"],
         )
     if public:
         app.middleware("http")(public_middleware(settings))
@@ -443,7 +457,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     async def upload_plan(
         request: Request,
-        filename: Annotated[str, Query(min_length=1, max_length=255)],
+        filename: Annotated[str, Depends(source_filename)],
     ) -> PlanUpload:
         """Store a floor-plan PDF, PNG or JPEG by its sha256 (IMP-03). An image or a one-page
         PDF comes back read as a picture in pixels; a longer PDF lists its pages. No language
@@ -473,7 +487,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         request: Request,
         sha256: Annotated[str, Path(pattern=r"^[0-9a-f]{64}$")],
         page: Annotated[int, Path(ge=1, le=50)],
-        filename: Annotated[str, Query(min_length=1, max_length=255)],
+        filename: Annotated[str, Depends(source_filename)],
     ) -> DrawingAnalysis:
         """Render the chosen page of a stored PDF and read it as a picture in pixels."""
         try:
@@ -501,7 +515,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     async def upload_photo(
         request: Request,
-        filename: Annotated[str, Query(min_length=1, max_length=255)],
+        filename: Annotated[str, Depends(source_filename)],
         expected_sha256: Annotated[str | None, Query(pattern=r"^[0-9a-f]{64}$")] = None,
     ) -> StoredPhoto:
         """Store an original photo in the local source library, named by its sha256.
@@ -539,7 +553,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     async def upload_drawing(
         request: Request,
-        filename: Annotated[str, Query(min_length=1, max_length=255)],
+        filename: Annotated[str, Depends(source_filename)],
     ) -> DrawingAnalysis:
         """Read a DXF drawing deterministically (IMP-01) and store it by its sha256.
 

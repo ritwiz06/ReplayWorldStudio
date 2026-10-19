@@ -48,7 +48,8 @@ def _check_public(settings: Settings) -> None:
     gb = 1000**3
     print(
         f"Public preview: running as uid {uid}; data in {data} "
-        f"({usage.total / gb:.1f} GB volume, {usage.free / gb:.1f} GB free); "
+        f"({'a mounted volume' if os.path.ismount(data) else 'NOT a mounted volume'}, "
+        f"{usage.total / gb:.1f} GB, {usage.free / gb:.1f} GB free); "
         f"storage cap {limits.storage_cap_mb} MB, refusing writes below {limits.min_free_mb} MB "
         f"free; files deleted {limits.retention_hours:g} h after they are stored "
         f"(checked at start and every {limits.sweep_minutes:g} min); AI off.",

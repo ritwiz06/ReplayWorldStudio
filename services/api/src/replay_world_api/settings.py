@@ -66,8 +66,9 @@ class PublicLimits:
 
     retention_hours: float = 24.0
     visitor_quota_mb: int = 100
-    #: All visitors' files together, counted as allocated disk blocks. Sized for a 4 GB volume:
-    #: about 1.1 GB stays free for the filesystem's own overhead and uploads in flight.
+    #: All visitors' files together, counted as allocated disk blocks. Sized for a volume of at
+    #: least 4 GB (Railway Hobby creates 5 GB): the rest stays free for the filesystem's own
+    #: overhead and uploads in flight.
     storage_cap_mb: int = 2800
     #: Writes are also refused when the volume itself has less than this free, whatever its size.
     min_free_mb: int = 512
@@ -88,7 +89,7 @@ class Settings:
     data_dir: Path = _REPO_ROOT / "data" / "public"
     #: The built web app to serve on the same origin (``apps/web/dist``), if any.
     web_dir: Path | None = None
-    #: Behind a proxy that appends the client to X-Forwarded-For (a host): use its last entry.
+    #: Behind a proxy that states the client (X-Real-IP, else X-Forwarded-For's last entry).
     trust_proxy: bool = False
     limits: PublicLimits = field(default_factory=PublicLimits)
     fixtures_dir: Path = _REPO_ROOT / "fixtures"

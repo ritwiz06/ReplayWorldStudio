@@ -258,6 +258,21 @@ test("a two-page PDF is marked by hand, saved and reopened; its page stays priva
   await other.context.close();
 });
 
+test("a plan over the 10 MB limit is refused with a clear message, and the About panel states limits and storage", { tag: "@public" }, async ({ page }) => {
+  await page.goto("/");
+  await loaded(page, 12);
+  await page.getByTestId("sample-upload").click();
+  const big = Buffer.concat([SKETCH, Buffer.alloc(10 * 1024 * 1024 + 1 - SKETCH.length)]);
+  await page.getByTestId("drawing-file-input").setInputFiles({ name: "my-big-plan.png", mimeType: "image/png", buffer: big });
+  await expect(page.getByTestId("drawing-error")).toContainText("The plan is larger than 10 MB. Nothing was imported.");
+  await page.keyboard.press("Escape");
+  await page.getByTestId("preview-badge").click(); // the upload limits and privacy wording are where a visitor looks
+  const about = page.getByTestId("about-preview");
+  await expect(about).toContainText("up to 10 MB");
+  await expect(about.getByTestId("about-storage")).toContainText("stored on the server temporarily");
+  await expect(about.getByTestId("about-storage")).toContainText("Upload only plans you are allowed to share");
+});
+
 test("with the API unreachable, the page says so and offers to try again", { tag: "@public" }, async ({ page }) => {
   await page.route("**/api/v1/**", (r) => r.abort("connectionrefused"));
   await page.route("**/health", (r) => r.abort("connectionrefused"));

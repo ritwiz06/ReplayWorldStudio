@@ -131,7 +131,7 @@ jobs:
           docker run -d --name rws -p 8000:8000 -e VOYAGER_API_KEY=ci-placeholder-not-a-key -v rws-data:/data replay-world-studio:ci
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:8000/health && break; sleep 1; done
           # The HTTP server runs as rws (uid 10001), never root, and owns the volume.
-          docker logs rws 2>&1 | grep -q "Public preview: running as uid 10001"
+          docker logs rws 2>&1 | grep -q "Public preview: running as uid 10001; data in /data (a mounted volume"
           docker exec rws grep -Eq '^Uid:[[:space:]]+10001[[:space:]]+10001[[:space:]]+10001[[:space:]]+10001$' /proc/1/status
           test "$(docker exec rws stat -c %u /data)" = 10001
           if docker run --rm --user 0 --entrypoint /app/.venv/bin/python replay-world-studio:ci -m replay_world_api; then echo "it served as root"; exit 1; fi
@@ -150,6 +150,11 @@ jobs:
         run: pnpm --filter @replay-world/web test:e2e:public
         env:
           PUBLIC_URL: http://127.0.0.1:8000
+
+      - name: The server's logs hold no uploaded file names and no key
+        run: |
+          docker logs rws > server.log 2>&1
+          if grep -E "my-hall|my-cell|ci-placeholder-not-a-key" server.log; then echo "a private name or the key reached the logs"; exit 1; fi
 
       - name: Keep traces of failed tests
         if: failure()

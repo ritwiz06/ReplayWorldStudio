@@ -1,7 +1,7 @@
 # Replay World Studio public preview (ADR-054, ADR-056): one container, the built web app served
 # by the API on the same origin. Mount a volume at /data (visitors' files, deleted after 24 hours);
-# on Railway that is a service volume (railway.json requires it): no VOLUME line here, Railway
-# refuses Dockerfiles that declare one.
+# on Railway that is a service volume set in the dashboard (docs/public-preview.md): no VOLUME line
+# here, Railway refuses Dockerfiles that declare one.
 #   docker build -t replay-world-studio .
 #   docker run -p 127.0.0.1:8000:8000 -v rws-data:/data replay-world-studio
 # AI is off in this image whatever the environment holds (RWS_PUBLIC=1 never reads a key).

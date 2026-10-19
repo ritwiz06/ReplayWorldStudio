@@ -50,6 +50,8 @@ interface RequestOptions {
   body?: string | Blob;
   /** Content type of a binary body (a photo); JSON otherwise. */
   contentType?: string;
+  /** An upload's original name, sent in a header so it never appears in a URL a proxy may log. */
+  filename?: string;
   signal?: AbortSignal | undefined;
   timeoutMs?: number;
 }
@@ -66,15 +68,17 @@ export function createApiClient(
   async function request<T>(
     path: string,
     validate: (data: unknown) => ValidationResult<T>,
-    { method = "GET", body, contentType, signal, timeoutMs = TIMEOUT_MS }: RequestOptions = {},
+    { method = "GET", body, contentType, filename, signal, timeoutMs = TIMEOUT_MS }: RequestOptions = {},
   ): Promise<ApiResult<T>> {
     const timeout = AbortSignal.timeout(timeoutMs);
     let response: Response;
+    const headers: Record<string, string> =
+      body === undefined ? { Accept: "application/json" } : contentType ? { Accept: "application/json", "Content-Type": contentType } : { ...JSON_HEADERS };
+    if (filename !== undefined) headers["X-Filename"] = encodeURIComponent(filename);
     try {
       response = await fetchImpl(`${baseUrl}${path}`, {
         method,
-        headers:
-          body === undefined ? { Accept: "application/json" } : contentType ? { Accept: "application/json", "Content-Type": contentType } : JSON_HEADERS,
+        headers,
         body: body ?? null,
         signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
       });
@@ -193,11 +197,11 @@ export function createApiClient(
     /** Store an original photo in the local source library. With `expectedSha256` (re-attaching
      * a missing photo), a different file is refused and nothing is written. */
     uploadPhoto: (file: Blob, filename: string, expectedSha256?: string, signal?: AbortSignal) => {
-      const query = new URLSearchParams({ filename });
-      if (expectedSha256) query.set("expected_sha256", expectedSha256);
-      return request(`/api/v1/sources/photos?${query.toString()}`, validateStoredPhoto, {
+      const query = expectedSha256 ? `?${new URLSearchParams({ expected_sha256: expectedSha256 }).toString()}` : "";
+      return request(`/api/v1/sources/photos${query}`, validateStoredPhoto, {
         method: "POST",
         body: file,
+        filename,
         contentType: file.type || "application/octet-stream",
         signal,
         timeoutMs: GENERATE_TIMEOUT_MS,
@@ -206,9 +210,10 @@ export function createApiClient(
     /** Read a DXF drawing (deterministically; no language model) and store it by its sha256.
      * Nothing is added to a project; a DWG or unreadable file is refused and not stored. */
     uploadDrawing: (file: Blob, filename: string, signal?: AbortSignal) =>
-      request(`/api/v1/sources/drawings?${new URLSearchParams({ filename }).toString()}`, validateDrawingAnalysis, {
+      request("/api/v1/sources/drawings", validateDrawingAnalysis, {
         method: "POST",
         body: file,
+        filename,
         contentType: "application/octet-stream",
         signal,
         timeoutMs: GENERATE_TIMEOUT_MS,
@@ -216,17 +221,19 @@ export function createApiClient(
     /** Store a floor-plan PDF, PNG or JPEG (IMP-03; no language model). An image or a one-page
      * PDF comes back read as a picture in pixels; a longer PDF lists its pages. */
     uploadPlan: (file: Blob, filename: string, signal?: AbortSignal) =>
-      request(`/api/v1/sources/plans?${new URLSearchParams({ filename }).toString()}`, validatePlanUpload, {
+      request("/api/v1/sources/plans", validatePlanUpload, {
         method: "POST",
         body: file,
+        filename,
         contentType: "application/octet-stream",
         signal,
         timeoutMs: GENERATE_TIMEOUT_MS,
       }),
     /** Render the chosen page of a stored PDF and read it. */
     readPlanPage: (sha256: string, page: number, filename: string, signal?: AbortSignal) =>
-      request(`/api/v1/sources/plans/${sha256}/pages/${page}?${new URLSearchParams({ filename }).toString()}`, validateDrawingAnalysis, {
+      request(`/api/v1/sources/plans/${sha256}/pages/${page}`, validateDrawingAnalysis, {
         method: "POST",
+        filename,
         signal,
         timeoutMs: GENERATE_TIMEOUT_MS,
       }),

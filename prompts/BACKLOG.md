@@ -901,6 +901,7 @@ Supported model: rigid bodies with stated mass, friction and restitution at a fi
   - Ready to deploy: the container and `railway.json`, with a 4 GB volume and a 2800 MB cap, the server never running as root, and AI refused.
   - **Publicly launched: no.**
   - Remaining: the Railway staging service (the user's account; docs/public-preview.md), the public journeys against its URL, the publish decision, a newcomer trial, and a licence.
+- Note (2026-10-18, ADR-057): new Railway services ignore `railway.json` (removed); the dashboard settings are in docs/public-preview.md. Volume 5 GB (Hobby). Fixed before staging: rate limits by `X-Real-IP`; file names out of URLs. **Staging not deployed** (no Railway access from here).
 
 ## Later
 

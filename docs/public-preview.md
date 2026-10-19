@@ -5,8 +5,8 @@ The release goal is an **online public preview**: an early preview that opens on
 | Stage | Status (2026-10-18) |
 | --- | --- |
 | Runs locally | **Yes.** `pnpm start` serves the app on `127.0.0.1` for you alone (your `.env`, AI on with your key). This is a convenience, not the release. |
-| Ready to deploy | **Yes.** The production container (`RWS_PUBLIC=1`) and `railway.json`. CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39175178847 passed all three jobs on `72ee6f0`, including the container on a root-owned volume (uid 10001) and the public journeys against it. |
-| Staging URL | **Not created.** Needs your Railway account (steps below). |
+| Ready to deploy | **Yes.** The production container (`RWS_PUBLIC=1`) and the dashboard settings below (ADR-057). CI https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39175178847 passed all three jobs on `72ee6f0`, including the container on a root-owned volume (uid 10001) and the public journeys against it. |
+| Staging URL | **Not created.** It needs your Railway account; I have no access to it (steps below). |
 | Publicly launched | **No.** Only after the public journeys pass against the staging URL and we decide to publish it. |
 
 ## What can be published
@@ -19,40 +19,55 @@ The release goal is an **online public preview**: an early preview that opens on
 
 ## Railway staging (the account-dependent steps you perform)
 
-Railway's documented terms (checked 2026-10-18):
-- **Hobby plan:** $5/month, which includes $5 of usage. Beyond that, memory $10/GB/month, vCPU $20/vCPU/month, volume storage $0.15/GB/month, egress $0.05/GB.
-- **Volumes on Hobby:** at most 5 GB; they can be grown (live resize), never shrunk. A service with a volume cannot have replicas and has a short downtime on each redeploy.
-- **Dockerfiles may not declare `VOLUME`** (that was the "Dockerfile failed validation" error); the image no longer does.
-- **Volumes are mounted owned by root.** Railway suggests `RAILWAY_RUN_UID=0`; **do not set it**. The image's entrypoint starts as root only to give `/data` to the user `rws` (uid 10001), then drops privileges before the HTTP server starts, and the server refuses to run as root.
+**Railway's documented terms (checked 2026-10-18).**
+- **Config as Code (`railway.json`) is deprecated.** "New services cannot opt into Config as Code". Existing files keep working for legacy services until 2026-12-01.
+  - Its replacement, `.railway/railway.ts`, is applied only by the Railway CLI (`railway config apply`) by a logged-in user.
+  - So the repository carries **no Railway config file**. The settings below are entered in the dashboard once.
+- **Builder.** A file named `Dockerfile` at the repository root is used automatically. The build log says `Using detected Dockerfile!`.
+- **Start command.** A dashboard Start Command would *replace* the image's `ENTRYPOINT`, so leave it empty. If one is set anyway, the server refuses to run as root and the deploy fails safely.
+- **Port.** Railway injects `PORT` and health-checks on it; the server listens on `PORT`.
+- **Plans.** Hobby is $5/month, including $5 of usage. Beyond that: memory $10/GB/month, vCPU $20/vCPU/month, volume storage $0.15/GB/month (billed on space used), egress $0.05/GB.
+- **Volumes.**
+  - Hobby volumes are created at **5 GB**. They can grow (live resize) but never shrink, so **4 GB is not available on Hobby**. Trial volumes are 0.5 GB, too small for the 512 MB free-space floor: use Hobby.
+  - Railway mounts volumes owned by root. Its docs suggest `RAILWAY_RUN_UID=0`; **do not set it**. The image's entrypoint gives `/data` to `rws` (uid 10001) and drops root before the server starts.
+  - A service with a volume cannot have replicas, and has a short downtime on each redeploy.
+  - `VOLUME` lines in a Dockerfile are refused; the image has none.
+- **Client address.** Railway's edge states it in `X-Real-IP`, which the rate limits use.
 
-1. **Create the service.** On the Hobby plan: **New Project → Deploy from GitHub repo → `ritwiz06/ReplayWorldStudio`**. Railway reads `railway.json`:
-   - the `Dockerfile` builder;
-   - a volume required at `/data` (a deploy without one fails);
-   - one replica, a health check at `/health`, and restart on failure.
-2. **Volume.** On the service, **Add Volume**, mount path **`/data`**. Open its settings and make sure it is **4 GB** (live-resize up to 4 GB if it is smaller; 5 GB is also fine). The application's storage cap is sized for 4 GB; see Storage below.
-3. **Variables:** none are required. The image sets `RWS_PUBLIC=1`, `RWS_DATA_DIR=/data`, `RWS_WEB_DIR` and `RWS_TRUST_PROXY=1`, and it listens on Railway's `PORT`.
-   - **Do not add `VOYAGER_API_KEY`**, or any Voyager setting. The public build ignores the key anyway, but it does not belong on the hosted service.
-   - **Do not add `RAILWAY_RUN_UID`.**
-4. **Backups: leave them all off.** Railway keeps daily backups 6 days, weekly 27 and monthly 89. Any schedule would keep uploads past 24 hours and make the stated retention false.
-5. **Deploy, then read the deploy log.** It must contain one line like:
+**Dashboard settings for the staging service:**
 
-   `Public preview: running as uid 10001; data in /data (4.0 GB volume, … GB free); storage cap 2800 MB, refusing writes below 512 MB free; files deleted 24 h after they are stored (checked at start and every 15 min); AI off.`
+| Where | Setting |
+| --- | --- |
+| Plan | **Hobby** |
+| New Project | **Deploy from GitHub repo** → `ritwiz06/ReplayWorldStudio`, branch `main`. Name the service `staging`. |
+| Settings → Source | Root Directory empty. **Wait for CI: on** (deploy only commits whose GitHub checks passed). |
+| Settings → Build | Builder **Dockerfile** (detected). No custom build command, no `RAILWAY_DOCKERFILE_PATH`. |
+| Settings → Deploy | **Custom Start Command: empty.** Healthcheck Path **`/health`**. Restart policy **On Failure**. **Replicas 1.** Serverless / app sleeping **off** (the 15-minute sweep needs the process running; a sleeping service would keep expired files). |
+| Variables | **`PORT=8000`** only. **No `VOYAGER_API_KEY`**, no other `VOYAGER_*` or `RWS_*` values, **no `RAILWAY_RUN_UID`**, nothing from your local `.env`. |
+| Volume | Right-click the canvas → **Volume** → attach to `staging`, **mount path `/data`**. Its settings show 5 GB on Hobby. |
+| Backups tab | **No schedules, no manual backups.** Any backup keeps uploads past 24 hours: daily backups are kept 6 days, weekly 27, monthly 89. |
+| Settings → Networking | **Generate Domain**, target port **8000**. Do not add a custom domain or share the URL. |
 
-   - If it says `uid 0`, or the log reads `Refusing to run the public preview as root`, stop: something overrode the entrypoint.
-   - If it warns that the cap exceeds the volume, grow the volume.
-6. **Domain:** **Settings → Networking → Generate Domain**. Railway provides HTTPS on `*.up.railway.app`.
-7. **Run the public journeys against the staging URL** from this repository:
+**Then:**
+1. **Deploy.** The build log shows `Using detected Dockerfile!`. The deploy log must show one line like:
+
+   `Public preview: running as uid 10001; data in /data (a mounted volume, 5.0 GB, … GB free); storage cap 2800 MB, refusing writes below 512 MB free; files deleted 24 h after they are stored (checked at start and every 15 min); AI off.`
+
+   - `NOT a mounted volume` means the volume isn't attached at `/data`.
+   - `uid 0` or `Refusing to run the public preview as root` means a Start Command replaced the entrypoint.
+2. **Send me the URL and that log line.** I run the public journeys against it:
 
    ```bash
    PUBLIC_URL=https://<your-domain> pnpm --filter @replay-world/web test:e2e:public
    SCREENS_OUT=../../docs/release-0.1/staging PUBLIC_URL=https://<your-domain> pnpm --filter @replay-world/web test:e2e:public screens
    ```
 
-8. **Decide whether to publish.** Until then, treat the URL as staging: do not announce it.
+   Two checks are visible only in your account: the volume's usage rising after uploads, and the deploy and HTTP logs. You can paste those, or run `railway login` and `railway link` on this computer so I can read them.
+3. **Decide whether to publish.** Until then, treat the URL as staging: do not announce it.
 
 **Expected cost:** about $5 a month (the Hobby fee) while traffic is small.
 - **Memory:** about 60–75 MB idle when measured locally, roughly $0.70 a month.
-- **Volume:** 4 GB is at most $0.60 a month.
+- **Volume:** billed on space used, so at most $0.75 a month for 5 GB.
 - **Egress:** a first visit transfers about 0.5 MB compressed, so 1,000 visits cost about $0.03.
 
 ## Storage and privacy
@@ -65,9 +80,9 @@ Railway's documented terms (checked 2026-10-18):
 | Retention | A file expires 24 hours after it was first stored. Uploading identical bytes again does not extend that.<br>**While the server runs**, a sweep every 15 minutes deletes expired files and empty folders, so each file is gone within 24 h 15 min.<br>**After downtime** (a redeploy, a crash, a stopped service), expired files stay on the volume, unreachable because nothing serves them, until the next start. The start-up sweep then deletes them before the first request is served.<br>"Delete my uploaded files now" in the About dialog deletes a visitor's files at once. |
 | Backups | **Off, and must stay off** for the retention above to hold (step 4). |
 | Projects | Never stored on the server: **Save project** downloads the file. A downloaded project reopens after its plan was deleted; the drawing panel says the original file is not on the server, and the visitor can upload the plan again. |
-| Storage | **Volume 4 GB.** The application cap is **2800 MB** (MiB, about 2.9 GB) for all visitors' files together, counted as the disk blocks they occupy. That leaves about 1.1 GB for the filesystem's own overhead, folders and uploads in flight.<br>Independently, a write is refused when it would leave **less than 512 MB free** on the volume, so a smaller volume fills safely too. Either limit answers 507, "storage is full". |
+| Storage | **Volume 5 GB** (Hobby's size; at least 4 GB is needed). The application cap is **2800 MB** (MiB, about 2.9 GB) for all visitors' files together, counted as the disk blocks they occupy. On 5 GB that leaves about 2 GB for the filesystem's own metadata (Railway: 2–3 %), folders and uploads in flight.<br>Independently, a write is refused when it would leave **less than 512 MB free** on the volume, so a smaller volume fills safely too. Either limit answers 507, "storage is full". |
 | Limits | 10 MB per plan, 15 MB per photo, 25 MB per request; 100 MB per visitor; the storage limits above; 600 requests a minute and 40 uploads per 10 minutes per client IP; a POST needs a Content-Length. |
-| Logs | Access logs are off in the preview (request lines would carry uploaded files' names); only start-up and errors are logged, never bodies, file contents or keys. |
+| Logs | The server's access logs are off; it logs only start-up and errors, never bodies, file contents or keys.<br>Railway's edge keeps its own HTTP logs of request lines, so uploads send their original name in an `X-Filename` header, never in the URL. Stored files are addressed by content hash, so request lines carry no file names. |
 | AI | Off. With `RWS_PUBLIC=1` the key is not read. Every AI request is refused with 503 before its body is read, and the web app shows no AI buttons. No key is in the image or the web bundle (checked in CI). |
 | Server user | The HTTP server runs as `rws` (uid 10001), never as root. CI checks this with a root-owned volume, as Railway mounts one. |
 | Headers | CSP (`script-src 'self' 'unsafe-eval'`, since the contract validator compiles its schemas at run time), `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`. API docs (`/docs`, `/openapi.json`) are off. |

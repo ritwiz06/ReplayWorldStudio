@@ -1111,3 +1111,30 @@ For a new decision, append: ID, date, status, context, options considered, decis
 - **Consequences.**
   - Deploying needs the user's Railway account (docs/public-preview.md, steps 1–8).
   - The provider-authorization question is the user's to ask; until it is answered, the hosted preview has no AI.
+
+### ADR-057 - Railway staging is configured in the dashboard; deploy blockers fixed before staging
+
+- Date: 2026-10-18 (America/Phoenix). Status: adopted. Amends ADR-056 points 3 and 5.
+- **Context.** Railway's documentation, checked 2026-10-18:
+  - Config as Code (`railway.json`) is deprecated, and "new services cannot opt into Config as Code". Existing files work for legacy services until 2026-12-01.
+  - Its replacement, `.railway/railway.ts`, is applied only through the Railway CLI by a logged-in user.
+  - Hobby volumes are created at 5 GB and cannot shrink.
+  - The edge states the client address in `X-Real-IP` and keeps its own HTTP logs.
+  - A dashboard Start Command replaces the image's `ENTRYPOINT`.
+  - This computer has no Railway CLI or token, so the account steps are the user's.
+- **Decision.**
+  1. **`railway.json` is removed**: a new service would silently ignore it, including its volume requirement. The staging service is configured once in the dashboard, with the exact settings recorded in docs/public-preview.md:
+     - Hobby plan;
+     - Dockerfile builder (detected), no Start Command, `/health`, one replica, no app sleeping;
+     - only `PORT=8000`; a volume at `/data`; no backups;
+     - a generated domain on port 8000.
+     
+     An IaC file can come later if the user wants the CLI workflow.
+  2. **Volume.** It is Hobby's 5 GB, since 4 GB cannot be chosen. The 2800 MB cap and 512 MB free-space floor stay; they need at least 4 GB.
+  3. **Rate limits** use `X-Real-IP` when the proxy is trusted. Otherwise every visitor could share one bucket: 600 requests a minute and 40 uploads per 10 minutes for everyone together.
+  4. **Upload names** travel in an `X-Filename` header (percent-encoded), so no request line, ours or Railway's, carries a private file name. The query parameter is still accepted from older clients.
+  5. **Start-up log.** It states whether `/data` is a mounted volume, to stand in for the removed `requiredMountPath`.
+  6. **Tests.**
+     - The public journeys check the 10 MB limit message and the About panel's limits and storage wording.
+     - CI checks the server's logs hold no uploaded names and no key.
+- **Consequences.** Staging is not deployed until the user creates the service. Verification against the URL follows.

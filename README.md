@@ -7,7 +7,7 @@ Turn a floor plan into a 3D layout you can walk through, change and check. Uploa
 > | | |
 > | --- | --- |
 > | Runs locally | Yes: `pnpm start` (below). |
-> | Ready to deploy | Yes: the production container and `railway.json` ([docs/public-preview.md](docs/public-preview.md)). |
+> | Ready to deploy | Yes: the production container and the Railway dashboard settings in [docs/public-preview.md](docs/public-preview.md). |
 > | Publicly launched | **No.** There is no staging URL yet, and launching follows a decision once the public journeys pass against it. |
 
 ## Run it on your computer
@@ -213,7 +213,7 @@ docker run -p 127.0.0.1:8000:8000 -v rws-data:/data replay-world-studio
 PUBLIC_URL=http://127.0.0.1:8000 pnpm --filter @replay-world/web test:e2e:public
 ```
 
-For Railway staging (a 4 GB volume at `/data`, backups off, no Voyager variables) and the storage and privacy record, see [docs/public-preview.md](docs/public-preview.md).
+For Railway staging (dashboard settings, a volume at `/data`, backups off, no Voyager variables) and the storage and privacy record, see [docs/public-preview.md](docs/public-preview.md).
 
 After changing a model in `packages/contracts/python/replay_world_contracts/models.py`, run `pnpm contracts:generate` and commit the regenerated files. After changing equipment geometry, run `pnpm assets:build` and then `pnpm fixtures:build`.
 

@@ -160,7 +160,12 @@ class RateLimiter:
 
 
 def client_of(request: Request, trust_proxy: bool) -> str:
+    """The visitor's address for rate limits. Behind a trusted proxy: Railway's edge states it in
+    X-Real-IP; otherwise the last X-Forwarded-For entry (the one the proxy appended)."""
     if trust_proxy:
+        real = request.headers.get("x-real-ip", "").strip()
+        if real:
+            return real
         forwarded = request.headers.get("x-forwarded-for", "")
         if forwarded:
             return forwarded.split(",")[-1].strip()

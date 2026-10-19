@@ -1040,6 +1040,33 @@ Append entries in chronological order. If a live repository session log already 
 - CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39175178847 passed all three jobs on `72ee6f0`.
 - Next concrete task: Railway staging (docs/public-preview.md steps 1–8).
 
+### 2026-10-18 - Railway staging prepared; deploy blockers fixed (ADR-057); staging NOT deployed
+
+- Starting branch and relevant commit: `main` at `0d72d56`.
+- Goal: deploy and verify the public staging preview. No feature work.
+- Repository state found: no Railway CLI, token or config on this computer, so the account steps are the user's. Railway's docs (2026-10-18):
+  - new services ignore `railway.json` (Config as Code is deprecated);
+  - Hobby volumes are created at 5 GB;
+  - the client address is in `X-Real-IP`;
+  - a Start Command replaces `ENTRYPOINT`.
+- Work completed:
+  - **`railway.json` removed.** The exact dashboard settings are in docs/public-preview.md.
+  - **Rate limits** use `X-Real-IP`. Before this, behind Railway's edge, every visitor could have shared one bucket.
+  - **Upload names** go in an `X-Filename` header, not the URL, so Railway's HTTP logs never see them. The `filename` query is still accepted; local CORS allows the header.
+  - **Start-up log** says whether `/data` is a mounted volume.
+  - **Tests.**
+    - New public journey: the 10 MB limit message, plus the About panel's limits and storage wording.
+    - CI: no uploaded names or key in the server's logs; the log line must say "a mounted volume".
+    - API tests: `X-Real-IP` handling, and the name sent in a header.
+- Commands run and outcomes:
+  - `pnpm check`: passed (843 pytest, 217 Vitest, 10 contracts).
+  - Container on a root-owned volume, port 8092: uid 10001, "a mounted volume". 6 public journeys passed, and the 7th (the upload limit) passed when run alone. The server log held no upload names or key, and the uploads were under `/data/visitors`.
+  - `pnpm test:e2e:smoke`: 14 passed, covering dev-mode uploads with the new header.
+- Known limitations and blockers:
+  - **Staging is not deployed and no URL exists.** The journeys, screens, volume and log checks against Railway are still to do.
+  - Not publicly launched.
+- Next concrete task: the user creates the Railway service with the dashboard settings and sends the URL and deploy log line; then verify against the URL.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title
