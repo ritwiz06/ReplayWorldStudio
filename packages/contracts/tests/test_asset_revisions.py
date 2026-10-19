@@ -261,6 +261,7 @@ def current(fixture_data: dict[str, Any]) -> dict[str, Any]:
 def as_0_6_0(current: dict[str, Any]) -> dict[str, Any]:
     old = copy.deepcopy(current)
     old["schema_version"] = "0.6.0"
+    del old["process"]
     for source in old["sources"]:
         del source["drawing"]
     for asset in old["catalog"]:
@@ -293,6 +294,8 @@ def test_0_6_0_documents_gain_a_null_revision_and_an_unstated_size_basis(
         "schema_version 0.11.0 -> 0.12.0 (adds 'raster: null' to 0 drawing readings and "
         "'tolerance: null' to 0 drawn outlines: DXF geometry is exact as drawn; no values or "
         "evidence changed)",
+        "schema_version 0.12.0 -> 0.13.0 (adds 'process: null': no process for Run a day was set "
+        "up; no values or evidence changed)",
     ]
     assert "revision" not in old["catalog"][-1]["generation"]  # input untouched
     Project.model_validate(upgrade.document)

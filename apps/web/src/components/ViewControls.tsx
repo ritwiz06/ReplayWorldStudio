@@ -106,7 +106,7 @@ export function FixtureBanner({ fixture, edited }: { fixture: FixtureLabel; edit
       <div className="fixture-banner-head">
         <strong>{title}</strong>
         <span>not verified engineering data</span>
-        {edited && <span className="banner-edited">Edited layout - still synthetic; only Check layout checks it</span>}
+        {edited && <span className="banner-edited">Edited layout - still synthetic; only Check layout and Run a day use it</span>}
         <button type="button" className="link-button" aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? "Hide details" : "Details"}
         </button>

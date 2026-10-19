@@ -453,6 +453,7 @@ function buildDraft(analysis: DrawingAnalysis, scale: ScaleReview, basis: UnitBa
     ],
     catalog: [],
     scene: { id: `scene-${plan ? "plan" : "dxf"}-${tag}`, name, revision: 0, objects: [floor, ...objects], edit_log: [] },
+    process: null,
   };
 }
 

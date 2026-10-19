@@ -478,5 +478,6 @@ export function buildPhotoProject(input: WorldInput): Project {
     ],
     catalog,
     scene: { id: `scene-photo-${tag}`, name: `Room from ${input.stored.filename}`.slice(0, 500), revision: 0, objects: [floor, reference, ...objects], edit_log: [] },
+    process: null,
   };
 }

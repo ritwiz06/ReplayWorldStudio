@@ -48,7 +48,8 @@ The server listens on `127.0.0.1` only. Your computer's network address is refus
    - a **PDF page, PNG or JPEG** (up to 10 MB) is shown as a picture: you mark one length you know, then trace the floor and objects.
    - Export a DWG as DXF first.
 3. **Change, compare, check.** Move, turn, resize, add and remove objects, with undo. **Compare** shows the drawing beside your layout. **Check layout** looks for overlaps and blocked keep-clear zones, and checks whether an item of a width you enter can get through. These are 2D checks of the reviewed design: width only, no turning, and heights are not checked.
-4. **Save project** downloads a `.json` file; **Open project** reopens it.
+4. **Run a day.** It plays a shift on the layout: the sample's example shift, or a process you set up with **Set up a day**. It predicts what happens only under the operating assumptions you enter, not real productivity or safety ([run-a-day.md](run-a-day.md)).
+5. **Save project** downloads a `.json` file, including the process; **Open project** reopens it.
 
 ## Where your files are, and how to delete them
 

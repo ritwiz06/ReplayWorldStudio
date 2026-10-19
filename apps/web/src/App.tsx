@@ -45,6 +45,12 @@ import { isTyping, MODES } from "./scene/modes";
 import type { GhostSpec } from "./scene/PlacementGhost";
 import { worldBounds } from "./scene/placement";
 import { SceneViewport } from "./scene/SceneViewport";
+import { RunBar } from "./components/RunBar";
+import { RunLabels } from "./components/RunLabels";
+import { RunPanel } from "./components/RunPanel";
+import { SetupDay } from "./components/SetupDay";
+import { usePlayback } from "./hooks/usePlayback";
+import { compareDays, type DayComparison, type DayRun, runDay, runOriginal } from "./run/day";
 
 const client = createApiClient();
 
@@ -180,7 +186,16 @@ export function App() {
   /** The object whose generated model is being improved. */
   const [improve, setImprove] = useState<string | null>(null);
   const [rebuild, setRebuild] = useState<{ busy: boolean; message: string | null }>({ busy: false, message: null });
-  const overlayOpen = start || about || create !== null || photoImport || drawingImport || improve !== null;
+  /** Run a day (SIM): the run made for this document, the comparison with the original layout,
+   * whether the run is shown in the 3D view, and the Set up a day dialog. */
+  const [day, setDay] = useState<{ loadId: number; run: DayRun } | null>(null);
+  const [dayComparison, setDayComparison] = useState<{ key: string; original: DayRun; result: DayComparison } | null>(null);
+  const [runShown, setRunShown] = useState(false);
+  const [pendingRun, setPendingRun] = useState(false);
+  const [setupDay, setSetupDay] = useState(false);
+  /** The run that should start playing as soon as it is shown. */
+  const [autoPlayKey, setAutoPlayKey] = useState<string | null>(null);
+  const overlayOpen = start || about || create !== null || photoImport || drawingImport || improve !== null || setupDay;
   // Selection and placement belong to the project they were made in.
   const [selection, setSelection] = useState<{ loadId: number; id: string | null }>({ loadId: 0, id: null });
   const [placement, setPlacement] = useState<Placement | null>(null);
@@ -208,6 +223,14 @@ export function App() {
   const checks = useMemo(() => (checking && project ? runChecks(project, routeAsk) : null), [checking, project, routeAsk]);
   const highlights = useMemo(() => (checks && drawingPanel.view === "check" ? sceneChecks(checks.now, routeAsk) : null), [checks, drawingPanel.view, routeAsk]);
   const isSample = project?.id === SAMPLE_PROJECT_ID;
+  const activeDay = day?.loadId === loadId ? day.run : null;
+  const dayStale = activeDay !== null && project !== null && activeDay.sceneRevision !== project.scene.revision;
+  const runKey = activeDay?.result ? `${loadId}:${activeDay.sceneRevision}:${activeDay.result.fingerprint}` : null;
+  const playback = usePlayback(activeDay?.result && project?.process ? project.process.shift.duration_s.value * 1000 : 1, runKey, runKey !== null && runKey === autoPlayKey);
+  const layoutEdited = useMemo(() => {
+    const counts = project && sourceDrawing ? compareWithDrawing(project)?.counts : undefined;
+    return counts !== undefined && counts.changed + counts.removed + counts.added > 0;
+  }, [project, sourceDrawing]);
   const selectedId = selection.loadId === loadId ? selection.id : null;
   const focusedDrawn = reviewFocus?.loadId === loadId ? reviewFocus.drawnId : null;
   const selected = project?.scene.objects.find((o) => o.id === selectedId) ?? null;
@@ -292,6 +315,43 @@ export function App() {
     if (mode === "walk") setMode("orbit");
     setDrawingPanel({ open: true, view: "check" });
   }, [mode, project, run, sampleMachine, sourceDrawing]);
+
+  /** Run a day: run the project's process on the layout as it is now (or open the sample hall
+   * and its example shift when there is no reviewed plan), then play it from the shift start. */
+  const startRun = useCallback(() => {
+    if (!project) return;
+    if (!sourceDrawing) {
+      setPendingRun(true);
+      session.loadFixture("sample");
+      return;
+    }
+    setDrawingPanel({ open: true, view: "run" });
+    if (!project.process) return;
+    const made = runDay(project, project.process, "edited");
+    setDay({ loadId, run: made });
+    setDayComparison(null);
+    setRunShown(true);
+    setAutoPlayKey(made.result ? `${loadId}:${made.sceneRevision}:${made.result.fingerprint}` : null);
+    if (mode !== "walk") issue("frame-all");
+  }, [issue, loadId, mode, project, session, sourceDrawing]);
+  if (pendingRun && isSample && sourceDrawing && project?.process && sampleFor === loadId) {
+    setPendingRun(false);
+    setDrawingPanel({ open: true, view: "run" });
+    const made = runDay(project, project.process, "edited");
+    setDay({ loadId, run: made });
+    setDayComparison(null);
+    setRunShown(true);
+    setAutoPlayKey(made.result ? `${loadId}:${made.sceneRevision}:${made.result.fingerprint}` : null);
+    issue("frame-all");
+  }
+  const compareDay = useCallback(() => {
+    if (!project?.process || !activeDay || !runKey) return;
+    const original = runOriginal(project, project.process);
+    if (original) setDayComparison({ key: runKey, original, result: compareDays(original, activeDay, project.process) });
+  }, [activeDay, project, runKey]);
+  const runLabels = useRef<HTMLDivElement>(null);
+  const runShownNow = runShown && activeDay?.replay && !dayStale ? { replay: activeDay.replay, clock: playback.clock } : null;
+  const runFrame = useMemo(() => (runShownNow ? runShownNow.replay.frame(playback.t) : null), [runShownNow?.replay, playback.t]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Handles and placement: a rejection is shown as a notice. */
   const runAndReport = useCallback(
@@ -521,6 +581,19 @@ export function App() {
   // On the simple screen the drawing panel is a column of its own beside the 3D view, so it
   // never covers the scene; with Details on it floats over the view as before.
   const docked = !details && project !== null && sourceDrawing !== null && mode !== "walk" && drawingPanel.open;
+  const runPanel = project ? (
+    <RunPanel
+      project={project}
+      day={activeDay}
+      playback={playback}
+      stale={dayStale}
+      edited={layoutEdited}
+      comparison={dayComparison && dayComparison.key === runKey ? dayComparison : null}
+      onRun={startRun}
+      onCompare={compareDay}
+      onSetUp={() => setSetupDay(true)}
+    />
+  ) : null;
   const help = MODES.find((m) => m.id === mode)!.help;
   const hint = mode !== "walk" && tool !== "select" ? (selected ? TOOL_HELP[tool](snapOn) : TOOL_FIRST[tool]) : help;
 
@@ -567,6 +640,7 @@ export function App() {
             if (mode === "walk") setMode("orbit");
             setDrawingPanel({ open: true, view: "check" });
           }}
+          onRun={startRun}
         />
         {isSample && !guideClosed && (
           <SampleGuide
@@ -641,12 +715,22 @@ export function App() {
             underlay={underlayShown ? underlay : null}
             picture={underlayShown ? picture : null}
             checks={highlights}
+            run={runShownNow}
+            runLabels={runLabels}
           />
         )}
         <div className="viewport-overlays">
           {project?.fixture && <FixtureBanner fixture={project.fixture} edited={project.scene.edit_log.length > 0} />}
           {ghost && editable && <PlacementBanner label={ghost.label} onCancel={() => setPlacement(null)} />}
           {rejection && <EditRejectedNotice message={rejection} onDismiss={() => setRejection(null)} />}
+          {runShown && activeDay && dayStale && (
+            <div className="notice run-stale-notice" data-testid="run-stale-notice">
+              The layout changed since this run.{" "}
+              <button type="button" className="link-button" data-testid="run-again-bar" onClick={startRun}>
+                Run the same shift again
+              </button>
+            </div>
+          )}
           {project && (
             <ModelNotice catalog={project.catalog} models={models} onRetry={retry} onRebuild={() => void rebuildModels()} rebuild={rebuild} />
           )}
@@ -677,6 +761,25 @@ export function App() {
           />
         )}
         {project && mode === "top" && <PlanOverlay pixelsPerMetre={pixelsPerMetre} />}
+        {runFrame && <RunLabels frame={runFrame} layer={runLabels} />}
+        {runShownNow && project?.process && activeDay && (
+          <RunBar
+            playback={playback}
+            replay={runShownNow.replay}
+            startClockS={project.process.shift.start_clock_s.value}
+            itemName={project.process.item_name}
+            breaks={activeDay.plan.input?.breaks ?? []}
+            example={project.process.example_note !== null}
+            onDetails={() => {
+              if (mode === "walk") setMode("orbit");
+              setDrawingPanel({ open: true, view: "run" });
+            }}
+            onClose={() => {
+              playback.pause();
+              setRunShown(false);
+            }}
+          />
+        )}
         {project && mode === "walk" && <WalkHud onReset={() => issue("reset-walk")} onExit={() => setMode("orbit")} />}
         {project && sourceDrawing && mode !== "walk" && !docked && (
           <SourceDrawing
@@ -697,6 +800,7 @@ export function App() {
             checks={checks}
             routeAsk={routeAsk}
             onRouteAsk={setRouteAsk}
+            run={runPanel}
           />
         )}
         {project && <SourcePhoto key={`photo-${loadId}`} client={client} project={project} selectedId={selected?.id ?? null} onSelect={select} onView={showView} missingFiles={source?.kind === "file" ? source.report.missing_source_files : []} />}
@@ -738,6 +842,7 @@ export function App() {
             checks={checks}
             routeAsk={routeAsk}
             onRouteAsk={setRouteAsk}
+            run={runPanel}
           />
         </aside>
       )}
@@ -871,6 +976,20 @@ export function App() {
       )}
       {create && !prompt && (
         <CreateObject client={client} assist={assist} startWith={create} onPlace={startGenerated} onClose={() => setCreate(null)} />
+      )}
+      {setupDay && project && !prompt && (
+        <SetupDay
+          project={project}
+          onClose={() => setSetupDay(false)}
+          onSave={(process, summary) => {
+            const outcome = run({ baseRevision: project.scene.revision, command: { type: "set_process", process, summary } });
+            if (!outcome) return "The scene is not editable right now.";
+            if (!outcome.ok && outcome.rejection.kind !== "no_change") return outcome.rejection.message;
+            setSetupDay(false);
+            setDrawingPanel({ open: true, view: "run" });
+            return null;
+          }}
+        />
       )}
       {prompt?.kind === "upgrade" && (
         <UpgradeReviewDialog

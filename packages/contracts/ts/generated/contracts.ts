@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.12.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.13.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -35,7 +35,7 @@ export interface ReplayWorldContracts {
   PlanProposalResult: PlanProposalResult;
 }
 export interface Project {
-  schema_version: "0.12.0";
+  schema_version: "0.13.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -47,6 +47,10 @@ export interface Project {
   sources: SourceDocument[];
   catalog: CatalogAsset[];
   scene: Scene;
+  /**
+   * The process 'Run a day' uses (0.13.0); null when none is set up.
+   */
+  process: ProcessModel | null;
 }
 export interface UnitSystem {
   length: "m";
@@ -1235,7 +1239,9 @@ export interface Scene {
    */
   revision: number;
   objects: SceneObject[];
-  edit_log: (ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed | SourceAttached)[];
+  edit_log: (
+    ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed | SourceAttached | ProcessSet
+  )[];
 }
 export interface SceneObject {
   /**
@@ -1447,18 +1453,557 @@ export interface SourceAttached {
   source_id: string;
   filename: string;
 }
+/**
+ * The process "Run a day" uses was set, changed or removed (0.13.0); no object changes.
+ */
+export interface ProcessSet {
+  type: "process_set";
+  /**
+   * Scene revision this edit produced.
+   */
+  revision: number;
+  summary: string;
+}
+/**
+ * A bounded production process for "Run a day" (0.13.0): stations in flow order, the
+ * transfers between them, the workers and the shift. A run uses it with the scene's current
+ * layout, its seed and an engine version, so the same inputs always give the same events.
+ */
+export interface ProcessModel {
+  format: "rws-process/1";
+  name: string;
+  /**
+   * What moves through the process, e.g. 'batch'.
+   */
+  item_name: string;
+  /**
+   * Set for a shipped example: what it is, and that its values are assumptions.
+   */
+  example_note: string | null;
+  shift: Shift;
+  /**
+   * @minItems 2
+   * @maxItems 12
+   */
+  stations:
+    | [ProcessStation, ProcessStation]
+    | [ProcessStation, ProcessStation, ProcessStation]
+    | [ProcessStation, ProcessStation, ProcessStation, ProcessStation]
+    | [ProcessStation, ProcessStation, ProcessStation, ProcessStation, ProcessStation]
+    | [ProcessStation, ProcessStation, ProcessStation, ProcessStation, ProcessStation, ProcessStation]
+    | [ProcessStation, ProcessStation, ProcessStation, ProcessStation, ProcessStation, ProcessStation, ProcessStation]
+    | [
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation
+      ]
+    | [
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation
+      ]
+    | [
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation
+      ]
+    | [
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation
+      ]
+    | [
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation,
+        ProcessStation
+      ];
+  /**
+   * @minItems 1
+   * @maxItems 24
+   */
+  transfers: [ProcessTransfer, ...ProcessTransfer[]];
+  /**
+   * @minItems 1
+   * @maxItems 12
+   */
+  workers:
+    | [ProcessWorker]
+    | [ProcessWorker, ProcessWorker]
+    | [ProcessWorker, ProcessWorker, ProcessWorker]
+    | [ProcessWorker, ProcessWorker, ProcessWorker, ProcessWorker]
+    | [ProcessWorker, ProcessWorker, ProcessWorker, ProcessWorker, ProcessWorker]
+    | [ProcessWorker, ProcessWorker, ProcessWorker, ProcessWorker, ProcessWorker, ProcessWorker]
+    | [ProcessWorker, ProcessWorker, ProcessWorker, ProcessWorker, ProcessWorker, ProcessWorker, ProcessWorker]
+    | [
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker
+      ]
+    | [
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker
+      ]
+    | [
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker
+      ]
+    | [
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker
+      ]
+    | [
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker,
+        ProcessWorker
+      ];
+  seed: number;
+}
+/**
+ * ``start_clock_s`` is the clock time the shift starts, in seconds after midnight.
+ */
+export interface Shift {
+  start_clock_s: OperatingValue;
+  duration_s: OperatingValue;
+  /**
+   * @maxItems 10
+   */
+  breaks:
+    | []
+    | [ShiftBreak]
+    | [ShiftBreak, ShiftBreak]
+    | [ShiftBreak, ShiftBreak, ShiftBreak]
+    | [ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak]
+    | [ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak]
+    | [ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak]
+    | [ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak]
+    | [ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak]
+    | [ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak, ShiftBreak]
+    | [
+        ShiftBreak,
+        ShiftBreak,
+        ShiftBreak,
+        ShiftBreak,
+        ShiftBreak,
+        ShiftBreak,
+        ShiftBreak,
+        ShiftBreak,
+        ShiftBreak,
+        ShiftBreak
+      ];
+}
+/**
+ * One operating fact (a time, a capacity, a speed or a width) with its basis.
+ */
+export interface OperatingValue {
+  value: number;
+  basis: "example" | "entered";
+}
+/**
+ * Every worker rests for ``duration_s`` from ``start_s`` (seconds after the shift starts), or
+ * from when their task in hand ends, if later.
+ */
+export interface ShiftBreak {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  id: string;
+  name: string;
+  start_s: OperatingValue;
+  duration_s: OperatingValue;
+}
+/**
+ * A step of the process at one scene object. A ``supply`` station is where material is
+ * taken (it is always available there, which is itself an assumption); a ``process`` station
+ * takes ``worker_s`` with a worker present, then ``machine_s`` on its own. ``access_m`` is where
+ * a worker stands to load, unload or pick, in the object's frame.
+ */
+export interface ProcessStation {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  id: string;
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  object_id: string;
+  name: string;
+  role: "supply" | "process";
+  access_m: LocalPoint;
+  access_basis: "example" | "entered";
+  worker_s: OperatingValue | null;
+  machine_s: OperatingValue | null;
+  input_capacity: OperatingValue | null;
+  output_capacity: OperatingValue | null;
+  /**
+   * @maxItems 20
+   */
+  planned_stops:
+    | []
+    | [PlannedStop]
+    | [PlannedStop, PlannedStop]
+    | [PlannedStop, PlannedStop, PlannedStop]
+    | [PlannedStop, PlannedStop, PlannedStop, PlannedStop]
+    | [PlannedStop, PlannedStop, PlannedStop, PlannedStop, PlannedStop]
+    | [PlannedStop, PlannedStop, PlannedStop, PlannedStop, PlannedStop, PlannedStop]
+    | [PlannedStop, PlannedStop, PlannedStop, PlannedStop, PlannedStop, PlannedStop, PlannedStop]
+    | [PlannedStop, PlannedStop, PlannedStop, PlannedStop, PlannedStop, PlannedStop, PlannedStop, PlannedStop]
+    | [
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop
+      ]
+    | [
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop
+      ]
+    | [
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop
+      ]
+    | [
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop
+      ]
+    | [
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop
+      ]
+    | [
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop
+      ]
+    | [
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop
+      ]
+    | [
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop
+      ]
+    | [
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop
+      ]
+    | [
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop
+      ]
+    | [
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop
+      ]
+    | [
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop,
+        PlannedStop
+      ];
+  random_stops: RandomStops | null;
+}
+/**
+ * A point in an object's own frame, metres from its centre before its turn: it moves and
+ * turns with the object.
+ */
+export interface LocalPoint {
+  x: number;
+  z: number;
+}
+/**
+ * No cycle starts at the station between ``start_s`` (seconds after the shift starts) and
+ * ``start_s + duration_s``; a cycle already running finishes first.
+ */
+export interface PlannedStop {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  id: string;
+  reason: string;
+  start_s: OperatingValue;
+  duration_s: OperatingValue;
+}
+/**
+ * Unplanned stops drawn from the run's seed: exponential gaps and durations with these
+ * means, so the same seed always gives the same stops.
+ */
+export interface RandomStops {
+  mean_between_s: OperatingValue;
+  mean_duration_s: OperatingValue;
+}
+/**
+ * Items carried by a worker from one station to the next along a route that has to be
+ * clear for ``item_width_m`` with ``allowance_m`` on each side (the route check decides).
+ * ``handling_s`` is spent picking the item up, and again setting it down.
+ */
+export interface ProcessTransfer {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  id: string;
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  from_station: string;
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  to_station: string;
+  method: "carry";
+  item_width_m: OperatingValue;
+  allowance_m: OperatingValue;
+  speed_m_s: OperatingValue;
+  handling_s: OperatingValue;
+}
+/**
+ * A worker: one task at a time, chosen in the order of ``tasks`` (``station:<id>`` to work
+ * at a station, ``transfer:<id>`` to carry), walking at ``walk_speed_m_s`` through a corridor
+ * ``width_m`` wide when carrying nothing.
+ */
+export interface ProcessWorker {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  id: string;
+  name: string;
+  /**
+   * @minItems 1
+   * @maxItems 40
+   */
+  tasks: [string, ...string[]];
+  walk_speed_m_s: OperatingValue;
+  width_m: OperatingValue;
+}
 export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.12.0";
+  schema_version: "0.13.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.12.0";
+  schema_version: "0.13.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -1495,7 +2040,7 @@ export interface UpgradeReport {
    * Schema version of the submitted document.
    */
   from_version: string;
-  to_version: "0.12.0";
+  to_version: "0.13.0";
   notes: string[];
   project: Project;
   validation: ValidationReport;

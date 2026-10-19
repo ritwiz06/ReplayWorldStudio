@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.12.0",
+  "$id": "urn:replay-world:contracts:0.13.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.12.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.13.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -2105,7 +2105,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.12.0",
+          "const": "0.13.0",
           "type": "string"
         }
       },
@@ -2478,6 +2478,28 @@
         "uncertainty_m"
       ],
       "title": "Length",
+      "type": "object"
+    },
+    "LocalPoint": {
+      "additionalProperties": false,
+      "description": "A point in an object's own frame, metres from its centre before its turn: it moves and\nturns with the object.",
+      "properties": {
+        "x": {
+          "maximum": 100,
+          "minimum": -100,
+          "type": "number"
+        },
+        "z": {
+          "maximum": 100,
+          "minimum": -100,
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "z"
+      ],
+      "title": "LocalPoint",
       "type": "object"
     },
     "ModelBounds": {
@@ -3040,6 +3062,29 @@
         "max"
       ],
       "title": "OmittedShape",
+      "type": "object"
+    },
+    "OperatingValue": {
+      "additionalProperties": false,
+      "description": "One operating fact (a time, a capacity, a speed or a width) with its basis.",
+      "properties": {
+        "value": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "basis": {
+          "enum": [
+            "example",
+            "entered"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "basis"
+      ],
+      "title": "OperatingValue",
       "type": "object"
     },
     "PhotoCalibration": {
@@ -3620,11 +3665,347 @@
       "title": "PlanUpload",
       "type": "object"
     },
+    "PlannedStop": {
+      "additionalProperties": false,
+      "description": "No cycle starts at the station between ``start_s`` (seconds after the shift starts) and\n``start_s + duration_s``; a cycle already running finishes first.",
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "start_s": {
+          "$ref": "#/$defs/OperatingValue"
+        },
+        "duration_s": {
+          "$ref": "#/$defs/OperatingValue"
+        }
+      },
+      "required": [
+        "id",
+        "reason",
+        "start_s",
+        "duration_s"
+      ],
+      "title": "PlannedStop",
+      "type": "object"
+    },
+    "ProcessModel": {
+      "additionalProperties": false,
+      "description": "A bounded production process for \"Run a day\" (0.13.0): stations in flow order, the\ntransfers between them, the workers and the shift. A run uses it with the scene's current\nlayout, its seed and an engine version, so the same inputs always give the same events.",
+      "properties": {
+        "format": {
+          "const": "rws-process/1",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "item_name": {
+          "description": "What moves through the process, e.g. 'batch'.",
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "example_note": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Set for a shipped example: what it is, and that its values are assumptions."
+        },
+        "shift": {
+          "$ref": "#/$defs/Shift"
+        },
+        "stations": {
+          "items": {
+            "$ref": "#/$defs/ProcessStation"
+          },
+          "maxItems": 12,
+          "minItems": 2,
+          "type": "array"
+        },
+        "transfers": {
+          "items": {
+            "$ref": "#/$defs/ProcessTransfer"
+          },
+          "maxItems": 24,
+          "minItems": 1,
+          "type": "array"
+        },
+        "workers": {
+          "items": {
+            "$ref": "#/$defs/ProcessWorker"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "type": "array"
+        },
+        "seed": {
+          "maximum": 2147483647,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "format",
+        "name",
+        "item_name",
+        "example_note",
+        "shift",
+        "stations",
+        "transfers",
+        "workers",
+        "seed"
+      ],
+      "title": "ProcessModel",
+      "type": "object"
+    },
+    "ProcessSet": {
+      "additionalProperties": false,
+      "description": "The process \"Run a day\" uses was set, changed or removed (0.13.0); no object changes.",
+      "properties": {
+        "type": {
+          "const": "process_set",
+          "type": "string"
+        },
+        "revision": {
+          "description": "Scene revision this edit produced.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "summary": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "revision",
+        "summary"
+      ],
+      "title": "ProcessSet",
+      "type": "object"
+    },
+    "ProcessStation": {
+      "additionalProperties": false,
+      "description": "A step of the process at one scene object. A ``supply`` station is where material is\ntaken (it is always available there, which is itself an assumption); a ``process`` station\ntakes ``worker_s`` with a worker present, then ``machine_s`` on its own. ``access_m`` is where\na worker stands to load, unload or pick, in the object's frame.",
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "object_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "supply",
+            "process"
+          ],
+          "type": "string"
+        },
+        "access_m": {
+          "$ref": "#/$defs/LocalPoint"
+        },
+        "access_basis": {
+          "enum": [
+            "example",
+            "entered"
+          ],
+          "type": "string"
+        },
+        "worker_s": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OperatingValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "machine_s": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OperatingValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input_capacity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OperatingValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_capacity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OperatingValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "planned_stops": {
+          "items": {
+            "$ref": "#/$defs/PlannedStop"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "random_stops": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RandomStops"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "object_id",
+        "name",
+        "role",
+        "access_m",
+        "access_basis",
+        "worker_s",
+        "machine_s",
+        "input_capacity",
+        "output_capacity",
+        "planned_stops",
+        "random_stops"
+      ],
+      "title": "ProcessStation",
+      "type": "object"
+    },
+    "ProcessTransfer": {
+      "additionalProperties": false,
+      "description": "Items carried by a worker from one station to the next along a route that has to be\nclear for ``item_width_m`` with ``allowance_m`` on each side (the route check decides).\n``handling_s`` is spent picking the item up, and again setting it down.",
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "from_station": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "to_station": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "method": {
+          "const": "carry",
+          "type": "string"
+        },
+        "item_width_m": {
+          "$ref": "#/$defs/OperatingValue"
+        },
+        "allowance_m": {
+          "$ref": "#/$defs/OperatingValue"
+        },
+        "speed_m_s": {
+          "$ref": "#/$defs/OperatingValue"
+        },
+        "handling_s": {
+          "$ref": "#/$defs/OperatingValue"
+        }
+      },
+      "required": [
+        "id",
+        "from_station",
+        "to_station",
+        "method",
+        "item_width_m",
+        "allowance_m",
+        "speed_m_s",
+        "handling_s"
+      ],
+      "title": "ProcessTransfer",
+      "type": "object"
+    },
+    "ProcessWorker": {
+      "additionalProperties": false,
+      "description": "A worker: one task at a time, chosen in the order of ``tasks`` (``station:<id>`` to work\nat a station, ``transfer:<id>`` to carry), walking at ``walk_speed_m_s`` through a corridor\n``width_m`` wide when carrying nothing.",
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "tasks": {
+          "items": {
+            "pattern": "^(station|transfer):[a-z0-9][a-z0-9._:-]{0,127}$",
+            "type": "string"
+          },
+          "maxItems": 40,
+          "minItems": 1,
+          "type": "array"
+        },
+        "walk_speed_m_s": {
+          "$ref": "#/$defs/OperatingValue"
+        },
+        "width_m": {
+          "$ref": "#/$defs/OperatingValue"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "tasks",
+        "walk_speed_m_s",
+        "width_m"
+      ],
+      "title": "ProcessWorker",
+      "type": "object"
+    },
     "Project": {
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.12.0",
+          "const": "0.13.0",
           "type": "string"
         },
         "id": {
@@ -3667,6 +4048,17 @@
         },
         "scene": {
           "$ref": "#/$defs/Scene"
+        },
+        "process": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProcessModel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The process 'Run a day' uses (0.13.0); null when none is set up."
         }
       },
       "required": [
@@ -3678,7 +4070,8 @@
         "fixture",
         "sources",
         "catalog",
-        "scene"
+        "scene",
+        "process"
       ],
       "title": "Project",
       "type": "object"
@@ -4043,6 +4436,24 @@
         "latency_ms"
       ],
       "title": "ProviderRun",
+      "type": "object"
+    },
+    "RandomStops": {
+      "additionalProperties": false,
+      "description": "Unplanned stops drawn from the run's seed: exponential gaps and durations with these\nmeans, so the same seed always gives the same stops.",
+      "properties": {
+        "mean_between_s": {
+          "$ref": "#/$defs/OperatingValue"
+        },
+        "mean_duration_s": {
+          "$ref": "#/$defs/OperatingValue"
+        }
+      },
+      "required": [
+        "mean_between_s",
+        "mean_duration_s"
+      ],
+      "title": "RandomStops",
       "type": "object"
     },
     "ReferenceLength": {
@@ -4549,6 +4960,9 @@
               },
               {
                 "$ref": "#/$defs/SourceAttached"
+              },
+              {
+                "$ref": "#/$defs/ProcessSet"
               }
             ],
             "type": "object"
@@ -4636,6 +5050,62 @@
         "parameters"
       ],
       "title": "SceneObject",
+      "type": "object"
+    },
+    "Shift": {
+      "additionalProperties": false,
+      "description": "``start_clock_s`` is the clock time the shift starts, in seconds after midnight.",
+      "properties": {
+        "start_clock_s": {
+          "$ref": "#/$defs/OperatingValue"
+        },
+        "duration_s": {
+          "$ref": "#/$defs/OperatingValue"
+        },
+        "breaks": {
+          "items": {
+            "$ref": "#/$defs/ShiftBreak"
+          },
+          "maxItems": 10,
+          "type": "array"
+        }
+      },
+      "required": [
+        "start_clock_s",
+        "duration_s",
+        "breaks"
+      ],
+      "title": "Shift",
+      "type": "object"
+    },
+    "ShiftBreak": {
+      "additionalProperties": false,
+      "description": "Every worker rests for ``duration_s`` from ``start_s`` (seconds after the shift starts), or\nfrom when their task in hand ends, if later.",
+      "properties": {
+        "id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "start_s": {
+          "$ref": "#/$defs/OperatingValue"
+        },
+        "duration_s": {
+          "$ref": "#/$defs/OperatingValue"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "start_s",
+        "duration_s"
+      ],
+      "title": "ShiftBreak",
       "type": "object"
     },
     "SkippedEntities": {
@@ -5101,7 +5571,7 @@
           "type": "string"
         },
         "to_version": {
-          "const": "0.12.0",
+          "const": "0.13.0",
           "type": "string"
         },
         "notes": {
@@ -5243,7 +5713,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.12.0",
+          "const": "0.13.0",
           "type": "string"
         },
         "project_id": {

@@ -180,7 +180,7 @@ test("a clean two-page PDF becomes a walkable draft whose aisle check is honest 
   const text = readFileSync((await download.path())!, "utf8");
   const saved = JSON.parse(text);
   const source = saved.sources[0];
-  expect([saved.schema_version, source.kind, source.drawing.reader, source.drawing.raster.page]).toEqual(["0.12.0", "pdf", "rws-plan-image/1", 2]);
+  expect([saved.schema_version, source.kind, source.drawing.reader, source.drawing.raster.page]).toEqual(["0.13.0", "pdf", "rws-plan-image/1", 2]);
   expect(source.drawing.review.scale.reference.tolerance).toBeGreaterThan(0);
   const traced = source.drawing.objects.filter((o: { refs: { entity: string }[] }) => o.refs[0]!.entity === "TRACE");
   expect(traced.map((o: { label: string }) => o.label).sort()).toEqual(["Floor (traced)", "Packing table", "Rack 1", "Rack 2"]);

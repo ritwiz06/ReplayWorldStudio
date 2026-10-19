@@ -30,7 +30,10 @@ import type { Vec3Tuple } from "./fit";
 import { ObjectVisual } from "./ObjectVisuals";
 import { type GhostSpec, PlacementGhost } from "./PlacementGhost";
 import { worldBounds } from "./placement";
+import { RunLabelProjector, RunOverlay } from "./RunOverlay";
 import { isFloorMarking, sceneBounds, walkWorldOf } from "./sceneBounds";
+import type { PlaybackClock } from "../hooks/usePlayback";
+import type { Replay } from "../run/replay";
 
 interface Props {
   project: Project;
@@ -62,6 +65,10 @@ interface Props {
   checks?: SceneChecks | null;
   /** A plan picture laid on the floor (IMP-03): where its corners are, in world metres. */
   picture?: { url: string; corners: { x: number; z: number }[] } | null;
+  /** A run of the day being played back: workers, items and station states (SIM-03). */
+  run?: { replay: Replay; clock: PlaybackClock } | null;
+  /** The page elements the run's labels are drawn in (moved here to their figures). */
+  runLabels?: RefObject<HTMLDivElement | null>;
 }
 
 const BACKGROUND = "#1f2329";
@@ -106,6 +113,8 @@ export function SceneViewport({
   underlay = null,
   checks = null,
   picture = null,
+  run = null,
+  runLabels,
 }: Props) {
   const objects = project.scene.objects;
   // While a handle is dragged, the object is drawn from this preview; the scene is unchanged
@@ -172,6 +181,8 @@ export function SceneViewport({
       {picture && <PictureUnderlay url={picture.url} corners={picture.corners} />}
       {underlay && !picture && <DrawingUnderlay positions={underlay} />}
       {checks && <CheckHighlights checks={checks} />}
+      {run && <RunOverlay replay={run.replay} clock={run.clock} objects={objects} />}
+      {run && runLabels && <RunLabelProjector replay={run.replay} clock={run.clock} objects={objects} layer={runLabels} />}
       {objects.map((o) => (
         <ObjectVisual
           key={o.id}

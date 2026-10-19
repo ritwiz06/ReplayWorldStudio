@@ -1,7 +1,9 @@
-// The main screen's three actions (UX-01, ADR-049): upload a plan, change something, play or
+// The main screen's three actions (UX-01, ADR-049): upload a plan, change something, walk or
 // compare. Each is one click; the editor's detail (object list, catalog, inspector) stays where
 // it is for whoever needs it. The step the person is on is highlighted. Under the third, for a
-// draft from a drawing, one entry asks whether the layout fits (GEO-01/02).
+// draft from a drawing, one entry asks whether the layout fits (GEO-01/02), and one runs a day
+// (SIM): Check layout answers whether things fit, Walk changes where you look, and Run a day
+// advances a production process through a shift.
 interface Props {
   /** Which step comes next: no drawing yet, a draft not changed yet, or changes to look at. */
   stage: "upload" | "change" | "compare";
@@ -13,9 +15,10 @@ interface Props {
   onChange: () => void;
   onCompare: () => void;
   onCheck: () => void;
+  onRun: () => void;
 }
 
-export function JourneyPanel({ stage, hasDrawing, reviewOpen, disabled, onUpload, onChange, onCompare, onCheck }: Props) {
+export function JourneyPanel({ stage, hasDrawing, reviewOpen, disabled, onUpload, onChange, onCompare, onCheck, onRun }: Props) {
   const steps = [
     {
       id: "upload",
@@ -28,7 +31,7 @@ export function JourneyPanel({ stage, hasDrawing, reviewOpen, disabled, onUpload
     {
       id: "compare",
       n: 3,
-      label: "Play or compare",
+      label: "Walk or compare",
       hint: hasDrawing ? "Walk through it and compare with the drawing." : "Walk through the scene.",
       onClick: onCompare,
     },
@@ -60,6 +63,10 @@ export function JourneyPanel({ stage, hasDrawing, reviewOpen, disabled, onUpload
           <span>Overlaps, keep-clear zones, and whether an item can get through.</span>
         </button>
       )}
+      <button type="button" className="journey-sub journey-run" data-testid="journey-run" disabled={disabled} onClick={onRun}>
+        <strong>Run a day</strong>
+        <span>{hasDrawing ? "Workers, machines and items through a shift, from the process you set up." : "Opens the sample hall and runs its example shift."}</span>
+      </button>
     </section>
   );
 }

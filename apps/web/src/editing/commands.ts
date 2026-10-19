@@ -16,6 +16,8 @@ import {
   type ObjectAdded,
   type ObjectEdited,
   type ObjectRemoved,
+  type ProcessModel,
+  type ProcessSet,
   type Project,
   type SceneObject,
   type SourceAttached,
@@ -51,7 +53,9 @@ export type EditCommand =
   | ReviewCommand
   /** Keep a later plan or drawing with the world (IMP-03): stored and listed with it, not
    * aligned or merged (ENR-01); no object changes. */
-  | { type: "attach_source"; source: SourceDocument };
+  | { type: "attach_source"; source: SourceDocument }
+  /** Set, change or remove the process "Run a day" uses (SIM-01); no object changes. */
+  | { type: "set_process"; process: ProcessModel | null; summary: string };
 
 /** One object to switch to a revised asset; axes not listed keep the object's own value. */
 export interface RevisedObjectRequest {
@@ -74,7 +78,7 @@ export interface Rejection {
   field?: string;
 }
 
-export type EditRecord = ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed | SourceAttached;
+export type EditRecord = ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed | SourceAttached | ProcessSet;
 type DraftOf<T> = T extends unknown ? Omit<T, "revision"> : never;
 export type EditRecordDraft = DraftOf<EditRecord>;
 
@@ -106,6 +110,12 @@ export interface SourcePatch {
   after: SourceDocument | null;
 }
 
+/** The project's process before and after a change. */
+export interface ProcessPatch {
+  before: ProcessModel | null;
+  after: ProcessModel | null;
+}
+
 /** A reversible change produced by one accepted command. */
 export interface Change {
   /** Short description for undo/redo controls, e.g. "Move Filling cell". */
@@ -119,6 +129,8 @@ export interface Change {
   catalogPatch?: CatalogPatch;
   /** Set when the command also changed a source (a drawing review correction). */
   sourcePatch?: SourcePatch;
+  /** Set when the command changed the process (Run a day). */
+  processPatch?: ProcessPatch;
   /** The edit record without its revision; the revision is assigned when (re)applied. */
   record: EditRecordDraft;
 }
@@ -183,7 +195,7 @@ export function usedObjectIds(project: Project): Set<string> {
   for (const record of project.scene.edit_log) {
     if (record.type === "object_removed") ids.add(record.object.id);
     else if (record.type === "asset_revised" || record.type === "drawing_reviewed") for (const o of record.objects) ids.add(o.object_id);
-    else if (record.type !== "source_attached") ids.add(record.object_id);
+    else if (record.type !== "source_attached" && record.type !== "process_set") ids.add(record.object_id);
     if (record.type === "object_added" && record.duplicate_of) ids.add(record.duplicate_of);
   }
   return ids;
@@ -427,6 +439,20 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
       };
     }
 
+    case "set_process": {
+      if (JSON.stringify(project.process) === JSON.stringify(command.process)) return reject("no_change", "The process is already set up this way.");
+      return {
+        ok: true,
+        change: {
+          label: command.process ? "Set up the day" : "Remove the day's process",
+          objectId: "",
+          patches: [],
+          processPatch: { before: project.process, after: command.process },
+          record: { type: "process_set", summary: command.summary },
+        },
+      };
+    }
+
     case "remove_object": {
       const index = indexOf(command.objectId);
       const before = objects[index];
@@ -521,8 +547,8 @@ export function applyCommand(project: Project, request: CommandRequest): Result<
   if (conflict) return { ok: false, rejection: conflict };
   const prepared = prepare(project, request.command);
   if (!prepared.ok) return prepared;
-  const { patches, catalogPatch, sourcePatch } = prepared.change;
-  const next = commit(project, patches, catalogPatch, (revision) => [...project.scene.edit_log, stamp(prepared.change.record, revision)], sourcePatch);
+  const { patches, catalogPatch, sourcePatch, processPatch } = prepared.change;
+  const next = commit(project, patches, catalogPatch, (revision) => [...project.scene.edit_log, stamp(prepared.change.record, revision)], sourcePatch, processPatch);
   const problem = guard(next);
   return problem ? { ok: false, rejection: problem } : { ok: true, project: next, change: prepared.change };
 }
@@ -533,10 +559,12 @@ function commit(
   catalogPatch: CatalogPatch | undefined,
   log: (revision: number) => EditRecord[],
   sourcePatch?: SourcePatch,
+  processPatch?: ProcessPatch,
 ): Project {
   const revision = project.scene.revision + 1;
   return {
     ...project,
+    process: processPatch ? processPatch.after : project.process,
     sources: sourcePatch ? patchSources(project.sources, sourcePatch) : project.sources,
     catalog: catalogPatch ? patchCatalog(project.catalog, catalogPatch) : project.catalog,
     scene: { ...project.scene, revision, objects: patchObjects(project.scene.objects, patches), edit_log: log(revision) },
@@ -554,26 +582,33 @@ export function revertChange(project: Project, change: Change, recordRevision: n
   const inverse = change.patches.map(invert).reverse();
   const catalogInverse = change.catalogPatch && invert(change.catalogPatch);
   const sourceInverse = change.sourcePatch && invert(change.sourcePatch);
+  const processInverse = change.processPatch && { before: change.processPatch.after, after: change.processPatch.before };
   if (
     log.at(-1)?.revision !== recordRevision ||
     !patchesApply(project.scene.objects, inverse) ||
     !catalogPatchApplies(project.catalog, catalogInverse) ||
-    !sourcePatchApplies(project, sourceInverse)
+    !sourcePatchApplies(project, sourceInverse) ||
+    (processInverse !== undefined && project.process !== processInverse.before)
   ) {
     return reject("conflict", "The scene no longer matches this step, so it cannot be undone.");
   }
-  return { ok: true, project: commit(project, inverse, catalogInverse, () => log.slice(0, -1), sourceInverse) };
+  return { ok: true, project: commit(project, inverse, catalogInverse, () => log.slice(0, -1), sourceInverse, processInverse) };
 }
 
 /** Redo `change`: the same snapshots again, with its record re-added at the new revision. */
 export function reapplyChange(project: Project, change: Change, baseRevision: number): Result<{ project: Project }> {
   const conflict = checkRevision(project, baseRevision);
   if (conflict) return { ok: false, rejection: conflict };
-  if (!patchesApply(project.scene.objects, change.patches) || !catalogPatchApplies(project.catalog, change.catalogPatch) || !sourcePatchApplies(project, change.sourcePatch)) {
+  if (
+    !patchesApply(project.scene.objects, change.patches) ||
+    !catalogPatchApplies(project.catalog, change.catalogPatch) ||
+    !sourcePatchApplies(project, change.sourcePatch) ||
+    (change.processPatch !== undefined && project.process !== change.processPatch.before)
+  ) {
     return reject("conflict", "The scene no longer matches this step, so it cannot be redone.");
   }
   return {
     ok: true,
-    project: commit(project, change.patches, change.catalogPatch, (revision) => [...project.scene.edit_log, stamp(change.record, revision)], change.sourcePatch),
+    project: commit(project, change.patches, change.catalogPatch, (revision) => [...project.scene.edit_log, stamp(change.record, revision)], change.sourcePatch, change.processPatch),
   };
 }

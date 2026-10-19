@@ -35,6 +35,11 @@ Conventions (see docs/contracts.md):
 * A ``default`` value is a display placeholder: it can never be ``confirmed``. A check that needs
   a verified value accepts only ``measured``, ``supplier`` and ``user_supplied`` evidence
   (:func:`is_verified`); an estimate or a display default means the value is still needed.
+* A process (0.13.0) is what "Run a day" runs: stations tied to scene objects by stable ID,
+  the transfers between them, the workers and the shift. Every operating value records whether
+  it is an ``example`` assumption or was ``entered``: none is ever read from a drawing. A run
+  predicts outcomes under those assumptions; it does not verify productivity, safety, forces,
+  structure or chemistry.
 * Geometry read from a design drawing is ``drawn`` (0.10.0): the drawing's size at the scale the
   review settled, never a site measurement. It can support a design-layout result only once the
   drawing is reviewed (scale, floor, the objects used, what the drawing leaves out), never an
@@ -58,7 +63,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.12.0"]
+SchemaVersion = Literal["0.13.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -885,8 +890,22 @@ class SourceAttached(ContractModel):
     filename: NonEmptyText
 
 
+class ProcessSet(ContractModel):
+    """The process "Run a day" uses was set, changed or removed (0.13.0); no object changes."""
+
+    type: Literal["process_set"]
+    revision: int = Field(ge=1, description="Scene revision this edit produced.")
+    summary: NonEmptyText
+
+
 EditRecord = Annotated[
-    ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed | SourceAttached,
+    ObjectEdited
+    | ObjectAdded
+    | ObjectRemoved
+    | AssetRevised
+    | DrawingReviewed
+    | SourceAttached
+    | ProcessSet,
     Field(discriminator="type"),
 ]
 
@@ -947,7 +966,7 @@ class Scene(ContractModel):
         # followed through every revision of that asset.
         asset_ref: dict[str, tuple[int, str | None]] = {}
         for record in self.edit_log:
-            if isinstance(record, ObjectRemoved | SourceAttached):
+            if isinstance(record, ObjectRemoved | SourceAttached | ProcessSet):
                 continue
             object_ids = (
                 [o.object_id for o in record.objects]
@@ -1795,6 +1814,209 @@ class FixtureLabel(ContractModel):
     note: NonEmptyText
 
 
+ProcessBasis = Literal["example", "entered"]
+"""Where an operating value came from: an ``example`` assumption shipped with a synthetic sample,
+or ``entered`` by the person. Never read from a drawing."""
+PROCESS_TASK_PATTERN: Final = r"^(station|transfer):[a-z0-9][a-z0-9._:-]{0,127}$"
+MAX_PROCESS_STATIONS: Final = 12
+MAX_PROCESS_WORKERS: Final = 12
+SHIFT_MAX_S: Final = 24 * 3600
+
+
+class OperatingValue(ContractModel):
+    """One operating fact (a time, a capacity, a speed or a width) with its basis."""
+
+    value: float = Field(ge=0)
+    basis: ProcessBasis
+
+
+class LocalPoint(ContractModel):
+    """A point in an object's own frame, metres from its centre before its turn: it moves and
+    turns with the object."""
+
+    x: float = Field(ge=-100, le=100)
+    z: float = Field(ge=-100, le=100)
+
+
+class PlannedStop(ContractModel):
+    """No cycle starts at the station between ``start_s`` (seconds after the shift starts) and
+    ``start_s + duration_s``; a cycle already running finishes first."""
+
+    id: StableId
+    reason: NonEmptyText
+    start_s: OperatingValue
+    duration_s: OperatingValue
+
+
+class RandomStops(ContractModel):
+    """Unplanned stops drawn from the run's seed: exponential gaps and durations with these
+    means, so the same seed always gives the same stops."""
+
+    mean_between_s: OperatingValue
+    mean_duration_s: OperatingValue
+
+
+class ProcessStation(ContractModel):
+    """A step of the process at one scene object. A ``supply`` station is where material is
+    taken (it is always available there, which is itself an assumption); a ``process`` station
+    takes ``worker_s`` with a worker present, then ``machine_s`` on its own. ``access_m`` is where
+    a worker stands to load, unload or pick, in the object's frame."""
+
+    id: StableId
+    object_id: StableId
+    name: NonEmptyText
+    role: Literal["supply", "process"]
+    access_m: LocalPoint
+    access_basis: ProcessBasis
+    worker_s: OperatingValue | None
+    machine_s: OperatingValue | None
+    input_capacity: OperatingValue | None
+    output_capacity: OperatingValue | None
+    planned_stops: list[PlannedStop] = Field(max_length=20)
+    random_stops: RandomStops | None
+
+    @model_validator(mode="after")
+    def _values_fit_the_role(self) -> ProcessStation:
+        values = (self.worker_s, self.machine_s, self.input_capacity, self.output_capacity)
+        if self.role == "supply":
+            if any(v is not None for v in values) or self.planned_stops or self.random_stops:
+                raise ValueError(f"supply station '{self.id}' has no cycle, capacities or stops")
+            return self
+        if any(v is None for v in values):
+            raise ValueError(
+                f"process station '{self.id}' needs worker_s, machine_s, input_capacity and "
+                "output_capacity"
+            )
+        assert self.worker_s and self.machine_s and self.input_capacity and self.output_capacity
+        if self.worker_s.value + self.machine_s.value <= 0:
+            raise ValueError(f"process station '{self.id}': a cycle must take some time")
+        for name, capacity in (("input", self.input_capacity), ("output", self.output_capacity)):
+            if capacity.value < 1 or capacity.value != int(capacity.value):
+                raise ValueError(
+                    f"process station '{self.id}': the {name} capacity must be a whole number of "
+                    "items, at least 1"
+                )
+        _require_unique((stop.id for stop in self.planned_stops), f"stop id in '{self.id}'")
+        return self
+
+
+class ProcessTransfer(ContractModel):
+    """Items carried by a worker from one station to the next along a route that has to be
+    clear for ``item_width_m`` with ``allowance_m`` on each side (the route check decides).
+    ``handling_s`` is spent picking the item up, and again setting it down."""
+
+    id: StableId
+    from_station: StableId
+    to_station: StableId
+    method: Literal["carry"]
+    item_width_m: OperatingValue
+    allowance_m: OperatingValue
+    speed_m_s: OperatingValue
+    handling_s: OperatingValue
+
+    @model_validator(mode="after")
+    def _moves(self) -> ProcessTransfer:
+        if self.from_station == self.to_station:
+            raise ValueError(f"transfer '{self.id}' must go to another station")
+        if self.item_width_m.value <= 0 or self.speed_m_s.value <= 0:
+            raise ValueError(f"transfer '{self.id}': width and speed must be above 0")
+        return self
+
+
+class ProcessWorker(ContractModel):
+    """A worker: one task at a time, chosen in the order of ``tasks`` (``station:<id>`` to work
+    at a station, ``transfer:<id>`` to carry), walking at ``walk_speed_m_s`` through a corridor
+    ``width_m`` wide when carrying nothing."""
+
+    id: StableId
+    name: NonEmptyText
+    tasks: list[Annotated[str, StringConstraints(pattern=PROCESS_TASK_PATTERN)]] = Field(
+        min_length=1, max_length=40
+    )
+    walk_speed_m_s: OperatingValue
+    width_m: OperatingValue
+
+    @model_validator(mode="after")
+    def _moves(self) -> ProcessWorker:
+        _require_unique(self.tasks, f"task of worker '{self.id}'")
+        if self.walk_speed_m_s.value <= 0 or self.width_m.value <= 0:
+            raise ValueError(f"worker '{self.id}': walking speed and width must be above 0")
+        return self
+
+
+class ShiftBreak(ContractModel):
+    """Every worker rests for ``duration_s`` from ``start_s`` (seconds after the shift starts), or
+    from when their task in hand ends, if later."""
+
+    id: StableId
+    name: NonEmptyText
+    start_s: OperatingValue
+    duration_s: OperatingValue
+
+
+class Shift(ContractModel):
+    """``start_clock_s`` is the clock time the shift starts, in seconds after midnight."""
+
+    start_clock_s: OperatingValue
+    duration_s: OperatingValue
+    breaks: list[ShiftBreak] = Field(max_length=10)
+
+    @model_validator(mode="after")
+    def _fits(self) -> Shift:
+        if not 0 < self.duration_s.value <= SHIFT_MAX_S:
+            raise ValueError("a shift lasts more than 0 s and at most 24 h")
+        if self.start_clock_s.value >= 24 * 3600:
+            raise ValueError("the shift's start is a clock time before 24:00")
+        _require_unique((b.id for b in self.breaks), "break id")
+        for b in self.breaks:
+            if b.start_s.value + b.duration_s.value > self.duration_s.value:
+                raise ValueError(f"break '{b.id}' must end within the shift")
+        return self
+
+
+class ProcessModel(ContractModel):
+    """A bounded production process for "Run a day" (0.13.0): stations in flow order, the
+    transfers between them, the workers and the shift. A run uses it with the scene's current
+    layout, its seed and an engine version, so the same inputs always give the same events."""
+
+    format: Literal["rws-process/1"]
+    name: NonEmptyText
+    item_name: NonEmptyText = Field(description="What moves through the process, e.g. 'batch'.")
+    example_note: NonEmptyText | None = Field(
+        description="Set for a shipped example: what it is, and that its values are assumptions."
+    )
+    shift: Shift
+    stations: list[ProcessStation] = Field(min_length=2, max_length=MAX_PROCESS_STATIONS)
+    transfers: list[ProcessTransfer] = Field(min_length=1, max_length=MAX_PROCESS_STATIONS * 2)
+    workers: list[ProcessWorker] = Field(min_length=1, max_length=MAX_PROCESS_WORKERS)
+    seed: int = Field(ge=0, le=2**31 - 1)
+
+    @model_validator(mode="after")
+    def _references_resolve(self) -> ProcessModel:
+        _require_unique((s.id for s in self.stations), "station id")
+        _require_unique((t.id for t in self.transfers), "transfer id")
+        _require_unique((w.id for w in self.workers), "worker id")
+        stations = {s.id: s for s in self.stations}
+        if self.stations[0].role != "supply" or any(s.role == "supply" for s in self.stations[1:]):
+            raise ValueError("the first station, and only the first, is the supply")
+        for transfer in self.transfers:
+            for end in (transfer.from_station, transfer.to_station):
+                if end not in stations:
+                    raise ValueError(f"transfer '{transfer.id}' names unknown station '{end}'")
+            if stations[transfer.to_station].role == "supply":
+                raise ValueError(f"transfer '{transfer.id}' cannot deliver to the supply")
+        transfers = {t.id for t in self.transfers}
+        for worker in self.workers:
+            for task in worker.tasks:
+                kind, ref = task.split(":", 1)
+                known = stations if kind == "station" else transfers
+                if ref not in known:
+                    raise ValueError(f"worker '{worker.id}' has task '{task}', which is unknown")
+                if kind == "station" and stations[ref].role == "supply":
+                    raise ValueError(f"worker '{worker.id}': the supply is not worked at")
+        return self
+
+
 class Project(ContractModel):
     schema_version: SchemaVersion
     id: StableId
@@ -1805,6 +2027,9 @@ class Project(ContractModel):
     sources: list[SourceDocument]
     catalog: list[CatalogAsset]
     scene: Scene
+    process: ProcessModel | None = Field(
+        description="The process 'Run a day' uses (0.13.0); null when none is set up."
+    )
 
     @model_validator(mode="after")
     def _references_resolve(self) -> Project:

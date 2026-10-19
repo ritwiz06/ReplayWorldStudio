@@ -87,7 +87,7 @@ test("a model saved before GEN-06 validates, rebuilds to its recorded hash and i
   await objects(page, 15);
   // Saved in contract 0.7.0, and its model file is not in this machine's catalog: refused, then
   // rebuilt by today's generator to exactly the sha256 recorded when it was made, then upgraded
-  // to 0.12.0 for review (only photo-observation and drawing fields are added; it has neither).
+  // to 0.13.0 for review (only photo-observation, drawing and process fields are added; it has none of them).
   await page.getByTestId("scene-file-input").setInputFiles(LEGACY);
   const rejected = page.getByTestId("file-rejected");
   await expect(rejected).toBeVisible();

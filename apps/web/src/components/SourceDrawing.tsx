@@ -4,7 +4,7 @@
 // checks that are not built yet; "Check" answers whether the layout fits (GEO-01/02). Nothing is
 // animated and no result is invented.
 import type { Project } from "@replay-world/contracts";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { answer, type CheckAnswer, QUESTIONS } from "../drawing/checks";
 import { compareWithDrawing, summary } from "../drawing/compare";
 import { describeRef, drawingSource, drawnFrom, scalePhrase } from "../drawing/world";
@@ -15,7 +15,7 @@ import { DrawingReview } from "./DrawingReview";
 import type { CheckPair, RouteAsk } from "../checks/results";
 import { LayoutCheck } from "./LayoutCheck";
 
-export type DrawingView = "review" | "drawing" | "compare" | "check";
+export type DrawingView = "review" | "drawing" | "compare" | "check" | "run";
 
 interface Props {
   project: Project;
@@ -38,12 +38,14 @@ interface Props {
   checks: CheckPair | null;
   routeAsk: RouteAsk | null;
   onRouteAsk: (ask: RouteAsk) => void;
+  /** The Run a day panel, shown in the Run view. */
+  run: ReactNode;
 }
 
 const OUTCOME_SHORT = { fits: "fits", conflict: "conflict found", cannot_determine: "cannot determine yet" } as const;
 const ROUTE_SHORT = { fits: "route fits", conflict: "route blocked", cannot_determine: "route cannot be determined yet" } as const;
 
-export function SourceDrawing({ project, selectedId, view, open, underlay, onView, onOpen, onUnderlay, onSelect, onWalk, missingFiles, focus, onReview, onDrawn, checks, routeAsk, onRouteAsk }: Props) {
+export function SourceDrawing({ project, selectedId, view, open, underlay, onView, onOpen, onUnderlay, onSelect, onWalk, missingFiles, focus, onReview, onDrawn, checks, routeAsk, onRouteAsk, run }: Props) {
   const source = drawingSource(project);
   const comparison = useMemo(() => compareWithDrawing(project), [project]);
   const [asked, setAsked] = useState<CheckAnswer | null>(null);
@@ -77,9 +79,13 @@ export function SourceDrawing({ project, selectedId, view, open, underlay, onVie
             <button type="button" role="tab" aria-selected={view === "check"} data-testid="drawing-tab-check" onClick={() => onView("check")}>
               Check
             </button>
+            <button type="button" role="tab" aria-selected={view === "run"} data-testid="drawing-tab-run" onClick={() => onView("run")}>
+              Run
+            </button>
           </div>
         )}
       </div>
+      {open && view === "run" && run}
       {open && view === "check" && checks && <LayoutCheck checks={checks} ask={routeAsk} onAsk={onRouteAsk} selectedId={selectedId} onSelect={onSelect} />}
       {open && view === "review" && <DrawingReview project={project} source={source} selectedId={selectedId} focus={focus} onReview={onReview} onDrawn={onDrawn} />}
       {open && view === "drawing" && (

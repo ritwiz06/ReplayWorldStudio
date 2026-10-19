@@ -1096,6 +1096,40 @@ Append entries in chronological order. If a live repository session log already 
 - Known limitations: "first-time installation" was run with warm uv and pnpm caches on the reference Mac, not on a new machine. REL-01 (exported demo) stays open.
 - Next concrete task: use local v0.1 and record what gets in the way.
 
+### 2026-10-18 - Run a day (M6: SIM-01..04 as one vertical slice; contract 0.13.0; ADR-059)
+
+- Starting branch and relevant commit: `main` at `20a1219`.
+- Goal: the "working factory" experience, separate from Walk. A labelled example shift from one click; playback independent of the camera; rerun after an edit and compare; Set up a day on an uploaded layout that never presents operating facts as known. Known-answer tests, a browser test, and screens at 1440×900 and 1280×800.
+- Work completed:
+  - **Contract 0.13.0.** `Project.process` (`rws-process/1`): every value an `OperatingValue` with basis `example` or `entered`; edit record `process_set`; migration 0.12.0 → 0.13.0 adds `process: null`. Fixtures, Python and TypeScript tests updated.
+  - **Engine** `rws-run/1` (`apps/web/src/run/engine.ts`): a pure, deterministic event model with workers, finite buffers, stops (planned, and seeded unplanned), breaks and fingerprints.
+  - **Plan** (`plan.ts`): access points in each object's frame; every carry and walk uses the existing route check.
+  - **Replay** (`replay.ts`): a pure function of (run, time).
+  - **Comparison** (`day.ts`): the same process and seed on the drawing's own arrangement; the explanation is computed from routes and runs.
+  - **Setup** (`setup.ts`): empty fields; exact list of what is missing.
+  - **Example shift** (`example.ts`), shipped with the sample hall.
+  - **UI:**
+    - "Run a day" journey entry (opens the sample on a layout without a reviewed plan); "Play or compare" renamed "Walk or compare";
+    - Run tab: live state, whole-shift results, comparison, assumptions, run record, scope;
+    - playback bar in every camera mode;
+    - 3D overlay: worker figures, items, state rings, queues;
+    - DOM labels positioned by an in-canvas projector (drei `Html` raised a React 19 `removeChild` error in development);
+    - the Set up a day dialog;
+    - `set_process` is an undoable command.
+- Commands run and outcomes:
+  - `pnpm check`: passed (843 pytest, 237 Vitest, 10 contracts).
+  - `pnpm test:e2e`: 57 passed, 24 skipped (manual screen and review tests). `test:e2e:local`: 1 passed. `test:e2e:public`: 7 passed.
+  - The example shift on the sample layout:
+    - all four routes fit (18.8, 4.9, 17.3, 13.9 m);
+    - 102 batches completed, 110 started; packing 86 % busy, its queue reaching 4/4; Machine B stopped 4 % (the changeover);
+    - with Machine B in the aisle, Rack A → Mixer is blocked (narrows to 0.50 m between Rack A and Machine B) and output is 0.
+  - Screens inspected at 1440×900 and 1280×800: first visit, the plan view at 08:12, Walk, the blocked comparison, no process yet, and the setup form. Fixed after inspection: compact labels, framing on run, the bar's width and its position in Walk, and the fixture banner's wording.
+- Known limitations:
+  - One line from one supply, carrying by hand only.
+  - No worker congestion, no event-log export.
+  - Runs are not stored (they are reproducible).
+- Next concrete task: use Run a day locally; M6 follow-ups when wanted.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

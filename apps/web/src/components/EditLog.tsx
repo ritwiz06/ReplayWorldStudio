@@ -47,6 +47,8 @@ function recordTitle(record: EditRecord, project: Project): string {
       return `Review: ${record.correction}`;
     case "source_attached":
       return `Kept ${record.filename} with this world (not aligned with the plan)`;
+    case "process_set":
+      return `Run a day: ${record.summary}`;
   }
 }
 
@@ -54,7 +56,7 @@ function recordTitle(record: EditRecord, project: Project): string {
 export function ObjectEditLog({ project, objectId }: { project: Project; objectId: string }) {
   const records = project.scene.edit_log
     .filter((r) =>
-      r.type === "asset_revised" || r.type === "drawing_reviewed" ? r.objects.some((o) => o.object_id === objectId) : r.type !== "object_removed" && r.type !== "source_attached" && r.object_id === objectId,
+      r.type === "asset_revised" || r.type === "drawing_reviewed" ? r.objects.some((o) => o.object_id === objectId) : r.type !== "object_removed" && r.type !== "source_attached" && r.type !== "process_set" && r.object_id === objectId,
     )
     .reverse();
   if (records.length === 0) return <p className="muted">No edits recorded for this object.</p>;

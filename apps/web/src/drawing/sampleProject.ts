@@ -4,6 +4,7 @@
 // sample, not of the saved project.
 import type { DrawingAnalysis, PlanPoint, Project } from "@replay-world/contracts";
 import { createEditor, type EditorState, execute } from "../editing/history";
+import { SAMPLE_PROCESS } from "../run/example";
 import type { ReviewCorrection } from "./review";
 import { buildDrawingProject } from "./world";
 
@@ -29,9 +30,11 @@ export function sampleProject(analysis: DrawingAnalysis): Project {
     name: "Sample factory hall (synthetic)",
     fixture: {
       kind: "demonstration",
-      note: "A synthetic sample made for this preview: a 20 m x 10 m hall drawn as a DXF, reviewed, with two racks and a 2 m aisle. Not a real site; sizes are the drawing's, heights are assumed for display.",
+      note: "A synthetic sample: a 20 m x 10 m hall drawn as a DXF, reviewed, with two racks and a 2 m aisle, and an example shift for Run a day. Not a real site; sizes are the drawing's, heights are assumed for display, and the shift's times and workers are made-up assumptions.",
     },
     // A fresh start: the review that made it is the sample's own preparation, not your edits.
     scene: { ...project.scene, revision: 0, edit_log: [] },
+    // An example shift for Run a day; its values are assumptions, labelled as such.
+    process: SAMPLE_PROCESS,
   };
 }

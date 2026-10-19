@@ -141,7 +141,7 @@ test("improve a described object by hand for every instance, keeping a measured 
   // Saved: both versions, linked; kept sizes keep their evidence; the entered one is the user's.
   const after = await save(page);
   const v2 = after.json.catalog.find((a) => a.generation?.revision?.revises === original.id)!;
-  expect(after.json.schema_version).toBe("0.12.0");
+  expect(after.json.schema_version).toBe("0.13.0");
   expect(after.json.catalog.find((a) => a.id === original.id)).toEqual(original);
   expect(v2.generation).toMatchObject({ method: "described", description: CONVEYOR, language_model: generation.language_model, revision: { version: 2, instruction: null, language_model: null } });
   expect(v2.visual.sha256).not.toBe(original.visual.sha256);

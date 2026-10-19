@@ -1152,3 +1152,42 @@ For a new decision, append: ID, date, status, context, options considered, decis
   3. **The hosted mode stays in the code, dormant.** `RWS_PUBLIC=1`, `VITE_PUBLIC_PREVIEW=1`, the Dockerfile and `test:e2e:public` stay CI-tested so they can be revived. They are not part of v0.1. The local build never shows their wording (the "Early preview" badge, the About dialog's retention and server-folder claims), and the local journey checks this.
   4. **The local journey is a committed test.** `test:e2e:local` starts `node scripts/start.mjs` with no `.env` and a temporary upload folder; CI runs it in the browser job.
 - **Consequences.** No hosting, cost or retention policy to operate. The question to ASU about public AI is moot. Sharing the app means sharing the repository and these steps.
+
+### ADR-059 - Run a day: a deterministic event model of one bounded process, separate from Walk and Check layout (contract 0.13.0)
+
+- Date: 2026-10-18 (America/Phoenix). Status: adopted. Implements SIM-01..04 as one vertical slice of M6, ahead of more import or model polish (at the user's request).
+- **Context.** The app could check whether a layout fits (GEO-01/02) and let you walk it, but nothing showed a working factory. The user asked for "Run a day":
+  - a configured example shift from one click;
+  - workers, items, machine states, queues and a shift clock;
+  - playback independent of the camera;
+  - rerun after an edit and compare;
+  - a setup flow for uploaded layouts that never presents operating facts as known.
+- **Decision.**
+  1. **A pure, deterministic event engine** in the web app (`apps/web/src/run/engine.ts`, `rws-run/1`).
+     - Items are created, carried, processed and completed only by events.
+     - Workers are limited resources with priorities, walking, working hours and breaks.
+     - Buffers are finite; stations are idle, waiting, loading, running, blocked or stopped.
+     - Planned stops; unplanned stops drawn from the seed.
+     - The same input and seed always give the same events (fingerprinted). The 3D playback replays the log and never creates output.
+  2. **The layout decides the moves.**
+     - Each station is tied to a scene object by stable ID, with an access point in the object's frame.
+     - Every carry and walk uses the existing route check. Blocked means the move cannot happen, and the run goes ahead without it; cannot determine stops the run with the reason.
+     - No result changes because a machine moved unless a route length or route outcome changed, and the comparison says which.
+  3. **Contract 0.13.0.**
+     - `Project.process` (`rws-process/1`): stations, transfers (carry), workers, shift with breaks, and seed. Every operating value is an `OperatingValue` with basis `example` or `entered`, never read from a drawing.
+     - Edit record `process_set`. Migration 0.12.0 → 0.13.0 adds `process: null`.
+     - Setting a process is one undoable command that changes no object.
+  4. **Runs are not stored.** They are reproducible from the saved process, the layout, the seed and the engine version. The screen shows the run record (engine, seed, layout revision, event count, fingerprint).
+  5. **Comparison** runs the same process and seed on the drawing's own arrangement. The explanation is built only from the two runs and their routes.
+  6. **The sample hall ships with a labelled example shift.** Its values are example assumptions: three workers, Mixer → Machine B → Packing table, 06:00–14:00 with two breaks and a changeover.
+     - **"Run a day"** on a layout without a reviewed plan opens the sample.
+     - **"Play or compare"** becomes "Walk or compare", so Walk and Run are not confused.
+  7. **Labels** over the 3D view are plain page elements, positioned per frame by a projector inside the canvas. drei `Html` creates a React root per label, and React 19 refuses to unmount those during a commit: a development-mode `removeChild` error.
+- **Consequences.**
+  - The claim is precise: it predicts outcomes under the entered assumptions. It does not verify productivity, safety, forces, structure or chemistry, and the equipment models' insides are not simulated.
+  - Not supported yet:
+    - conveyors and other transport;
+    - branching flows, several products and rework;
+    - worker congestion and skills;
+    - export of the event log (REL-01).
+  - Docs: docs/run-a-day.md.

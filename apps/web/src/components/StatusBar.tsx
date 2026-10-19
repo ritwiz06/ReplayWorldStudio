@@ -38,7 +38,7 @@ export function StatusBar({ project, mode, models, savedAs, dirty, details }: Pr
           {project.scene.edit_log.length > 0 && (
             <span className="status-warn" data-testid="unchecked-status">
               {drawingSource(project)
-                ? "Edited layout · overlaps and routes are checked only in Check layout (2D); nothing physical is checked"
+                ? "Edited layout · overlaps and routes are checked only in Check layout (2D), and Run a day uses them; nothing physical is checked"
                 : "Edited layout · not checked for clearance, collisions or feasibility"}
             </span>
           )}

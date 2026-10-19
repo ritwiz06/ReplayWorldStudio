@@ -1,6 +1,6 @@
 # Contracts: units, frames, provenance and the schema pipeline
 
-Contract version **0.12.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, 0.4.0 → 0.5.0 in GEN-01, all 2026-10-10; 0.5.0 → 0.6.0 in IMG-01, 2026-10-14; 0.6.0 → 0.7.0 in GEN-02, 2026-10-15; 0.7.0 → 0.8.0 in IMG-02, 2026-10-16; 0.8.0 → 0.9.0 in ONB-01/IMP-01 and 0.9.0 → 0.10.0 in IMP-02, both 2026-10-16; 0.10.0 → 0.11.0 in GEO-01/02, 2026-10-17; 0.11.0 → 0.12.0 in IMP-03, 2026-10-18). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
+Contract version **0.13.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, 0.4.0 → 0.5.0 in GEN-01, all 2026-10-10; 0.5.0 → 0.6.0 in IMG-01, 2026-10-14; 0.6.0 → 0.7.0 in GEN-02, 2026-10-15; 0.7.0 → 0.8.0 in IMG-02, 2026-10-16; 0.8.0 → 0.9.0 in ONB-01/IMP-01 and 0.9.0 → 0.10.0 in IMP-02, both 2026-10-16; 0.10.0 → 0.11.0 in GEO-01/02, 2026-10-17; 0.11.0 → 0.12.0 in IMP-03, 2026-10-18; 0.12.0 → 0.13.0 in SIM-01..04, 2026-10-18). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
 
 ## One source of truth
 
@@ -104,11 +104,12 @@ Worked example (foundation fixture): the plan is in mm with translation (−10, 
 
   Its note reads `schema_version 0.9.0 -> 0.10.0 (adds an unchecked review to N drawing source(s) and footprint_fit to M drawn object(s); K drawn footprint value(s) recorded as measured become drawn (a design drawing, not a site measurement); nothing is strengthened)`. The edit log's history is not rewritten.
 - 0.10.0 → 0.11.0 adds `omitted: null` to every drawing reading and changes nothing else: where its left-out shapes lie was not recorded, so the layout checks treat them as possibly anywhere (keep-clear zones and routes answer "cannot determine yet" until the drawing is uploaded again). Its note reads `schema_version 0.10.0 -> 0.11.0 (adds 'omitted: null' to N drawing reading(s): where their left-out shapes lie was not recorded, so checks treat them as possibly anywhere)`. A 0.10.0 document whose drawing already has `omitted` is refused as malformed.
+- 0.12.0 → 0.13.0 adds `process: null` to the project: no process for Run a day was set up before 0.13.0. Its note reads `schema_version 0.12.0 -> 0.13.0 (adds 'process: null': no process for Run a day was set up; no values or evidence changed)`. A 0.12.0 document that already has `process` is refused as malformed.
 - 0.11.0 → 0.12.0 adds `raster: null` to every drawing reading, and `tolerance: null` to every drawn object and reference length: a DXF's geometry is exact as drawn. Nothing else changes. Its note reads `schema_version 0.11.0 -> 0.12.0 (adds 'raster: null' to N drawing reading(s) and 'tolerance: null' to M drawn outline(s): DXF geometry is exact as drawn; no values or evidence changed)`. A 0.11.0 document whose drawing already has `raster` is refused as malformed.
 - 0.8.0 → 0.9.0 adds `drawing: null` to every source (DXF drawings were not read before 0.9.0) and changes nothing else. Its note reads `schema_version 0.8.0 -> 0.9.0 (adds 'drawing: null' to N source(s); no values or evidence changed)`. A 0.8.0 document whose sources already have `drawing` is refused as malformed. 0.9.0 also refuses a `default` length marked `confirmed`; no earlier editor could write one, and such a document is reported after the upgrade, never silently changed.
 - 0.7.0 → 0.8.0 adds `visibility: "not_recorded"`, `derived_from: null`, `replaced_by: null` and `corrections: []` to every photo observation (0.7.0 did not record how much of an object the photo showed, and could not split or merge observations, so none is claimed). Its note reads `schema_version 0.7.0 -> 0.8.0 (adds 'visibility: not_recorded' and empty corrections to N photo observation(s); no values or evidence changed)`. A 0.7.0 document that already has any of these fields is refused as malformed. Rebuilding missing generated models (`POST /api/v1/catalog/generated-models/restore`) accepts an older document and upgrades it first; upgrades never change a recorded specification, so the rebuilt files keep their recorded hashes.
 - `fixtures/legacy/foundation-scene-0.1.0.json` is the exact 0.1.0 fixture, kept to test this path.
-- **In the editor (WRL-03).** Opening a file whose `schema_version` is any other string sends it to `POST /api/v1/projects/upgrade`. That endpoint runs the same `upgrade_document`, validates the result (contract and model files), and returns an `UpgradeReport` (`from_version`, `to_version`, `notes`, `project`, `validation`) without storing anything. The browser shows the notes and offers **Open upgraded project**, **Download upgraded file** (`<name>-0.12.0.json`) or **Cancel**; nothing is replaced or written before that choice. An unknown version gets one 422 issue at `/schema_version`, a malformed legacy file one issue at the document level, and errors after a successful upgrade are located in the upgraded document. In each case the current scene stays.
+- **In the editor (WRL-03).** Opening a file whose `schema_version` is any other string sends it to `POST /api/v1/projects/upgrade`. That endpoint runs the same `upgrade_document`, validates the result (contract and model files), and returns an `UpgradeReport` (`from_version`, `to_version`, `notes`, `project`, `validation`) without storing anything. The browser shows the notes and offers **Open upgraded project**, **Download upgraded file** (`<name>-0.13.0.json`) or **Cancel**; nothing is replaced or written before that choice. An unknown version gets one 422 issue at `/schema_version`, a malformed legacy file one issue at the document level, and errors after a successful upgrade are located in the upgraded document. In each case the current scene stays.
 
 ## Edits, revisions and the edit log (0.4.0)
 
@@ -376,3 +377,24 @@ Decision: ADR-053; the journey and its limits: [docs/drawing-import.md](drawing-
 - untraced proposals keep `APPROXIMATE_MARGIN_M` (0.5 m) from a route;
 - the floor must be traced;
 - answers within the precision are "cannot determine yet".
+
+## Processes for Run a day (0.13.0, SIM-01..04)
+
+`Project.process` is the process **Run a day** uses (format `rws-process/1`), or `null`:
+
+- **Stations**, in flow order.
+  - The first, and only the first, is the `supply`: material is always available there, which is an assumption. The others are `process` stations.
+  - Each is tied to a scene object by `object_id`. `access_m` is where a worker stands, in the object's own frame, so it moves and turns with the object.
+  - A process station has `worker_s` (with a worker present), `machine_s` (on its own), `input_capacity` and `output_capacity` (whole numbers, at least 1), `planned_stops` and optional `random_stops`.
+  - The project validator does not require `object_id` to resolve: removing an object makes the run say which station lost its object, instead of making the file invalid.
+- **Transfers** (`method: "carry"`) between two stations: `item_width_m`, `allowance_m` (each side), `speed_m_s` and `handling_s` (to pick up, and again to set down). The route check decides whether the path is clear.
+- **Workers:** `tasks` in priority order (`station:<id>` or `transfer:<id>`, which must resolve), `walk_speed_m_s`, and `width_m` (the path needed with empty hands).
+- **Shift:** `start_clock_s` (seconds after midnight), `duration_s` (at most 24 h), and `breaks` that end within the shift.
+- **`seed`,** used for unplanned stops.
+- **`example_note`** is set for a shipped example and says its values are assumptions.
+
+Every operating value is an `OperatingValue` (`value`, `basis`: `example` or `entered`). None is ever read from a drawing.
+
+Setting, changing or removing the process is one edit: an edit record `process_set` (`revision`, `summary`) with no object change, undone and redone like any other.
+
+Runs are not stored. They are made again from the process, the layout, the seed and the engine version, and give the same events. See [run-a-day.md](run-a-day.md).

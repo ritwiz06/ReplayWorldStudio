@@ -315,6 +315,7 @@ def test_a_0_9_0_drawing_is_reviewed_as_unchecked_and_its_drawn_sizes_are_weaken
     current = with_source(fixture_data, drawing_source(object_id(fixture_data)))
     old = copy.deepcopy(current)
     old["schema_version"] = "0.9.0"
+    del old["process"]
     drawing = old["sources"][-1]["drawing"]
     del drawing["review"]
     del drawing["omitted"]
@@ -337,6 +338,8 @@ def test_a_0_9_0_drawing_is_reviewed_as_unchecked_and_its_drawn_sizes_are_weaken
         "schema_version 0.11.0 -> 0.12.0 (adds 'raster: null' to 1 drawing reading and "
         "'tolerance: null' to 1 drawn outline: DXF geometry is exact as drawn; no values or "
         "evidence changed)",
+        "schema_version 0.12.0 -> 0.13.0 (adds 'process: null': no process for Run a day was set "
+        "up; no values or evidence changed)",
     ]
     project = Project.model_validate(upgrade.document)
     review = project.sources[-1].drawing.review  # type: ignore[union-attr]

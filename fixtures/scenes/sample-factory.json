@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.12.0",
+  "schema_version": "0.13.0",
   "id": "proj-sample-factory-hall",
   "name": "Sample factory hall (synthetic)",
   "units": {
@@ -15,7 +15,7 @@
   },
   "fixture": {
     "kind": "demonstration",
-    "note": "A synthetic sample made for this preview: a 20 m x 10 m hall drawn as a DXF, reviewed, with two racks and a 2 m aisle. Not a real site; sizes are the drawing's, heights are assumed for display."
+    "note": "A synthetic sample: a 20 m x 10 m hall drawn as a DXF, reviewed, with two racks and a 2 m aisle, and an example shift for Run a day. Not a real site; sizes are the drawing's, heights are assumed for display, and the shift's times and workers are made-up assumptions."
   },
   "sources": [
     {
@@ -1905,5 +1905,285 @@
       }
     ],
     "edit_log": []
+  },
+  "process": {
+    "format": "rws-process/1",
+    "name": "Example shift: mixing, forming and packing",
+    "item_name": "batch",
+    "example_note": "An example to show how Run a day works. Every time, capacity, speed, break and worker assignment here is an assumption made up for this synthetic hall: not data from a real factory, and nothing is read from the drawing.",
+    "shift": {
+      "start_clock_s": {
+        "value": 21600,
+        "basis": "example"
+      },
+      "duration_s": {
+        "value": 28800,
+        "basis": "example"
+      },
+      "breaks": [
+        {
+          "id": "break-morning",
+          "name": "Morning break",
+          "start_s": {
+            "value": 10800,
+            "basis": "example"
+          },
+          "duration_s": {
+            "value": 900,
+            "basis": "example"
+          }
+        },
+        {
+          "id": "break-lunch",
+          "name": "Lunch",
+          "start_s": {
+            "value": 19800,
+            "basis": "example"
+          },
+          "duration_s": {
+            "value": 1800,
+            "basis": "example"
+          }
+        }
+      ]
+    },
+    "stations": [
+      {
+        "id": "rack-a",
+        "object_id": "obj-dxf-106",
+        "name": "Rack A (material)",
+        "role": "supply",
+        "access_m": {
+          "x": -3.5,
+          "z": 1.5
+        },
+        "access_basis": "example",
+        "worker_s": null,
+        "machine_s": null,
+        "input_capacity": null,
+        "output_capacity": null,
+        "planned_stops": [],
+        "random_stops": null
+      },
+      {
+        "id": "mixer",
+        "object_id": "obj-dxf-10a",
+        "name": "Mixer",
+        "role": "process",
+        "access_m": {
+          "x": 1.591,
+          "z": 1.591
+        },
+        "access_basis": "example",
+        "worker_s": {
+          "value": 60,
+          "basis": "example"
+        },
+        "machine_s": {
+          "value": 150,
+          "basis": "example"
+        },
+        "input_capacity": {
+          "value": 1,
+          "basis": "example"
+        },
+        "output_capacity": {
+          "value": 1,
+          "basis": "example"
+        },
+        "planned_stops": [],
+        "random_stops": null
+      },
+      {
+        "id": "machine-b",
+        "object_id": "obj-dxf-111",
+        "name": "Machine B",
+        "role": "process",
+        "access_m": {
+          "x": 0,
+          "z": 1.1
+        },
+        "access_basis": "example",
+        "worker_s": {
+          "value": 20,
+          "basis": "example"
+        },
+        "machine_s": {
+          "value": 120,
+          "basis": "example"
+        },
+        "input_capacity": {
+          "value": 2,
+          "basis": "example"
+        },
+        "output_capacity": {
+          "value": 2,
+          "basis": "example"
+        },
+        "planned_stops": [
+          {
+            "id": "changeover",
+            "reason": "Changeover (example)",
+            "start_s": {
+              "value": 14400,
+              "basis": "example"
+            },
+            "duration_s": {
+              "value": 1200,
+              "basis": "example"
+            }
+          }
+        ],
+        "random_stops": null
+      },
+      {
+        "id": "packing",
+        "object_id": "obj-dxf-113",
+        "name": "Packing table",
+        "role": "process",
+        "access_m": {
+          "x": 0,
+          "z": -0.9
+        },
+        "access_basis": "example",
+        "worker_s": {
+          "value": 240,
+          "basis": "example"
+        },
+        "machine_s": {
+          "value": 0,
+          "basis": "example"
+        },
+        "input_capacity": {
+          "value": 4,
+          "basis": "example"
+        },
+        "output_capacity": {
+          "value": 1,
+          "basis": "example"
+        },
+        "planned_stops": [],
+        "random_stops": null
+      }
+    ],
+    "transfers": [
+      {
+        "id": "carry-material",
+        "from_station": "rack-a",
+        "to_station": "mixer",
+        "method": "carry",
+        "item_width_m": {
+          "value": 0.6,
+          "basis": "example"
+        },
+        "allowance_m": {
+          "value": 0.1,
+          "basis": "example"
+        },
+        "speed_m_s": {
+          "value": 1,
+          "basis": "example"
+        },
+        "handling_s": {
+          "value": 10,
+          "basis": "example"
+        }
+      },
+      {
+        "id": "carry-mixed",
+        "from_station": "mixer",
+        "to_station": "machine-b",
+        "method": "carry",
+        "item_width_m": {
+          "value": 0.6,
+          "basis": "example"
+        },
+        "allowance_m": {
+          "value": 0.1,
+          "basis": "example"
+        },
+        "speed_m_s": {
+          "value": 1,
+          "basis": "example"
+        },
+        "handling_s": {
+          "value": 10,
+          "basis": "example"
+        }
+      },
+      {
+        "id": "carry-formed",
+        "from_station": "machine-b",
+        "to_station": "packing",
+        "method": "carry",
+        "item_width_m": {
+          "value": 0.6,
+          "basis": "example"
+        },
+        "allowance_m": {
+          "value": 0.1,
+          "basis": "example"
+        },
+        "speed_m_s": {
+          "value": 1,
+          "basis": "example"
+        },
+        "handling_s": {
+          "value": 10,
+          "basis": "example"
+        }
+      }
+    ],
+    "workers": [
+      {
+        "id": "worker-1",
+        "name": "Worker 1 (mixing)",
+        "tasks": [
+          "transfer:carry-mixed",
+          "station:mixer",
+          "transfer:carry-material"
+        ],
+        "walk_speed_m_s": {
+          "value": 1.2,
+          "basis": "example"
+        },
+        "width_m": {
+          "value": 0.8,
+          "basis": "example"
+        }
+      },
+      {
+        "id": "worker-2",
+        "name": "Worker 2 (forming)",
+        "tasks": [
+          "transfer:carry-formed",
+          "station:machine-b"
+        ],
+        "walk_speed_m_s": {
+          "value": 1.2,
+          "basis": "example"
+        },
+        "width_m": {
+          "value": 0.8,
+          "basis": "example"
+        }
+      },
+      {
+        "id": "worker-3",
+        "name": "Worker 3 (packing)",
+        "tasks": [
+          "station:packing"
+        ],
+        "walk_speed_m_s": {
+          "value": 1.2,
+          "basis": "example"
+        },
+        "width_m": {
+          "value": 0.8,
+          "basis": "example"
+        }
+      }
+    ],
+    "seed": 1
   }
 }

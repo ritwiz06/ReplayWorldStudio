@@ -242,6 +242,7 @@ def build() -> Project:
             "objects": objects,
             "edit_log": [],
         },
+        "process": None,
     }
     return Project.model_validate(document)
 

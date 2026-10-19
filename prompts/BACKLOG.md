@@ -806,6 +806,7 @@ Supported model: production events (discrete-event queues and resources). It doe
 - Baseline status: planned; reconcile with actual repository
 - Done when: Required timing, buffer and routing fields validate; missing inputs are actionable.
 - Evidence: not recorded by this package
+- Status (2026-10-18, ADR-059): **done** for one bounded process. Contract 0.13.0 `process` covers stations tied to object IDs (with access points), carries, workers with priorities, the shift with breaks, stops and the seed; every value is `example` or `entered`. Set up a day names exactly what is missing (`apps/web/src/run/setup.ts`, tests; e2e `run-day.spec.ts`). Not yet: conveyors, branches, several products.
 
 ### SIM-02 - Implement event-based production
 
@@ -814,6 +815,7 @@ Supported model: production events (discrete-event queues and resources). It doe
 - Baseline status: planned; reconcile with actual repository
 - Done when: Known-answer counts, finite buffers, downtime and conservation checks pass.
 - Evidence: not recorded by this package
+- Status (2026-10-18, ADR-059): **done.** Engine `rws-run/1` (`apps/web/src/run/engine.ts`). Known answers cover output counts, finite-buffer blocking and release, breaks, planned stops, worker contention without overlap, item conservation at every event, blocked routes, and determinism (`engine.test.ts`). The sample's shift runs on its layout with route-checked distances (`plan.test.ts`).
 
 ### SIM-03 - Persist jobs, events and playback
 
@@ -822,6 +824,7 @@ Supported model: production events (discrete-event queues and resources). It doe
 - Baseline status: planned; reconcile with actual repository
 - Done when: Cancel/restart handling is clear; playback speed does not change results.
 - Evidence: not recorded by this package
+- Status (2026-10-18, ADR-059): **done.** Playback (clock, Play/Pause, Restart, speed, timeline) reads the event log only, so the same moment looks the same whatever came before; camera switches do not restart it. Runs are not stored but are reproducible (engine, seed, layout revision, fingerprints); the process survives save/reopen and gives the same events (e2e). There is no long-running job to cancel: a run takes well under a second.
 
 ### SIM-04 - Compare scenario variants
 
@@ -830,6 +833,7 @@ Supported model: production events (discrete-event queues and resources). It doe
 - Baseline status: planned; reconcile with actual repository
 - Done when: Independent revisions, paired assumptions and changed metrics export correctly.
 - Evidence: not recorded by this package
+- Status (2026-10-18, ADR-059): **done** for original vs edited layout: same process, seed and engine; metrics table plus an explanation computed from blocked or changed routes. Export of the comparison stays with REL-01.
 
 ## M7 - Rigid-body interactions
 

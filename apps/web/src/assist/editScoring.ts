@@ -60,7 +60,7 @@ export function frozenScene(saved: Project): Project {
   if (saved.schema_version !== ("0.7.0" as string) || saved.sources.some((s) => s.photo_import !== null)) {
     throw new Error(`A ${saved.schema_version} scene with a photo needs the API's upgrade.`);
   }
-  return { ...saved, schema_version: SCHEMA_VERSION };
+  return { ...saved, schema_version: SCHEMA_VERSION, process: null };
 }
 
 export function scoreEdit(scene: Project, c: EditCase, row: EditRow): EditScore {

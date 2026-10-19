@@ -58,6 +58,12 @@ each change, and the result is then validated like any other document.
     * every drawing reading gains ``omitted: null``: readings made before 0.11.0 did not record
       where the shapes they left out lie, so a check treats each such shape as possibly anywhere.
 
+0.11.0 -> 0.12.0
+    * every drawing reading gains ``raster: null`` and every drawn outline ``tolerance: null``.
+
+0.12.0 -> 0.13.0
+    * the project gains ``process: null``: no process for "Run a day" was set up before 0.13.0.
+
 Steps run in sequence, so a 0.1.0 document passes through 0.2.0 on its way to the current
 version and its notes describe every step.
 """
@@ -416,6 +422,18 @@ def _from_0_11_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     return upgraded, [note]
 
 
+def _from_0_12_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    upgraded = copy.deepcopy(dict(old))
+    if "process" in upgraded:
+        raise MigrationError("malformed 0.12.0 document: processes only exist from 0.13.0")
+    upgraded["process"] = None
+    upgraded["schema_version"] = "0.13.0"
+    return upgraded, [
+        "schema_version 0.12.0 -> 0.13.0 (adds 'process: null': no process for Run a day was set "
+        "up; no values or evidence changed)"
+    ]
+
+
 _STEPS: Final[dict[str, Step]] = {
     "0.1.0": _from_0_1_0,
     "0.2.0": _from_0_2_0,
@@ -428,5 +446,6 @@ _STEPS: Final[dict[str, Step]] = {
     "0.9.0": _from_0_9_0,
     "0.10.0": _from_0_10_0,
     "0.11.0": _from_0_11_0,
+    "0.12.0": _from_0_12_0,
 }
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)

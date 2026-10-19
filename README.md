@@ -1,8 +1,8 @@
 # Replay World Studio
 
-Turn a floor plan into a 3D layout you can walk through, change and check. Upload a plan, move a machine, and see whether the layout still fits. Factory production areas are the first example; the world contracts stay generic.
+Turn a floor plan into a 3D layout you can walk through, change, check and run. Upload a plan, move a machine, see whether the layout still fits, and run a shift on it. Factory production areas are the first example; the world contracts stay generic.
 
-> **Status: local v0.1.** It runs on your own computer at `http://127.0.0.1:8000` with `pnpm start`; nothing is hosted (ADR-058). It works on synthetic examples and supported files; it has not been tried on real plans yet. It does **not** convert every drawing into an accurate 3D model automatically, simulate production or physics, or certify anything about a real site. The release guide is [docs/local-v0.1.md](docs/local-v0.1.md).
+> **Status: local v0.1.** It runs on your own computer at `http://127.0.0.1:8000` with `pnpm start`; nothing is hosted (ADR-058). It works on synthetic examples and supported files; it has not been tried on real plans yet. It does **not** convert every drawing into an accurate 3D model automatically, simulate physics, verify real productivity or safety, or certify anything about a real site. **Run a day** predicts what happens only under the operating assumptions you enter. The release guide is [docs/local-v0.1.md](docs/local-v0.1.md).
 
 ## Run it on your computer
 
@@ -28,7 +28,20 @@ RWS_API_PORT=8001 pnpm start    # if port 8000 is taken (pnpm start tells you wh
 - **No key is needed.** A Voyager key in your git-ignored `.env` turns on the optional AI features in your local app only. The key never leaves the local API process. Pressing an AI button sends that request (for example a plan picture's smaller copy) to ASU Voyager.
 - Details: [docs/local-v0.1.md](docs/local-v0.1.md).
 
-Start with **Try the sample**. Move *Machine B* into the aisle (drag it, or press **move it for me**) and watch **Check layout** say whether a 1.20 m cart can still get along the aisle; the before/after table compares the drawing with your layout. Then upload your own plan.
+Start with **Run a day** on the left: the sample hall opens and its example shift plays. Workers fetch, mix, form and pack batches, machines cycle or wait, and queues form.
+- Move *Machine B* into the aisle (drag it, or press **move it for me**).
+- **Check layout** then says the 1.20 m cart route is blocked.
+- Running the same shift again shows the material route blocked, with output 0, and the comparison explains why.
+
+Then upload your own plan.
+
+**Three different things:**
+
+| | Answers | Uses |
+| --- | --- | --- |
+| **Check layout** | Does it fit? Overlaps, keep-clear zones, whether an item of a given width can get from A to B. | The reviewed plan's geometry, in 2D. |
+| **Walk** | What does it look like from here? | The camera only; nothing happens in the scene. |
+| **Run a day** | What happens during a shift under these assumptions? Output, unfinished items, queues, worker activity, machine use. | A process you set up (or the sample's labelled example), the same route checks, a seed and an event engine ([docs/run-a-day.md](docs/run-a-day.md)). |
 
 What you can do:
 
@@ -38,14 +51,16 @@ What you can do:
 | **Walk and change it** | Orbit, plan and walk views. Move, turn, resize, add, duplicate and remove, with undo and redo. Heights are *assumed for display* unless you enter them. |
 | **Compare** | The drawing's own arrangement beside your edited one, with every change listed. |
 | **Check layout** | Footprint overlaps, objects in keep-clear zones, and whether an item of a width you enter can get from A to B. These are 2D checks of the **reviewed design**: **width only; turning is not evaluated**, heights are not checked, and outlines on a PDF or picture count only as precisely as you traced them. |
-| **Save** | **Save project** downloads the project as a file. Reopen it with **Open project**. |
+| **Run a day** | Plays a shift: workers, items, machine states, queues and a shift clock, with Play/Pause, speed, Restart and a timeline in every camera mode. Run again after an edit and compare with the original layout. **Set up a day** on your own plan: you enter the stations, times, buffers, workers, shift and breaks; nothing is read from the drawing. |
+| **Save** | **Save project** downloads the project as a file, with its process. Reopen it with **Open project**. |
 
 ## What exists today
 
 | Area | Built | Not built |
 | --- | --- | --- |
 | Plans | DXF reading (`rws-dxf/1`), a four-question review (floor, scale with a known length, objects, omissions), plan pictures from a PDF page, PNG or JPEG, traced outlines with their precision | DWG, page cropping, PDF vectors, printed scale ratios, aligning a second plan |
-| Checks | Overlaps, keep-clear zones, floor edge, width-only routes on the reviewed design, before/after | Turning (swept paths), overhead heights, loads, throughput, physics |
+| Checks | Overlaps, keep-clear zones, floor edge, width-only routes on the reviewed design, before/after | Turning (swept paths), overhead heights, loads, physics |
+| Run a day | One bounded process: stations tied to objects, carrying by hand along route-checked paths, workers with priorities and breaks, finite buffers, planned and seeded stops, deterministic events (`rws-run/1`), playback, comparison with the original layout, setup on your own plan | Conveyors and other transport, branching flows, several products, worker congestion, event-log export |
 | World and editor | Evidence on every value, edit log, undo/redo, save/reopen, walk view, provisional models | Matching equipment to real models (ENR-01), shared private links (SHR-01), accounts |
 | AI (optional, your own key) | ASU Voyager drafts described objects, plan pictures and photo objects; nothing is applied unreviewed | Any hosted AI |
 
