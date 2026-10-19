@@ -1226,6 +1226,7 @@ Append entries in chronological order. If a live repository session log already 
   - QA-01 has not been run, so REL-01's dependency is not met. Nothing here validates output accuracy on a real operation.
   - Bundles are not signed.
   - The recording script is local only, needs macOS (AVFoundation) and the installed Chrome, and never runs in CI.
+- CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39335525219 passed all three jobs on `eb2e1f9`. The smoke job ran `evidence.spec.ts` (1.6 min, software WebGL), and the local-launcher job ran both checks in `local/evidence.spec.ts`. Locally, two full `pnpm test:e2e` runs each failed one different, unrelated test (`drawing-review.spec.ts:50`, then `industrial-demo.spec.ts:54` and `photo-review.spec.ts:310`); each passed when rerun alone, which points to timing under parallel software WebGL. Not investigated further.
 - Next concrete task: QA-01, or the separate import follow-ups (downscale for scans over 50 MP, DWG conversion, fewer CAD corrections), on the user's priority.
 
 ## Copy this template for a coding session
