@@ -1128,6 +1128,7 @@ Append entries in chronological order. If a live repository session log already 
   - One line from one supply, carrying by hand only.
   - No worker congestion, no event-log export.
   - Runs are not stored (they are reproducible).
+- CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39203602939 passed all three jobs on `4feb9d8`; both `run-day.spec.ts` tests ran in the browser job.
 - Next concrete task: use Run a day locally; M6 follow-ups when wanted.
 
 ## Copy this template for a coding session
