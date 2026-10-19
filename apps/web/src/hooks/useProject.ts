@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION, validateProject, type Project, type UpgradeReport, type ValidationReport } from "@replay-world/contracts";
+import { type EvidenceBundleOpened, SCHEMA_VERSION, validateProject, type Project, type UpgradeReport, type ValidationReport } from "@replay-world/contracts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ApiClient, ApiFailure, FixtureName } from "../api/client";
 import type { CommandRequest } from "../editing/commands";
@@ -9,7 +9,8 @@ export type LoadFailure = ApiFailure | { kind: "file"; message: string };
 
 export type SceneSource =
   | { kind: "fixture"; name: FixtureName }
-  | { kind: "file"; filename: string; report: ValidationReport }
+  /** A project file, or the project of an evidence bundle (REL-01) with what the bundle recorded. */
+  | { kind: "file"; filename: string; report: ValidationReport; bundle?: EvidenceBundleOpened }
   | { kind: "upgrade"; filename: string; fromVersion: string }
   /** A world just built from a photo or a drawing; not saved yet. */
   | { kind: "photo" | "drawing"; filename: string };
@@ -217,6 +218,37 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
     [client, offerReplacement, replace],
   );
 
+  /** Open an evidence bundle (REL-01): the API checks every file against its manifest and stores
+   * its verified sources; then the project is validated like any file and opened, keeping what
+   * the bundle recorded so its runs can be compared with new ones. */
+  const openBundle = useCallback(
+    async (file: File) => {
+      const filename = file.name;
+      const reject = (error: LoadFailure) => setFileCheck({ status: "rejected", filename, error, restorable: null });
+      setFileCheck({ status: "checking", filename });
+      const opened = await client.openBundle(file);
+      if (!opened.ok) {
+        reject(opened.error);
+        return;
+      }
+      const text = serializeProject(opened.value.project);
+      const verdict = await client.validateProjectDocument(text, undefined, true);
+      if (!verdict.ok) {
+        reject(verdict.error);
+        return;
+      }
+      const local = validateProject(JSON.parse(text));
+      if (!local.ok) {
+        reject({ kind: "contract", message: "The bundle's project does not match the contract.", issues: local.issues });
+        return;
+      }
+      setFileCheck({ status: "idle" });
+      const project = local.value;
+      offerReplacement(`open ${filename}`, () => replace(project, { kind: "file", filename, report: verdict.value, bundle: opened.value }, project.scene.revision));
+    },
+    [client, offerReplacement, replace],
+  );
+
   const dismissFileCheck = useCallback(() => setFileCheck({ status: "idle" }), []);
 
   /** Re-attach the original photo a file names (it must have the recorded sha256), then open
@@ -377,6 +409,7 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
     loadFixture,
     reloadFixture,
     openFile,
+    openBundle,
     dismissFileCheck,
     restoreAndReopen,
     attachPhotoAndReopen,

@@ -50,6 +50,13 @@ from .assist import (
     StoredPhoto,
     SuggestedStation,
 )
+from .evidence import (
+    EvidenceAsset,
+    EvidenceBundleOpened,
+    EvidenceBundleRequest,
+    EvidenceInventory,
+    EvidenceManifest,
+)
 from .models import (
     DESIGN_ORIGINS,
     DRAWING_PATH_PATTERN,
@@ -185,6 +192,11 @@ __all__ = [
     "EditProposalResult",
     "EditRecord",
     "EulerRotation",
+    "EvidenceAsset",
+    "EvidenceBundleOpened",
+    "EvidenceBundleRequest",
+    "EvidenceInventory",
+    "EvidenceManifest",
     "Extent3",
     "FixtureLabel",
     "FloorRectangle",

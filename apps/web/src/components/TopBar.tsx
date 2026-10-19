@@ -166,7 +166,7 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
           className="button button-primary"
           onClick={() => fileInput.current?.click()}
           disabled={checking}
-          title="Open a project JSON file; it is checked by the API before anything is replaced"
+          title="Open a project JSON file, or an evidence bundle (.zip) exported from a run; it is checked by the API before anything is replaced"
           aria-label="Open project…"
         >
           Open<span className="label-long"> project</span>…
@@ -174,7 +174,7 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
         <input
           ref={fileInput}
           type="file"
-          accept=".json,application/json"
+          accept=".json,application/json,.zip,application/zip"
           hidden
           onChange={handleFile}
           aria-label="Project file"

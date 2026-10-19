@@ -35,6 +35,9 @@ export interface ReplayWorldContracts {
   PlanProposalResult: PlanProposalResult;
   ProcessSuggestionRequest: ProcessSuggestionRequest;
   ProcessSuggestionResult: ProcessSuggestionResult;
+  EvidenceBundleRequest: EvidenceBundleRequest;
+  EvidenceBundleOpened: EvidenceBundleOpened;
+  EvidenceInventory: EvidenceInventory;
 }
 export interface Project {
   schema_version: "0.14.0";
@@ -3285,4 +3288,382 @@ export interface SuggestedStation {
   name: string;
   role: "supply" | "process";
   why: string;
+}
+/**
+ * What the browser sends to package a bundle: the texts it made, the asset URIs to copy in
+ * (each checked against the project's own hash), and the manifest without its file list.
+ */
+export interface EvidenceBundleRequest {
+  manifest: EvidenceManifest;
+  /**
+   * @minItems 1
+   * @maxItems 20
+   */
+  texts:
+    | [EvidenceText]
+    | [EvidenceText, EvidenceText]
+    | [EvidenceText, EvidenceText, EvidenceText]
+    | [EvidenceText, EvidenceText, EvidenceText, EvidenceText]
+    | [EvidenceText, EvidenceText, EvidenceText, EvidenceText, EvidenceText]
+    | [EvidenceText, EvidenceText, EvidenceText, EvidenceText, EvidenceText, EvidenceText]
+    | [EvidenceText, EvidenceText, EvidenceText, EvidenceText, EvidenceText, EvidenceText, EvidenceText]
+    | [EvidenceText, EvidenceText, EvidenceText, EvidenceText, EvidenceText, EvidenceText, EvidenceText, EvidenceText]
+    | [
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText
+      ]
+    | [
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText
+      ]
+    | [
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText
+      ]
+    | [
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText
+      ]
+    | [
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText
+      ]
+    | [
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText
+      ]
+    | [
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText
+      ]
+    | [
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText
+      ]
+    | [
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText
+      ]
+    | [
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText
+      ]
+    | [
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText
+      ]
+    | [
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText,
+        EvidenceText
+      ];
+  /**
+   * @maxItems 200
+   */
+  include: string[];
+}
+export interface EvidenceManifest {
+  format: "rws-evidence/1";
+  created_utc: string;
+  schema_version: "0.14.0";
+  engine: string;
+  project: EvidenceProject;
+  process: EvidenceProcess;
+  /**
+   * @minItems 1
+   * @maxItems 2
+   */
+  runs: [EvidenceRun] | [EvidenceRun, EvidenceRun];
+  comparison: EvidenceComparison | null;
+  inputs: EvidenceInput[];
+  /**
+   * What the drawing and its review established (design geometry), in words.
+   */
+  layout_evidence: string[];
+  /**
+   * What the results do and do not show.
+   */
+  claims: string[];
+  /**
+   * Units, timestamps and event ordering.
+   */
+  conventions: string[];
+  /**
+   * 'full': the project and every source and model file it names are included; 'runs_only': the runs replay from the project file, but some of its files are not included (see 'excluded'); 'summary_only': no project file, so nothing can be rerun.
+   */
+  replay: "full" | "runs_only" | "summary_only";
+  /**
+   * @maxItems 200
+   */
+  files: EvidenceFile[];
+  excluded: EvidenceExcluded[];
+}
+export interface EvidenceProject {
+  /**
+   * Null in a summary-only bundle.
+   */
+  file: string | null;
+  id: string;
+  name: string;
+  /**
+   * A labelled synthetic or demonstration project.
+   */
+  synthetic: boolean;
+  note: string | null;
+}
+export interface EvidenceProcess {
+  name: string;
+  fingerprint: string;
+  seed: number;
+  example_note: string | null;
+}
+/**
+ * One run of the process on one layout, as the engine produced it.
+ */
+export interface EvidenceRun {
+  layout: "original" | "edited";
+  engine: string;
+  seed: number;
+  scene_revision: number;
+  layout_fingerprint: string;
+  process_fingerprint: string;
+  outcome: "ready" | "blocked" | "cannot_determine" | "needs_input";
+  reasons: string[];
+  event_fingerprint: string | null;
+  event_count: number;
+  completed: number | null;
+  created: number | null;
+  unfinished: number | null;
+  events_file: string | null;
+  metrics_file: string | null;
+}
+export interface EvidenceComparison {
+  identical: boolean;
+  explanation: string[];
+}
+/**
+ * One operating value of the process and where it came from.
+ */
+export interface EvidenceInput {
+  /**
+   * Where it is in the process, e.g. stations[1].worker_s.
+   */
+  path: string;
+  label: string;
+  /**
+   * The number in ``unit``; null for a place (detail).
+   */
+  value: number | null;
+  unit: string;
+  detail: string | null;
+  basis: "example" | "entered";
+}
+export interface EvidenceFile {
+  /**
+   * A relative path inside the bundle: no '..', no leading '/', no backslash.
+   */
+  path: string;
+  sha256: string;
+  bytes: number;
+  role: "readme" | "summary" | "project" | "events" | "metrics" | "source" | "model";
+  /**
+   * For an asset: the URI the project uses for it (source library or catalog).
+   */
+  uri: string | null;
+}
+export interface EvidenceExcluded {
+  what: string;
+  reason: string;
+}
+export interface EvidenceText {
+  /**
+   * A relative path inside the bundle: no '..', no leading '/', no backslash.
+   */
+  path: string;
+  role: "readme" | "summary" | "project" | "events" | "metrics";
+  text: string;
+}
+/**
+ * A bundle checked and opened: its manifest, its project, the recorded event logs, and
+ * what was verified, stored or missing.
+ */
+export interface EvidenceBundleOpened {
+  manifest: EvidenceManifest;
+  project: Project;
+  events: {
+    [k: string]:
+      | {
+          [k: string]: unknown | undefined;
+        }[]
+      | undefined;
+  };
+  verified: string[];
+  stored: string[];
+  problems: string[];
+}
+export interface EvidenceInventory {
+  assets: EvidenceAsset[];
+}
+/**
+ * A file the project names, and whether it can go in a bundle.
+ */
+export interface EvidenceAsset {
+  uri: string;
+  kind: "drawing" | "plan" | "photo" | "model";
+  label: string;
+  sha256: string | null;
+  bytes: number | null;
+  /**
+   * 'repo_owned': a synthetic fixture or catalog model in this repository, verified by hash; 'library': the person's own file in their local library; 'missing' or 'changed': not available as the project recorded it.
+   */
+  status: "repo_owned" | "library" | "missing" | "changed";
 }

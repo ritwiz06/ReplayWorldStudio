@@ -50,7 +50,7 @@ export function Inspector({ project, source, selected, models, edit, onImprove }
 function sourceLabel(source: SceneSource | null): string {
   switch (source?.kind) {
     case "file":
-      return `${source.filename} (accepted by API)`;
+      return source.bundle ? `${source.filename} (evidence bundle, checked by API)` : `${source.filename} (accepted by API)`;
     case "upgrade":
       return `${source.filename} (upgraded from ${source.fromVersion}; not saved yet)`;
     case "photo":

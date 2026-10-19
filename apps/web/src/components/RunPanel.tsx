@@ -24,6 +24,10 @@ interface Props {
   /** The guided setup, shown instead of the run while there is no process or it is being changed. */
   guided: ReactNode | null;
   onChangeSetup: () => void;
+  /** Shown first: the sample's step-by-step example, or an opened evidence bundle's check. */
+  top: ReactNode | null;
+  /** Open the export review; null while there is no current run to export. */
+  onExport: (() => void) | null;
 }
 
 const pct = (v: number) => `${Math.round(v * 100)} %`;
@@ -41,7 +45,7 @@ function Basis({ value, shipped }: { value: OperatingValue | null; shipped: bool
   return <span className={`basis basis-${value.basis}`}>{value.basis === "entered" ? "you entered" : shipped ? "example" : "illustrative, accepted"}</span>;
 }
 
-export function RunPanel({ project, day, playback, stale, edited, comparison, onRun, onCompare, guided, onChangeSetup }: Props) {
+export function RunPanel({ project, day, playback, stale, edited, comparison, onRun, onCompare, guided, onChangeSetup, top, onExport }: Props) {
   const process = project.process;
   const frame = useMemo(() => (day?.replay && !stale ? day.replay.frame(playback.t) : null), [day, playback.t, stale]);
   if (!process || guided) {
@@ -64,6 +68,7 @@ export function RunPanel({ project, day, playback, stale, edited, comparison, on
   const metrics = result?.metrics ?? null;
   return (
     <div className="source-drawing-body run-panel" data-testid="run-panel" data-outcome={day?.plan.outcome ?? "none"} data-fingerprint={result?.fingerprint ?? ""}>
+      {top}
       <div className="run-head">
         <strong data-testid="run-name">{process.name}</strong>
         {process.example_note && <span className="badge badge-example">Example shift · assumptions</span>}
@@ -213,6 +218,11 @@ export function RunPanel({ project, day, playback, stale, edited, comparison, on
           Run record: engine {day.engine} · seed {day.seed} · layout revision {day.sceneRevision} · {result.events.length} events · fingerprint {result.fingerprint}. Running it again on the same
           layout gives the same events; playback speed and the camera never change them.
         </p>
+      )}
+      {onExport && (
+        <button type="button" className="button" data-testid="run-export" onClick={onExport}>
+          Export this run…
+        </button>
       )}
       <p className="small muted" data-testid="run-scope">
         {SCOPE}

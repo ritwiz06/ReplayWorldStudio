@@ -8,7 +8,9 @@
 | **Walk** | What does it look like from here? | The camera only. Nothing happens in the scene. |
 | **Run a day** | What happens during a shift under these operating assumptions? | A process you set up (or the sample's example), the layout's routes (the same route check), a seed and an event engine. |
 
-**What a run claims.** It predicts outcomes under the entered process assumptions. It does **not** verify real productivity, worker safety, forces, structural strength or chemistry. The equipment models are illustrations: their insides are not simulated, only each station's state is shown.
+**What a run claims.** It predicts outcomes under the entered process assumptions. It does **not** verify real productivity, worker safety, forces, structural strength or chemistry.
+
+**What a machine is in a run.** Each station is a timed step: a time with a worker, then a time on its own, with a queue in front and an output place after it. Nothing inside a machine is modelled: no mechanism, moving parts, material behaviour, speeds or energy. The 3D models are illustrations of the equipment; the view shows only each station's state (running, loading, waiting, blocked, stopped) taken from the event log.
 
 ## Try it
 
@@ -29,6 +31,15 @@ From the first screen, press **Run a day** on the left. The sample hall opens an
   - every assumption, with its basis, and the run record.
 
 To see an edit's effect: move Machine B (**move it for me** in the sample guide). The run is marked as being for the old layout; press **Run the same shift again**, then **Compare with the original layout**.
+
+**Show the example** (on the sample's Run tab) does the same one step at a time, with the app's own commands and engine:
+1. run the shift on the hall as drawn;
+2. move Machine B into the aisle;
+3. run the same shift again;
+4. compare;
+5. undo the move and run again.
+
+Every number is from a run made at that moment, and the last step shows that the original events come back exactly.
 
 ## The sample's example shift (assumptions, not data)
 
@@ -109,7 +120,7 @@ On an uploaded plan, the Run tab opens **Set up a day**. The review must be fini
 5. **Routes.** The setup checks every route the shift needs on the layout, and says how to correct one that is blocked or cannot be determined: choose another side, move an object, or mark door and hatch layers as drawing symbols in the review. Nothing is assumed to pass.
 6. **Save and run the day:** one undoable step (`process_set`). The Run tab then counts the values you entered and the illustrative assumptions you accepted, and marks each in **What this run assumes**.
 
-**Suggest setup (optional).** With a Voyager key, describe the work in a sentence and the language model suggests stations, their order and questions to answer, from the reviewed objects' names. It never sets times or staffing (its answer has no place for them). Nothing is applied until you press **Use these stations**, and you review them. Without a key, everything above works by hand. **Full form…** opens every field at once.
+**Suggest setup (optional, only with your own key).** If you put your own ASU Voyager key in the git-ignored `.env` of your local app, describe the work in a sentence and press **Suggest**. That request (your sentence, plus the reviewed objects' names) is then sent to ASU Voyager, and the language model suggests stations, their order and questions to answer. It never sets times or staffing: its answer has no place for them. Nothing is applied until you press **Use these stations**, and you review them. Without a key the button is off, and everything above works by hand. **Full form…** opens every field at once.
 
 Real drawings and what they need first (a traced floor, symbol layers, renamed stations) are recorded in [external-drawings.md](external-drawings.md).
 
@@ -126,8 +137,32 @@ An older file opens through the existing upgrade path, which adds `process: null
 - **Workers:** no skills, learning, fatigue or shift handover. Breaks are the same for everyone.
 - **Machines:** no setup times that depend on the product, no maintenance plans beyond planned stops, and no energy use.
 - **Movement:** no congestion between workers in the same aisle. Routes are width-only (no turning), as in Check layout.
-- **Not available:** physics, forces, structural or chemical behaviour, and live AI.
-- **Display:** playback is visual only; there is no export of the event log yet (REL-01).
+- **Not available:** physics, forces, structural or chemical behaviour. A language model never sets an operating value and never runs or changes the shift; the only AI step is the optional **Suggest setup** above.
+- **Display:** playback is visual only. The event log is exported with **Export this run** (below).
+
+## Export this run, and reproduce it (REL-01)
+
+**Export this run** (Run tab, under the run record) saves one ZIP of the run on the layout now and, when the layout was edited, the original layout's run too. Before saving, the export review lists every file:
+- **Always included:** README.md, summary.md (the before/after and its cause, in words), project.json, and each run's events.json and metrics.json, plus manifest.json.
+- **Files the project uses,** each with where it stands:
+  - the sample's synthetic drawing is part of this repository, so it is selected;
+  - your own drawings, plan pictures, photos and models are **not selected** until you tick them;
+  - a missing or changed file cannot be included.
+- **Summary only** leaves the project out: the bundle can be read but not rerun.
+
+The Voyager key, settings and other projects' files are never read. Exporting does not change the project.
+
+**Open project** also takes such a ZIP. It is opened only if every check passes:
+- every file has the sha256 its manifest lists;
+- every name is a plain relative path;
+- each source has the hash the project records.
+
+Otherwise it is refused with the reason, and the open project is kept. **Run both layouts again** then reruns each recorded layout and compares:
+- the event logs, event by event;
+- the fingerprints of each layout, the process and each event log;
+- the counts, the blocked routes and the explanation.
+
+The format and conventions are in [evidence-bundles.md](evidence-bundles.md).
 
 ## Checks
 

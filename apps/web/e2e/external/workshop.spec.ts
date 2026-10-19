@@ -152,6 +152,33 @@ test("external: the CC0 workshop DXF through the whole guided Run a day journey"
   await page.setViewportSize({ width: 1440, height: 900 });
   phase("move, run again, compare");
 
+  // Export this run (REL-01). The drawing is this person's own library file (a third-party CC0
+  // file here), so the review does not select it: the bundle replays the runs from the project
+  // but does not carry the drawing. Ticking it makes a full bundle. Both stay in the git-ignored
+  // results folder.
+  await click(page, "run-export");
+  const exportDialog = page.getByTestId("export-run");
+  const drawingRow = exportDialog.getByTestId("export-asset-drawing");
+  await expect(drawingRow).toHaveAttribute("data-status", "library");
+  await expect(drawingRow.locator("input[type=checkbox]")).not.toBeChecked();
+  await expect(exportDialog.getByTestId("export-replay")).toHaveAttribute("data-replay", "runs_only");
+  await page.screenshot({ path: `${OUT}/workshop-6-export-review-1440.png` });
+  const exports: Record<string, { file: string; bytes: number }> = {};
+  for (const kind of ["runs_only", "full"] as const) {
+    if (kind === "full") {
+      tally.clicks++;
+      await drawingRow.locator("input[type=checkbox]").check();
+      await expect(exportDialog.getByTestId("export-replay")).toHaveAttribute("data-replay", "full");
+    }
+    tally.clicks++;
+    const [zip] = await Promise.all([page.waitForEvent("download"), exportDialog.getByTestId("export-save").click()]);
+    const file = `${OUT}/workshop-bundle-${kind}.zip`;
+    await zip.saveAs(file);
+    exports[kind] = { file: file.split("/").pop()!, bytes: readFileSync(file).length };
+  }
+  await click(page, "export-close");
+  phase("export the run");
+
   // Undo the move: the same shift on the original layout gives the original events again.
   await click(page, "undo");
   await click(page, "run-again-bar");
@@ -170,7 +197,17 @@ test("external: the CC0 workshop DXF through the whole guided Run a day journey"
   await expect(panel).toHaveAttribute("data-fingerprint", original.fingerprint!);
   phase("undo, save, reopen, replay");
 
-  const report = { summary, routes, original, edited, explanation, table, phases, clicks: tally.clicks, typed: tally.typed };
+  // The runs-only bundle in a fresh page: checked, then both layouts run again.
+  await page.goto("/");
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 15 objects");
+  await page.getByTestId("scene-file-input").setInputFiles(`${OUT}/workshop-bundle-runs_only.zip`);
+  await expect(page.getByTestId("bundle-check")).toBeVisible();
+  await page.getByTestId("bundle-rerun").click();
+  await expect(page.getByTestId("bundle-check")).toHaveAttribute("data-same", "true");
+  const bundleCheck = (await page.getByTestId("bundle-rows").locator("tbody tr").allTextContents()).map((t) => t.replace(/\s+/g, " ").trim());
+  phase("open the bundle and run again");
+
+  const report = { summary, routes, original, edited, explanation, table, exports, bundleCheck, phases, clicks: tally.clicks, typed: tally.typed };
   writeFileSync(`${OUT}/workshop-journey-move-${MOVE_M}.json`, JSON.stringify({ moveM: MOVE_M, ...report }, null, 2));
   console.log(JSON.stringify(report, null, 2));
   expect(edited.fingerprint).not.toBe(original.fingerprint);

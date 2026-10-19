@@ -49,9 +49,13 @@ import { RunBar } from "./components/RunBar";
 import { GuidedSetup } from "./components/GuidedSetup";
 import { RunLabels } from "./components/RunLabels";
 import { RunPanel } from "./components/RunPanel";
+import { BundleCheck } from "./components/BundleCheck";
+import { ExportRun } from "./components/ExportRun";
+import { type ExampleProgress, ShowExample } from "./components/ShowExample";
 import { SetupDay } from "./components/SetupDay";
 import { usePlayback } from "./hooks/usePlayback";
 import { compareDays, type DayComparison, type DayRun, runDay, runOriginal } from "./run/day";
+import { bundleRuns, type Reproduction, reproduce } from "./run/evidence";
 import { emptyGuided, type GuidedDraft, guidedFrom } from "./run/guided";
 
 const client = createApiClient();
@@ -162,6 +166,8 @@ export function App() {
   const { scene, fileCheck, prompt, loadId, execute, undo, redo, save } = session;
   const project = scene.status === "loaded" ? scene.project : null;
   const source = scene.status === "loaded" ? scene.source : null;
+  /** An opened evidence bundle (REL-01): what it recorded, to compare with runs made here. */
+  const bundle = source?.kind === "file" ? (source.bundle ?? null) : null;
   const { models, retry } = useCatalogModels(client, project);
   const { state: assist } = useAssistStatus(client);
   const assistOn = assist.status === "known" && assist.assist.available;
@@ -201,7 +207,11 @@ export function App() {
   const [guidedState, setGuidedState] = useState<{ loadId: number; draft: GuidedDraft; open: boolean } | null>(null);
   /** The run that should start playing as soon as it is shown. */
   const [autoPlayKey, setAutoPlayKey] = useState<string | null>(null);
-  const overlayOpen = start || about || create !== null || photoImport || drawingImport || improve !== null || setupDay;
+  /** REL-01: the sample's step-by-step example, the export review, and an opened bundle's check. */
+  const [example, setExample] = useState<{ loadId: number; progress: ExampleProgress } | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [bundleCheck, setBundleCheck] = useState<{ loadId: number; check: Reproduction } | null>(null);
+  const overlayOpen = start || about || create !== null || photoImport || drawingImport || improve !== null || setupDay || exporting;
   // Selection and placement belong to the project they were made in.
   const [selection, setSelection] = useState<{ loadId: number; id: string | null }>({ loadId: 0, id: null });
   const [placement, setPlacement] = useState<Placement | null>(null);
@@ -309,29 +319,45 @@ export function App() {
     setTool("move");
     setGuideClosed(false);
   }
+  // A bundle opens on the Run tab, where its check is (after the sample's own setup above).
+  const [bundleFor, setBundleFor] = useState<number | null>(null);
+  if (bundle && bundleFor !== loadId) {
+    setBundleFor(loadId);
+    setDrawingPanel({ open: true, view: "run" });
+  }
   const sampleMoved = useMemo(
     () => (isSample && project && sampleMachine ? (compareWithDrawing(project)?.changes.find((c) => c.objectId === sampleMachine.id)?.status === "changed") : false),
     [isSample, project, sampleMachine],
   );
-  const moveForMe = useCallback(() => {
-    if (!project || !sourceDrawing || !sampleMachine) return;
-    const at = toWorld(sourceDrawing.source_to_world, SAMPLE_MOVE_TO);
-    const transform = { ...sampleMachine.transform, position_m: { ...sampleMachine.transform.position_m, x: at.x, z: at.z } };
-    run({ baseRevision: project.scene.revision, command: { type: "set_transform", objectId: sampleMachine.id, transform } });
-    if (mode === "walk") setMode("orbit");
-    setDrawingPanel({ open: true, view: "check" });
-  }, [mode, project, run, sampleMachine, sourceDrawing]);
+  const moveForMe = useCallback(
+    (view: DrawingView = "check") => {
+      if (!project || !sourceDrawing || !sampleMachine) return;
+      const at = toWorld(sourceDrawing.source_to_world, SAMPLE_MOVE_TO);
+      const transform = { ...sampleMachine.transform, position_m: { ...sampleMachine.transform.position_m, x: at.x, z: at.z } };
+      run({ baseRevision: project.scene.revision, command: { type: "set_transform", objectId: sampleMachine.id, transform } });
+      if (mode === "walk") setMode("orbit");
+      setDrawingPanel({ open: true, view });
+    },
+    [mode, project, run, sampleMachine, sourceDrawing],
+  );
+
+  /** Open a project file, or an evidence bundle (a ZIP made by Export this run). */
+  const openAny = useCallback(
+    (file: File) => void (/\.zip$/i.test(file.name) || file.type === "application/zip" ? session.openBundle(file) : session.openFile(file)),
+    [session],
+  );
 
   /** Run the project's process on its layout as it is, and play it from the shift start. */
   const runOn = useCallback(
-    (target: Project) => {
-      if (!target.process) return;
+    (target: Project): DayRun | null => {
+      if (!target.process) return null;
       const made = runDay(target, target.process, "edited");
       setDay({ loadId, run: made });
       setDayComparison(null);
       setRunShown(true);
       setAutoPlayKey(made.result ? `${loadId}:${made.sceneRevision}:${made.result.fingerprint}` : null);
       if (mode !== "walk") issue("frame-all");
+      return made;
     },
     [issue, loadId, mode],
   );
@@ -362,6 +388,60 @@ export function App() {
     const original = runOriginal(project, project.process);
     if (original) setDayComparison({ key: runKey, original, result: compareDays(original, activeDay, project.process) });
   }, [activeDay, project, runKey]);
+  const exampleProgress = example?.loadId === loadId ? example.progress : null;
+  /** One step of "Show the example": each is the app's own command or run, made now. */
+  const exampleNext = useCallback(() => {
+    if (!project?.process || !exampleProgress) return;
+    const p = exampleProgress;
+    const advance = (patch: Partial<ExampleProgress> = {}) => setExample({ loadId, progress: { ...p, ...patch, step: p.step + 1 } });
+    setDrawingPanel({ open: true, view: "run" });
+    if (p.step === 0 || p.step === 2) {
+      const made = runOn(project);
+      advance(p.step === 0 ? { first: made?.result?.fingerprint ?? null } : {});
+    } else if (p.step === 1) {
+      moveForMe("run");
+      advance();
+    } else if (p.step === 3) {
+      compareDay();
+      advance();
+    } else if (p.step === 4) {
+      const outcome = session.undo();
+      if (!outcome?.ok) return;
+      const made = runOn(outcome.state.project);
+      advance({ again: made?.result?.fingerprint ?? null });
+    }
+  }, [compareDay, exampleProgress, loadId, moveForMe, project, runOn, session]);
+  const exampleNode =
+    isSample && project?.process && sourceDrawing ? (
+      <ShowExample
+        progress={exampleProgress}
+        blocked={layoutEdited && !exampleProgress ? "The layout has been changed. Undo your changes (or reload the sample) to start from the hall as drawn." : null}
+        onStart={() => setExample({ loadId, progress: { step: 0, first: null, again: null } })}
+        onNext={exampleNext}
+      />
+    ) : null;
+  /** The runs an export holds: the original layout's and, when the layout was edited, this one. */
+  const exportRuns = useMemo(
+    () => (project?.process && activeDay?.result && !dayStale ? bundleRuns(project, activeDay, layoutEdited, dayComparison?.key === runKey ? (dayComparison?.original ?? null) : null) : null),
+    [activeDay, dayComparison, dayStale, layoutEdited, project, runKey],
+  );
+  const activeBundleCheck = bundleCheck?.loadId === loadId ? bundleCheck.check : null;
+  const rerunBundle = useCallback(() => {
+    if (!project || !bundle) return;
+    const check = reproduce(project, bundle.manifest, bundle.events);
+    setBundleCheck({ loadId, check });
+    const current = check.runs.at(-1);
+    if (!current?.result) return;
+    // Show the last recorded run, and its comparison with the original, as the run made here.
+    setDay({ loadId, run: current });
+    const key = `${loadId}:${current.sceneRevision}:${current.result.fingerprint}`;
+    if (check.runs.length === 2 && project.process) setDayComparison({ key, original: check.runs[0]!, result: compareDays(check.runs[0]!, current, project.process) });
+    else setDayComparison(null);
+    setRunShown(true);
+    setAutoPlayKey(key);
+    setDrawingPanel({ open: true, view: "run" });
+  }, [bundle, loadId, project]);
+  const bundleNode = bundle && source?.kind === "file" ? <BundleCheck filename={source.filename} bundle={bundle} check={activeBundleCheck} onRerun={rerunBundle} /> : null;
   const runLabels = useRef<HTMLDivElement>(null);
   const runShownNow = runShown && activeDay?.replay && !dayStale ? { replay: activeDay.replay, clock: playback.clock } : null;
   const runFrame = useMemo(() => (runShownNow ? runShownNow.replay.frame(playback.t) : null), [runShownNow?.replay, playback.t]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -632,6 +712,8 @@ export function App() {
       onCompare={compareDay}
       guided={guidedNode}
       onChangeSetup={() => setGuidedState({ loadId, draft: project.process ? guidedFrom(project.process) : emptyGuided(), open: true })}
+      top={bundleNode ?? exampleNode}
+      onExport={exportRuns ? () => setExporting(true) : null}
     />
   ) : null;
   const help = MODES.find((m) => m.id === mode)!.help;
@@ -651,7 +733,7 @@ export function App() {
         onUndo={() => step("undo")}
         onRedo={() => step("redo")}
         onSave={() => save()}
-        onOpenFile={(file) => void session.openFile(file)}
+        onOpenFile={openAny}
         onLoadFixture={session.loadFixture}
         onStart={() => setStart(true)}
         details={details}
@@ -687,7 +769,7 @@ export function App() {
             route={checks?.now.route?.outcome ?? null}
             drawn={checks?.drawn.route?.outcome ?? null}
             machineMoved={sampleMoved}
-            onMoveForMe={moveForMe}
+            onMoveForMe={() => moveForMe()}
             onShowCheck={() => setDrawingPanel({ open: true, view: "check" })}
             onUpload={() => {
               if (mode === "walk") setMode("orbit");
@@ -945,7 +1027,7 @@ export function App() {
           }}
           onOpenFile={(file) => {
             closeStart();
-            void session.openFile(file);
+            openAny(file);
           }}
           onClose={closeStart}
           preview={PUBLIC_PREVIEW}
@@ -1017,6 +1099,7 @@ export function App() {
       {create && !prompt && (
         <CreateObject client={client} assist={assist} startWith={create} onPlace={startGenerated} onClose={() => setCreate(null)} />
       )}
+      {exporting && project && exportRuns && !prompt && <ExportRun client={client} project={project} runs={exportRuns} onClose={() => setExporting(false)} />}
       {setupDay && project && !prompt && (
         <SetupDay
           project={project}

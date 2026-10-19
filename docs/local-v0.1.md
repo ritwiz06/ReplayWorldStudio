@@ -48,8 +48,9 @@ The server listens on `127.0.0.1` only. Your computer's network address is refus
    - a **PDF page, PNG or JPEG** (up to 10 MB) is shown as a picture: you mark one length you know, then trace the floor and objects.
    - Export a DWG as DXF first.
 3. **Change, compare, check.** Move, turn, resize, add and remove objects, with undo. **Compare** shows the drawing beside your layout. **Check layout** looks for overlaps and blocked keep-clear zones, and checks whether an item of a width you enter can get through. These are 2D checks of the reviewed design: width only, no turning, and heights are not checked.
-4. **Run a day.** It plays a shift on the layout: the sample's example shift, or a process you set up with **Set up a day**. It predicts what happens only under the operating assumptions you enter, not real productivity or safety ([run-a-day.md](run-a-day.md)).
+4. **Run a day.** It plays a shift on the layout: the sample's example shift, or a process you set up with **Set up a day**. It predicts what happens only under the operating assumptions you enter, not real productivity or safety ([run-a-day.md](run-a-day.md)). On the sample, **Show the example** takes you through the before and after one step at a time.
 5. **Save project** downloads a `.json` file, including the process; **Open project** reopens it.
+6. **Export this run** (Run tab) saves one ZIP with a README, a before/after summary, the project, each run's event log and metrics, and a manifest of hashes. **Open project** also opens such a ZIP, checks it, and runs both layouts again ([evidence-bundles.md](evidence-bundles.md)).
 
 ## Where your files are, and how to delete them
 
@@ -61,6 +62,8 @@ Everything stays on your computer:
 | Photos you add | `data/sources/photos/` | `rm -rf data/sources/photos` |
 | Models generated for described or hand-built objects | `assets/catalog/generated/` | `rm -rf assets/catalog/generated` |
 | Projects | Wherever your browser saves downloads | Delete the `.json` files |
+| Evidence bundles you export | Wherever your browser saves downloads | Delete the `.zip` files |
+| Files from bundles you open | The plan goes to `data/sources/drawings/` (stored only if it has the hash the project records) | As for plans you upload |
 
 - All of these folders are git-ignored, so they are never committed.
 - `RWS_SOURCES_DIR` in `.env` moves the upload library elsewhere.
@@ -82,13 +85,14 @@ cp .env.example .env    # then set VOYAGER_API_KEY=... in .env, and restart pnpm
   - A description: its text.
   - A request to change the scene: your words, plus the objects' names, kinds, positions and sizes.
   - **Propose the change** on a model: your instruction, plus the model's part list.
+  - **Suggest setup** in Run a day: your sentence about the work, plus the reviewed objects' names. It suggests stations and their order only, never times or staffing.
 
   Details are in [assist.md](assist.md).
 - **Under ASU's AI governance,** send only plans and photos you are authorized to share with ASU Voyager, and treat what comes back as a proposal you review.
 
 ## Limits
 
-- It has been tried on synthetic examples and supported files, not yet on real plans.
+- Real third-party drawings (a construction plan, a workshop DXF and a scanned 1975 measured drawing) were tested for import and review, and one went through a whole Run a day ([external-drawings.md](external-drawings.md)). That tested the workflow. The accuracy of any output (completed items, shares, queues) is **not validated** against a real operation: no real site's operating data has been entered or observed.
 - It does not convert every drawing into an accurate 3D model, simulate physics, verify real output or worker safety, or certify anything about a real site. **Run a day** plays a production-event shift only under the assumptions you state.
 - Heights are *assumed for display* unless you enter them.
 

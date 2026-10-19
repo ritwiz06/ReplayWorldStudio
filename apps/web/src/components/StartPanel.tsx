@@ -87,7 +87,7 @@ export function StartPanel({ apiOnline, onExplore, onDescribe, onBuild, onPhoto,
         </button>
         )}
       </div>
-      <input ref={fileInput} type="file" accept=".json,application/json" hidden onChange={handleFile} aria-label="Project file to open" data-testid="start-file-input" />
+      <input ref={fileInput} type="file" accept=".json,application/json,.zip,application/zip" hidden onChange={handleFile} aria-label="Project file to open" data-testid="start-file-input" />
       <div className="modal-actions start-footer">
         <button type="button" className="link-button" data-testid="start-build" onClick={onBuild}>
           Build an object by hand

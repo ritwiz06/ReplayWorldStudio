@@ -18,7 +18,7 @@ from fastapi import Body, Depends, FastAPI, Header, HTTPException, Path, Query, 
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import ValidationError
 from replay_world_contracts import (
     MAX_DRAWING_BYTES,
@@ -28,6 +28,9 @@ from replay_world_contracts import (
     DrawingAnalysis,
     EditProposalRequest,
     EditProposalResult,
+    EvidenceBundleOpened,
+    EvidenceBundleRequest,
+    EvidenceInventory,
     GeneratedAssetRequest,
     GeneratedAssetRevisionRequest,
     GeneratedModel,
@@ -73,6 +76,14 @@ from .assist.revisions import propose_revision
 from .assist.setup import suggest_setup
 from .catalog_files import CatalogFileError, check_model_files, resolve_catalog_file
 from .drawings import DrawingError, analyse_drawing, check_drawing_files, shared_drawings
+from .evidence import (
+    MAX_BUNDLE_BYTES,
+    EvidenceError,
+    Libraries,
+    build_bundle,
+    inventory,
+    open_bundle,
+)
 from .generated_assets import (
     create_asset_revision,
     create_generated_asset,
@@ -696,6 +707,69 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return restore_generated_models(project, catalog_dir())
         except GeneratorError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from None
+
+    def _libraries() -> Libraries:
+        return Libraries(
+            sources=sources_dir(),
+            shared=shared,
+            catalog=settings.catalog_dir,
+            generated=generated_root(),
+        )
+
+    def _evidence_failure(exc: EvidenceError | PhotoError) -> NoReturn:
+        if isinstance(exc, PhotoError):
+            raise HTTPException(status_code=409, detail=exc.message) from None
+        status = {"too_large": 413, "summary_only": 422, "damaged": 422, "invalid": 422}[exc.kind]
+        raise HTTPException(status_code=status, detail=exc.message) from None
+
+    @app.post("/api/v1/exports/inventory", openapi_extra=_PROJECT_BODY_DOC)
+    def export_inventory(document: Annotated[Any, Body()]) -> EvidenceInventory:
+        """Every source and model file the project names, and whether each is part of this
+        repository, the person's own file, missing or changed. Nothing is read beyond them."""
+        return inventory(_validated(document), _libraries())
+
+    @app.post("/api/v1/exports", response_class=Response)
+    def export_bundle(body: EvidenceBundleRequest) -> Response:
+        """One ZIP: the texts the app made, the chosen files (each checked against the hash the
+        project records) and manifest.json listing every file with its sha256. The project is
+        not changed and nothing is stored."""
+        try:
+            data, _manifest = build_bundle(body, _libraries())
+        except EvidenceError as exc:
+            _evidence_failure(exc)
+        return Response(
+            content=data, media_type="application/zip", headers={"Cache-Control": "no-store"}
+        )
+
+    @app.post(
+        "/api/v1/exports/open",
+        openapi_extra={
+            "requestBody": {
+                "required": True,
+                "content": {"application/zip": {"schema": {"type": "string", "format": "binary"}}},
+            }
+        },
+    )
+    async def open_export(request: Request) -> EvidenceBundleOpened:
+        """Check an evidence bundle (names, sizes, every file's sha256) and store its source and
+        model files only when they are the files the project records. Returns the project and
+        the recorded event logs so the app can run both layouts again and compare."""
+        chunks: list[bytes] = []
+        size = 0
+        async for chunk in request.stream():
+            size += len(chunk)
+            if size > MAX_BUNDLE_BYTES:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"The bundle is larger than {MAX_BUNDLE_BYTES // 2**20} MB.",
+                )
+            chunks.append(chunk)
+        data = b"".join(chunks)
+        libraries = _libraries()
+        try:
+            return await anyio.to_thread.run_sync(lambda: open_bundle(data, libraries))
+        except (EvidenceError, PhotoError) as exc:
+            _evidence_failure(exc)
 
     def _checked_source_files(project: Project, allow_missing: bool) -> tuple[int, list[str]]:
         verified, issues, missing = check_source_files(project, sources_dir(), allow_missing)

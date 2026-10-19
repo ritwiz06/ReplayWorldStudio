@@ -35,6 +35,11 @@ from .assist import (
     ProcessSuggestionResult,
     StoredPhoto,
 )
+from .evidence import (
+    EvidenceBundleOpened,
+    EvidenceBundleRequest,
+    EvidenceInventory,
+)
 from .models import (
     SCHEMA_VERSION,
     CatalogAsset,
@@ -72,6 +77,9 @@ ROOT_MODELS: Final[tuple[type[BaseModel], ...]] = (
     PlanProposalResult,
     ProcessSuggestionRequest,
     ProcessSuggestionResult,
+    EvidenceBundleRequest,
+    EvidenceBundleOpened,
+    EvidenceInventory,
 )
 BUNDLE_ID: Final = f"urn:replay-world:contracts:{SCHEMA_VERSION}"
 

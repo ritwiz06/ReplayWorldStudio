@@ -6,6 +6,8 @@ import {
   validateCatalogAsset,
   validateDrawingAnalysis,
   validateEditProposalResult,
+  validateEvidenceBundleOpened,
+  validateEvidenceInventory,
   validateGeneratedModel,
   validateGeneratedModelRestoreReport,
   validateHealthResponse,
@@ -22,6 +24,7 @@ import {
   validateValidationReport,
   type ContractIssue,
   type EditProposalRequest,
+  type EvidenceBundleRequest,
   type GeneratedAssetRequest,
   type GeneratedAssetRevisionRequest,
   type GeometryDraft,
@@ -271,6 +274,39 @@ export function createApiClient(
       }),
     /** Where the API serves a stored source photo. */
     sourceFileUrl: (uri: string) => `${baseUrl}/api/v1/sources/files/${uri}`,
+    /** Every source and model file the project names, and whether each can go in a bundle. */
+    exportInventory: (projectText: string, signal?: AbortSignal) =>
+      request("/api/v1/exports/inventory", validateEvidenceInventory, { method: "POST", body: projectText, signal, timeoutMs: GENERATE_TIMEOUT_MS }),
+    /** Package an evidence bundle: the API checks each chosen file against the project's hash and
+     * returns the ZIP. Nothing is stored and the project is not changed. */
+    exportBundle: async (body: EvidenceBundleRequest, signal?: AbortSignal): Promise<ApiResult<Blob>> => {
+      const timeout = AbortSignal.timeout(GENERATE_TIMEOUT_MS);
+      let response: Response;
+      try {
+        response = await fetchImpl(`${baseUrl}/api/v1/exports`, {
+          method: "POST",
+          headers: { Accept: "application/zip, application/json", "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+        });
+      } catch (err) {
+        if (isAbortError(err)) throw err;
+        return failure({ kind: "network", message: isTimeoutError(err) ? `The API at ${baseUrl} did not respond within ${GENERATE_TIMEOUT_MS / 1000} s.` : `Could not reach the API at ${baseUrl}.` });
+      }
+      if (!response.ok) {
+        let data: unknown;
+        try {
+          data = await response.json();
+        } catch {
+          data = undefined;
+        }
+        return failure(httpFailure(response.status, data));
+      }
+      return { ok: true, value: await response.blob() };
+    },
+    /** Check an evidence bundle and store its verified files; returns its project and event logs. */
+    openBundle: (file: Blob, signal?: AbortSignal) =>
+      request("/api/v1/exports/open", validateEvidenceBundleOpened, { method: "POST", body: file, contentType: "application/zip", signal, timeoutMs: GENERATE_TIMEOUT_MS }),
     /** Rebuild a project's missing generated models from their recorded specifications. */
     restoreGeneratedModels: (projectText: string, signal?: AbortSignal) =>
       request("/api/v1/catalog/generated-models/restore", validateGeneratedModelRestoreReport, {

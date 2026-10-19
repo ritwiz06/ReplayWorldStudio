@@ -3250,3 +3250,75 @@ label.button.disabled {
 .setup-row input.narrow {
   width: 4.5em;
 }
+
+/* Export this run (REL-01) */
+.export-run {
+  width: min(640px, calc(100vw - 32px));
+}
+.export-run fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 10px 0;
+  padding: 8px 12px;
+}
+.export-run legend {
+  padding: 0 4px;
+  font-weight: 600;
+}
+.export-list,
+.export-assets {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+.export-assets {
+  list-style: none;
+  padding-left: 0;
+}
+.export-assets li {
+  margin: 6px 0;
+}
+.export-summary-only {
+  display: block;
+  margin: 8px 0;
+}
+.show-example,
+.bundle-check {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+.example-steps {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+.example-steps li {
+  margin: 4px 0;
+}
+.example-steps li.done strong {
+  color: var(--muted, #8b949e);
+}
+.example-steps li.done strong::after {
+  content: " ✓";
+  color: #57d9a3;
+}
+.example-steps li.current strong {
+  color: inherit;
+}
+.example-steps li.pending {
+  opacity: 0.6;
+}
+.bundle-table td {
+  white-space: normal;
+  vertical-align: top;
+}
+.bundle-value {
+  overflow-wrap: anywhere;
+}
+.bundle-table th,
+.bundle-table td {
+  text-align: left;
+}
+.bundle-table td:last-child {
+  white-space: nowrap;
+}

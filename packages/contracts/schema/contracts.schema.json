@@ -82,6 +82,15 @@
     },
     "ProcessSuggestionResult": {
       "$ref": "#/$defs/ProcessSuggestionResult"
+    },
+    "EvidenceBundleRequest": {
+      "$ref": "#/$defs/EvidenceBundleRequest"
+    },
+    "EvidenceBundleOpened": {
+      "$ref": "#/$defs/EvidenceBundleOpened"
+    },
+    "EvidenceInventory": {
+      "$ref": "#/$defs/EvidenceInventory"
     }
   },
   "required": [
@@ -110,7 +119,10 @@
     "PlanUpload",
     "PlanProposalResult",
     "ProcessSuggestionRequest",
-    "ProcessSuggestionResult"
+    "ProcessSuggestionResult",
+    "EvidenceBundleRequest",
+    "EvidenceBundleOpened",
+    "EvidenceInventory"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -1424,6 +1436,720 @@
         "z"
       ],
       "title": "EulerRotation",
+      "type": "object"
+    },
+    "EvidenceAsset": {
+      "additionalProperties": false,
+      "description": "A file the project names, and whether it can go in a bundle.",
+      "properties": {
+        "uri": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "drawing",
+            "plan",
+            "photo",
+            "model"
+          ],
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "description": "'repo_owned': a synthetic fixture or catalog model in this repository, verified by hash; 'library': the person's own file in their local library; 'missing' or 'changed': not available as the project recorded it.",
+          "enum": [
+            "repo_owned",
+            "library",
+            "missing",
+            "changed"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri",
+        "kind",
+        "label",
+        "sha256",
+        "bytes",
+        "status"
+      ],
+      "title": "EvidenceAsset",
+      "type": "object"
+    },
+    "EvidenceBundleOpened": {
+      "additionalProperties": false,
+      "description": "A bundle checked and opened: its manifest, its project, the recorded event logs, and\nwhat was verified, stored or missing.",
+      "properties": {
+        "manifest": {
+          "$ref": "#/$defs/EvidenceManifest"
+        },
+        "project": {
+          "$ref": "#/$defs/Project"
+        },
+        "events": {
+          "additionalProperties": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "verified": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "stored": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "problems": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "manifest",
+        "project",
+        "events",
+        "verified",
+        "stored",
+        "problems"
+      ],
+      "title": "EvidenceBundleOpened",
+      "type": "object"
+    },
+    "EvidenceBundleRequest": {
+      "additionalProperties": false,
+      "description": "What the browser sends to package a bundle: the texts it made, the asset URIs to copy in\n(each checked against the project's own hash), and the manifest without its file list.",
+      "properties": {
+        "manifest": {
+          "$ref": "#/$defs/EvidenceManifest"
+        },
+        "texts": {
+          "items": {
+            "$ref": "#/$defs/EvidenceText"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "type": "array"
+        },
+        "include": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 200,
+          "type": "array"
+        }
+      },
+      "required": [
+        "manifest",
+        "texts",
+        "include"
+      ],
+      "title": "EvidenceBundleRequest",
+      "type": "object"
+    },
+    "EvidenceComparison": {
+      "additionalProperties": false,
+      "properties": {
+        "identical": {
+          "type": "boolean"
+        },
+        "explanation": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "identical",
+        "explanation"
+      ],
+      "title": "EvidenceComparison",
+      "type": "object"
+    },
+    "EvidenceExcluded": {
+      "additionalProperties": false,
+      "properties": {
+        "what": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "what",
+        "reason"
+      ],
+      "title": "EvidenceExcluded",
+      "type": "object"
+    },
+    "EvidenceFile": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "A relative path inside the bundle: no '..', no leading '/', no backslash.",
+          "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9._-]{0,99}/){0,5}[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "bytes": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "role": {
+          "enum": [
+            "readme",
+            "summary",
+            "project",
+            "events",
+            "metrics",
+            "source",
+            "model"
+          ],
+          "type": "string"
+        },
+        "uri": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "For an asset: the URI the project uses for it (source library or catalog)."
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes",
+        "role",
+        "uri"
+      ],
+      "title": "EvidenceFile",
+      "type": "object"
+    },
+    "EvidenceInput": {
+      "additionalProperties": false,
+      "description": "One operating value of the process and where it came from.",
+      "properties": {
+        "path": {
+          "description": "Where it is in the process, e.g. stations[1].worker_s.",
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The number in ``unit``; null for a place (detail)."
+        },
+        "unit": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "basis": {
+          "enum": [
+            "example",
+            "entered"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "label",
+        "value",
+        "unit",
+        "detail",
+        "basis"
+      ],
+      "title": "EvidenceInput",
+      "type": "object"
+    },
+    "EvidenceInventory": {
+      "additionalProperties": false,
+      "properties": {
+        "assets": {
+          "items": {
+            "$ref": "#/$defs/EvidenceAsset"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "assets"
+      ],
+      "title": "EvidenceInventory",
+      "type": "object"
+    },
+    "EvidenceManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "const": "rws-evidence/1",
+          "type": "string"
+        },
+        "created_utc": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "0.14.0",
+          "type": "string"
+        },
+        "engine": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "project": {
+          "$ref": "#/$defs/EvidenceProject"
+        },
+        "process": {
+          "$ref": "#/$defs/EvidenceProcess"
+        },
+        "runs": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRun"
+          },
+          "maxItems": 2,
+          "minItems": 1,
+          "type": "array"
+        },
+        "comparison": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceComparison"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inputs": {
+          "items": {
+            "$ref": "#/$defs/EvidenceInput"
+          },
+          "type": "array"
+        },
+        "layout_evidence": {
+          "description": "What the drawing and its review established (design geometry), in words.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "claims": {
+          "description": "What the results do and do not show.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "conventions": {
+          "description": "Units, timestamps and event ordering.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "replay": {
+          "description": "'full': the project and every source and model file it names are included; 'runs_only': the runs replay from the project file, but some of its files are not included (see 'excluded'); 'summary_only': no project file, so nothing can be rerun.",
+          "enum": [
+            "full",
+            "runs_only",
+            "summary_only"
+          ],
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/EvidenceFile"
+          },
+          "maxItems": 200,
+          "type": "array"
+        },
+        "excluded": {
+          "items": {
+            "$ref": "#/$defs/EvidenceExcluded"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "format",
+        "created_utc",
+        "schema_version",
+        "engine",
+        "project",
+        "process",
+        "runs",
+        "comparison",
+        "inputs",
+        "layout_evidence",
+        "claims",
+        "conventions",
+        "replay",
+        "files",
+        "excluded"
+      ],
+      "title": "EvidenceManifest",
+      "type": "object"
+    },
+    "EvidenceProcess": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "fingerprint": {
+          "pattern": "^[0-9a-f]{14}$",
+          "type": "string"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "example_note": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "fingerprint",
+        "seed",
+        "example_note"
+      ],
+      "title": "EvidenceProcess",
+      "type": "object"
+    },
+    "EvidenceProject": {
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "anyOf": [
+            {
+              "description": "A relative path inside the bundle: no '..', no leading '/', no backslash.",
+              "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9._-]{0,99}/){0,5}[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Null in a summary-only bundle."
+        },
+        "id": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "synthetic": {
+          "description": "A labelled synthetic or demonstration project.",
+          "type": "boolean"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "file",
+        "id",
+        "name",
+        "synthetic",
+        "note"
+      ],
+      "title": "EvidenceProject",
+      "type": "object"
+    },
+    "EvidenceRun": {
+      "additionalProperties": false,
+      "description": "One run of the process on one layout, as the engine produced it.",
+      "properties": {
+        "layout": {
+          "enum": [
+            "original",
+            "edited"
+          ],
+          "type": "string"
+        },
+        "engine": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "scene_revision": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "layout_fingerprint": {
+          "pattern": "^[0-9a-f]{14}$",
+          "type": "string"
+        },
+        "process_fingerprint": {
+          "pattern": "^[0-9a-f]{14}$",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "ready",
+            "blocked",
+            "cannot_determine",
+            "needs_input"
+          ],
+          "type": "string"
+        },
+        "reasons": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "event_fingerprint": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{14}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "event_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "completed": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unfinished": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "events_file": {
+          "anyOf": [
+            {
+              "description": "A relative path inside the bundle: no '..', no leading '/', no backslash.",
+              "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9._-]{0,99}/){0,5}[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metrics_file": {
+          "anyOf": [
+            {
+              "description": "A relative path inside the bundle: no '..', no leading '/', no backslash.",
+              "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9._-]{0,99}/){0,5}[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "layout",
+        "engine",
+        "seed",
+        "scene_revision",
+        "layout_fingerprint",
+        "process_fingerprint",
+        "outcome",
+        "reasons",
+        "event_fingerprint",
+        "event_count",
+        "completed",
+        "created",
+        "unfinished",
+        "events_file",
+        "metrics_file"
+      ],
+      "title": "EvidenceRun",
+      "type": "object"
+    },
+    "EvidenceText": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "A relative path inside the bundle: no '..', no leading '/', no backslash.",
+          "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9._-]{0,99}/){0,5}[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "readme",
+            "summary",
+            "project",
+            "events",
+            "metrics"
+          ],
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 20000000,
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "role",
+        "text"
+      ],
+      "title": "EvidenceText",
       "type": "object"
     },
     "Extent3": {

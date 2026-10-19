@@ -7,6 +7,9 @@ import type {
   CatalogAsset,
   DrawingAnalysis,
   EditProposalResult,
+  EvidenceBundleOpened,
+  EvidenceInventory,
+  EvidenceManifest,
   GeneratedModel,
   GeneratedModelRestoreReport,
   GeometryDraft,
@@ -84,3 +87,6 @@ export const validateDrawingAnalysis = validatorFor<DrawingAnalysis>("DrawingAna
 export const validatePlanUpload = validatorFor<PlanUpload>("PlanUpload");
 export const validatePlanProposalResult = validatorFor<PlanProposalResult>("PlanProposalResult");
 export const validateProcessSuggestionResult = validatorFor<ProcessSuggestionResult>("ProcessSuggestionResult");
+export const validateEvidenceInventory = validatorFor<EvidenceInventory>("EvidenceInventory");
+export const validateEvidenceBundleOpened = validatorFor<EvidenceBundleOpened>("EvidenceBundleOpened");
+export const validateEvidenceManifest = validatorFor<EvidenceManifest>("EvidenceManifest");
