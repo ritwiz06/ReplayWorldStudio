@@ -94,6 +94,9 @@ jobs:
       - name: Browser smoke tests
         run: pnpm test:e2e:smoke
 
+      - name: Local v0.1 journey on the pnpm start build (no .env, no key)
+        run: pnpm --filter @replay-world/web test:e2e:local
+
       - name: Keep traces of failed tests
         if: failure()
         uses: actions/upload-artifact@v4
@@ -103,7 +106,7 @@ jobs:
           retention-days: 7
 
   public-preview:
-    # The release candidate (ADR-054, ADR-056): the container image builds, its server runs as
+    # The dormant hosted mode (ADR-054, ADR-056; superseded as the release by ADR-058, kept tested): the container image builds, its server runs as
     # rws (never root) on a root-owned volume and answers with AI off, and the public journeys
     # pass against that container as anonymous visitors (the sample's move-and-check, DXF, PDF
     # page and plan picture saved and reopened by another visitor, cross-visitor isolation, the

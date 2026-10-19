@@ -10,7 +10,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "test:e2e:public": "playwright test -c playwright.public.config.ts"
+    "test:e2e:public": "playwright test -c playwright.public.config.ts",
+    "test:e2e:local": "playwright test -c playwright.local.config.ts"
   },
   "dependencies": {
     "@react-three/drei": "10.7.9",

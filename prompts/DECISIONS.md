@@ -1030,7 +1030,7 @@ For a new decision, append: ID, date, status, context, options considered, decis
 
 ### ADR-054 - Public preview v0.1: one container, visitors isolated, files kept 24 hours, no AI
 
-- Date: 2026-10-18 (America/Phoenix). Status: adopted (release candidate; staging not yet created).
+- Date: 2026-10-18 (America/Phoenix). Status: **superseded by ADR-058** as the release target (v0.1 is local only). The public mode it built stays in the code, dormant and tested. Original status: adopted (release candidate; staging not yet created).
 - **Context.**
   - The user wants a public early preview soon: the sample's move-and-check moment first, then visitors' own plans.
   - The API was built for one local user: one shared source library, files kept forever, loopback only, and AI enabled whenever a key is present.
@@ -1076,7 +1076,7 @@ For a new decision, append: ID, date, status, context, options considered, decis
 
 ### ADR-056 - The v0.1 release goal is the online public preview; `pnpm start` stays as a local convenience
 
-- Date: 2026-10-18 (America/Phoenix). Status: adopted. Supersedes ADR-055's claim about the user's intent and its "no hosting" decision.
+- Date: 2026-10-18 (America/Phoenix). Status: **superseded by ADR-058** (v0.1 is local only). Its corrections to ADR-055's record and its container hardening stand. Original status: adopted. Supersedes ADR-055's claim about the user's intent and its "no hosting" decision.
 - **Context.**
   - The user asked to ship a public online preview soon (ADR-054).
   - Mid-task they wrote: "i dont want it on railway, i want to run it on my pc, public means runnable for me only."
@@ -1114,7 +1114,7 @@ For a new decision, append: ID, date, status, context, options considered, decis
 
 ### ADR-057 - Railway staging is configured in the dashboard; deploy blockers fixed before staging
 
-- Date: 2026-10-18 (America/Phoenix). Status: adopted. Amends ADR-056 points 3 and 5.
+- Date: 2026-10-18 (America/Phoenix). Status: **superseded by ADR-058** (no Railway service will be created). Its code fixes (`X-Real-IP`, upload names in a header, the mount log line) stay. Original status: adopted. Amends ADR-056 points 3 and 5.
 - **Context.** Railway's documentation, checked 2026-10-18:
   - Config as Code (`railway.json`) is deprecated, and "new services cannot opt into Config as Code". Existing files work for legacy services until 2026-12-01.
   - Its replacement, `.railway/railway.ts`, is applied only through the Railway CLI by a logged-in user.
@@ -1138,3 +1138,17 @@ For a new decision, append: ID, date, status, context, options considered, decis
      - The public journeys check the 10 MB limit message and the About panel's limits and storage wording.
      - CI checks the server's logs hold no uploaded names and no key.
 - **Consequences.** Staging is not deployed until the user creates the service. Verification against the URL follows.
+
+### ADR-058 - v0.1 is local only: `pnpm start` on 127.0.0.1; the online preview is superseded
+
+- Date: 2026-10-18 (America/Phoenix). Status: adopted. Supersedes ADR-054, ADR-056 and ADR-057 as the release target. Their records are kept unchanged apart from their status lines.
+- **Context.** The user stopped the Railway staging task and set the v0.1 release target to local use at `127.0.0.1` through `pnpm start`, with no deployment, hosting account or staging URL. No Railway service was ever created.
+- **Decision.**
+  1. **v0.1 is the local app.**
+     - `pnpm start` builds the web app and serves it from the API on `127.0.0.1:8000`; it refuses to start, with a clear message, when the port is taken.
+     - Uploads stay in `data/sources/` (plans in `drawings/`, photos in `photos/`), and generated models in `assets/catalog/generated/`. All are git-ignored, kept until the user deletes them, and nothing expires.
+     - Without a Voyager key everything except the AI features works. With a key in the user's `.env`, the AI features run in the user's local app only. Each AI button sends its request to ASU Voyager; the key never leaves the local API process.
+  2. **The release guide** is docs/local-v0.1.md. docs/public-preview.md becomes a short superseded record: the Railway instructions, cost estimate and hosted-use question to ASU are removed and stay in Git history.
+  3. **The hosted mode stays in the code, dormant.** `RWS_PUBLIC=1`, `VITE_PUBLIC_PREVIEW=1`, the Dockerfile and `test:e2e:public` stay CI-tested so they can be revived. They are not part of v0.1. The local build never shows their wording (the "Early preview" badge, the About dialog's retention and server-folder claims), and the local journey checks this.
+  4. **The local journey is a committed test.** `test:e2e:local` starts `node scripts/start.mjs` with no `.env` and a temporary upload folder; CI runs it in the browser job.
+- **Consequences.** No hosting, cost or retention policy to operate. The question to ASU about public AI is moot. Sharing the app means sharing the repository and these steps.

@@ -2,25 +2,31 @@
 
 Turn a floor plan into a 3D layout you can walk through, change and check. Upload a plan, move a machine, and see whether the layout still fits. Factory production areas are the first example; the world contracts stay generic.
 
-> **Status: v0.1, an early preview being prepared for public release online.** It works on synthetic examples and supported files; it has not been tried on real plans yet. It does **not** convert every drawing into an accurate 3D model automatically, simulate production or physics, or certify anything about a real site.
->
-> | | |
-> | --- | --- |
-> | Runs locally | Yes: `pnpm start` (below). |
-> | Ready to deploy | Yes: the production container and the Railway dashboard settings in [docs/public-preview.md](docs/public-preview.md). |
-> | Publicly launched | **No.** There is no staging URL yet, and launching follows a decision once the public journeys pass against it. |
+> **Status: local v0.1.** It runs on your own computer at `http://127.0.0.1:8000` with `pnpm start`; nothing is hosted (ADR-058). It works on synthetic examples and supported files; it has not been tried on real plans yet. It does **not** convert every drawing into an accurate 3D model automatically, simulate production or physics, or certify anything about a real site. The release guide is [docs/local-v0.1.md](docs/local-v0.1.md).
 
 ## Run it on your computer
 
-After [Setup](#setup), one command builds the app and serves it on your computer only. This is a convenience for you; it is not the public preview:
+After installing (Node.js ≥ 22.12 with pnpm, and uv; see [Prerequisites](#prerequisites)):
 
 ```bash
-pnpm start                      # then open http://127.0.0.1:8000
-RWS_API_PORT=8001 pnpm start    # if port 8000 is taken (for example by an older API you left running)
-pnpm start --no-build           # reuse the last build
+git clone https://github.com/ritwiz06/ReplayWorldStudio.git && cd ReplayWorldStudio
+uv sync --locked
+pnpm install --frozen-lockfile
+pnpm start                      # then open http://127.0.0.1:8000; Ctrl+C stops it
 ```
 
-It listens on `127.0.0.1` only, so other machines cannot reach it. Your uploads stay in `data/sources/` (git-ignored) until you delete them. The API reads your `.env` as in development: with a Voyager key there, the optional AI features (drafting objects and plan pictures) are on, and only you use them.
+```bash
+pnpm start --no-build           # later runs: reuse the last build
+RWS_API_PORT=8001 pnpm start    # if port 8000 is taken (pnpm start tells you when it is)
+```
+
+- **Only your computer can reach it.** It listens on `127.0.0.1` only.
+- **Your files stay local.**
+  - Uploaded plans go in `data/sources/drawings/`, photos in `data/sources/photos/`, and generated models in `assets/catalog/generated/`. All are git-ignored.
+  - They stay until you delete them: stop the app, then delete the files or folders.
+  - Projects are the `.json` files you download with **Save project**.
+- **No key is needed.** A Voyager key in your git-ignored `.env` turns on the optional AI features in your local app only. The key never leaves the local API process. Pressing an AI button sends that request (for example a plan picture's smaller copy) to ASU Voyager.
+- Details: [docs/local-v0.1.md](docs/local-v0.1.md).
 
 Start with **Try the sample**. Move *Machine B* into the aisle (drag it, or press **move it for me**) and watch **Check layout** say whether a 1.20 m cart can still get along the aisle; the before/after table compares the drawing with your layout. Then upload your own plan.
 
@@ -41,7 +47,7 @@ What you can do:
 | Plans | DXF reading (`rws-dxf/1`), a four-question review (floor, scale with a known length, objects, omissions), plan pictures from a PDF page, PNG or JPEG, traced outlines with their precision | DWG, page cropping, PDF vectors, printed scale ratios, aligning a second plan |
 | Checks | Overlaps, keep-clear zones, floor edge, width-only routes on the reviewed design, before/after | Turning (swept paths), overhead heights, loads, throughput, physics |
 | World and editor | Evidence on every value, edit log, undo/redo, save/reopen, walk view, provisional models | Matching equipment to real models (ENR-01), shared private links (SHR-01), accounts |
-| AI (development only) | ASU Voyager drafts described objects, plan pictures and photo objects; nothing is applied unreviewed | Any AI in the public preview |
+| AI (optional, your own key) | ASU Voyager drafts described objects, plan pictures and photo objects; nothing is applied unreviewed | Any hosted AI |
 
 Older capabilities (described and hand-built objects, one-photo import, improving generated models) remain in development builds; see the sections below and [prompts/PROJECT_STATE.md](prompts/PROJECT_STATE.md).
 
@@ -198,22 +204,17 @@ API docs (OpenAPI) are served at <http://127.0.0.1:8000/docs> while the API runs
 | `uv run python scripts/evaluate_model_revisions.py [CASES] [--record]` | **Live** evaluation of proposed model changes against ASU Voyager (needs `VOYAGER_API_KEY`), on the cases in `scripts/model_revision_cases.json` by default. Writes `docs/assist-evaluation/gen-02.*.json`; `--record` refreshes `fixtures/assist/recorded/revision-*.json` |
 | `uv run python scripts/evaluate_gen03.py [--retry-errors] [--build-targets]` | **Live** GEN-03 held-out evaluation against ASU Voyager (needs `VOYAGER_API_KEY`): descriptions, edits and model revisions for two text models through the API endpoints, one request at a time. Writes `docs/assist-evaluation/gen-03/results/`; an interrupted run resumes and keeps recorded errors unless `--retry-errors`. Scoring and the blind review: [docs/assist-evaluation/gen-03/README.md](docs/assist-evaluation/gen-03/README.md) |
 
-| `pnpm --filter @replay-world/web test:e2e:public` | The container mode's journeys on the **production build** (built with the preview's settings, served by the API in public mode as one origin): the sample's move-and-check, no AI with a key present, DXF and plan picture saved and reopened by another visitor, cross-visitor isolation, the API unreachable. With `PUBLIC_URL=...` the same journeys run against a running container or the staging site |
+| `pnpm --filter @replay-world/web test:e2e:local` | **The local v0.1 journey** on the app exactly as `pnpm start` serves it (no `.env`, so no key; a temporary upload folder): the sample's move blocks the route, a DXF is imported, reviewed, edited, saved and reopened, and no hosted-preview wording is shown. With `LOCAL_URL=...` it runs against a `pnpm start` you already run |
+| `pnpm --filter @replay-world/web test:e2e:public` | The dormant hosted mode's journeys (ADR-054; not part of v0.1) on its production build with `RWS_PUBLIC=1`. With `PUBLIC_URL=...` they run against a running container |
 
-## Public preview container (ADR-054, ADR-056)
+## Dormant: the hosted-preview mode (not part of v0.1)
 
-The online preview is one container: the built web app served by the API on the same origin, in public mode (`RWS_PUBLIC=1`).
-- **AI:** off even when a Voyager key is in the environment; no key reaches the browser.
-- **Visitors:** each has a private folder; files are deleted 24 hours after they are stored.
-- **Server user:** the HTTP server runs as `rws` (uid 10001), never as root.
+The online preview of ADR-054 to ADR-057 is superseded by ADR-058. Its code stays, and is tested in CI, so it can be revived:
+- the `RWS_PUBLIC=1` mode, with per-visitor folders, 24-hour deletion and AI refused;
+- the `Dockerfile`;
+- `pnpm --filter @replay-world/web test:e2e:public`.
 
-```bash
-docker build -t replay-world-studio .
-docker run -p 127.0.0.1:8000:8000 -v rws-data:/data replay-world-studio
-PUBLIC_URL=http://127.0.0.1:8000 pnpm --filter @replay-world/web test:e2e:public
-```
-
-For Railway staging (dashboard settings, a volume at `/data`, backups off, no Voyager variables) and the storage and privacy record, see [docs/public-preview.md](docs/public-preview.md).
+It is not deployed anywhere, and the local app never shows its wording. See [docs/public-preview.md](docs/public-preview.md).
 
 After changing a model in `packages/contracts/python/replay_world_contracts/models.py`, run `pnpm contracts:generate` and commit the regenerated files. After changing equipment geometry, run `pnpm assets:build` and then `pnpm fixtures:build`.
 
@@ -246,7 +247,7 @@ prompts/               Project context, milestones, backlog, decisions and sessi
 
 ## Data care
 
-Keep credentials, customer drawings, model weights and run outputs out of commits (see `.gitignore`). Use synthetic or permissioned inputs in `fixtures/`. The API binds to `127.0.0.1` by default. Only the public-preview mode (`RWS_PUBLIC=1`, ADR-054) is meant to be exposed, with its visitor isolation, limits and AI off. Uploaded document content is data, never instructions.
+Keep credentials, customer drawings, model weights and run outputs out of commits (see `.gitignore`). Use synthetic or permissioned inputs in `fixtures/`. The API binds to `127.0.0.1` by default, and v0.1 is meant to stay there (ADR-058). The dormant hosted mode (`RWS_PUBLIC=1`, ADR-054) is the only mode built for exposure, and it is not deployed. Uploaded document content is data, never instructions.
 
 ## Project records
 

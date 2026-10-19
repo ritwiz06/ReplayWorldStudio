@@ -1068,6 +1068,27 @@ Append entries in chronological order. If a live repository session log already 
 - CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39180776215 passed all three jobs on `799c5e9`.
 - Next concrete task: the user creates the Railway service with the dashboard settings and sends the URL and deploy log line; then verify against the URL.
 
+### 2026-10-18 - Local v0.1 release pass (ADR-058); the online preview is superseded
+
+- Starting branch and relevant commit: `main` at `c625371`.
+- Goal: the user set the v0.1 target to local use only (`pnpm start` on 127.0.0.1). Stop the staging task: no deployment, no hosting account. Update the records; remove stale Railway instructions and hosted-only claims; verify from a clean checkout; run one complete local journey. No feature work.
+- Work completed:
+  - **ADR-058.** ADR-054, ADR-056 and ADR-057 are marked superseded and otherwise unchanged.
+  - **Release guide.** New docs/local-v0.1.md: install, run, the busy port, where uploads are and how to delete them, and what a local Voyager key enables and sends.
+  - **README.** Rewritten for local v0.1; the hosted mode is described as dormant.
+  - **docs/public-preview.md.** Cut to a superseded record: the Railway instructions, cost estimate and hosted-use ASU question are removed; they are in Git at `c625371`.
+  - **Committed local journey.** `test:e2e:local` and `playwright.local.config.ts` start `node scripts/start.mjs` with no `.env` and a temporary upload folder. The journey: sample move → blocked route; a DXF imported, reviewed (floor, scale, objects, omissions); Press 1 moved 2 m; saved; reopened with the move and its drawing intact. It also checks that no hosted wording or badge appears. CI runs it in the browser job.
+- Commands run and outcomes:
+  - Fresh `git clone` of `main` (`c625371`) from GitHub, with no `.env` and no `VOYAGER_*`/`RWS_*` in the environment:
+    - `uv sync --locked` and `pnpm install --frozen-lockfile` succeeded (warm local caches; a first install downloads more).
+  - `pnpm start` with port 8000 held by an older API: it stopped with "Port 8000 is already in use on this computer (perhaps an API you started earlier). Stop that process, or choose another port: RWS_API_PORT=8001 pnpm start" (exit 1).
+  - `RWS_API_PORT=8003 pnpm start`:
+    - it built, then served on 127.0.0.1:8003 only (`lsof`); the LAN address was refused;
+    - `/health` reported schema 0.12.0, and AI status was `available: false`.
+  - The local journey passed against it (`LOCAL_URL=http://127.0.0.1:8003`), and again through its own `pnpm start` (port 8040).
+- Known limitations: "first-time installation" was run with warm uv and pnpm caches on the reference Mac, not on a new machine. REL-01 (exported demo) stays open.
+- Next concrete task: use local v0.1 and record what gets in the way.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

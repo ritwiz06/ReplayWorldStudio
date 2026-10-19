@@ -902,6 +902,11 @@ Supported model: rigid bodies with stated mass, friction and restitution at a fi
   - **Publicly launched: no.**
   - Remaining: the Railway staging service (the user's account; docs/public-preview.md), the public journeys against its URL, the publish decision, a newcomer trial, and a licence.
 - Note (2026-10-18, ADR-057): new Railway services ignore `railway.json` (removed); the dashboard settings are in docs/public-preview.md. Volume 5 GB (Hobby). Fixed before staging: rate limits by `X-Real-IP`; file names out of URLs. **Staging not deployed** (no Railway access from here).
+- Note (2026-10-18, ADR-058): **v0.1 is local only; the online preview (ADR-054, 056, 057) is superseded.**
+  - Release: `pnpm start` on 127.0.0.1, with the guide in docs/local-v0.1.md.
+  - Verified from a clean clone: install, an occupied port 8000, no key, loopback only. The local journey (`test:e2e:local`) is also in CI.
+  - No staging service was created. The hosted mode stays dormant in the code.
+  - REL-01 itself (an exported, reproducible demo) stays open.
 
 ## Later
 
