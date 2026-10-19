@@ -835,6 +835,7 @@ Supported model: production events (discrete-event queues and resources). It doe
 - Done when: Independent revisions, paired assumptions and changed metrics export correctly.
 - Evidence: not recorded by this package
 - Status (2026-10-18, ADR-059): **done** for original vs edited layout: same process, seed and engine; metrics table plus an explanation computed from blocked or changed routes. Export of the comparison stays with REL-01.
+- Note (2026-10-19, ADR-061): the comparison, its event logs and metrics are exported with **Export this run** (REL-01).
 
 ## M7 - Rigid-body interactions
 
@@ -912,6 +913,14 @@ Supported model: rigid bodies with stated mass, friction and restitution at a fi
   - Verified from a clean clone: install, an occupied port 8000, no key, loopback only. The local journey (`test:e2e:local`) is also in CI.
   - No staging service was created. The hosted mode stays dormant in the code.
   - REL-01 itself (an exported, reproducible demo) stays open.
+- Note (2026-10-19, ADR-061): **done for its own "done when", on the synthetic sample.**
+  - **A fresh environment reproduces the flagship workflow and reads the exported evidence.** A clean clone, with a locked install, no `.env` and no key, ran `pnpm start` and opened the committed bundle (docs/demo, 36 KB). Both layouts reran with identical events, fingerprints, counts, blocked route and explanation. Playback speed, pausing, scrubbing and the camera did not change them. Save, reopen and export gave the same bundle.
+  - **Damaged or changed bundles are refused,** each with its reason.
+  - **The recording:** docs/demo, 79 s, H.264.
+  - **On a real drawing:** the local CC0 workshop journey exported a runs-only bundle (the user's own DXF is not selected) and a full one, and reran the runs-only bundle identically. Its results stay local.
+  - **The dependency on QA-01 is not met, and is not claimed.** QA-01 (the held-out benchmark and user tasks) has not been run. This work does not evaluate output accuracy on real operations, and does not involve users. The times are scripted.
+  - **It does not make the app hosted.** v0.1 stays local only (ADR-058).
+  - **Separate follow-ups, not part of REL-01:** a built-in downscale for scans over 50 MP, DWG conversion, and fewer CAD review corrections (floor tracing, symbol layers, renaming).
 
 ## Later
 

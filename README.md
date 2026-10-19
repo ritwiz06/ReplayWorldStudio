@@ -53,6 +53,7 @@ What you can do:
 | **Check layout** | Footprint overlaps, objects in keep-clear zones, and whether an item of a width you enter can get from A to B. These are 2D checks of the **reviewed design**: **width only; turning is not evaluated**, heights are not checked, and outlines on a PDF or picture count only as precisely as you traced them. |
 | **Run a day** | Plays a shift: workers, items, machine states, queues and a shift clock, with Play/Pause, speed, Restart and a timeline in every camera mode. Run again after an edit and compare with the original layout. **Set up a day** on your own plan, guided: pick the stations in order on the plan, say what moves, type the pace and people you know, and accept or change clearly labelled example assumptions for the rest. Nothing is read from the drawing; an optional **Suggest setup** (with a Voyager key) proposes stations and order only. |
 | **Save** | **Save project** downloads the project as a file, with its process. Reopen it with **Open project**. |
+| **Export a run** | **Export this run** saves one ZIP: a README, a before/after summary with its cause, the project, each run's event log and metrics, and a manifest of hashes, fingerprints and the basis of every input. Your own files are included only if you tick them. **Open project** checks such a ZIP and runs both layouts again ([docs/evidence-bundles.md](docs/evidence-bundles.md)). On the sample, **Show the example** walks through the before and after. A 79 s recording and the sample's bundle are in [docs/demo/](docs/demo/). |
 
 ## What exists today
 

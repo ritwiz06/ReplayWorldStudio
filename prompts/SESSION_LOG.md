@@ -1175,6 +1175,59 @@ Append entries in chronological order. If a live repository session log already 
 - CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39305266586 passed all three jobs on `ff78c71`.
 - Next concrete task: REL-01, the exportable demo.
 
+### 2026-10-19 - REL-01: export a run, reproduce it from a clean clone, record the demo (ADR-061)
+
+- Starting branch and relevant commit: `main` at `c35ddf0`.
+- Goal:
+  - Ship REL-01, local only: Show the example on the synthetic sample, and Export this run with a manifest.
+  - Open and rerun a bundle, with useful errors for a damaged bundle or a missing file.
+  - Record a real 60-90 s demo.
+  - Reproduce from a clean clone, and check the presentation.
+- Work completed:
+  - **Contract** (additive; Project unchanged, still 0.14.0): `evidence.py` with `EvidenceManifest`, `EvidenceBundleRequest`, `EvidenceInventory` and `EvidenceBundleOpened`.
+  - **API** (`services/api/src/replay_world_api/evidence.py`):
+    - `POST /api/v1/exports/inventory`;
+    - `POST /api/v1/exports` (the ZIP);
+    - `POST /api/v1/exports/open` (checks, then stores verified sources).
+  - **Web:**
+    - `run/evidence.ts`: the texts, manifest, inputs with basis, layout evidence and the reproduction check;
+    - `ExportRun.tsx` (the export review), `ShowExample.tsx`, `BundleCheck.tsx`;
+    - Open accepts .zip;
+    - a bundle opens on the Run tab, counted as saved.
+  - **Docs:**
+    - new: docs/evidence-bundles.md and docs/demo/README.md;
+    - run-a-day.md: machine internals stated plainly; Suggest setup only with your own key, sending your sentence and the object names; the old "live AI not available" line was contradictory and is fixed; an export section added;
+    - local-v0.1.md: "not yet on real plans" replaced (real drawings were tested for import and review; output accuracy is not validated); Suggest setup added to the AI list; export and bundle files;
+    - README.
+- **Demo (docs/demo):**
+  - `run-a-day-before-after-demo.mp4`: H.264, 1440 × 900, 25 fps, 79.1 s, 14.5 MB.
+    - Recorded from the `pnpm start` build with no `.env`, in the installed Chrome (headless, Metal GPU), from Chrome's screencast frames, encoded with AVFoundation (`scripts/demo/frames-to-mp4.swift`).
+    - Captions: "Synthetic example · results under stated assumptions", plus one per step.
+    - Stills decoded from the MP4 at 3-74 s were checked: the blocked route and the 0.50 m are legible, and the captions are clear of the toolbar, the playback bar and the panels. The first two recordings put captions over the toolbar and playback bar, and the bundle table overflowed; both were fixed and re-recorded.
+  - `sample-factory-hall-synthetic-run-0c9d70a92abb83.zip`, 37,059 bytes, 9 files: manifest, project, two event logs (2,160 and 9 events), two metrics files, summary, README and the synthetic DXF.
+    - Original: 102 batches, fingerprint `0e2f103ae1a2eb`.
+    - Edited: blocked, 0 batches, `0c9d70a92abb83`.
+    - The cause is named: Rack A (material) ↔ Mixer narrows to 0.50 m between Rack A and Machine B.
+- **Clean-checkout reproduction** (`git clone` of `f55eb24`, no `.env`, `uv sync --locked`, `pnpm install --frozen-lockfile`, `RWS_API_PORT=8060 pnpm start`; `LOCAL_URL=... test:e2e:local`): 3/3.
+  - The committed bundle reruns with every row the same: engine, process and layout fingerprints, outcomes, blocked routes, events, event fingerprints, counts, the event logs event by event, and the explanation.
+  - Speed 600×, pause, scrubbing to 08:00 and Top, Walk and Orbit do not change the fingerprint.
+  - Save, reopen, compare and export gives the same bundle name and identical rows.
+  - `scripts/demo/check_bundle_errors.py`: a changed byte, a removed project.json, an unlisted file, `../outside.txt`, a truncated ZIP and summary-only are each refused with HTTP 422 and the reason. The untouched bundle opens with no problems.
+  - The workshop runs-only bundle on the clean clone names the drawing that is neither in the bundle nor on that computer.
+- **Workshop** (local, CC0 DXF; results in git-ignored `data/external/results`):
+  - the review shows the DXF as "your own file", not selected, so the bundle is runs-only (26,998 bytes); ticked, it is full (34,142 bytes);
+  - the runs-only bundle opened in a fresh page reruns with every row the same (66 kits; blocked when the bench moves 1.5 m);
+  - 47 clicks for the whole journey including the export.
+- **Scripted times** (headless Chromium, software WebGL; not a user study):
+  - the sample's before and after, from Run a day to "same events": 7 clicks, 4.9 s on the clean clone and 8.0 s on the working copy, including the export;
+  - the export: 3 clicks, 0.17-0.18 s.
+- **Presentation** (`e2e/demo/screens.spec.ts`, local; screenshots not committed): at 1440 × 900 and 1280 × 800, the example steps, the comparison, the export dialog and the bundle check fit with nothing cut off. The video's 1440 × 900 stills, scaled to 1280 × 800, keep the blocked route and the caption legible.
+- Known limitations:
+  - QA-01 has not been run, so REL-01's dependency is not met. Nothing here validates output accuracy on a real operation.
+  - Bundles are not signed.
+  - The recording script is local only, needs macOS (AVFoundation) and the installed Chrome, and never runs in CI.
+- Next concrete task: QA-01, or the separate import follow-ups (downscale for scans over 50 MP, DWG conversion, fewer CAD corrections), on the user's priority.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

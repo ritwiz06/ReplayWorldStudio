@@ -1224,3 +1224,37 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - Pictures over 50 MP are refused with an instruction.
   - DWG needs an export to DXF.
   - A run predicts outcomes under the stated assumptions only.
+
+### ADR-061 - Evidence bundles: export a run, open it elsewhere, run it again (REL-01)
+
+- Date: 2026-10-19 (America/Phoenix). Status: adopted. Builds on ADR-058 (local only), ADR-059 and ADR-060; no new engine, no hosting and no sharing service.
+- **Context.** A run's result could be watched but not handed to anyone. REL-01 needs a fresh environment to reproduce the flagship workflow from exported evidence.
+- **Decision.**
+  1. **One ZIP per export, format `rws-evidence/1`.** It holds a README, summary.md, project.json (exactly as Save writes it), per-run `events.json` and `metrics.json`, the chosen assets, and `manifest.json`. The manifest records:
+     - each file's sha256 and size;
+     - the contract and engine versions and the seed;
+     - the layout, process and event fingerprints of each run;
+     - the explanation, and every operating input with its unit and basis;
+     - the layout evidence, apart from the inputs;
+     - the claims and the conventions (units, times, ordering);
+     - a replay label: `full`, `runs_only` or `summary_only`;
+     - the excluded files and why.
+
+     Event logs are the engine's own array, unchanged and in processing order.
+  2. **The browser writes the texts, and the API packages them.** The engine runs in the browser; only the API can read the library files. The API includes an asset only if the project names it and its bytes have the recorded hash. It checks that the replay label and the exclusions match what is included. Entries carry a fixed date, so the same files give the same archive.
+  3. **An export review lists every file.** The sample's drawing is part of the repository, so it is selected. A person's own drawings, pictures, photos and models are **not** selected until ticked. Missing or changed files cannot be included. Summary only leaves the project out. The key, settings and other files are never read. Exporting never changes the project.
+  4. **Opening is all-or-nothing before storage:**
+     - names must be plain relative paths, and sizes are bounded (200 MB packed, 400 MB unpacked, 201 entries);
+     - every listed file must have its hash, and no file may be unlisted;
+     - the project must validate (older contracts are upgraded);
+     - each source must have the hash the project records.
+
+     A source is then stored by its hash, and an existing different file is left alone. A file that is neither in the bundle nor on the computer is named, never substituted.
+  5. **Run both layouts again** reruns each recorded layout with the bundle's process and seed. It compares the engine, the fingerprints, the outcomes and blocked routes, the counts, each event log event by event, and the explanation.
+  6. **Show the example** (sample only) steps through run → move Machine B → run again → compare → undo and run again, with the app's own commands. Nothing is prerecorded.
+- **Consequences.**
+  - The committed sample bundle (docs/demo, 36 KB) reruns identically from a fresh clone with no key, and CI runs that check in the local-launcher job.
+  - A user's bundle by default carries no drawing (runs only): the recipient sees the runs, but not the plan.
+  - Bundles are not signed: the hashes detect damage, not authorship.
+  - The recording (H.264 MP4) is made by a local-only script with the installed Chrome and AVFoundation.
+
