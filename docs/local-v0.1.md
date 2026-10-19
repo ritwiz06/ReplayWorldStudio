@@ -5,7 +5,7 @@ v0.1 runs on your own computer at `http://127.0.0.1:8000` through `pnpm start`. 
 | Stage | Status (2026-10-18) |
 | --- | --- |
 | Runs locally | **Yes.** Checked from a clean checkout: install, `pnpm start`, an occupied port 8000, and no Voyager key. |
-| Local journey | **Passes** (`pnpm --filter @replay-world/web test:e2e:local`, also in CI): the sample's move blocks the route; a DXF is imported, reviewed, edited, saved and reopened. |
+| Local journey | **Passes** (`pnpm --filter @replay-world/web test:e2e:local`, also in CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39184511408): the sample's move blocks the route; a DXF is imported, reviewed, edited, saved and reopened. |
 | Online preview | **Not planned.** Superseded by ADR-058; see [public-preview.md](public-preview.md) for the history. |
 
 ## Install (once)

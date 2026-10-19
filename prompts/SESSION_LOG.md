@@ -1092,6 +1092,7 @@ Append entries in chronological order. If a live repository session log already 
   - The client's default 8 s timeout also covers reading the body. An abort during the read was reported as malformed, not as a timeout, so on a slow computer reopening a project could fail with a misleading message.
   - Fix in `apps/web/src/api/client.ts`: a timeout while reading the body is now reported as "did not respond within N s", and project validation and upgrade get 30 s.
   - New unit test. Locally: client tests 10 passed, `pnpm test:e2e:smoke` 14 passed, `test:e2e:local` passed.
+- CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39184511408 passed all three jobs on `6e3d774`, the local journey included.
 - Known limitations: "first-time installation" was run with warm uv and pnpm caches on the reference Mac, not on a new machine. REL-01 (exported demo) stays open.
 - Next concrete task: use local v0.1 and record what gets in the way.
 
