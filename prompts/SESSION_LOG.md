@@ -1292,6 +1292,7 @@ Append entries in chronological order. If a live repository session log already 
     - the panel says "Checking the AI…" or "AI status unknown · retrying" instead of "no key";
     - the test waits visibly (60 s) for typing to be enabled.
   - Local smoke: 18 passed; `pnpm check`: exit 0.
+- CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39460718902 passed all three jobs on `69c0c79`. The smoke job ran `chat.spec.ts` (1.4 min); the local-launcher job ran `local/chat-nokey.spec.ts`.
 - Actual effort: about 2.5 hours of wall-clock time today (about 07:00–09:45 America/Phoenix), plus the CI follow-up.
 - Next concrete task: UX-02 with consenting newcomers, or AGT-01's catalog matching, on the user's priority.
 
