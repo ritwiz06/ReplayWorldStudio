@@ -1284,7 +1284,15 @@ Append entries in chronological order. If a live repository session log already 
   - no catalog matching (AGT-01 stays open);
   - real drawings still need the floor traced and symbol layers marked;
   - UX-02 (newcomers) not done.
-- Actual effort: about 2.5 hours of wall-clock time today (about 07:00–09:45 America/Phoenix).
+- **First CI run** (`839e991`, https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39458442509): the smoke job failed. The chat journey hung for 4 minutes on a disabled input, because the conversation said "AI off · no key" after the second page load. The trace showed the status request answered 200 "recorded", so the page dropped that answer.
+  - **Likely cause:** in development the effect runs twice. The hook did not ignore the result of its own cancelled request, so a cancelled request that settles as a failure, after the real answer, overwrites it.
+  - **Fixed:**
+    - results of cancelled requests are ignored;
+    - an unreachable API is asked again up to four times;
+    - the panel says "Checking the AI…" or "AI status unknown · retrying" instead of "no key";
+    - the test waits visibly (60 s) for typing to be enabled.
+  - Local smoke: 18 passed; `pnpm check`: exit 0.
+- Actual effort: about 2.5 hours of wall-clock time today (about 07:00–09:45 America/Phoenix), plus the CI follow-up.
 - Next concrete task: UX-02 with consenting newcomers, or AGT-01's catalog matching, on the user's priority.
 
 ## Copy this template for a coding session

@@ -18,7 +18,7 @@ interface Props {
   entries: Entry[];
   suggestions: SuggestionId[];
   busy: boolean;
-  assist: { available: boolean; mode: "live" | "recorded" | "off" };
+  assist: { available: boolean; mode: "live" | "recorded" | "off" | "checking" | "unreachable" };
   collapsed: boolean;
   onCollapse: (collapsed: boolean) => void;
   onSend: (text: string) => void;
@@ -40,7 +40,8 @@ interface Props {
   fileInput: React.RefObject<HTMLInputElement | null>;
 }
 
-const AI_WORDS = { live: "AI on · ASU Voyager", recorded: "Recorded answers (test)", off: "AI off · no key" } as const;
+const AI_WORDS = { live: "AI on · ASU Voyager", recorded: "Recorded answers (test)", off: "AI off · no key", checking: "Checking the AI…", unreachable: "AI status unknown · retrying" } as const;
+const PLACEHOLDER = { checking: "Checking whether AI is available…", unreachable: "AI status unknown: use the suggestions", off: "Typing needs AI (off: no key)" } as const;
 
 export function ChatPanel(props: Props) {
   const { project, entries, suggestions, busy, assist, collapsed, onCollapse, onSend, onSuggest, onAttach, review, setup, fileInput } = props;
@@ -126,7 +127,7 @@ export function ChatPanel(props: Props) {
           value={text}
           data-testid="chat-input"
           disabled={!assist.available}
-          placeholder={assist.available ? "Ask about this world or tell it what to change" : "Typing needs AI (off: no key)"}
+          placeholder={assist.available ? "Ask about this world or tell it what to change" : PLACEHOLDER[assist.mode as keyof typeof PLACEHOLDER]}
           aria-label="Message"
           onChange={(e) => setText(e.target.value)}
           onKeyDown={keys}

@@ -3407,7 +3407,9 @@ label.button.disabled {
 }
 .chat-ai-live::before,
 .chat-ai-recorded::before,
-.chat-ai-off::before {
+.chat-ai-off::before,
+.chat-ai-checking::before,
+.chat-ai-unreachable::before {
   content: "";
   display: inline-block;
   width: 7px;
@@ -3420,8 +3422,12 @@ label.button.disabled {
 .chat-ai-recorded::before {
   background: var(--warn);
 }
-.chat-ai-off::before {
+.chat-ai-off::before,
+.chat-ai-checking::before {
   background: var(--muted);
+}
+.chat-ai-unreachable::before {
+  background: var(--error);
 }
 .icon-button {
   display: inline-flex;

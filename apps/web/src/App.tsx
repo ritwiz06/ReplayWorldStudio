@@ -771,7 +771,8 @@ export function App() {
     const original = runOriginal(project, project.process);
     return original?.result ? original.result.metrics.completed !== activeDay.result.metrics.completed : null;
   }, [activeDay, dayStale, layoutEdited, project]);
-  const assistMode: "live" | "recorded" | "off" = assist.status === "known" ? (assist.assist.available ? assist.assist.mode : "off") : "off";
+  const assistMode: "live" | "recorded" | "off" | "checking" | "unreachable" =
+    assist.status === "known" ? (assist.assist.available ? assist.assist.mode : "off") : assist.status === "checking" ? "checking" : "unreachable";
   const facts: WorldFacts = {
     hasWorld: project !== null && project.scene.objects.length > 0,
     hasDrawing: sourceDrawing !== null,

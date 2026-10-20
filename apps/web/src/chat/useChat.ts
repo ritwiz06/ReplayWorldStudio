@@ -72,7 +72,7 @@ export interface ChatHost {
   loadId: number;
   source: DrawingSource | null;
   selectedId: string | null;
-  assist: { available: boolean; mode: "live" | "recorded" | "off"; note: string };
+  assist: { available: boolean; mode: "live" | "recorded" | "off" | "checking" | "unreachable"; note: string };
   facts: WorldFacts;
   routeAsk: RouteAsk | null;
   day: DayRun | null;
@@ -508,7 +508,13 @@ export class ChatController {
     const h = this.host;
     this.push({ role: "user", kind: "user", text: message, tone: "info" });
     if (!h.assist.available) {
-      this.say("cannot", "Typing a request needs the AI, which is off here (no Voyager key). Use the suggestions, attach a plan, or open the Full editor: everything works by hand.", { tone: "warn" });
+      this.say(
+        "cannot",
+        h.assist.mode === "off"
+          ? "Typing a request needs the AI, which is off here (no Voyager key). Use the suggestions, attach a plan, or open the Full editor: everything works by hand."
+          : "The AI's availability isn't known yet (the local API did not answer). Use the suggestions or the Full editor meanwhile.",
+        { tone: "warn" },
+      );
       return;
     }
     this.pending?.controller.abort();

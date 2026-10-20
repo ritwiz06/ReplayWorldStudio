@@ -12,6 +12,8 @@ test.use({ storageState: CHAT });
 
 const waits: Record<string, number> = {};
 async function ask(page: Page, text: string, wait = true) {
+  // Typing is enabled once the API has said the (recorded) AI is available.
+  await expect(page.getByTestId("chat-input")).toBeEnabled({ timeout: 60_000 });
   await page.getByTestId("chat-input").fill(text);
   const started = Date.now();
   await page.getByTestId("chat-send").click();
