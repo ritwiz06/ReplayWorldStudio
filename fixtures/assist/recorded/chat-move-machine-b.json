@@ -1,0 +1,14 @@
+{
+  "task": "chat",
+  "key": "Move Machine B 1 metre right | selected=none | scene=53151f7c69de",
+  "case": "move-machine-b",
+  "message": "Move Machine B 1 metre right",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "chat-01",
+  "recorded_at": "2026-10-20",
+  "note": "Raw answers from the live language model for the synthetic sample, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"candidates\": [],\n  \"intent\": \"move\",\n  \"message\": null,\n  \"move\": {\n    \"direction\": \"right\",\n    \"distance\": 1,\n    \"quote\": \"1 metre\",\n    \"unit\": \"m\"\n  },\n  \"question\": null,\n  \"rotate\": null,\n  \"route\": null,\n  \"target\": {\n    \"object_id\": \"obj-dxf-111\",\n    \"phrase\": \"Machine B\",\n    \"reference\": \"named\"\n  }\n}"
+  ]
+}

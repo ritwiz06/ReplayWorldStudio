@@ -1,0 +1,84 @@
+You: Show me the example factory
+
+Assistant [done]: Here's the example factory: a made-up hall drawn as a DXF, with an example shift. Every operating value in it is an assumption, not data.
+
+You: Move the rack 1 m back
+
+Assistant [question]: recorded answer
+    “the rack” could be Rack A (material), Rack B. Which one?
+    Rack A (material)
+    Rack B
+
+You: Move Machine B 3.5 m forward
+
+Assistant [applied]: recorded answer
+    Moved Machine B 3.5 m forward.
+    Your route becomes blocked: narrows to 0.70 m between Machine B and Rack B; needs 1.40 m.
+    Rack A (material) ↔ Mixer would be blocked: narrows to 0.70 m between Machine B and Rack B; needs 0.80 m.
+    Details
+    Mixer ↔ Machine B would be blocked: the end is 0.10 m from Rack B; needs 0.40 m each side.
+    Machine B ↔ Packing table would be blocked: the start is 0.10 m from Rack B; needs 0.40 m each side.
+    z -3.700 → -0.200 m
+    Directions as seen from above (the Top view). Nothing changes until you press Apply.
+    Undo
+    Run it again
+    Will the route still fit?
+
+You: What happens during a shift?
+
+Assistant [run]: recorded answer
+    Ran the shift: 0 batches completed by 14:00.
+    Blocked: Rack A (material) ↔ Mixer: narrows to 0.70 m between Machine B and Rack B; needs 0.80 m.
+    Details
+    Every time, capacity and staffing here is an example assumption for this synthetic hall, not data.
+    Engine rws-run/1, seed 1, 9 events, fingerprint 0c9d70a92abb83.
+    Predicts what happens under these assumptions only; it does not verify real output or safety.
+    Full results
+    Compare with the original layout
+
+You: Why did output change?
+
+Assistant [why]: recorded answer
+    Output goes from 102 to 0 completed batches (−102).
+    Because Rack A (material) ↔ Mixer is blocked in the edited layout: narrows to 0.70 m between Machine B and Rack B; needs 0.80 m.
+    Details
+    Rack A (material) ↔ Mixer is blocked in the edited layout (Blocked: the best way through narrows to 0.70 m between Machine B and Rack B, and the item needs 0.80 m). It is needed for carrying from Rack A (material) to Mixer and Worker 1 (mixing) walking, so that cannot happen; nothing is moved through equipment.
+    Mixer ↔ Machine B is blocked in the edited layout (Blocked at the destination: the destination point is 0.10 m from Rack B, and the item needs 0.40 m on each side). It is needed for carrying from Mixer to Machine B and Worker 1 (mixing) walking, so that cannot happen; nothing is moved through equipment.
+    Machine B ↔ Packing table is blocked in the edited layout (Blocked at the start: the start point is 0.10 m from Rack B, and the item needs 0.40 m on each side). It is needed for carrying from Machine B to Packing table and Worker 2 (forming) walking, so that cannot happen; nothing is moved through equipment.
+    Rack A (material) ↔ Machine B is blocked in the edited layout (Blocked at the destination: the destination point is 0.10 m from Rack B, and the item needs 0.40 m on each side). It is needed for Worker 1 (mixing) walking, so that cannot happen; nothing is moved through equipment.
+    Completed batches: 102 → 0 (−102)
+    Unfinished at the shift end: 8 → 0 (−8)
+    Mixer: busy: 79 % → 0 % (−79 pts)
+    Mixer: longest queue: 1 → 0 (−1)
+    Mixer: blocked: 1 % → 0 % (−1 pts)
+    Machine B: busy: 52 % → 0 % (−52 pts)
+    Machine B: longest queue: 2 → 0 (−2)
+    Packing table: busy: 86 % → 0 % (−86 pts)
+    Packing table: longest queue: 4 → 0 (−4)
+    Worker 1 (mixing): working, carrying or walking: 54 % → 0 % (−54 pts)
+    Worker 2 (forming): working, carrying or walking: 27 % → 0 % (−27 pts)
+    Worker 3 (packing): working, carrying or walking: 86 % → 0 % (−86 pts)
+    Both runs use the same process, seed and engine; only the layout differs.
+    Full comparison
+
+You: Undo that
+
+Assistant [done]: Undone: Move Machine B.
+    Run it again
+
+You: Run it again
+
+Assistant [run-again]: Ran the same shift again: 102 batches completed by 14:00, 8 unfinished.
+    Was 0 before the change, with the same process and seed.
+    Packing table is the busiest station and sets the pace.
+    Details
+    Every time, capacity and staffing here is an example assumption for this synthetic hall, not data.
+    Engine rws-run/1, seed 1, 2160 events, fingerprint 0e2f103ae1a2eb.
+    Predicts what happens under these assumptions only; it does not verify real output or safety.
+    Full results
+
+You: Paint the mixer red
+
+Assistant [cannot]: recorded answer
+    The application cannot change colors or paint objects.
+    I can move or turn things, check routes, run a shift and explain its result.

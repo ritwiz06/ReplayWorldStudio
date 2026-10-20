@@ -40,12 +40,14 @@ interface Props {
   onRouteAsk: (ask: RouteAsk) => void;
   /** The Run a day panel, shown in the Run view. */
   run: ReactNode;
+  /** Open the review ready to trace the floor (asked for in the conversation). */
+  reviewStart?: "trace_floor" | null;
 }
 
 const OUTCOME_SHORT = { fits: "fits", conflict: "conflict found", cannot_determine: "cannot determine yet" } as const;
 const ROUTE_SHORT = { fits: "route fits", conflict: "route blocked", cannot_determine: "route cannot be determined yet" } as const;
 
-export function SourceDrawing({ project, selectedId, view, open, underlay, onView, onOpen, onUnderlay, onSelect, onWalk, missingFiles, focus, onReview, onDrawn, checks, routeAsk, onRouteAsk, run }: Props) {
+export function SourceDrawing({ project, selectedId, view, open, underlay, onView, onOpen, onUnderlay, onSelect, onWalk, missingFiles, focus, onReview, onDrawn, checks, routeAsk, onRouteAsk, run, reviewStart }: Props) {
   const source = drawingSource(project);
   const comparison = useMemo(() => compareWithDrawing(project), [project]);
   const [asked, setAsked] = useState<CheckAnswer | null>(null);
@@ -87,7 +89,7 @@ export function SourceDrawing({ project, selectedId, view, open, underlay, onVie
       </div>
       {open && view === "run" && run}
       {open && view === "check" && checks && <LayoutCheck checks={checks} ask={routeAsk} onAsk={onRouteAsk} selectedId={selectedId} onSelect={onSelect} />}
-      {open && view === "review" && <DrawingReview project={project} source={source} selectedId={selectedId} focus={focus} onReview={onReview} onDrawn={onDrawn} />}
+      {open && view === "review" && <DrawingReview project={project} source={source} selectedId={selectedId} focus={focus} onReview={onReview} onDrawn={onDrawn} start={reviewStart ?? null} />}
       {open && view === "drawing" && (
         <div className="source-drawing-body">
           <div className="drawing-plan-frame small-plan">

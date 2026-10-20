@@ -20,6 +20,8 @@ export interface ReplayWorldContracts {
   ObjectProposalResult: ObjectProposalResult;
   EditProposalRequest: EditProposalRequest;
   EditProposalResult: EditProposalResult;
+  ChatRequest: ChatRequest;
+  ChatResult: ChatResult;
   GeneratedModelRequest: GeneratedModelRequest;
   GeneratedModel: GeneratedModel;
   GeneratedAssetRequest: GeneratedAssetRequest;
@@ -2239,6 +2241,82 @@ export interface RotateIntent {
    * The user's words that give the angle.
    */
   quote: string;
+}
+/**
+ * One chat message, the reviewed scene facts it may need, and the app's state.
+ */
+export interface ChatRequest {
+  request: string;
+  context: EditContext;
+  state: ChatState;
+}
+/**
+ * What the open world allows right now, so the answer can name only workable actions.
+ */
+export interface ChatState {
+  has_world: boolean;
+  has_drawing: boolean;
+  review_open: boolean;
+  has_process: boolean;
+  has_run: boolean;
+  run_stale: boolean;
+  layout_edited: boolean;
+  can_undo: boolean;
+}
+/**
+ * The interpretation of one chat message: one action with its typed parameters, a
+ * question, or why it cannot be done. Nothing here changes the project.
+ */
+export interface ChatResult {
+  outcome: "action" | "clarification" | "unsupported";
+  action:
+    | (
+        | "move"
+        | "rotate"
+        | "check_route"
+        | "run_day"
+        | "run_again"
+        | "explain_change"
+        | "undo"
+        | "show_example"
+        | "capabilities"
+        | "select"
+        | "save"
+        | "export"
+      )
+    | null;
+  /**
+   * For move and rotate.
+   */
+  edit: EditIntent | null;
+  /**
+   * For check_route.
+   */
+  route: ChatRoute | null;
+  /**
+   * For select.
+   */
+  object_id: string | null;
+  question: string | null;
+  /**
+   * Items: Stable, lowercase identifier. Never reused for a different entity.
+   */
+  candidates: string[];
+  message: string | null;
+  checks: string[];
+  provider: ProviderRun;
+}
+/**
+ * The route a request asks about: endpoints by object id, and a width only when stated.
+ */
+export interface ChatRoute {
+  from_object_id: string | null;
+  to_object_id: string | null;
+  /**
+   * Only when the request states it.
+   */
+  width_m: number | null;
+  width_quote: string | null;
 }
 /**
  * Build (and optionally store) the model for a geometry draft.

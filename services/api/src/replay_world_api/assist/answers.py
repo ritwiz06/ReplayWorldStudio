@@ -133,6 +133,40 @@ class RawEditAnswer(_Raw):
     rotate: RawRotate | None
 
 
+class RawRoute(_Raw):
+    from_object_id: str | None
+    to_object_id: str | None
+    width: float | None
+    unit: DistanceUnit | None
+    quote: str | None
+
+
+class RawChatAnswer(_Raw):
+    intent: Literal[
+        "move",
+        "rotate",
+        "check_route",
+        "run_day",
+        "run_again",
+        "explain_change",
+        "undo",
+        "show_example",
+        "capabilities",
+        "select",
+        "save",
+        "export",
+        "ask",
+        "cannot",
+    ]
+    question: str | None
+    candidates: list[str]
+    message: str | None
+    target: RawTarget | None
+    move: RawMove | None
+    rotate: RawRotate | None
+    route: RawRoute | None
+
+
 # Keywords that schema-guided decoders often do not support. Limits are enforced by the
 # Pydantic checks after decoding instead.
 _DROPPED = {"title", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "pattern"}

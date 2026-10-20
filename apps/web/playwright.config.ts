@@ -48,7 +48,7 @@ export default defineConfig({
         {
           origin: `http://127.0.0.1:${WEB_PORT}`,
           localStorage: [
-            { name: "rws.start.seen", value: "1" },
+            { name: "rws.start.seen", value: "1" }, { name: "rws.view", value: "editor" },
             { name: "rws.details", value: "1" },
           ],
         },
@@ -79,7 +79,7 @@ export default defineConfig({
     {
       command: `pnpm exec vite --port ${WEB_PORT} --strictPort`,
       url: `http://127.0.0.1:${WEB_PORT}`,
-      env: { VITE_API_BASE_URL: `http://127.0.0.1:${API_PORT}` },
+      env: { VITE_API_BASE_URL: `http://127.0.0.1:${API_PORT}`, RWS_E2E: "1" },
       reuseExistingServer: false,
       timeout: 60_000,
     },

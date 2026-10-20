@@ -9,6 +9,12 @@ const HALL = new URL("../../../../fixtures/drawings/hall-mm.dxf", import.meta.ur
 const loaded = (page: Page, n: number) => expect(page.getByTestId("scene-status")).toHaveText(`Scene loaded · ${n} objects`);
 const objectList = (page: Page, name: RegExp) => page.getByRole("navigation", { name: "Scene objects" }).getByRole("button", { name });
 
+// This is the full editor's journey (UX-03 keeps it one click away); the chat-first screen with
+// no key has its own test (chat-nokey.spec.ts).
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(() => localStorage.setItem("rws.view", "editor"));
+});
+
 test("local: sample move blocks the route; a DXF is imported, reviewed, edited, saved and reopened", { tag: "@local" }, async ({ page }) => {
   await page.goto("/");
   // No key: AI is off, and the app says nothing that only applies to a hosted preview.

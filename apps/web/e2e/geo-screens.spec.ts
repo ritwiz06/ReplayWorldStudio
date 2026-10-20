@@ -11,7 +11,7 @@ import { expect, type Page, test } from "@playwright/test";
 const OUT = process.env.SCREENS_OUT;
 const LAYOUT = new URL("../../../fixtures/drawings/layout-checks-mm.dxf", import.meta.url).pathname;
 
-test.use({ storageState: { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.start.seen", value: "1" }] }] } });
+test.use({ storageState: { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.start.seen", value: "1" }, { name: "rws.view", value: "editor" }] }] } });
 
 async function clickPlan(page: Page, x: number, y: number) {
   const at = await page.getByTestId("check-plan").evaluate(

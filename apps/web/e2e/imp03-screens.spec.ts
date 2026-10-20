@@ -17,7 +17,7 @@ const SKETCH = new URL("rough-cell.png", PLANS).pathname;
 const LAYOUT = new URL("../../../fixtures/drawings/layout-checks-mm.dxf", import.meta.url).pathname;
 const PX = 71.4285714;
 
-test.use({ storageState: { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.start.seen", value: "1" }] }] } });
+test.use({ storageState: { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.start.seen", value: "1" }, { name: "rws.view", value: "editor" }] }] } });
 
 const hall = (x: number, y: number): [number, number] => [302.38 + x * PX, 579.56 + y * PX];
 function sketch(x: number, y: number): [number, number] {

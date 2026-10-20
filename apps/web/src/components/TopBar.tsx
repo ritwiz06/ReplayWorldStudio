@@ -27,11 +27,14 @@ interface Props {
   details: boolean;
   /** The public preview's "Early preview" label, opening what it does and where files go. */
   onAbout?: (() => void) | undefined;
+  /** The chat-first screen or the full editor (UX-03); both keep the same world. */
+  view: "chat" | "editor";
+  onView: (view: "chat" | "editor") => void;
   onDetails: () => void;
 }
 
 const FIXTURES: FixtureName[] = ["industrial-demo", "foundation"];
-const SHORT_FIXTURE_LABEL: Record<FixtureName, string> = { "industrial-demo": "Demo", foundation: "Foundation", sample: "Sample" };
+const SHORT_FIXTURE_LABEL: Record<FixtureName, string> = { "industrial-demo": "Demo", foundation: "Foundation", sample: "Sample", empty: "New" };
 
 function sceneStatus(scene: SceneState): [tone: string, text: string] {
   switch (scene.status) {
@@ -44,7 +47,7 @@ function sceneStatus(scene: SceneState): [tone: string, text: string] {
   }
 }
 
-export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel, redoLabel, busy, onUndo, onRedo, onSave, onOpenFile, onLoadFixture, onStart, details, onDetails, onAbout }: Props) {
+export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel, redoLabel, busy, onUndo, onRedo, onSave, onOpenFile, onLoadFixture, onStart, details, onDetails, onAbout, view, onView }: Props) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [tone, text] = sceneStatus(scene);
   const checking = fileCheck.status === "checking";
@@ -98,9 +101,11 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
         <HealthIndicator state={health} />
       </div>
       <div className="topbar-actions">
-        <button type="button" className="button" onClick={onStart} disabled={busy} data-testid="open-start" title="Explore, describe an object, or open a project">
-          Start
-        </button>
+        {view === "editor" && (
+          <button type="button" className="button" onClick={onStart} disabled={busy} data-testid="open-start" title="Explore, describe an object, or open a project">
+            Start
+          </button>
+        )}
         <div className="segmented history-buttons" role="group" aria-label="History">
           <button
             type="button"
@@ -134,6 +139,7 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
         >
           Save<span className="label-long"> project</span>
         </button>
+        {view === "editor" && (
         <button
           type="button"
           className="button"
@@ -144,7 +150,8 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
         >
           Details
         </button>
-        {details && (
+        )}
+        {view === "editor" && details && (
         <div className="segmented scene-picker" role="group" aria-label="Scene">
           {FIXTURES.map((name) => (
             <button
@@ -163,7 +170,17 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
         )}
         <button
           type="button"
-          className="button button-primary"
+          className="button view-toggle"
+          data-testid="view-toggle"
+          aria-pressed={view === "editor"}
+          onClick={() => onView(view === "chat" ? "editor" : "chat")}
+          title={view === "chat" ? "Every panel and control: the object list, catalog, inspector, drawing review, checks and run details" : "Back to the world and the conversation"}
+        >
+          {view === "chat" ? "Full editor" : "Chat view"}
+        </button>
+        <button
+          type="button"
+          className={`button${view === "editor" ? " button-primary" : ""}`}
           onClick={() => fileInput.current?.click()}
           disabled={checking}
           title="Open a project JSON file, or an evidence bundle (.zip) exported from a run; it is checked by the API before anything is replaced"

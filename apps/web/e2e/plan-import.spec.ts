@@ -11,7 +11,7 @@ const HALL = new URL("packing-hall.pdf", PLANS).pathname;
 const SKETCH = new URL("rough-cell.png", PLANS).pathname;
 const TRUTH = JSON.parse(readFileSync(new URL("plans.truth.json", PLANS), "utf8"));
 const PX: number = TRUTH["packing-hall.pdf"].px_per_m;
-const SIMPLE = { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.start.seen", value: "1" }] }] };
+const SIMPLE = { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.start.seen", value: "1" }, { name: "rws.view", value: "editor" }] }] };
 
 test.use({ storageState: SIMPLE });
 

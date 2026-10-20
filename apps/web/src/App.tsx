@@ -1,5 +1,5 @@
 import type { CatalogAsset, DrawingObject, ProcessModel, Project, SceneObject, Transform } from "@replay-world/contracts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createApiClient } from "./api/client";
 import type { ResolvedEdit } from "./assist/editIntent";
 import { CatalogPanel } from "./components/CatalogPanel";
@@ -49,6 +49,11 @@ import { RunBar } from "./components/RunBar";
 import { GuidedSetup } from "./components/GuidedSetup";
 import { RunLabels } from "./components/RunLabels";
 import { RunPanel } from "./components/RunPanel";
+import { ChatPanel } from "./components/ChatPanel";
+import { suggestions as chatSuggestions, symbolCandidates, type WorldFacts } from "./chat/context";
+import { type ChatPreview, useChat } from "./chat/useChat";
+import { footprint } from "./checks/geometry";
+import type { AccentSpec } from "./scene/SceneViewport";
 import { BundleCheck } from "./components/BundleCheck";
 import { ExportRun } from "./components/ExportRun";
 import { type ExampleProgress, ShowExample } from "./components/ShowExample";
@@ -94,6 +99,25 @@ function startSeen(): boolean {
     return window.localStorage.getItem(START_SEEN_KEY) === "1";
   } catch {
     return false; // storage unavailable (private mode): show it, nothing else depends on it
+  }
+}
+
+const VIEW_KEY = "rws.view";
+
+/** The chat-first screen (UX-03) unless the person last chose the full editor. */
+function storedView(): "chat" | "editor" {
+  try {
+    return window.localStorage.getItem(VIEW_KEY) === "editor" ? "editor" : "chat";
+  } catch {
+    return "chat";
+  }
+}
+
+function rememberView(view: "chat" | "editor") {
+  try {
+    window.localStorage.setItem(VIEW_KEY, view);
+  } catch {
+    // Not remembered; the chat-first screen shows next time.
   }
 }
 
@@ -162,7 +186,13 @@ function besideSource(source: SceneObject): [number, number] {
 export function App() {
   const health = useHealth(client);
   // The public preview opens on the sample (ADR-054); development opens on the demo.
-  const session = useProject(client, PUBLIC_PREVIEW ? "sample" : "industrial-demo");
+  /** The chat-first screen or the full editor (UX-03): one App, one world, one history. */
+  const [view, setViewState] = useState<"chat" | "editor">(() => (PUBLIC_PREVIEW ? "editor" : storedView()));
+  const setView = useCallback((next: "chat" | "editor") => {
+    rememberView(next);
+    setViewState(next);
+  }, []);
+  const session = useProject(client, PUBLIC_PREVIEW ? "sample" : view === "chat" ? "empty" : "industrial-demo");
   const { scene, fileCheck, prompt, loadId, execute, undo, redo, save } = session;
   const project = scene.status === "loaded" ? scene.project : null;
   const source = scene.status === "loaded" ? scene.source : null;
@@ -174,7 +204,7 @@ export function App() {
   const assistNote =
     assist.status === "known" ? assist.assist.message : assist.status === "checking" ? "Checking the assistant…" : assist.message;
   // The preview's first screen is the sample with its guide, not the start panel.
-  const [start, setStart] = useState(() => !PUBLIC_PREVIEW && !startSeen());
+  const [start, setStart] = useState(() => !PUBLIC_PREVIEW && !startSeen() && storedView() === "editor");
   const [about, setAbout] = useState(false);
   const [guideClosed, setGuideClosed] = useState(false);
   const [create, setCreate] = useState<"describe" | "builder" | null>(null);
@@ -207,6 +237,15 @@ export function App() {
   const [guidedState, setGuidedState] = useState<{ loadId: number; draft: GuidedDraft; open: boolean } | null>(null);
   /** The run that should start playing as soon as it is shown. */
   const [autoPlayKey, setAutoPlayKey] = useState<string | null>(null);
+  /** The conversation (UX-03): its emphasis in the world, whether it is folded away, the guided
+   * setup shown inside it, the plan opened from it, and a picture attached to it. */
+  const [chatPreview, setChatPreview] = useState<{ loadId: number; preview: ChatPreview } | null>(null);
+  const [chatCollapsed, setChatCollapsed] = useState(false);
+  const [chatSetup, setChatSetup] = useState<number | null>(null);
+  const [sheet, setSheet] = useState<{ loadId: number; trace: boolean } | null>(null);
+  const [pictureFile, setPictureFile] = useState<File | null>(null);
+  const [symbolsAnswered, setSymbolsAnswered] = useState<number | null>(null);
+  const chatFile = useRef<HTMLInputElement>(null);
   /** REL-01: the sample's step-by-step example, the export review, and an opened bundle's check. */
   const [example, setExample] = useState<{ loadId: number; progress: ExampleProgress } | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -311,7 +350,12 @@ export function App() {
   // with the move tool (set once per load, during render rather than in an effect).
   const [sampleFor, setSampleFor] = useState<number | null>(null);
   const sampleMachine = isSample ? (project?.scene.objects.find((o) => o.name === SAMPLE_MACHINE) ?? null) : null;
-  if (isSample && sourceDrawing && sampleFor !== loadId) {
+  if (isSample && sourceDrawing && sampleFor !== loadId && view === "chat") {
+    // The conversation keeps the sample's route question (so "will the route still fit?" has
+    // one) but leaves the world as it is: no panel, selection or tool is chosen for the person.
+    setSampleFor(loadId);
+    setRouteAsk({ sourceId: sourceDrawing.id, start: SAMPLE_ROUTE.start, end: SAMPLE_ROUTE.end, width: SAMPLE_ROUTE.width, allowance: SAMPLE_ROUTE.allowance });
+  } else if (isSample && sourceDrawing && sampleFor !== loadId) {
     setSampleFor(loadId);
     setRouteAsk({ sourceId: sourceDrawing.id, start: SAMPLE_ROUTE.start, end: SAMPLE_ROUTE.end, width: SAMPLE_ROUTE.width, allowance: SAMPLE_ROUTE.allowance });
     setDrawingPanel({ open: true, view: "check" });
@@ -383,10 +427,13 @@ export function App() {
     setAutoPlayKey(made.result ? `${loadId}:${made.sceneRevision}:${made.result.fingerprint}` : null);
     issue("frame-all");
   }
-  const compareDay = useCallback(() => {
-    if (!project?.process || !activeDay || !runKey) return;
+  const compareDay = useCallback((): { original: DayRun; result: DayComparison } | null => {
+    if (!project?.process || !activeDay || !runKey) return null;
     const original = runOriginal(project, project.process);
-    if (original) setDayComparison({ key: runKey, original, result: compareDays(original, activeDay, project.process) });
+    if (!original) return null;
+    const made = { original, result: compareDays(original, activeDay, project.process) };
+    setDayComparison({ key: runKey, ...made });
+    return made;
   }, [activeDay, project, runKey]);
   const exampleProgress = example?.loadId === loadId ? example.progress : null;
   /** One step of "Show the example": each is the app's own command or run, made now. */
@@ -673,7 +720,7 @@ export function App() {
 
   // On the simple screen the drawing panel is a column of its own beside the 3D view, so it
   // never covers the scene; with Details on it floats over the view as before.
-  const docked = !details && project !== null && sourceDrawing !== null && mode !== "walk" && drawingPanel.open;
+  const docked = view !== "chat" && !details && project !== null && sourceDrawing !== null && mode !== "walk" && drawingPanel.open;
   const guidedFor = guidedState?.loadId === loadId ? guidedState : null;
   const guidedDraft = guidedFor?.draft ?? (project?.process ? guidedFrom(project.process) : emptyGuided());
   const guidedNode =
@@ -716,11 +763,127 @@ export function App() {
       onExport={exportRuns ? () => setExporting(true) : null}
     />
   ) : null;
+  // ── The conversation (UX-03) ─────────────────────────────────────────────────────────────
+  // Whether the current run's output differs from the drawing's own layout (for the suggestion's
+  // wording only; the explanation itself always comes from the comparison).
+  const outputChanged = useMemo(() => {
+    if (!project?.process || !activeDay?.result || dayStale || !layoutEdited) return null;
+    const original = runOriginal(project, project.process);
+    return original?.result ? original.result.metrics.completed !== activeDay.result.metrics.completed : null;
+  }, [activeDay, dayStale, layoutEdited, project]);
+  const assistMode: "live" | "recorded" | "off" = assist.status === "known" ? (assist.assist.available ? assist.assist.mode : "off") : "off";
+  const facts: WorldFacts = {
+    hasWorld: project !== null && project.scene.objects.length > 0,
+    hasDrawing: sourceDrawing !== null,
+    reviewOpen,
+    hasProcess: project?.process != null,
+    hasRun: activeDay?.result != null,
+    runStale: dayStale,
+    layoutEdited,
+    canUndo: session.undoLabel !== null,
+    hasSelection: selected !== null && selected.kind === "equipment",
+    canExplain: activeDay?.result != null && !dayStale && layoutEdited && project?.process != null,
+    outputChanged,
+  };
+  const chat = useChat();
+  // The conversation acts on the world as it is after this render.
+  useLayoutEffect(() => {
+    chat.controller.setHost({
+      client,
+      project,
+      loadId,
+      source: sourceDrawing,
+      selectedId: selected?.id ?? null,
+      assist: { available: assistOn, mode: assistMode, note: assistNote },
+      facts,
+      routeAsk,
+      day: activeDay,
+      isSample,
+      undoLabel: session.undoLabel,
+      fileError: fileCheck.status === "rejected" ? fileCheck.error.message : null,
+      loadSample: () => session.loadFixture("sample"),
+      openFile: (file) => openAny(file),
+      createWorld: (created, filename) => {
+        setTool("select");
+        if (mode === "walk") setMode("orbit");
+        setReviewFocus(null);
+        session.loadCreated(created, filename, "drawing");
+      },
+      pictureImport: (file) => {
+        setPictureFile(file);
+        setDrawingImport(true);
+      },
+      select: (id) => select(id),
+      execute: (request) => run(request),
+      undo: () => {
+        const outcome = session.undo();
+        if (outcome?.ok) setPlacement(null);
+        return outcome;
+      },
+      setRouteAsk: (ask) => setRouteAsk(ask),
+      setPreview: (preview) => setChatPreview(preview ? { loadId, preview } : null),
+      runDay: (target) => (target ?? project ? runOn((target ?? project)!) : null),
+      compare: () => compareDay(),
+      openSetup: () => setChatSetup(loadId),
+      save: () => save(),
+      exportRun: () => {
+        if (!exportRuns) return false;
+        setExporting(true);
+        return true;
+      },
+      openSheet: (sheetView) => {
+        if (mode === "walk") setMode("orbit");
+        setSheet({ loadId, trace: false });
+        setDrawingPanel({ open: true, view: sheetView });
+      },
+      pickFile: () => chatFile.current?.click(),
+    });
+  });
+  const preview = chatPreview?.loadId === loadId ? chatPreview.preview : null;
+  const accent: AccentSpec | null = useMemo(() => {
+    if (!preview || !project) return null;
+    const objectOf = (id: string) => project.scene.objects.find((o) => o.id === id);
+    const outlines = preview.candidates.flatMap((id) => {
+      const o = objectOf(id);
+      return o ? [{ points: footprint(o), top: o.transform.position_m.y + o.dimensions.height.value_m }] : [];
+    });
+    const moved = preview.move ? objectOf(preview.move.objectId) : null;
+    const ghost = moved && preview.move
+      ? {
+          points: footprint({ ...moved, transform: preview.move.transform }),
+          top: preview.move.transform.position_m.y + moved.dimensions.height.value_m,
+          from: { x: moved.transform.position_m.x, z: moved.transform.position_m.z },
+          to: { x: preview.move.transform.position_m.x, z: preview.move.transform.position_m.z },
+        }
+      : null;
+    return outlines.length || ghost ? { outlines, ghost } : null;
+  }, [preview, project]);
+  const chatView = view === "chat";
+  const sheetOpen = chatView && sheet?.loadId === loadId && drawingPanel.open;
+  // The review card stays while the review is open, and while layers that look like drawing
+  // symbols are unanswered (they decide whether routes past them can be checked).
+  const symbolsPending = sourceDrawing !== null && symbolsAnswered !== loadId && symbolCandidates(sourceDrawing).some((c) => c.likely);
+  const chatReview =
+    chatView && project && sourceDrawing && (reviewOpen || symbolsPending)
+      ? { source: sourceDrawing, onCorrect: applyReview, onCorrectAll: (corrections: ReviewCorrection[]) => {
+            // Several corrections in a row: each against the revision the previous one made.
+            let revision = project.scene.revision;
+            for (const correction of corrections) {
+              const outcome = run({ baseRevision: revision, command: { type: "review_drawing", sourceId: sourceDrawing.id, correction } });
+              if (!outcome) return "The scene is not editable right now.";
+              if (!outcome.ok) { if (outcome.rejection.kind === "no_change") continue; return outcome.rejection.message; } // prettier-ignore
+              revision = outcome.state.project.scene.revision;
+            }
+            return null;
+          }, onSymbolsDone: () => setSymbolsAnswered(loadId), onPlan: (trace: boolean) => { if (mode === "walk") setMode("orbit"); setSheet({ loadId, trace }); setDrawingPanel({ open: true, view: "review" }); } } // prettier-ignore
+      : null;
+  // A floor traced from the conversation closes the plan it opened.
+  if (sheet?.trace && sheet.loadId === loadId && sourceDrawing && sourceDrawing.drawing.review.floor.status !== "proposed") setSheet(null);
   const help = MODES.find((m) => m.id === mode)!.help;
   const hint = mode !== "walk" && tool !== "select" ? (selected ? TOOL_HELP[tool](snapOn) : TOOL_FIRST[tool]) : help;
 
   return (
-    <div className={`app${details ? "" : " simple"}${docked ? " docked" : ""}`}>
+    <div className={chatView ? `app chat-view${chatCollapsed ? " chat-collapsed" : ""}` : `app${details ? "" : " simple"}${docked ? " docked" : ""}`} data-view={view}>
       <TopBar
         scene={scene}
         fixtureName={source?.kind === "fixture" || scene.status !== "loaded" ? session.fixtureName : null}
@@ -739,7 +902,14 @@ export function App() {
         details={details}
         onDetails={() => setDetails(!details)}
         onAbout={PUBLIC_PREVIEW ? () => setAbout(true) : undefined}
+        view={view}
+        onView={(next) => {
+          setView(next);
+          setSheet(null);
+          if (next === "editor") setChatPreview(null);
+        }}
       />
+      {!chatView && (
       <aside className="panel panel-left">
         <JourneyPanel
           stage={journeyStage}
@@ -804,6 +974,7 @@ export function App() {
           />
         )}
       </aside>
+      )}
       <main
         ref={viewport}
         className="viewport"
@@ -813,6 +984,7 @@ export function App() {
         data-camera-mode={mode}
         data-models={`${summary.ready}/${summary.total} ready, ${summary.failed} failed`}
         data-dragging={dragging ? "true" : "false"}
+        data-selected={selected?.id ?? ""}
       >
         {project && (
           <SceneViewport
@@ -836,9 +1008,10 @@ export function App() {
             onHandleProbe={onHandleProbe}
             underlay={underlayShown ? underlay : null}
             picture={underlayShown ? picture : null}
-            checks={highlights}
+            checks={(chatView ? preview?.route : null) ?? highlights}
             run={runShownNow}
             runLabels={runLabels}
+            accent={chatView ? accent : null}
           />
         )}
         <div className="viewport-overlays">
@@ -865,7 +1038,7 @@ export function App() {
             />
           )}
         </div>
-        {project && (
+        {project && (!chatView || project.scene.objects.length > 0) && (
           <ViewToolbar
             mode={mode}
             hasSelection={selected !== null}
@@ -903,7 +1076,7 @@ export function App() {
           />
         )}
         {project && mode === "walk" && <WalkHud onReset={() => issue("reset-walk")} onExit={() => setMode("orbit")} />}
-        {project && sourceDrawing && mode !== "walk" && !docked && (
+        {project && sourceDrawing && mode !== "walk" && !docked && (!chatView || sheetOpen) && (
           <SourceDrawing
             project={project}
             selectedId={selected?.id ?? null}
@@ -923,10 +1096,11 @@ export function App() {
             routeAsk={routeAsk}
             onRouteAsk={setRouteAsk}
             run={runPanel}
+            reviewStart={chatView && sheet?.trace ? "trace_floor" : null}
           />
         )}
         {project && <SourcePhoto key={`photo-${loadId}`} client={client} project={project} selectedId={selected?.id ?? null} onSelect={select} onView={showView} missingFiles={source?.kind === "file" ? source.report.missing_source_files : []} />}
-        {details && project && mode !== "walk" && !activePlacement && (
+        {!chatView && details && project && mode !== "walk" && !activePlacement && (
           <ChangeBar
             key={loadId}
             client={client}
@@ -938,7 +1112,7 @@ export function App() {
             onSelect={select}
           />
         )}
-        {project && mode !== "walk" && (
+        {project && mode !== "walk" && !chatView && (
           <p className="viewport-hint" data-testid="viewport-hint">
             {hint} · <kbd>F</kbd> frame selection · <kbd>H</kbd> frame all
           </p>
@@ -968,7 +1142,7 @@ export function App() {
           />
         </aside>
       )}
-      {details && (
+      {!chatView && details && (
       <aside className="panel panel-right">
         <Inspector
           project={project}
@@ -991,7 +1165,27 @@ export function App() {
         />
       </aside>
       )}
-      <StatusBar project={project} mode={mode} models={summary} savedAs={session.savedAs} dirty={session.dirty} details={details} />
+      {!chatView && <StatusBar project={project} mode={mode} models={summary} savedAs={session.savedAs} dirty={session.dirty} details={details} />}
+      {chatView && (
+        <ChatPanel
+          project={project}
+          entries={chat.entries}
+          suggestions={chatSuggestions(facts, isSample)}
+          busy={chat.busy}
+          assist={{ available: assistOn, mode: assistMode }}
+          collapsed={chatCollapsed}
+          onCollapse={setChatCollapsed}
+          onSend={(text) => void chat.controller.send(text)}
+          onSuggest={chat.controller.suggest}
+          onAttach={(file) => void chat.controller.attach(file)}
+          onMove={chat.controller.submitMove}
+          onRoute={chat.controller.submitRoute}
+          onHighlight={(ids) => setChatPreview((p) => ({ loadId, preview: { move: p?.loadId === loadId ? p.preview.move : null, route: null, candidates: ids } }))}
+          review={chatReview}
+          setup={chatSetup === loadId && guidedNode ? guidedNode : null}
+          fileInput={chatFile}
+        />
+      )}
       {prompt?.kind === "unsaved" && project && (
         <UnsavedChangesDialog
           action={prompt.action}
@@ -1058,9 +1252,14 @@ export function App() {
       {drawingImport && !prompt && (
         <DrawingImport
           client={client}
-          onClose={() => setDrawingImport(false)}
+          initialFile={pictureFile}
+          onClose={() => {
+            setDrawingImport(false);
+            setPictureFile(null);
+          }}
           onCreated={(created, filename) => {
             setDrawingImport(false);
+            setPictureFile(null);
             setTool("select");
             if (mode === "walk") setMode("orbit");
             setDrawingPanel({ open: true, view: "review" });

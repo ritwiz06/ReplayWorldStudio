@@ -14,7 +14,7 @@ import { instanceModel } from "./modelLoader";
 import { placementOf } from "./placement";
 import { isSlab } from "./sceneBounds";
 
-const ACCENT = "#7cc4ff";
+const ACCENT = "#37d0ff";
 /** Pointer travel (px) above which a release ends a drag, not a click. */
 const CLICK_TOLERANCE_PX = 4;
 
@@ -92,7 +92,7 @@ function StructureBox({ object }: { object: SceneObject }) {
   return (
     <PlacedBox object={object}>
       <meshStandardMaterial
-        color={slab ? "#767b80" : "#aeb1ae"}
+        color={slab ? "#8b8880" : "#c8c3b9"}
         roughness={slab ? 0.72 : 0.92}
         metalness={0}
         envMapIntensity={slab ? 0.6 : 0.4}
@@ -107,12 +107,12 @@ function StructureBox({ object }: { object: SceneObject }) {
 /** A box with no model. One whose height is only assumed is see-through, so it reads as a
  * provisional footprint with a display height, not as a measured solid. */
 function PlaceholderBox({ object }: { object: SceneObject }) {
-  const color = object.kind === "reference" ? "#c4a24a" : "#7891ad";
+  const color = object.kind === "reference" ? "#c4a24a" : "#6f9fca";
   const assumed = heightAssumed(object);
   return (
     <PlacedBox object={object}>
       <meshStandardMaterial color={color} roughness={0.8} metalness={0.05} transparent={assumed} opacity={assumed ? 0.6 : 1} depthWrite={!assumed} />
-      <Edges color={object.kind === "reference" ? "#e0c477" : assumed ? "#d3e2f1" : "#a5b8cc"} />
+      <Edges color={object.kind === "reference" ? "#e0c477" : assumed ? "#d4e9ff" : "#a9c3dc"} />
     </PlacedBox>
   );
 }
@@ -128,7 +128,7 @@ function ProvisionalForm({ object, form }: { object: SceneObject; form: Exclude<
       {parts.map((part, i) => (
         <mesh key={i} position={part.centre} castShadow receiveShadow>
           <boxGeometry args={part.size} />
-          <meshStandardMaterial color="#8aa3bd" roughness={0.7} metalness={0.1} transparent opacity={0.78} />
+          <meshStandardMaterial color="#85afd6" roughness={0.65} metalness={0.1} transparent opacity={0.8} />
         </mesh>
       ))}
       <mesh position={p.meshOffset}>

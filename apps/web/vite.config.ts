@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [react()],
   // One .env at the repository root serves both the API and the web app.
   envDir: "../..",
-  server: { host: "127.0.0.1", port: 5173, strictPort: true },
+  // Browser tests run the dev server with RWS_E2E=1: no hot reload, so a source file saved while
+  // the suite runs cannot reload the pages under test (it did once: a test mid-journey found the
+  // app back on its first scene).
+  server: { host: "127.0.0.1", port: 5173, strictPort: true, hmr: process.env.RWS_E2E ? false : undefined },
   preview: { host: "127.0.0.1", port: 4173, strictPort: true },
   test: { include: ["src/**/*.test.ts"], environment: "node" },
 });

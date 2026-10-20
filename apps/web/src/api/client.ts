@@ -5,6 +5,7 @@ import {
   validateAssistStatus,
   validateCatalogAsset,
   validateDrawingAnalysis,
+  validateChatResult,
   validateEditProposalResult,
   validateEvidenceBundleOpened,
   validateEvidenceInventory,
@@ -23,6 +24,7 @@ import {
   validateValidationErrorResponse,
   validateValidationReport,
   type ContractIssue,
+  type ChatRequest,
   type EditProposalRequest,
   type EvidenceBundleRequest,
   type GeneratedAssetRequest,
@@ -46,7 +48,8 @@ export type ApiFailure =
   /** The API answered 2xx with JSON that does not match the contract. */
   | { kind: "contract"; message: string; issues: ContractIssue[] };
 
-export type FixtureName = "industrial-demo" | "foundation" | "sample";
+/** "empty" is a new, empty world made in the browser (the conversation's starting point). */
+export type FixtureName = "industrial-demo" | "foundation" | "sample" | "empty";
 
 export type ApiResult<T> = { ok: true; value: T } | { ok: false; error: ApiFailure };
 
@@ -147,6 +150,10 @@ export function createApiClient(
       }),
     /** Whether language proposals are available, and where requests would go. */
     getAssistStatus: (signal?: AbortSignal) => request("/api/v1/assist/status", validateAssistStatus, { signal }),
+    /** Interpret one chat message as one bounded action (UX-03): only the words and the
+     * reviewed scene facts are sent; nothing is applied. */
+    interpretChat: (body: ChatRequest, signal?: AbortSignal) =>
+      request("/api/v1/assist/chat", validateChatResult, { method: "POST", body: JSON.stringify(body), signal, timeoutMs: ASSIST_TIMEOUT_MS }),
     /** Draft a typed proposal for a described object (sent to the configured provider). */
     proposeObject: (description: string, signal?: AbortSignal) =>
       request("/api/v1/assist/object-proposals", validateObjectProposalResult, {

@@ -38,6 +38,12 @@
     "EditProposalResult": {
       "$ref": "#/$defs/EditProposalResult"
     },
+    "ChatRequest": {
+      "$ref": "#/$defs/ChatRequest"
+    },
+    "ChatResult": {
+      "$ref": "#/$defs/ChatResult"
+    },
     "GeneratedModelRequest": {
       "$ref": "#/$defs/GeneratedModelRequest"
     },
@@ -105,6 +111,8 @@
     "ObjectProposalResult",
     "EditProposalRequest",
     "EditProposalResult",
+    "ChatRequest",
+    "ChatResult",
     "GeneratedModelRequest",
     "GeneratedModel",
     "GeneratedAssetRequest",
@@ -583,6 +591,265 @@
         "generation"
       ],
       "title": "CatalogAsset",
+      "type": "object"
+    },
+    "ChatRequest": {
+      "additionalProperties": false,
+      "description": "One chat message, the reviewed scene facts it may need, and the app's state.",
+      "properties": {
+        "request": {
+          "maxLength": 300,
+          "minLength": 3,
+          "type": "string"
+        },
+        "context": {
+          "$ref": "#/$defs/EditContext"
+        },
+        "state": {
+          "$ref": "#/$defs/ChatState"
+        }
+      },
+      "required": [
+        "request",
+        "context",
+        "state"
+      ],
+      "title": "ChatRequest",
+      "type": "object"
+    },
+    "ChatResult": {
+      "additionalProperties": false,
+      "description": "The interpretation of one chat message: one action with its typed parameters, a\nquestion, or why it cannot be done. Nothing here changes the project.",
+      "properties": {
+        "outcome": {
+          "enum": [
+            "action",
+            "clarification",
+            "unsupported"
+          ],
+          "type": "string"
+        },
+        "action": {
+          "anyOf": [
+            {
+              "enum": [
+                "move",
+                "rotate",
+                "check_route",
+                "run_day",
+                "run_again",
+                "explain_change",
+                "undo",
+                "show_example",
+                "capabilities",
+                "select",
+                "save",
+                "export"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EditIntent"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "For move and rotate."
+        },
+        "route": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ChatRoute"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "For check_route."
+        },
+        "object_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "For select."
+        },
+        "question": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "candidates": {
+          "items": {
+            "description": "Stable, lowercase identifier. Never reused for a different entity.",
+            "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checks": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "provider": {
+          "$ref": "#/$defs/ProviderRun"
+        }
+      },
+      "required": [
+        "outcome",
+        "action",
+        "edit",
+        "route",
+        "object_id",
+        "question",
+        "candidates",
+        "message",
+        "checks",
+        "provider"
+      ],
+      "title": "ChatResult",
+      "type": "object"
+    },
+    "ChatRoute": {
+      "additionalProperties": false,
+      "description": "The route a request asks about: endpoints by object id, and a width only when stated.",
+      "properties": {
+        "from_object_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "to_object_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "width_m": {
+          "anyOf": [
+            {
+              "description": "Strictly positive length in metres.",
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Only when the request states it."
+        },
+        "width_quote": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "from_object_id",
+        "to_object_id",
+        "width_m",
+        "width_quote"
+      ],
+      "title": "ChatRoute",
+      "type": "object"
+    },
+    "ChatState": {
+      "additionalProperties": false,
+      "description": "What the open world allows right now, so the answer can name only workable actions.",
+      "properties": {
+        "has_world": {
+          "type": "boolean"
+        },
+        "has_drawing": {
+          "type": "boolean"
+        },
+        "review_open": {
+          "type": "boolean"
+        },
+        "has_process": {
+          "type": "boolean"
+        },
+        "has_run": {
+          "type": "boolean"
+        },
+        "run_stale": {
+          "type": "boolean"
+        },
+        "layout_edited": {
+          "type": "boolean"
+        },
+        "can_undo": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "has_world",
+        "has_drawing",
+        "review_open",
+        "has_process",
+        "has_run",
+        "run_stale",
+        "layout_edited",
+        "can_undo"
+      ],
+      "title": "ChatState",
       "type": "object"
     },
     "ContextObject": {

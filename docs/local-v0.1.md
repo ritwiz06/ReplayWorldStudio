@@ -42,6 +42,10 @@ The server listens on `127.0.0.1` only. Your computer's network address is refus
 
 ## First steps
 
+The app opens on the world and a conversation beside it ([ux-03](ux-03/README.md)). Press **Show me the example factory**, or attach a plan with the paperclip, and ask for what you want: "Move Machine B 3.5 m forward", "Will the route still fit?", "Run a day", "Why did output change?". Each change is shown before **Apply** and can be undone. Typing needs the optional AI key (below); without it the suggestions and small forms do the same things.
+
+**Full editor** (top right) has every panel. Its first steps:
+
 1. **Try the sample** (in **Start**). Move *Machine B* into the aisle: drag it, or press **move it for me**. **Check layout** then says the 1.20 m cart's route is blocked. Undo puts it back.
 2. **Upload your own plan:**
    - a **DXF** (ASCII, up to 10 MB) is read into a draft that you review: floor, scale, objects, and what the drawing leaves out;
@@ -72,7 +76,7 @@ Everything stays on your computer:
 
 ## AI is optional, and uses your own key
 
-Without a key, every feature above works and the AI buttons are off. To turn the AI features on (drafting a plan picture's layout, describing objects, changing the scene with words, analysing a photo):
+Without a key, every feature above works, the AI buttons are off, and typing in the conversation is off (it says so; the suggestions and forms still work). To turn the AI features on (typed requests in the conversation, drafting a plan picture's layout, describing objects, changing the scene with words, analysing a photo):
 
 ```bash
 cp .env.example .env    # then set VOYAGER_API_KEY=... in .env, and restart pnpm start
@@ -88,6 +92,7 @@ cp .env.example .env    # then set VOYAGER_API_KEY=... in .env, and restart pnpm
   - **Suggest setup** in Run a day: your sentence about the work, plus the reviewed objects' names. It suggests stations and their order only, never times or staffing.
 
   Details are in [assist.md](assist.md).
+  - A chat request: your words, plus the objects' ids, names, kinds, positions and sizes, the selection and what the app can do now. Never a drawing, a picture or a file's text: attaching a plan only stores it on this computer.
 - **Under ASU's AI governance,** send only plans and photos you are authorized to share with ASU Voyager, and treat what comes back as a proposal you review.
 
 ## Limits

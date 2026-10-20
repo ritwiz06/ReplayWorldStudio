@@ -82,7 +82,24 @@ export const FIXTURE_LABEL: Record<FixtureName, string> = {
   "industrial-demo": "Industrial demo",
   foundation: "Foundation fixture",
   sample: "Sample factory hall",
+  empty: "New world",
 };
+
+/** A new, empty world: nothing in it until a plan is attached or the example is opened. */
+export function emptyProject(): Project {
+  return {
+    schema_version: SCHEMA_VERSION,
+    id: "proj-new-world",
+    name: "New world",
+    units: { length: "m", time: "s", mass: "kg", angle: "rad" },
+    world_frame: { handedness: "right", up_axis: "+Y", floor_plane: "XZ" },
+    fixture: null,
+    sources: [],
+    catalog: [],
+    scene: { id: "scene-new-world", name: "New world", revision: 0, objects: [], edit_log: [] },
+    process: null,
+  };
+}
 
 const isDirty = (s: Session): boolean => s.load.status === "loaded" && s.load.savedRevision !== s.load.editor.project.scene.revision;
 const editorOf = (s: Session): EditorState | null => (s.load.status === "loaded" ? s.load.editor : null);
@@ -118,6 +135,10 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
   );
 
   useEffect(() => {
+    if (fixture.name === "empty") {
+      replace(emptyProject(), { kind: "fixture", name: "empty" }, 0);
+      return;
+    }
     const controller = new AbortController();
     pendingFixture.current = controller;
     client.getFixture(fixture.name, controller.signal).then(

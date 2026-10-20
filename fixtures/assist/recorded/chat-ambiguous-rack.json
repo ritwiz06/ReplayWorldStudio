@@ -1,0 +1,14 @@
+{
+  "task": "chat",
+  "key": "Move the rack 1 m back | selected=none | scene=53151f7c69de",
+  "case": "ambiguous-rack",
+  "message": "Move the rack 1 m back",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "chat-01",
+  "recorded_at": "2026-10-20",
+  "note": "Raw answers from the live language model for the synthetic sample, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"candidates\": [],\n  \"intent\": \"move\",\n  \"message\": null,\n  \"move\": {\n    \"direction\": \"back\",\n    \"distance\": 1,\n    \"quote\": \"1 m\",\n    \"unit\": \"m\"\n  },\n  \"question\": null,\n  \"rotate\": null,\n  \"route\": null,\n  \"target\": {\n    \"object_id\": \"obj-dxf-106\",\n    \"phrase\": \"the rack\",\n    \"reference\": \"named\"\n  }\n}"
+  ]
+}

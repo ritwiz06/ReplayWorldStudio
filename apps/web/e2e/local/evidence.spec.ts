@@ -25,7 +25,10 @@ async function rows(page: Page) {
 
 // The first screen's start panel has its own journey (local.spec.ts); these open the editor.
 test.beforeEach(async ({ context }) => {
-  await context.addInitScript(() => localStorage.setItem("rws.start.seen", "1"));
+  await context.addInitScript(() => {
+    localStorage.setItem("rws.start.seen", "1");
+    localStorage.setItem("rws.view", "editor");
+  });
 });
 
 test("the committed sample bundle reruns with the recorded events; playback never changes them; save, reopen and export again", async ({ page }) => {

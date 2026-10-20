@@ -2,6 +2,9 @@
 
 from .assist import (
     AssistStatus,
+    ChatRequest,
+    ChatResult,
+    ChatState,
     ContextObject,
     DrawingAnalysis,
     EditContext,
@@ -176,6 +179,9 @@ __all__ = [
     "AxisChange",
     "CameraEstimate",
     "CatalogAsset",
+    "ChatRequest",
+    "ChatResult",
+    "ChatState",
     "ContextObject",
     "Dimensions",
     "DrawingAnalysis",

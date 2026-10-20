@@ -1258,3 +1258,49 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - Bundles are not signed: the hashes detect damage, not authorship.
   - The recording (H.264 MP4) is made by a local-only script with the installed Chrome and AVFoundation.
 
+
+### ADR-062 - Chat-first main screen: one assistant over bounded actions, the full editor one click away (UX-03, AGT-01)
+
+- Date: 2026-10-20 (America/Phoenix). Status: adopted. Builds on UX-01 (ADR-051), GEN-01's edit boundary (ADR-032), SIM (ADR-059/060) and REL-01 (ADR-061). No new engine; the contract's Project is unchanged (0.14.0).
+- **Context.** A manager had to learn panels before seeing anything happen. At 1280 × 800 the world had 41 % of the width, the same caveat was repeated in four places, and CAD terms sat on the main path (docs/ux-03/before/).
+- **Decision.**
+  1. **The default screen is the world plus a conversation** (380 px; 344 px at ≤ 1360 px wide; collapsible). **Full editor** is today's interface, unchanged. Both are one App with one canvas that is never remounted, so the scene, selection, camera, review, history and run survive a switch. The choice is remembered (`rws.view`). A new visitor starts on an empty world with three working prompts.
+  2. **One orchestrating assistant over 12 typed actions** (`ChatResult`):
+     - move, rotate and select;
+     - check_route;
+     - run_day, run_again and explain_change;
+     - undo, show_example, capabilities, save and export.
+
+     The model answers a single `intent`, a question or "cannot"; asking for one field instead of two (outcome and action) removed the contradictions seen in the first live answers. The API checks the answer:
+     - move and rotate go through the edit checks (the object exists, the selection fits the words, the distance or angle and the direction are in the words);
+     - select and route ends must be objects in the scene;
+     - a route width counts only when stated;
+     - ambiguous names become clickable candidates.
+
+     A one-letter identifier ("Rack A") is now kept as a word, and must match a whole word: the edit matcher had treated it as the article "a".
+  3. **The app performs every action with existing code:**
+     - edits: the command engine, as a dry run for the preview and its effect on the checks, then Apply;
+     - routes: the GEO-02 check, between named objects or along the shift's carrying routes;
+     - runs: the guided setup and `rws-run/1`;
+     - explanations: `compareDays`.
+
+     It checks the scene revision when the answer arrives (a stale answer is set aside) and each action's prerequisites, which become a plain next step.
+  4. **Each request has a visible lifecycle:** interpreting (Cancel) → proposal or question → Apply → result, error, or "cannot determine". Cards say what was done, what awaits review and what cannot be determined. Measurements and assumptions sit under Details.
+  5. **What is sent:**
+     - the words;
+     - the objects' ids, names, kinds, positions and sizes (a station is named "Workbench (Fixtures 5)");
+     - the selection and the app's state.
+
+     An attached file is stored locally and never sent. File text is data.
+  6. **Without a key,** typing is disabled and says why. Suggestions call the same actions directly, with small forms for a move and for a route, so nothing is a simulated chatbot.
+  7. **Offline tests use recorded live answers** (`fixtures/assist/recorded/chat-*.json`, synthetic sample). Answers about a third-party drawing are recorded only in the git-ignored `data/external/recorded/`.
+  8. **Style:**
+     - one cyan accent for the selection and proposals;
+     - quieter panels, larger answer text and rounded cards;
+     - warmer lights and floor;
+     - translucency kept as the cue for an assumed height;
+     - reduced motion respected.
+- **Consequences.**
+  - The workshop journey through the conversation took 31 clicks against 42 in the full editor, with 68 characters typed against 43, in a similar scripted time (docs/ux-03/README.md).
+  - A live interpretation takes about 8–14 s (four requests measured).
+  - One action per message; no catalog matching (AGT-01 stays open). Whether newcomers find it easier is UX-02.

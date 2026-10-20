@@ -69,9 +69,56 @@ interface Props {
   run?: { replay: Replay; clock: PlaybackClock } | null;
   /** The page elements the run's labels are drawn in (moved here to their figures). */
   runLabels?: RefObject<HTMLDivElement | null>;
+  /** The conversation's emphasis (UX-03): a proposed position, and objects a question is about. */
+  accent?: AccentSpec | null;
 }
 
-const BACKGROUND = "#1f2329";
+export interface AccentSpec {
+  /** Outlines of objects to point at (footprint and top height). */
+  outlines: { points: { x: number; z: number }[]; top: number }[];
+  /** A proposed new place for one object: its footprint there, and from where to where. */
+  ghost: { points: { x: number; z: number }[]; top: number; from: { x: number; z: number }; to: { x: number; z: number } } | null;
+}
+
+const ACCENT = "#37d0ff";
+
+function AccentOverlay({ accent }: { accent: AccentSpec }) {
+  const lift = 0.04;
+  const box = (points: { x: number; z: number }[], top: number) => {
+    const segments: [number, number, number][] = [];
+    for (let k = 0; k < points.length; k++) {
+      const a = points[k]!;
+      const b = points[(k + 1) % points.length]!;
+      segments.push([a.x, lift, a.z], [b.x, lift, b.z], [a.x, top, a.z], [b.x, top, b.z], [a.x, lift, a.z], [a.x, top, a.z]);
+    }
+    return segments;
+  };
+  const ghost = accent.ghost;
+  const shape = useMemo(() => (ghost ? new ShapeGeometry(new Shape(ghost.points.map((p) => new Vector2(p.x, -p.z)))) : null), [ghost]);
+  useEffect(() => () => shape?.dispose(), [shape]);
+  return (
+    <group name="chat-accent">
+      {accent.outlines.map((o, i) => (
+        <Line key={`c${i}`} raycast={none} points={box(o.points, o.top)} segments color={ACCENT} lineWidth={3} depthTest={false} renderOrder={14} />
+      ))}
+      {ghost && shape && (
+        <>
+          <mesh raycast={none} geometry={shape} rotation={[-Math.PI / 2, 0, 0]} position={[0, lift, 0]} renderOrder={14}>
+            <meshBasicMaterial color={ACCENT} transparent opacity={0.42} side={DoubleSide} depthTest={false} depthWrite={false} />
+          </mesh>
+          <Line raycast={none} points={box(ghost.points, ghost.top)} segments color={ACCENT} lineWidth={3.5} dashed dashSize={0.25} gapSize={0.15} depthTest={false} renderOrder={15} />
+          <Line raycast={none} points={[[ghost.from.x, lift + 0.02, ghost.from.z], [ghost.to.x, lift + 0.02, ghost.to.z]]} color={ACCENT} lineWidth={4} depthTest={false} renderOrder={15} />
+          <mesh raycast={none} position={[ghost.to.x, lift + 0.03, ghost.to.z]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={16}>
+            <circleGeometry args={[0.16, 24]} />
+            <meshBasicMaterial color={ACCENT} depthTest={false} />
+          </mesh>
+        </>
+      )}
+    </group>
+  );
+}
+
+const BACKGROUND = "#171a1f";
 
 /** Plan labels narrower than this (px) would be unreadable, so they are hidden. */
 const MIN_PLAN_LABEL_PX = 44;
@@ -115,6 +162,7 @@ export function SceneViewport({
   picture = null,
   run = null,
   runLabels,
+  accent = null,
 }: Props) {
   const objects = project.scene.objects;
   // While a handle is dragged, the object is drawn from this preview; the scene is unchanged
@@ -168,10 +216,10 @@ export function SceneViewport({
         position={[0, 0.006, 0]}
         cellSize={1}
         cellThickness={0.5}
-        cellColor="#666c72"
+        cellColor="#3f454c"
         sectionSize={5}
         sectionThickness={0.9}
-        sectionColor="#565c63"
+        sectionColor="#4d545c"
         fadeDistance={radius * 2.5}
         fadeFrom={0}
         fadeStrength={1.2}
@@ -181,6 +229,7 @@ export function SceneViewport({
       {picture && <PictureUnderlay url={picture.url} corners={picture.corners} />}
       {underlay && !picture && <DrawingUnderlay positions={underlay} />}
       {checks && <CheckHighlights checks={checks} />}
+      {accent && <AccentOverlay accent={accent} />}
       {run && <RunOverlay replay={run.replay} clock={run.clock} objects={objects} />}
       {run && runLabels && <RunLabelProjector replay={run.replay} clock={run.clock} objects={objects} layer={runLabels} />}
       {objects.map((o) => (
@@ -428,17 +477,18 @@ function Lighting({ box, shadows }: { box: Box3; shadows: boolean }) {
 
   return (
     <>
-      <hemisphereLight args={["#e8edf2", "#4a4e53", 0.5]} />
+      <hemisphereLight args={["#eaf2ff", "#3c3833", 0.55]} />
       <directionalLight
         ref={key}
         position={[centre.x - radius * 0.45, centre.y + radius * 1.5, centre.z + radius * 0.7]}
-        intensity={1.8}
+        intensity={2}
+        color="#fff2e0"
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0003}
         shadow-normalBias={0.025}
       />
-      <directionalLight position={[centre.x + radius, centre.y + radius * 0.6, centre.z - radius]} intensity={0.35} />
+      <directionalLight position={[centre.x + radius, centre.y + radius * 0.6, centre.z - radius]} intensity={0.4} color="#c4d8ff" />
     </>
   );
 }

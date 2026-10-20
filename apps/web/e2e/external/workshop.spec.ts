@@ -14,7 +14,7 @@ const DXF = `${ROOT}data/external/innerscene/garage-and-workshop-72-m2.dxf`;
 const OUT = `${ROOT}data/external/results`;
 /** How far the workbench is moved east (m): 1.5 by default, MOVE_M to try another distance. */
 const MOVE_M = Number(process.env.MOVE_M ?? "1.5");
-const SIMPLE = { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.start.seen", value: "1" }] }] };
+const SIMPLE = { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.start.seen", value: "1" }, { name: "rws.view", value: "editor" }] }] };
 test.use({ storageState: SIMPLE, viewport: { width: 1440, height: 900 } });
 
 const tally = { clicks: 0, typed: 0 };

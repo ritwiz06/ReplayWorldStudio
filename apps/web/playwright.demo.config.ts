@@ -26,7 +26,7 @@ export default defineConfig({
   reporter: [["list"]],
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
-    storageState: { cookies: [], origins: [{ origin: `http://127.0.0.1:${PORT}`, localStorage: [{ name: "rws.start.seen", value: "1" }] }] },
+    storageState: { cookies: [], origins: [{ origin: `http://127.0.0.1:${PORT}`, localStorage: [{ name: "rws.start.seen", value: "1" }, { name: "rws.view", value: "editor" }] }] },
   },
   projects: [
     {
@@ -44,7 +44,8 @@ export default defineConfig({
     command: "node scripts/start.mjs",
     cwd: repoRoot,
     url: `http://127.0.0.1:${PORT}/health`,
-    env: { RWS_API_PORT: String(PORT), RWS_ENV_FILE: "none", RWS_SOURCES_DIR: SOURCES },
+    // DEMO_ASSIST=recorded replays the recorded AI answers (labelled as such in the app).
+    env: { RWS_API_PORT: String(PORT), RWS_ENV_FILE: "none", RWS_SOURCES_DIR: SOURCES, ...(process.env.DEMO_ASSIST ? { RWS_ASSIST_PROVIDER: process.env.DEMO_ASSIST } : {}) },
     reuseExistingServer: false,
     timeout: 240_000,
   },

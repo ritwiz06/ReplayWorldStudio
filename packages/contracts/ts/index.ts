@@ -5,6 +5,7 @@ import bundle from "../schema/contracts.schema.json";
 import type {
   AssistStatus,
   CatalogAsset,
+  ChatResult,
   DrawingAnalysis,
   EditProposalResult,
   EvidenceBundleOpened,
@@ -90,3 +91,4 @@ export const validateProcessSuggestionResult = validatorFor<ProcessSuggestionRes
 export const validateEvidenceInventory = validatorFor<EvidenceInventory>("EvidenceInventory");
 export const validateEvidenceBundleOpened = validatorFor<EvidenceBundleOpened>("EvidenceBundleOpened");
 export const validateEvidenceManifest = validatorFor<EvidenceManifest>("EvidenceManifest");
+export const validateChatResult = validatorFor<ChatResult>("ChatResult");

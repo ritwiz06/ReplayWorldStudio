@@ -581,6 +581,17 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
     - no Voyager call was made in ONB-01.
   - Update (2026-10-18, IMP-03): the plan-picture path adds one bounded model step: the vision model's draft, chosen by the person, cancellable and retryable, with "mark it myself" when it is unavailable. Its result is typed, checked and only ever approximate. Equipment matching and change proposals are still not built.
 - Evidence: e2e/drawing.spec.ts; services/api/tests/test_drawings.py.
+- Update (2026-10-20, ADR-062, UX-03): **the chat orchestration is built; AGT-01 stays open.**
+  - **Built:** one orchestrating assistant in the conversation, with a registry of 12 typed, bounded actions: move, rotate, select, check_route, run_day, run_again, explain_change, undo, show_example, capabilities, save, export.
+    - The model (`/api/v1/assist/chat`, prompt chat-01) only maps words to one action, a question or "cannot".
+    - The API checks object ids, any number against the words, and ambiguous names (these become clickable choices).
+    - The app checks the scene revision and the prerequisites, and performs each action with the existing commands, the route check, the guided setup and the run engine.
+  - **Lifecycle:** interpreting (cancellable) → proposal or question → Apply → result or a useful error. A late answer is never applied.
+  - **Attaching a file:** a DXF is identified, read and built by the existing tools; the review asks only the open corrections. Nothing is sent to the model.
+  - **Still not met:**
+    - matching equipment to catalog or generated models;
+    - multi-step plans (one action per message);
+    - free questions about the scene.
 
 ### UX-01 - Three-action main screen
 
@@ -735,6 +746,25 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   - aligning a second plan and merging its objects (ENR-01);
   - accuracy on real plans (none permitted yet; two synthetic plans say nothing about real drawings).
 
+### UX-03 - Chat-first main screen and visual redesign
+
+- Priority: P0
+- Dependencies: UX-01, AGT-01 (partial), SIM-01..04, REL-01
+- Baseline status: added 2026-10-20 (ADR-062)
+- Done when:
+  - The world is the dominant element, with a compact, collapsible conversation beside it, and **Full editor** keeps every panel.
+  - Switching views preserves the scene, selection, camera, pending review, undo history and current run.
+  - **An empty project** offers three prompts that work; **a world** offers suggestions that follow its state and only when they can work.
+  - **The agentic journey works end to end:** attach a plan → the review's needed corrections → move by name, with ambiguity choices, a preview and Apply → check a route → run a day under accepted assumptions → run again → why it changed → undo → save and reopen.
+  - **The assistant separates** what it completed, what awaits review, and what it cannot determine.
+  - **Without a key,** typing is off and says so, while the manual actions and the full editor work.
+  - **A coherent visual style,** checked in real screenshots at 1440 × 900 and 1280 × 800.
+- Status (2026-10-20): **done for these criteria**, measured by scripts. Whether it is easier for people stays **UX-02**.
+- Evidence:
+  - docs/ux-03/ (plan, before and after screenshots);
+  - e2e `chat.spec.ts` (4), `local/chat-nokey.spec.ts`, `external/workshop-chat.spec.ts` (local);
+  - `apps/web/src/chat/`, `services/api/src/replay_world_api/assist/chat.py`, tests `test_chat.py` and `chat.test.ts`.
+
 ### UX-02 - Measure the onboarding targets with people
 
 - Priority: P1
@@ -747,6 +777,7 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
 
   The tasks, participants and consent are recorded, after an ASU research-ethics check if results are reported as research. Failures are kept. Scripted timings are not a substitute.
 - Evidence: not recorded
+- Note (2026-10-20): still open. UX-03 changed the main screen to chat-first; its click and time counts are scripted, not a study with newcomers.
 
 ## M5 - Spatial checks
 

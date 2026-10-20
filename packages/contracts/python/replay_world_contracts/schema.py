@@ -15,6 +15,8 @@ from pydantic_core import CoreSchema
 
 from .assist import (
     AssistStatus,
+    ChatRequest,
+    ChatResult,
     DrawingAnalysis,
     EditProposalRequest,
     EditProposalResult,
@@ -62,6 +64,8 @@ ROOT_MODELS: Final[tuple[type[BaseModel], ...]] = (
     ObjectProposalResult,
     EditProposalRequest,
     EditProposalResult,
+    ChatRequest,
+    ChatResult,
     GeneratedModelRequest,
     GeneratedModel,
     GeneratedAssetRequest,

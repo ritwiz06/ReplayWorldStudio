@@ -10,7 +10,7 @@ import { expect, test } from "@playwright/test";
 const OUT = process.env.SCREENS_OUT;
 const drawing = (name: string) => new URL(`../../../fixtures/drawings/${name}`, import.meta.url).pathname;
 
-test.use({ storageState: { cookies: [], origins: [] }, viewport: { width: 1440, height: 900 } });
+test.use({ storageState: { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.view", value: "editor" }] }] }, viewport: { width: 1440, height: 900 } });
 
 test("first-time journey screens", async ({ page }) => {
   test.skip(!OUT, "set SCREENS_OUT to write the screenshots");

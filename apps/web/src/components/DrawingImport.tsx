@@ -21,6 +21,8 @@ interface Props {
   onAttach?: ((source: SourceDocument) => void) | undefined;
   /** A vision model is set up to draft plan pictures (off in the public preview). */
   proposals?: boolean | undefined;
+  /** A file already chosen (attached in the conversation): reading starts at once. */
+  initialFile?: File | null | undefined;
 }
 
 /** A later plan or drawing kept with the open world: stored by hash, not aligned or merged. */
@@ -53,7 +55,7 @@ type Step =
  * the browser journey to record the measurements. */
 type Timing = { startedAt: number; pageAt: number | null; planMs: number | null; modelMs: number | null; draftMs: number | null };
 
-export function DrawingImport({ client, onClose, onCreated, onAttach, proposals = true }: Props) {
+export function DrawingImport({ client, onClose, onCreated, onAttach, proposals = true, initialFile = null }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const controller = useRef<AbortController | null>(null);
@@ -87,6 +89,14 @@ export function DrawingImport({ client, onClose, onCreated, onAttach, proposals 
     } else done();
     return () => cancelAnimationFrame(frame);
   }, [planShown, timing.planMs]);
+
+  // A file attached in the conversation is read at once, as if chosen here.
+  const started = useRef(false);
+  useEffect(() => {
+    if (!initialFile || started.current) return;
+    started.current = true;
+    void choose(initialFile);
+  }, [initialFile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function fresh(): AbortSignal {
     controller.current?.abort();

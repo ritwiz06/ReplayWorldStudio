@@ -1,0 +1,14 @@
+{
+  "task": "chat",
+  "key": "What happens during a shift? | selected=none | scene=53151f7c69de",
+  "case": "run-shift",
+  "message": "What happens during a shift?",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "chat-01",
+  "recorded_at": "2026-10-20",
+  "note": "Raw answers from the live language model for the synthetic sample, replayed by the offline test provider. Not live AI when replayed.",
+  "responses": [
+    "{\n  \"candidates\": [],\n  \"intent\": \"run_day\",\n  \"message\": null,\n  \"move\": {\n    \"direction\": \"forward\",\n    \"distance\": 0,\n    \"quote\": \"\",\n    \"unit\": \"m\"\n  },\n  \"question\": null,\n  \"rotate\": {\n    \"angle_deg\": 0,\n    \"direction\": \"clockwise\",\n    \"quote\": \"\"\n  },\n  \"route\": {\n    \"from_object_id\": null,\n    \"quote\": null,\n    \"to_object_id\": null,\n    \"unit\": null,\n    \"width\": null\n  },\n  \"target\": {\n    \"object_id\": \"\",\n    \"phrase\": \"\",\n    \"reference\": \"named\"\n  }\n}"
+  ]
+}

@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 
 const WAREHOUSE = new URL("../../../fixtures/drawings/warehouse-cm.dxf", import.meta.url).pathname;
-const SIMPLE = { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.start.seen", value: "1" }] }] };
+const SIMPLE = { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.start.seen", value: "1" }, { name: "rws.view", value: "editor" }] }] };
 
 test.use({ storageState: SIMPLE });
 

@@ -9,7 +9,7 @@ import { expect, type Page, test } from "@playwright/test";
 const ROOT = new URL("../../../../", import.meta.url).pathname;
 const EXT = `${ROOT}data/external`;
 const OUT = `${EXT}/results`;
-const SIMPLE = { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.start.seen", value: "1" }] }] };
+const SIMPLE = { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.start.seen", value: "1" }, { name: "rws.view", value: "editor" }] }] };
 test.use({ storageState: SIMPLE, viewport: { width: 1440, height: 900 } });
 
 const save = (name: string, data: unknown) => {

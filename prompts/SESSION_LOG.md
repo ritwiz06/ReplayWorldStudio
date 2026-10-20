@@ -1229,6 +1229,64 @@ Append entries in chronological order. If a live repository session log already 
 - CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/39335525219 passed all three jobs on `eb2e1f9`. The smoke job ran `evidence.spec.ts` (1.6 min, software WebGL), and the local-launcher job ran both checks in `local/evidence.spec.ts`. Locally, two full `pnpm test:e2e` runs failed different unrelated tests (the first `drawing-review.spec.ts:50`; the second `industrial-demo.spec.ts:54` and `photo-review.spec.ts:310`); each passed when rerun alone, which points to timing under parallel software WebGL. Not investigated further.
 - Next concrete task: QA-01, or the separate import follow-ups (downscale for scans over 50 MP, DWG conversion, fewer CAD corrections), on the user's priority.
 
+### 2026-10-20 - UX-03: chat-first main screen and one assistant over bounded actions (ADR-062)
+
+- Starting branch and relevant commit: `main` at `193f943`.
+- Goal: "Upload a plan. Ask what you want to change. See it happen in the world." The goals:
+  - the world dominant, a compact conversation, and a full editor that keeps everything;
+  - one complete agentic journey through typed, bounded actions, with no second engine;
+  - a visual quality pass;
+  - real screenshots at both sizes, measured journeys, and an investigation of the recurring browser timing failures.
+- Inspection (docs/ux-03/README.md; before/):
+  - at 1280 × 800 the world had 41 % of the width;
+  - four repeats of "synthetic/assumption";
+  - competing journey and top-bar buttons;
+  - CAD terms on the main path;
+  - flat lighting.
+- Work completed:
+  - **Contract** (additive; Project still 0.14.0): `ChatState`, `ChatRequest`, `ChatRoute` and `ChatResult`, with 12 actions.
+  - **API** `/api/v1/assist/chat` (`assist/chat.py`, prompt chat-01, task `chat`):
+    - **one `intent` per answer.** A first schema with separate outcome and action fields gave contradictory live answers, so it was replaced.
+    - **move and rotate go through the edit checks.** Select and route ends must be objects; a width counts only when stated; ambiguity gives clickable candidates.
+    - **Fix in the shared name matcher:** a one-letter identifier ("Rack A") was dropped as the article "a", and "a" matched part of "Rack B".
+  - **Web** (`src/chat/`, `components/ChatPanel.tsx`):
+    - the conversation controller, a plain class read through `useSyncExternalStore`, which the React compiler rules require;
+    - the request lifecycle: interpreting with Cancel, then a proposal or question, Apply, and a result, error or "cannot";
+    - the scene revision checked on arrival;
+    - proposals with a ghost in the world and their effect on the checks and the shift's routes;
+    - route answers from GEO-02 or along the shift's routes;
+    - run, run again and why, from the engine and `compareDays`, with the blocked route given first;
+    - a live review card that asks only open corrections plus symbol layers, applied in sequence;
+    - attachments: a DXF read and built directly, pictures through the marking window, projects and bundles opened;
+    - a move form and a route form for use without a key;
+    - suggestions that follow the state.
+  - **Layout:** chat-first view (`rws.view`), Full editor toggle, collapsible chat, an empty starting world, the existing panels unchanged in the editor. The public preview stays in the editor.
+  - **Style:** tokens, one cyan accent, cards, warmer lighting and floor, a stronger proposal ghost, reduced motion.
+- **Live AI** (text only, the synthetic sample's object names; no images):
+  - recording rounds: 13 + 13 + 13 + 1 sample cases, and 2 workshop cases kept in the git-ignored data/external/recorded;
+  - one live browser journey (`playwright.live.config.ts`): 4 requests, interpreted in 7.9 s, 9.7 s, 13.8 s and 12.1 s, all performed correctly.
+- **Timing failures investigated.** The three earlier failures (`drawing-review:50`, `industrial-demo:54`, `photo-review:310`) each found the page back on its first scene.
+  - **Reproduced:** saving a source file while a test runs makes Vite's hot reload reload every open page. `drawing-review:50` failed with hot reload on and passed with it off.
+  - **Fixed:** the e2e dev server now runs without hot reload (`RWS_E2E=1`).
+  - **Stress run:** `--repeat-each=3 --workers=2` on the three files gave 24/24.
+  - **Two full runs of the suite** had no timing failure; their only failure was a bug in the new cancel test, since fixed.
+- Commands run and outcomes:
+  - `pnpm check`: exit 0 (pytest 884, Vitest 259, contracts 10).
+  - `pnpm test:e2e`: 63 passed, 24 skipped (opt-in screens).
+  - `test:e2e:local`: 4 passed, including the new no-key chat journey.
+  - `test:e2e:public`: 7 passed, 2 skipped.
+  - External: `workshop-chat` and `workshop`, 2 passed.
+  - After screenshots (Chrome, GPU): 20 + 4.
+- **Measured** (scripted, not a user study; workshop DXF): the conversation took **31 clicks and 68 characters**; the full editor took **42 clicks and 43 characters** (the documented reference; 47 clicks today with export). Both took about 20 s, with the recorded answers returning at once. The scope differences are in docs/ux-03/README.md.
+- Known limitations:
+  - live waits of 8–14 s per typed request;
+  - one action per message;
+  - no catalog matching (AGT-01 stays open);
+  - real drawings still need the floor traced and symbol layers marked;
+  - UX-02 (newcomers) not done.
+- Actual effort: about 2.5 hours of wall-clock time today (about 07:00–09:45 America/Phoenix).
+- Next concrete task: UX-02 with consenting newcomers, or AGT-01's catalog matching, on the user's priority.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

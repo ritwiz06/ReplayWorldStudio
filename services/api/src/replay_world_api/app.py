@@ -25,6 +25,8 @@ from replay_world_contracts import (
     SCHEMA_VERSION,
     AssistStatus,
     CatalogAsset,
+    ChatRequest,
+    ChatResult,
     DrawingAnalysis,
     EditProposalRequest,
     EditProposalResult,
@@ -62,6 +64,7 @@ from replay_world_contracts.migrations import (
 )
 
 from . import __version__
+from .assist.chat import interpret_chat
 from .assist.edits import propose_edit
 from .assist.images import propose_image
 from .assist.plans import propose_plan
@@ -383,6 +386,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         """Interpret one edit request against the described scene. Nothing is changed."""
         try:
             return propose_edit(_provider(), body)
+        except (ProviderError, AssistError) as exc:
+            _assist_failure(exc)
+
+    @app.post("/api/v1/assist/chat")
+    def chat(body: ChatRequest) -> ChatResult:
+        """Interpret one chat message as one bounded action (UX-03). Only the words, the
+        reviewed objects' names, kinds, positions and sizes, the selection and the app's state
+        are sent; nothing is changed. The browser checks prerequisites and the revision."""
+        try:
+            return interpret_chat(_provider(), body)
         except (ProviderError, AssistError) as exc:
             _assist_failure(exc)
 

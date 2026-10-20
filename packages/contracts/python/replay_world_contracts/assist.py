@@ -233,6 +233,86 @@ class EditProposalResult(ContractModel):
         return self
 
 
+ChatAction = Literal[
+    "move",
+    "rotate",
+    "check_route",
+    "run_day",
+    "run_again",
+    "explain_change",
+    "undo",
+    "show_example",
+    "capabilities",
+    "select",
+    "save",
+    "export",
+]
+"""The bounded actions a chat request can map to (UX-03, AGT-01). The browser checks each
+action's prerequisites and performs it with the existing deterministic code."""
+
+
+class ChatState(ContractModel):
+    """What the open world allows right now, so the answer can name only workable actions."""
+
+    has_world: bool
+    has_drawing: bool
+    review_open: bool
+    has_process: bool
+    has_run: bool
+    run_stale: bool
+    layout_edited: bool
+    can_undo: bool
+
+
+class ChatRequest(ContractModel):
+    """One chat message, the reviewed scene facts it may need, and the app's state."""
+
+    request: EditRequestText
+    context: EditContext
+    state: ChatState
+
+
+class ChatRoute(ContractModel):
+    """The route a request asks about: endpoints by object id, and a width only when stated."""
+
+    from_object_id: StableId | None
+    to_object_id: StableId | None
+    width_m: PositiveLength | None = Field(description="Only when the request states it.")
+    width_quote: NonEmptyText | None
+
+
+class ChatResult(ContractModel):
+    """The interpretation of one chat message: one action with its typed parameters, a
+    question, or why it cannot be done. Nothing here changes the project."""
+
+    outcome: Literal["action", "clarification", "unsupported"]
+    action: ChatAction | None
+    edit: EditIntent | None = Field(description="For move and rotate.")
+    route: ChatRoute | None = Field(description="For check_route.")
+    object_id: StableId | None = Field(description="For select.")
+    question: NonEmptyText | None
+    candidates: list[StableId]
+    message: NonEmptyText | None
+    checks: list[NonEmptyText]
+    provider: ProviderRun
+
+    @model_validator(mode="after")
+    def _one_outcome(self) -> ChatResult:
+        if (self.outcome == "action") != (self.action is not None):
+            raise ValueError("an action result, and only one, names its action")
+        if self.outcome == "clarification" and self.question is None:
+            raise ValueError("a clarification asks a question")
+        if self.outcome == "unsupported" and self.message is None:
+            raise ValueError("an unsupported result says why")
+        if (self.action in ("move", "rotate")) != (self.edit is not None):
+            raise ValueError("move and rotate, and only they, carry an edit")
+        if (self.action == "check_route") != (self.route is not None):
+            raise ValueError("check_route, and only it, carries a route")
+        if (self.action == "select") != (self.object_id is not None):
+            raise ValueError("select, and only it, names an object")
+        return self
+
+
 class GeneratedModelRequest(ContractModel):
     """Build (and optionally store) the model for a geometry draft."""
 

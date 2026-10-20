@@ -19,6 +19,8 @@ interface Props {
   /** Apply a correction; returns why it was refused, or null. */
   onReview: (correction: ReviewCorrection) => string | null;
   onDrawn: (drawn: DrawingObject) => void;
+  /** Start in this mode (the conversation's "Trace the floor" opens the plan ready to trace). */
+  start?: "trace_floor" | null;
 }
 
 const STATUS_WORDS: Record<Reviewed, string> = {
@@ -44,8 +46,8 @@ const KINDS: readonly { kind: ObjectKind | "none"; label: string }[] = [
   { kind: "none", label: "Not an object" },
 ];
 
-export function DrawingReview({ project, source, selectedId, focus, onReview, onDrawn }: Props) {
-  const [mode, setModeState] = useState<Mode>("select");
+export function DrawingReview({ project, source, selectedId, focus, onReview, onDrawn, start = null }: Props) {
+  const [mode, setModeState] = useState<Mode>(start ?? "select");
   const [marks, setMarks] = useState<PlanPoint[]>([]);
   const [precision, setPrecision] = useState(0);
   const [traceTarget, setTraceTarget] = useState<string | null>(null);

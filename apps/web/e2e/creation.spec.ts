@@ -38,7 +38,7 @@ async function reopen(page: Page, file: { name: string; text: string }) {
 }
 
 test.describe("first visit", () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
+  test.use({ storageState: { cookies: [], origins: [{ origin: "http://127.0.0.1:5180", localStorage: [{ name: "rws.view", value: "editor" }] }] } });
 
   test("describe, check, place, undo, save, reopen and rebuild a missing model", { tag: "@smoke" }, async ({ page }) => {
     test.setTimeout(150_000);

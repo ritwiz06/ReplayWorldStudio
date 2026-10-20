@@ -152,7 +152,27 @@ def _ask(
 
 
 def _words(text: str) -> list[str]:
-    return [w for w in re.findall(r"[a-z0-9+-]+", text.casefold()) if w not in _STOP_WORDS]
+    """The words that identify an object. A one-letter word after the first ("Rack A") is an
+    identifier, not the article, so it is kept."""
+    words = re.findall(r"[a-z0-9+-]+", text.casefold())
+    return [
+        w
+        for i, w in enumerate(words)
+        if w not in _STOP_WORDS or (i > 0 and len(w) == 1 and words[i - 1] not in _STOP_WORDS)
+    ]
+
+
+def _fits(token: str, name: str) -> bool:
+    """A word of the request fits a name: a one-letter or numeric identifier must be a whole
+    word of it ("a" does not fit "Rack B"); a longer word may be part of one ("cab")."""
+    words = re.findall(r"[a-z0-9+-]+", name.casefold())
+    if len(token) == 1 or token.isdigit():
+        return token in words
+    return token in name.casefold()
+
+
+def _fits_all(tokens: list[str], name: str) -> bool:
+    return bool(tokens) and all(_fits(t, name) for t in tokens)
 
 
 def _says(text: str, words: tuple[str, ...]) -> bool:
@@ -198,11 +218,9 @@ def _result(
         # disagree, so ask which one is meant.
         nouns = _words(target.phrase)
         described = f"{current.name} {current.kind}".casefold()
-        if target.object_id != selected or (nouns and not all(n in described for n in nouns)):
+        if target.object_id != selected or (nouns and not _fits_all(nouns, described)):
             others = [
-                o.id
-                for o in context.objects
-                if o.id != selected and nouns and all(n in o.name.casefold() for n in nouns)
+                o.id for o in context.objects if o.id != selected and _fits_all(nouns, o.name)
             ]
             return _ask(
                 run,
@@ -219,9 +237,7 @@ def _result(
     # there are two cabinets). Only an explicit selection settles that without asking.
     if target.reference == "named":
         tokens = _words(target.phrase)
-        matches = [
-            o.id for o in context.objects if tokens and all(t in o.name.casefold() for t in tokens)
-        ]
+        matches = [o.id for o in context.objects if _fits_all(tokens, o.name)]
         exact = [o.id for o in context.objects if o.name.casefold() == " ".join(tokens)]
         if len(matches) > 1 and len(exact) != 1:
             names = ", ".join(objects[i].name for i in matches[:6])

@@ -1,8 +1,8 @@
 # Replay World Studio
 
-Turn a floor plan into a 3D layout you can walk through, change, check and run. Upload a plan, move a machine, see whether the layout still fits, and run a shift on it. Factory production areas are the first example; the world contracts stay generic.
+**Upload a plan. Ask what you want to change. See it happen in the world.** Replay World Studio turns a floor plan into a 3D layout you can change, check and run a shift on, by talking to it or with a full editor. Factory production areas are the first example; the world contracts stay generic.
 
-> **Status: local v0.1.** It runs on your own computer at `http://127.0.0.1:8000` with `pnpm start`; nothing is hosted (ADR-058). It works on synthetic examples and supported files; it has not been tried on real plans yet. It does **not** convert every drawing into an accurate 3D model automatically, simulate physics, verify real productivity or safety, or certify anything about a real site. **Run a day** predicts what happens only under the operating assumptions you enter. The release guide is [docs/local-v0.1.md](docs/local-v0.1.md).
+> **Status: local v0.1.** It runs on your own computer at `http://127.0.0.1:8000` with `pnpm start`; nothing is hosted (ADR-058). Real third-party drawings have been tried for import and review ([docs/external-drawings.md](docs/external-drawings.md)); the accuracy of any result on a real operation is not validated. It does **not** convert every drawing into an accurate 3D model automatically, simulate physics, verify real productivity or safety, or certify anything about a real site. **Run a day** predicts what happens only under the operating assumptions you enter. The release guide is [docs/local-v0.1.md](docs/local-v0.1.md).
 
 ## Run it on your computer
 
@@ -28,12 +28,13 @@ RWS_API_PORT=8001 pnpm start    # if port 8000 is taken (pnpm start tells you wh
 - **No key is needed.** A Voyager key in your git-ignored `.env` turns on the optional AI features in your local app only. The key never leaves the local API process. Pressing an AI button sends that request (for example a plan picture's smaller copy) to ASU Voyager.
 - Details: [docs/local-v0.1.md](docs/local-v0.1.md).
 
-Start with **Run a day** on the left: the sample hall opens and its example shift plays. Workers fetch, mix, form and pack batches, machines cycle or wait, and queues form.
-- Move *Machine B* into the aisle (drag it, or press **move it for me**).
-- **Check layout** then says the 1.20 m cart route is blocked.
-- Running the same shift again shows the material route blocked, with output 0, and the comparison explains why.
+**The main screen is the world and a conversation beside it** ([docs/ux-03/](docs/ux-03/README.md)). An empty project offers three starting points: **Show me the example factory**, **Upload a drawing and make a world**, **What can I check in this layout?** Then:
+- **Attach a plan** (the paperclip). It is read on your computer; the conversation asks only the corrections the review needs (a missing floor outline, the scale, which layers are door swings or notes).
+- **Ask** "Move Machine B 3.5 m forward": you see the proposed position in the world and what it does to the routes, then **Apply** (one undoable edit).
+- **"Will the route still fit?"**, **"Run a day"**, **"Run it again"**, **"Why did output change?"**: each answer comes from the existing route check, run engine and comparison, and names the blocked route.
+- **Full editor** (top right) shows every panel; switching keeps the world, selection, camera, review, undo history and run.
 
-Then upload your own plan.
+Typing a request needs the optional AI (your own key; the words and the objects' names, kinds, positions and sizes are sent to ASU Voyager, never a drawing). Without a key, typing is off and says so; the suggestions, the attachment, small forms for moving and checking routes, and the full editor all work.
 
 **Three different things:**
 
@@ -52,6 +53,7 @@ What you can do:
 | **Compare** | The drawing's own arrangement beside your edited one, with every change listed. |
 | **Check layout** | Footprint overlaps, objects in keep-clear zones, and whether an item of a width you enter can get from A to B. These are 2D checks of the **reviewed design**: **width only; turning is not evaluated**, heights are not checked, and outlines on a PDF or picture count only as precisely as you traced them. |
 | **Run a day** | Plays a shift: workers, items, machine states, queues and a shift clock, with Play/Pause, speed, Restart and a timeline in every camera mode. Run again after an edit and compare with the original layout. **Set up a day** on your own plan, guided: pick the stations in order on the plan, say what moves, type the pace and people you know, and accept or change clearly labelled example assumptions for the rest. Nothing is read from the drawing; an optional **Suggest setup** (with a Voyager key) proposes stations and order only. |
+| **Talk to it** | The conversation's 12 actions: move, turn, select, check a route, run a day, run it again, explain the change, undo, show the example, what can I check, save, export. The language model only maps words to one of them; the app checks the object, the scene revision and the prerequisites, and performs it with its own code. A cancelled request, or one answered after the world changed, is never applied. |
 | **Save** | **Save project** downloads the project as a file, with its process. Reopen it with **Open project**. |
 | **Export a run** | **Export this run** saves one ZIP: a README, a before/after summary with its cause, the project, each run's event log and metrics, and a manifest of hashes, fingerprints and the basis of every input. Your own files are included only if you tick them. **Open project** checks such a ZIP and runs both layouts again ([docs/evidence-bundles.md](docs/evidence-bundles.md)). On the sample, **Show the example** walks through the before and after. A 79 s recording and the sample's bundle are in [docs/demo/](docs/demo/). |
 
@@ -61,9 +63,10 @@ What you can do:
 | --- | --- | --- |
 | Plans | DXF reading (`rws-dxf/1`), a four-question review (floor, scale with a known length, objects, omissions), plan pictures from a PDF page, PNG or JPEG, traced outlines with their precision | DWG, page cropping, PDF vectors, printed scale ratios, aligning a second plan |
 | Checks | Overlaps, keep-clear zones, floor edge, width-only routes on the reviewed design, before/after | Turning (swept paths), overhead heights, loads, physics |
-| Run a day | One bounded process: stations tied to objects, carrying by hand along route-checked paths, workers with priorities and breaks, finite buffers, planned and seeded stops, deterministic events (`rws-run/1`), playback, comparison with the original layout, guided setup on your own plan with accepted illustrative assumptions | Conveyors and other transport, branching flows, several products, worker congestion, event-log export |
+| Run a day | One bounded process: stations tied to objects, carrying by hand along route-checked paths, workers with priorities and breaks, finite buffers, planned and seeded stops, deterministic events (`rws-run/1`), playback, comparison with the original layout, guided setup on your own plan with accepted illustrative assumptions, evidence bundles with the event logs (REL-01) | Conveyors and other transport, branching flows, several products, worker congestion |
 | World and editor | Evidence on every value, edit log, undo/redo, save/reopen, walk view, provisional models | Matching equipment to real models (ENR-01), shared private links (SHR-01), accounts |
-| AI (optional, your own key) | ASU Voyager drafts described objects, plan pictures and photo objects; nothing is applied unreviewed | Any hosted AI |
+| Conversation (UX-03) | Chat-first screen, 12 bounded actions, previews before Apply, live review card, recorded answers for offline tests, no-key manual use | Matching equipment to catalog models, multi-step plans, free questions (AGT-01 is not complete) |
+| AI (optional, your own key) | ASU Voyager interprets chat requests, drafts described objects, plan pictures and photo objects; nothing is applied unreviewed | Any hosted AI |
 
 Older capabilities (described and hand-built objects, one-photo import, improving generated models) remain in development builds; see the sections below and [prompts/PROJECT_STATE.md](prompts/PROJECT_STATE.md).
 
