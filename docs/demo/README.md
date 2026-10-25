@@ -61,6 +61,22 @@ DEMO_ASSIST=recorded pnpm --filter @replay-world/web exec playwright test -c pla
 swift scripts/demo/frames-to-mp4.swift apps/web/test-results/demo-frames-ux04 docs/demo/ux04-one-request.mp4 25 1000000
 ```
 
+## UX-05: improve the equipment's look, then one connected request
+
+[`ux05-appearance-and-request.mp4`](ux05-appearance-and-request.mp4) is a 38 s recording: H.264, 1440 × 900, 25 fps, 4.6 MB. It shows only synthetic files: `fixtures/drawings/hall-mm.dxf` and the example factory. Its AI answers are **recorded, replayed** answers, and the app labels them so.
+
+1. The hall's DXF is attached, read on this computer, and its review is answered one question at a time.
+2. **Improve equipment appearance:** the Electrical panel is suggested the generic "Electrical cabinet, 800 mm" model; the card says why and how it is fitted. **Use this model**, then **Apply**: one undoable step; ids, sizes, evidence and links unchanged.
+3. A fresh session opens the example factory, and its two cabinets get the same model.
+4. "Move Machine B 1 metre right, check its routes, and run the shift again." is shown as a plan of three steps and applied step by step. "Why did output change?" is then answered from the comparison of the two runs.
+
+Made with:
+
+```bash
+DEMO_ASSIST=recorded pnpm --filter @replay-world/web exec playwright test -c playwright.demo.config.ts e2e/demo/record-demo.spec.ts -g "UX-05"
+swift scripts/demo/frames-to-mp4.swift apps/web/test-results/demo-frames-ux05 docs/demo/ux05-appearance-and-request.mp4 25 1000000
+```
+
 ## Reproducing the bundle on another computer
 
 You need:

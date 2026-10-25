@@ -35,6 +35,10 @@ MAX_OUTPUT_TOKENS: Final = 4096
 class Completion:
     content: str
     latency_ms: int
+    # Token counts as the provider reports them (OpenAI-style ``usage``); None when it reports
+    # none, as a recording made before UX-05 does. Never estimated.
+    input_tokens: int | None = None
+    output_tokens: int | None = None
 
 
 @dataclass(frozen=True)
@@ -163,7 +167,19 @@ class OpenAICompatibleProvider:
             ) from None
         if not isinstance(content, str):
             raise ProviderError("malformed", f"{self.service} returned no text content.")
-        return Completion(content=content, latency_ms=latency_ms)
+        usage = payload.get("usage") if isinstance(payload, dict) else None
+        usage = usage if isinstance(usage, dict) else {}
+
+        def count(name: str) -> int | None:
+            value = usage.get(name)
+            return value if isinstance(value, int) and value >= 0 else None
+
+        return Completion(
+            content=content,
+            latency_ms=latency_ms,
+            input_tokens=count("prompt_tokens"),
+            output_tokens=count("completion_tokens"),
+        )
 
 
 def recording_key(task: Task, key: str) -> str:
@@ -185,6 +201,8 @@ class RecordedProvider:
         self.service = settings.service
         self.base_url = settings.base_url
         self._recordings: dict[str, list[str]] = {}
+        self._delays: dict[str, int] = {}
+        self._usage: dict[str, list[tuple[int | None, int | None]]] = {}
         models: set[str] = set()
         directory = settings.recordings_dir
         for path in sorted(directory.glob("*.json")) if directory.is_dir() else []:
@@ -192,7 +210,21 @@ class RecordedProvider:
             if data["task"] not in tasks:
                 continue
             self._recordings[recording_key(data["task"], data["key"])] = list(data["responses"])
-            models.add(str(data["model"]))
+            # A test recording may replay a slow provider (UX-05): its wait, then its answer, or
+            # a timeout when the wait exceeds what is left of the deadline.
+            delay = data.get("replay_delay_ms")
+            if isinstance(delay, int) and delay > 0:
+                self._delays[recording_key(data["task"], data["key"])] = delay
+            usage = data.get("usage")
+            if isinstance(usage, list):
+                self._usage[recording_key(data["task"], data["key"])] = [
+                    (u.get("input_tokens"), u.get("output_tokens"))
+                    if isinstance(u, dict)
+                    else (None, None)
+                    for u in usage
+                ]
+            if not data.get("test_only"):  # a synthetic test fixture names no model
+                models.add(str(data["model"]))
         # Recordings name the model that produced them; a mixed set reports all of them.
         self.model = " + ".join(sorted(models)) or settings.model
 
@@ -206,18 +238,36 @@ class RecordedProvider:
         attempt: int,
         timeout_s: float | None = None,
     ) -> Completion:
-        responses = self._recordings.get(recording_key(task, key))
+        found = recording_key(task, key)
+        responses = self._recordings.get(found)
         if not responses and " | focus=" in key:
             # A chat answer recorded without a focus object also answers the same message with
             # one: the focus only resolves "it"/"that", and the checks resolve it the same way.
-            responses = self._recordings.get(recording_key(task, key.split(" | focus=")[0]))
+            found = recording_key(task, key.split(" | focus=")[0])
+            responses = self._recordings.get(found)
         if not responses:
             raise ProviderError(
                 "not_recorded",
                 "The offline test provider has no recorded answer for this request. Configure "
                 "VOYAGER_API_KEY for live proposals, or use the object builder.",
             )
-        return Completion(content=responses[min(attempt, len(responses) - 1)], latency_ms=0)
+        delay_ms = self._delays.get(found, 0)
+        if delay_ms:
+            limit_s = timeout_s if timeout_s is not None else delay_ms / 1000
+            time.sleep(min(delay_ms / 1000, limit_s))
+            if delay_ms / 1000 > limit_s:
+                raise ProviderError(
+                    "timeout", f"{self.service} did not answer within {limit_s:.0f} s."
+                )
+        index = min(attempt, len(responses) - 1)
+        usage = self._usage.get(found, [])
+        tokens = usage[index] if index < len(usage) else (None, None)
+        return Completion(
+            content=responses[index],
+            latency_ms=delay_ms,
+            input_tokens=tokens[0],
+            output_tokens=tokens[1],
+        )
 
 
 def provider_from_settings(settings: AssistSettings) -> Provider | None:

@@ -35,7 +35,7 @@ test("plan: move, check its routes and run the shift in one request; why; undo t
   const plan = lastCard(page, "proposal");
   await expect(plan).toContainText("Plan: 3 steps");
   await expect(plan).toContainText("recorded answer");
-  await expect(rows(plan)).toHaveText(["Move Machine B 1 m right", "Check Machine B's routes", "Run the shift"]);
+  await expect(rows(plan)).toHaveText(["Move Machine B 1 m right", "Check Machine B's routes", "Run the same shift again"]);
   await expect(plan).toContainText("Walk Mixer ↔ Machine B: 4.9 m → 5.9 m.");
   await expect(page.getByTestId("viewport")).not.toHaveAttribute("data-ghosts", "0");
   await expect(page.getByTestId("undo")).toBeDisabled();
@@ -45,7 +45,7 @@ test("plan: move, check its routes and run the shift in one request; why; undo t
   const done = lastCard(page, "plan-done");
   await expect(done).toContainText("Done: 3 of 3 steps.", { timeout: 60_000 });
   await expect(done.getByTestId("chat-apply")).toHaveCount(0);
-  await expect(rows(done)).toHaveText(["Move Machine B 1 m right", "Check Machine B's routes", "Run the shift"]);
+  await expect(rows(done)).toHaveText(["Move Machine B 1 m right", "Check Machine B's routes", "Run the same shift again"]);
   await expect(lastCard(page, "route")).toContainText("Yes: its 2 routes still fit.");
   await expect(lastCard(page, "run")).toContainText("Ran the shift. Whole-shift result: 102 batches completed by 14:00");
   // The run bar separates the playback clock from the whole shift.

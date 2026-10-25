@@ -1,0 +1,15 @@
+{
+  "task": "chat",
+  "key": "Move Machine B 1 m right and sort out the corner. | selected=none | scene=53151f7c69de",
+  "case": "test-clarify",
+  "message": "Move Machine B 1 m right and sort out the corner.",
+  "service": "none (synthetic test fixture)",
+  "model": "none (synthetic test fixture)",
+  "prompt_version": "chat-03",
+  "recorded_at": "2026-10-24",
+  "test_only": true,
+  "note": "A synthetic test fixture, NOT a live answer: a plan with one part the interpreter could not understand, to test that it blocks Apply in the browser.",
+  "responses": [
+    "{\"steps\":[{\"do\":\"move\",\"obj\":\"obj-dxf-111\",\"obj2\":null,\"what\":null,\"said\":\"Move Machine B 1 m right\",\"alts\":[]},{\"do\":\"ask\",\"obj\":null,\"obj2\":null,\"what\":null,\"said\":\"sort out the corner\",\"alts\":[]}]}"
+  ]
+}

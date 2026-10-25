@@ -45,7 +45,14 @@ export default defineConfig({
     cwd: repoRoot,
     url: `http://127.0.0.1:${PORT}/health`,
     // DEMO_ASSIST=recorded replays the recorded AI answers (labelled as such in the app).
-    env: { RWS_API_PORT: String(PORT), RWS_ENV_FILE: "none", RWS_SOURCES_DIR: SOURCES, ...(process.env.DEMO_ASSIST ? { RWS_ASSIST_PROVIDER: process.env.DEMO_ASSIST } : {}) },
+    // RWS_CHAT_DEADLINE_S: a short chat deadline, to show a timed-out request (UX-05 screens).
+    env: {
+      RWS_API_PORT: String(PORT),
+      RWS_ENV_FILE: "none",
+      RWS_SOURCES_DIR: SOURCES,
+      ...(process.env.DEMO_ASSIST ? { RWS_ASSIST_PROVIDER: process.env.DEMO_ASSIST } : {}),
+      ...(process.env.RWS_CHAT_DEADLINE_S ? { RWS_CHAT_DEADLINE_S: process.env.RWS_CHAT_DEADLINE_S } : {}),
+    },
     reuseExistingServer: false,
     timeout: 240_000,
   },

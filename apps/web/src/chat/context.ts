@@ -43,6 +43,8 @@ export interface WorldFacts {
   canExplain: boolean;
   /** Whether that run's output differs from the original layout's (null: not known). */
   outputChanged: boolean | null;
+  /** Imported equipment still drawn as a stand-in (UX-05): its look could be improved. */
+  canImproveLook?: boolean;
 }
 
 export function chatState(f: WorldFacts): ChatState {
@@ -58,7 +60,7 @@ export function chatState(f: WorldFacts): ChatState {
   };
 }
 
-export type SuggestionId = "example" | "upload" | "capabilities" | "move" | "move_any" | "route" | "run" | "run_example" | "run_again" | "why" | "compare" | "undo" | "export";
+export type SuggestionId = "example" | "upload" | "capabilities" | "move" | "move_any" | "route" | "run" | "run_example" | "run_again" | "why" | "compare" | "undo" | "export" | "appearance";
 
 export const SUGGESTION_TEXT: Record<SuggestionId, string> = {
   example: "Show me the example factory",
@@ -74,6 +76,7 @@ export const SUGGESTION_TEXT: Record<SuggestionId, string> = {
   compare: "Compare with the original layout",
   undo: "Undo that",
   export: "Export this run",
+  appearance: "Improve equipment appearance",
 };
 
 /** The suggestions that can work now, most useful first (at most four). An empty project
@@ -87,9 +90,11 @@ export function suggestions(f: WorldFacts, sample: boolean): SuggestionId[] {
   out.push(f.hasSelection ? "move" : "move_any");
   if (f.hasDrawing) out.push("route");
   if (f.hasDrawing && !f.hasRun) out.push(sample ? "run_example" : "run");
+  if (f.canImproveLook && !f.hasRun && out.length < 4) out.push("appearance");
   if (f.canUndo && out.length < 4) out.push("undo");
   if (!f.hasDrawing && !sample) out.push("example", "upload");
   if (f.hasRun && !f.runStale && out.length < 4) out.push("export");
+  if (f.canImproveLook && f.hasRun && out.length < 4) out.push("appearance");
   return out.slice(0, 4);
 }
 

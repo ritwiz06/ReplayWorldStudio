@@ -70,6 +70,8 @@ export default defineConfig({
         RWS_CORS_ORIGINS: `http://127.0.0.1:${WEB_PORT}`,
         RWS_ENV_FILE: "none",
         RWS_ASSIST_PROVIDER: "recorded",
+        // A short chat deadline, so the slow-provider fixture reaches it quickly (UX-05).
+        RWS_CHAT_DEADLINE_S: "6",
         RWS_CATALOG_DIR: E2E_CATALOG_DIR,
         RWS_SOURCES_DIR: E2E_SOURCES_DIR,
       },

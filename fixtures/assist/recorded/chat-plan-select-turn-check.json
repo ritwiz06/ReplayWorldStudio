@@ -5,13 +5,19 @@
   "message": "Select the mixer, turn it 90 degrees clockwise, and check the layout.",
   "service": "ASU Voyager",
   "model": "qwen3-235b-a22b-instruct-2507",
-  "prompt_version": "chat-02",
+  "prompt_version": "chat-03",
   "recorded_at": "2026-10-24",
   "note": "Raw answers from the live language model for the synthetic sample, replayed by the offline test provider. Not live AI when replayed.",
   "latency_ms": [
-    24891
+    6543
+  ],
+  "usage": [
+    {
+      "input_tokens": 674,
+      "output_tokens": 103
+    }
   ],
   "responses": [
-    "{\n  \"steps\": [\n    {\n      \"add\": null,\n      \"candidates\": [],\n      \"intent\": \"select\",\n      \"message\": null,\n      \"move\": null,\n      \"question\": null,\n      \"rotate\": null,\n      \"route\": null,\n      \"target\": {\n        \"object_id\": \"obj-dxf-10a\",\n        \"phrase\": \"the mixer\",\n        \"reference\": \"named\"\n      }\n    },\n    {\n      \"add\": null,\n      \"candidates\": [],\n      \"intent\": \"rotate\",\n      \"message\": null,\n      \"move\": null,\n      \"question\": null,\n      \"rotate\": {\n        \"angle_deg\": 90,\n        \"direction\": \"clockwise\",\n        \"quote\": \"90 degrees clockwise\"\n      },\n      \"route\": null,\n      \"target\": {\n        \"object_id\": \"obj-dxf-10a\",\n        \"phrase\": \"it\",\n        \"reference\": \"selected\"\n      }\n    },\n    {\n      \"add\": null,\n      \"candidates\": [],\n      \"intent\": \"check_layout\",\n      \"message\": null,\n      \"move\": null,\n      \"question\": null,\n      \"rotate\": null,\n      \"route\": null,\n      \"target\": null\n    }\n  ]\n}"
+    "{\"steps\":[{\"alts\":[],\"do\":\"select\",\"obj\":\"obj-dxf-10a\",\"obj2\":null,\"said\":\"Select the mixer\",\"what\":null},{\"alts\":[],\"do\":\"rotate\",\"obj\":\"obj-dxf-10a\",\"obj2\":null,\"said\":\"turn it 90 degrees clockwise\",\"what\":null},{\"alts\":[],\"do\":\"check_layout\",\"obj\":null,\"obj2\":null,\"said\":\"check the layout\",\"what\":null}]}"
   ]
 }

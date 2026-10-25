@@ -287,7 +287,9 @@ def test_an_added_object_keeps_only_the_stated_sizes() -> None:
     assert added is not None
     assert (added.width_m, added.depth_m, added.height_m) == (1.5, 0.8, None)
     assert added.near_object_id == "obj-dxf-111"
-    assert result.checks == ["A height was suggested but is not in the message, so it is not used."]
+    assert result.checks == [
+        "A height was suggested but the message does not give it as the height, so it is not used."
+    ]
 
 
 def test_without_a_provider_chat_is_refused_with_the_reason(tmp_path: Path) -> None:
@@ -295,3 +297,162 @@ def test_without_a_provider_chat_is_refused_with_the_reason(tmp_path: Path) -> N
     with TestClient(create_app(settings)) as c:
         response = c.post("/api/v1/assist/chat", json=body("Run a day"))
     assert response.status_code == 503
+
+
+# chat-03 (UX-05): compact steps; every value is read from the step's own words.
+
+
+def compact(do: str, said: str, obj: str | None = None, **fields: Any) -> dict[str, Any]:
+    return {"do": do, "obj": obj, "obj2": None, "what": None, "said": said, "alts": [], **fields}
+
+
+def test_each_amount_belongs_to_the_step_and_object_whose_words_hold_it() -> None:
+    message = "Move Rack A 1 m right and Machine B 2 m left."
+    answer3 = plan(
+        compact("move", "Move Rack A 1 m right", "obj-dxf-106"),
+        compact("move", "Machine B 2 m left", "obj-dxf-111"),
+    )
+    result = interpret_chat(Scripted(answer3), request(message))
+    first, second = result.steps
+    assert (
+        first.target_id,
+        first.move and first.move.direction,
+        first.move and first.move.distance,
+    ) == ("obj-dxf-106", "right", 1)
+    assert (
+        second.target_id,
+        second.move and second.move.direction,
+        second.move and second.move.distance,
+    ) == ("obj-dxf-111", "left", 2)
+    # A model that names the wrong object for a step's words is overruled by the words.
+    crossed = plan(
+        compact("move", "Move Rack A 1 m right", "obj-dxf-111"),
+        compact("move", "Machine B 2 m left", "obj-dxf-106"),
+    )
+    a, b = interpret_chat(Scripted(crossed), request(message)).steps
+    assert (a.target_id, b.target_id) == ("obj-dxf-106", "obj-dxf-111")
+
+
+def test_words_that_are_not_the_persons_own_state_no_amount() -> None:
+    paraphrase = plan(compact("move", "move machine b one meter to the right", "obj-dxf-111"))
+    step = interpret_chat(Scripted(paraphrase), request("Move Machine B 1 m right")).steps[0]
+    assert step.needs is not None and step.needs.kind == "move_details" and step.move is None
+
+
+def test_sizes_are_tied_to_their_axis_words() -> None:
+    message = "Add a table 1.5 m wide and 0.8 m deep."
+    added = (
+        interpret_chat(
+            Scripted(plan(compact("add_object", message, what="table"))), request(message)
+        )
+        .steps[0]
+        .add
+    )
+    assert added is not None and (added.width_m, added.depth_m, added.height_m) == (1.5, 0.8, None)
+    loose = "Add a table 1.5 by 0.8 m."
+    unassigned = (
+        interpret_chat(Scripted(plan(compact("add_object", loose, what="table"))), request(loose))
+        .steps[0]
+        .add
+    )
+    assert unassigned is not None and (unassigned.width_m, unassigned.depth_m) == (None, None)
+    # An older answer that swaps the axes is caught by the same reading.
+    swapped = answer(
+        intent="add_object",
+        add={
+            "description": "table",
+            "width": 0.8,
+            "depth": 1.5,
+            "height": None,
+            "unit": "m",
+            "near_object_id": None,
+            "side": None,
+        },
+    )
+    kept = interpret_chat(Scripted(plan(swapped)), request(message)).steps[0].add
+    assert kept is not None and (kept.width_m, kept.depth_m) == (None, None)
+
+
+def test_a_step_the_person_says_not_to_do_is_not_planned() -> None:
+    message = "Select the mixer; do not move it."
+    said = plan(
+        compact("select", "Select the mixer", "obj-dxf-10a"),
+        compact("move", "do not move it", "obj-dxf-10a"),
+    )
+    result = interpret_chat(Scripted(said), request(message))
+    assert [s.action for s in result.steps] == ["select"]
+    assert result.checks == ["“do not move it” says not to, so it is not part of the plan."]
+
+
+def test_a_part_that_needs_clarifying_stays_in_the_plan_and_blocks_it() -> None:
+    message = "Move Machine B 1 m right and sort out the corner."
+    result = interpret_chat(
+        Scripted(
+            plan(
+                compact("move", "Move Machine B 1 m right", "obj-dxf-111"),
+                compact("ask", "sort out the corner"),
+            )
+        ),
+        request(message),
+    )
+    assert result.outcome == "plan"
+    move, unclear = result.steps
+    assert move.action == "move" and move.move is not None
+    assert unclear.action is None and unclear.needs is not None
+    assert (unclear.needs.kind, unclear.needs.question) == (
+        "clarify",
+        "What do you mean by “sort out the corner”?",
+    )
+
+
+def test_every_matching_object_stays_a_candidate() -> None:
+    message = "Move the rack 1 m back"
+    step = interpret_chat(
+        Scripted(plan(compact("move", message, "obj-dxf-106"))), request(message)
+    ).steps[0]
+    assert step.needs is not None and step.needs.candidates == ["obj-dxf-106", "obj-dxf-108"]
+    assert step.move is not None and step.move.distance == 1  # kept while the person chooses
+    # The model's other possibilities widen the choice, never narrow it.
+    widened = interpret_chat(
+        Scripted(plan(compact("select", "Show Machine B", "obj-dxf-111", alts=["obj-dxf-10a"]))),
+        request("Show Machine B"),
+    ).steps[0]
+    assert widened.needs is not None and widened.needs.candidates == ["obj-dxf-111", "obj-dxf-10a"]
+
+
+def test_the_model_sees_names_and_kinds_but_no_geometry() -> None:
+    seen: list[str] = []
+
+    class Watching(Scripted):
+        def complete(self, *, attempt: int, **rest: Any) -> Completion:
+            seen.append(rest["messages"][1]["content"])
+            return super().complete(attempt=attempt)
+
+    result = interpret_chat(
+        Watching(plan(compact("run_day", "run the shift"))), request("run the shift")
+    )
+    assert "obj-dxf-106: Rack A (material) (equipment)" in seen[0] and "position" not in seen[0]
+    assert result.timing is not None and result.timing.request_chars == len(seen[0]) + len(
+        __import__("replay_world_api.assist.prompts", fromlist=["CHAT_SYSTEM"]).CHAT_SYSTEM
+    )
+
+
+def test_one_deadline_covers_every_attempt_and_no_retry_starts_after_it() -> None:
+    from replay_world_api.assist.provider import ProviderError
+
+    calls: list[float | None] = []
+
+    class Slow(Scripted):
+        def complete(self, *, timeout_s: float | None = None, **rest: Any) -> Completion:
+            calls.append(timeout_s)
+            import time
+
+            time.sleep(1.2)
+            return Completion(content="not json", latency_ms=1200)
+
+    try:
+        interpret_chat(Slow(), request("run the shift"), deadline_s=2.0)
+        raise AssertionError("expected a timeout")
+    except ProviderError as error:  # (pytest.raises cannot hold a frozen exception)
+        assert error.kind == "timeout"
+    assert len(calls) == 1 and calls[0] is not None and calls[0] <= 2.0

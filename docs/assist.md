@@ -27,9 +27,11 @@ An edit request follows the same shape. The API returns a typed **intent** (move
 - **What is sent:**
   - for a description, the description text and fixed instructions;
   - for an edit, the request plus each object's ID, name, kind, position, yaw and size, and the selected ID;
-  - for a model revision (GEN-02), the instruction plus the object's name and its current specification (overall size and part list); no photo and nothing else from the scene.
+  - for a model revision (GEN-02), the instruction plus the object's name and its current specification (overall size and part list); no photo and nothing else from the scene;
+  - for a chat message (UX-05, prompt chat-03), the words plus each object's ID, name and kind, the selection, the object the conversation is about and the app's state flags. No positions, sizes or turns: none of the supported actions needs them to be interpreted, and the app keeps them.
 
   Nothing else from the project is sent. The UI says where the text goes before you send it.
+- **Chat deadline (UX-05):** `RWS_CHAT_DEADLINE_S` (default 30, between 1 and 600) is one end-to-end deadline for interpreting a chat message, every attempt included; a retry starts only while time remains. The object generator keeps `RWS_ASSIST_TIMEOUT_S` (default 150). `GET /api/v1/assist/status` reports the chat deadline, so the browser shows it and stops waiting just after it. **Cancel** stops the browser waiting and discards any later answer; the local API's request to the provider is not interrupted, and runs until it answers or the deadline passes, and its answer is then dropped.
 - **No key:** `GET /api/v1/assist/status` reports `off`. Describing, language edits and proposed model changes are disabled with that message (`POST /api/v1/assist/model-revisions` answers 503), and the **object builder**, changing a model by hand and the whole editor keep working.
 - **Offline tests:** `RWS_ASSIST_PROVIDER=recorded` replays real answers saved in `fixtures/assist/recorded/`. Everything it produces is labelled `recorded` ("recorded offline test answer (not live AI)") and it never calls the network. The browser test suite and pytest use it; CI never calls Voyager.
 

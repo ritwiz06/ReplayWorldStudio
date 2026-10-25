@@ -21,6 +21,7 @@ import { brief, buildChatContext, capabilityLines, chatState, nameOf, SUGGESTION
 import { editImpact } from "./impact";
 import { type AddChoice, dryRun, type Ghost, MUTATING, type PlanStep, planStep, type Side, stepCommand, stepLabel, stepNeeds, suggestAssets } from "./plan";
 import { answerAsked, answerProcess, routeBetween } from "./routes";
+import { type Candidate, describeFor, equipmentToImprove, type Match, matchEquipment } from "../matching/appearance";
 
 export type Tone = "info" | "done" | "warn" | "error" | "progress" | "question";
 
@@ -61,6 +62,11 @@ export interface Entry {
   closed?: boolean;
   /** A plan of several steps (UX-04): its rows, and whether it can be applied. */
   plan?: PlanView;
+  /** Reviewing models for imported equipment (UX-05). */
+  look?: LookView;
+  /** Where the time went (UX-05), in ms: interpreting (and the provider's part of it),
+   * preparing the proposal in the browser, and performing it after Apply. */
+  timing?: { interpretMs?: number; providerMs?: number; prepareMs?: number; executeMs?: number };
 }
 
 export type RowStatus = "ready" | "needs" | "running" | "done" | "failed" | "skipped" | "cancelled" | "unsupported";
@@ -77,6 +83,8 @@ export interface PlanRow {
     | { kind: "asset"; question: string; suggestion: { id: string; label: string } | null; description: string }
     | { kind: "near"; question: string; candidates: { id: string; label: string }[] }
     | { kind: "side"; question: string; near: string }
+    /** A part the interpreter could not understand (UX-05): answered by asking again. */
+    | { kind: "clarify"; question: string }
     | null;
 }
 
@@ -100,7 +108,8 @@ export interface ChatHost {
   loadId: number;
   source: DrawingSource | null;
   selectedId: string | null;
-  assist: { available: boolean; mode: "live" | "recorded" | "off" | "checking" | "unreachable"; note: string };
+  /** `deadlineS`: the API's end-to-end deadline for interpreting one message (UX-05). */
+  assist: { available: boolean; mode: "live" | "recorded" | "off" | "checking" | "unreachable"; note: string; deadlineS?: number | null };
   facts: WorldFacts;
   routeAsk: RouteAsk | null;
   day: DayRun | null;
@@ -129,7 +138,70 @@ export interface ChatHost {
   library(): Promise<CatalogAsset[]>;
   /** The existing Describe-an-object or builder window, with the person's words kept. */
   openCreate(kind: "describe" | "builder", description: string): void;
+  /** Draw one object with a candidate model while it is reviewed (display only; UX-05). */
+  setLookPreview(preview: { objectId: string; asset: CatalogAsset } | null): void;
+  /** The object generator for an existing object (UX-05): its words and recorded size carried
+   * over; the reviewed result becomes that object's model (one undoable step), never a new
+   * object. `done` gets what happened: applied, refused, or null when closed without a model. */
+  openLookCreate(objectId: string, kind: "describe" | "builder", initial: { text: string; name: string; size: { width: number; depth: number; height: number } }, done: (outcome: { ok: true; assetName: string } | { ok: false; message: string } | null) => void): void;
 }
+
+/** One option for an object's look, as the appearance card shows it. */
+export interface LookOption {
+  assetId: string;
+  name: string;
+  reason: string;
+  warnings: string[];
+  /** The fit in one line, for the list of options. */
+  summary: string;
+  generic: boolean;
+  /** A small still of the model (shipped models only), or null. */
+  preview: string | null;
+}
+
+export interface LookRow {
+  objectId: string;
+  label: string;
+  /** suggested: the names agree; ask: the name says nothing; none: no model of that kind;
+   * chosen: a model is picked for Apply; kept: the current look stays; made: a generated model
+   * was applied to it from this card. */
+  status: "suggested" | "ask" | "none" | "chosen" | "kept" | "made";
+  question: string | null;
+  suggestion: LookOption | null;
+  chosen: string | null;
+  options: LookOption[];
+  browsing: boolean;
+  note: string | null;
+}
+
+export interface LookView {
+  id: number;
+  phase: "review" | "applied" | "cancelled" | "stale" | "undone";
+  rows: LookRow[];
+  canApply: boolean;
+}
+
+interface LookState {
+  id: number;
+  entryId: number;
+  loadId: number;
+  baseRevision: number;
+  library: CatalogAsset[];
+  rows: { match: Match; chosen: string | null; kept: boolean; browsing: boolean; made: string | null; note: string | null }[];
+  phase: LookView["phase"];
+  revisionAfter: number | null;
+  applied: number;
+}
+
+/** Stills of the shipped models (public/catalog-previews/), for the appearance card. */
+const SHIPPED_PREVIEWS = new Set(["asset-belt-conveyor-3m", "asset-guarded-machine-cell", "asset-electrical-cabinet-800", "asset-pallet-cartons"]);
+
+function lookOption(c: Candidate): LookOption {
+  return { assetId: c.asset.id, name: c.asset.name, reason: c.reason, warnings: c.warnings, summary: c.summary, generic: c.generic, preview: SHIPPED_PREVIEWS.has(c.asset.id) ? `/catalog-previews/${c.asset.id}.jpg` : null };
+}
+
+/** Typed requests about how equipment looks are handled here, without the AI. */
+const LOOK_WORDS = /\b(appearance|recogni[sz]e|recogni[sz]able|look(s)? like|models? for|easier to see|look of)\b/i;
 
 
 
@@ -174,14 +246,35 @@ interface PlanState {
   statuses: RowStatus[];
   notes: (string | null)[];
   unsupported: string[];
+  /** Questions about parts of the message that were not understood: nothing applies until the
+   * person answers (the request is then interpreted again with the answer). */
+  clarify: string[];
   checks: string[];
   phase: PlanView["phase"];
+  timing: NonNullable<Entry["timing"]>;
   cancelled: boolean;
   /** Changes this plan applied (each one entry in the undo history). */
   applied: number;
   before: DayRun | null;
   undoneTo: { label: string } | null;
   revisionAfter?: number;
+}
+
+/** Between a plan's steps: long enough to see each one happen and to press Cancel. */
+const STEP_PAUSE_MS = 120;
+
+const seconds = (ms: number) => `${(ms / 1000).toFixed(1)} s`;
+
+/** Where a request's time went, in words, for its card's Details (UX-05). */
+function timingLines(t: NonNullable<Entry["timing"]>, via: Entry["via"]): string[] {
+  const lines: string[] = [];
+  if (t.interpretMs !== undefined) {
+    const provider = t.providerMs !== undefined ? `; ${via === "recorded" ? "a recorded answer, no provider wait" : `the AI took ${seconds(t.providerMs)}`}` : "";
+    lines.push(`Interpreted in ${seconds(t.interpretMs)}${provider}.`);
+  }
+  if (t.prepareMs !== undefined) lines.push(`Proposal prepared in the browser in ${t.prepareMs} ms.`);
+  if (t.executeMs !== undefined) lines.push(`Performed in ${t.executeMs} ms after Apply (pauses between steps not counted).`);
+  return lines;
 }
 
 /** The conversation's state and its actions. A plain object (not hooks), so actions can call
@@ -267,26 +360,27 @@ export class ChatController {
   focus: string | null = null;
 
   /** A plan from checked steps: shown, completed where it asks, applied once. */
-  startPlan = (steps: ChatStep[], message: string, via: Entry["via"], checks: string[] = []) => {
+  startPlan = (steps: ChatStep[], message: string, via: Entry["via"], checks: string[] = [], timing: NonNullable<Entry["timing"]> = {}) => {
     const h = this.host;
     const project = h.project;
     if (!project) return void this.needWorld();
     const planned = steps.map(planStep);
-    const unsupported = planned.filter((s) => s.step.action === null).map((s) => s.step.unsupported!);
+    const clarify = planned.filter((s) => s.step.needs?.kind === "clarify").map((s) => s.step.needs!.question);
+    const unsupported = planned.filter((s) => s.step.action === null && s.step.unsupported).map((s) => s.step.unsupported!);
     const supported = planned.filter((s) => s.step.action !== null);
     const id = this.nextPlan++;
     const changes = supported.some((s) => MUTATING.has(s.step.action!));
     // Only read-only steps, nothing to resolve: performed at once (nothing in the world changes).
-    if (!changes && !unsupported.length && supported.every((s) => stepNeeds(s) === null)) {
+    if (!changes && !unsupported.length && !clarify.length && supported.every((s) => stepNeeds(s) === null)) {
       if (supported.length === 1) return this.runReadOnly(supported[0]!, via, project);
       const entryId = this.push({ role: "assistant", kind: "plan", tone: "progress", via, text: `${supported.length} steps:`, buttons: [] });
-      const plan: PlanState = { id, entryId, message, via, loadId: h.loadId, baseRevision: project.scene.revision, steps: supported, statuses: supported.map(() => "ready"), notes: supported.map(() => null), unsupported, checks, phase: "review", cancelled: false, applied: 0, before: null, undoneTo: null };
+      const plan: PlanState = { id, entryId, message, via, loadId: h.loadId, baseRevision: project.scene.revision, steps: supported, statuses: supported.map(() => "ready"), notes: supported.map(() => null), unsupported, clarify, checks, phase: "review", cancelled: false, applied: 0, before: null, undoneTo: null, timing };
       this.plans.set(id, plan);
       void this.execute(plan);
       return;
     }
     const entryId = this.push({ role: "assistant", kind: "proposal", tone: "question", via, text: "", buttons: [] });
-    const plan: PlanState = { id, entryId, message, via, loadId: h.loadId, baseRevision: project.scene.revision, steps: supported, statuses: supported.map(() => "ready"), notes: supported.map(() => null), unsupported, checks, phase: "review", cancelled: false, applied: 0, before: null, undoneTo: null };
+    const plan: PlanState = { id, entryId, message, via, loadId: h.loadId, baseRevision: project.scene.revision, steps: supported, statuses: supported.map(() => "ready"), notes: supported.map(() => null), unsupported, clarify, checks, phase: "review", cancelled: false, applied: 0, before: null, undoneTo: null, timing };
     this.plans.set(id, plan);
     for (const s of supported) if (s.step.action === "add_object") void this.suggestFor(plan, s);
     this.renderPlan(plan);
@@ -308,14 +402,17 @@ export class ChatController {
     const rows: PlanRow[] = plan.steps.map((s, index) => ({ index, label: stepLabel(project, s, undoLabel), status: plan.statuses[index]!, note: plan.notes[index]!, need: plan.phase === "review" ? this.needOf(project, s) : null }));
     for (const [i, row] of rows.entries()) if (plan.phase === "review" && row.need) rows[i] = { ...row, status: "needs" };
     for (const why of plan.unsupported) rows.push({ index: -1, label: why, status: "unsupported", note: "not done", need: null });
+    for (const question of plan.clarify) rows.push({ index: -1, label: "Not understood yet", status: plan.phase === "review" ? "needs" : "skipped", note: null, need: plan.phase === "review" ? { kind: "clarify", question } : null });
     const ready = rows.every((r) => r.status !== "needs");
     const mutating = plan.steps.some((s) => MUTATING.has(s.step.action!));
     let lines: string[] = [];
     let details: string[] = [...plan.checks];
     let canApply = false;
     if (plan.phase === "review") {
+      const preparing = performance.now();
       const undone = plan.steps.some((s) => s.step.action === "undo") ? h.previewUndo() : null;
       const dry = ready ? dryRun(project, plan.steps, undone) : null;
+      if (ready && plan.timing.prepareMs === undefined) plan.timing.prepareMs = Math.round(performance.now() - preparing);
       if (dry && !dry.ok) {
         rows[dry.index] = { ...rows[dry.index]!, status: "failed", note: dry.message };
         lines = [`Can't do: ${dry.message}`];
@@ -327,9 +424,10 @@ export class ChatController {
         h.setPreview({ ghosts: dry.ghosts, candidates: [], route: null });
       }
       if (plan.unsupported.length) lines.push(`Only the steps above can be done; the rest is not supported and will not be attempted.`);
+      if (plan.clarify.length) lines.push("Nothing is applied until the part not understood is answered.");
       if (mutating) details.push("Directions are as seen from above (the Top view), whatever the camera shows. Nothing changes until you press Apply.");
     }
-    const single = plan.steps.length === 1 && !plan.unsupported.length && mutating;
+    const single = plan.steps.length === 1 && !plan.unsupported.length && !plan.clarify.length && mutating;
     const title = (() => {
       if (plan.phase === "review") return single ? `${rows[0]!.label}?` : `Plan: ${plan.steps.length} step${plan.steps.length === 1 ? "" : "s"}${ready ? "" : " (one needs your answer)"}`;
       if (plan.phase === "running") return "Working…";
@@ -358,8 +456,9 @@ export class ChatController {
       tone: plan.phase === "review" ? "question" : plan.phase === "done" ? "done" : plan.phase === "running" ? "progress" : plan.phase === "cancelled" && plan.applied === 0 ? "info" : "warn",
       text: title,
       lines,
-      details: plan.phase === "review" ? details : [],
+      details: plan.phase === "review" ? [...details, ...timingLines(plan.timing, plan.via)] : timingLines(plan.timing, plan.via),
       buttons,
+      timing: { ...plan.timing },
       closed: false,
       // One change says itself in the title: its row is shown only while it asks or fails.
       plan: { id: plan.id, phase: plan.phase, rows: single && (plan.phase !== "review" || (!rows[0]!.need && rows[0]!.status !== "failed")) ? [] : rows, canApply },
@@ -443,6 +542,235 @@ export class ChatController {
     this.renderPlan(plan);
   };
 
+  // ---------- Equipment appearance (UX-05) ----------
+
+  private looks = new Map<number, LookState>();
+  private nextLook = 1;
+
+  /** Review models for imported equipment, all of it or only `only`. Deterministic: no AI. */
+  startLook = async (only?: string[]) => {
+    const h = this.host;
+    const project = h.project;
+    if (!project) return void this.needWorld();
+    const objects = equipmentToImprove(project).filter((o) => !only || only.includes(o.id));
+    const picked = only ? project.scene.objects.filter((o) => only.includes(o.id) && o.kind === "equipment") : objects;
+    if (!picked.length) {
+      this.say("done", h.facts.hasDrawing ? "All the imported equipment already has a model, or there is none." : "Matching models is for equipment of an imported plan; open or attach one first.", { tone: "info" });
+      return;
+    }
+    const library = await h.library().catch(() => [] as CatalogAsset[]);
+    const now = this.host.project;
+    if (!now || now !== project) return; // the world changed while the catalog loaded
+    const matches = matchEquipment(now, picked, library);
+    const id = this.nextLook++;
+    const entryId = this.push({ role: "assistant", kind: "appearance", tone: "question", text: "", buttons: [] });
+    const look: LookState = {
+      id,
+      entryId,
+      loadId: h.loadId,
+      baseRevision: now.scene.revision,
+      library,
+      rows: matches.map((match) => ({ match, chosen: null, kept: false, browsing: only !== undefined && match.kind !== "suggested", made: null, note: null })),
+      phase: "review",
+      revisionAfter: null,
+      applied: 0,
+    };
+    this.looks.set(id, look);
+    this.renderLook(look);
+  };
+
+  private renderLook(look: LookState) {
+    const rows: LookRow[] = look.rows.map((r) => {
+      const m = r.match;
+      const options = (m.kind === "suggested" ? [m.best, ...m.others] : m.options).map(lookOption);
+      const status: LookRow["status"] = r.made ? "made" : r.chosen ? "chosen" : r.kept ? "kept" : m.kind;
+      return {
+        objectId: m.object.id,
+        label: m.label,
+        status,
+        question: m.kind === "ask" ? m.question : m.kind === "none" ? "No catalog model is this kind of equipment." : null,
+        suggestion: m.kind === "suggested" ? lookOption(m.best) : null,
+        chosen: r.chosen,
+        options,
+        browsing: r.browsing,
+        note: r.note,
+      };
+    });
+    const chosen = look.rows.filter((r) => r.chosen);
+    const count = (k: Match["kind"]) => look.rows.filter((r) => r.match.kind === k && !r.chosen && !r.kept && !r.made).length;
+    const parts = [count("suggested") && `${count("suggested")} suggested`, count("ask") && `${count("ask")} to choose or keep`, count("none") && `${count("none")} without a catalog model`].filter(Boolean);
+    const title = {
+      review: `Equipment appearance${parts.length ? `: ${parts.join(", ")}` : ""}`,
+      applied: `Changed the look of ${look.applied} object${look.applied === 1 ? "" : "s"}.`,
+      cancelled: "Kept every object as it was.",
+      stale: "The world changed since these suggestions, so nothing was changed.",
+      undone: "Undone: the objects look as they did before.",
+    }[look.phase];
+    const lines =
+      look.phase === "review"
+        ? [
+            "Each model is a generic illustration fitted to the recorded size; it identifies no manufacturer or machine. Only how the object is drawn changes: its id, name, position, dimensions and their evidence, process and drawing links, and every check and run stay as they are.",
+            ...(chosen.length ? [`Apply changes: ${chosen.map((r) => r.match.label).join(", ")}.`] : []),
+          ]
+        : look.phase === "applied"
+          ? ["Display only: dimensions and their evidence, process and drawing links are unchanged, and runs read the same layout."]
+          : [];
+    const buttons: CardButton[] = [];
+    if (look.phase === "review") {
+      if (chosen.length) buttons.push({ label: `Apply ${chosen.length} change${chosen.length === 1 ? "" : "s"}`, testId: "look-apply", primary: true, run: () => this.lookApply(look.id) });
+      buttons.push({ label: chosen.length ? "Cancel" : "Done", testId: "look-cancel", run: () => this.lookCancel(look.id) });
+    } else if (look.phase === "applied") {
+      buttons.push({ label: "Undo", testId: "look-undo", run: () => this.lookUndo(look.id) });
+    } else if (look.phase === "stale") {
+      buttons.push({ label: "Suggest again", testId: "look-again", run: () => void this.startLook() });
+    }
+    this.update(look.entryId, {
+      kind: look.phase === "review" ? "appearance" : `appearance-${look.phase}`,
+      tone: look.phase === "review" ? "question" : look.phase === "applied" ? "done" : look.phase === "stale" ? "warn" : "info",
+      text: title,
+      lines,
+      buttons,
+      closed: look.phase !== "review" && look.phase !== "applied",
+      look: { id: look.id, phase: look.phase, rows: look.phase === "review" ? rows : rows.filter((r) => r.status === "chosen" || r.status === "made"), canApply: chosen.length > 0 },
+    });
+  }
+
+  private lookOf(id: number): LookState | null {
+    const look = this.looks.get(id);
+    return look && look.phase === "review" ? look : null;
+  }
+
+  private rowOf(look: LookState, objectId: string) {
+    return look.rows.find((r) => r.match.object.id === objectId) ?? null;
+  }
+
+  /** Use this model (for Apply): shown on the object in the world at once. */
+  lookUse = (id: number, objectId: string, assetId: string) => {
+    const look = this.lookOf(id);
+    const row = look && this.rowOf(look, objectId);
+    const asset = look?.library.find((a) => a.id === assetId);
+    if (!look || !row || !asset || row.made) return;
+    row.chosen = assetId;
+    row.kept = false;
+    row.browsing = false;
+    this.host.setLookPreview({ objectId, asset });
+    this.renderLook(look);
+  };
+
+  lookKeep = (id: number, objectId: string) => {
+    const look = this.lookOf(id);
+    const row = look && this.rowOf(look, objectId);
+    if (!look || !row || row.made) return;
+    row.chosen = null;
+    row.kept = true;
+    row.browsing = false;
+    this.host.setLookPreview(null);
+    this.renderLook(look);
+  };
+
+  lookBrowse = (id: number, objectId: string) => {
+    const look = this.lookOf(id);
+    const row = look && this.rowOf(look, objectId);
+    if (!look || !row) return;
+    row.browsing = !row.browsing;
+    row.kept = false;
+    this.renderLook(look);
+  };
+
+  /** Hovering an option: the object drawn with it (display only) and highlighted. */
+  lookHover = (id: number, objectId: string | null, assetId: string | null) => {
+    const look = this.looks.get(id);
+    const h = this.host;
+    if (!look || look.phase !== "review" || !objectId) {
+      h.setLookPreview(null);
+      return;
+    }
+    const row = this.rowOf(look, objectId);
+    const asset = look.library.find((a) => a.id === (assetId ?? row?.chosen));
+    h.setPreview({ ghosts: [], candidates: [objectId], route: null });
+    h.setLookPreview(asset ? { objectId, asset } : null);
+  };
+
+  lookApply = (id: number) => {
+    const look = this.lookOf(id);
+    if (!look) return; // applied at most once
+    const h = this.host;
+    const chosen = look.rows.filter((r) => r.chosen);
+    if (!chosen.length) return;
+    look.phase = "applied"; // before executing: a second click finds nothing to apply
+    const assets = [...new Set(chosen.map((r) => r.chosen!))].map((a) => look.library.find((x) => x.id === a)!).filter(Boolean);
+    const outcome = h.loadId === look.loadId ? h.execute({ baseRevision: look.baseRevision, command: { type: "set_appearance", changes: chosen.map((r) => ({ objectId: r.match.object.id, assetId: r.chosen, expected: r.match.object.asset_id })), assets } }) : null;
+    h.setLookPreview(null);
+    h.setPreview(null);
+    if (!outcome?.ok) {
+      look.phase = "stale";
+      this.renderLook(look);
+      if (outcome && outcome.rejection.kind !== "conflict") this.update(look.entryId, { lines: [outcome.rejection.message] });
+      return;
+    }
+    look.applied = chosen.length;
+    look.revisionAfter = outcome.state.project.scene.revision;
+    this.renderLook(look);
+  };
+
+  lookCancel = (id: number) => {
+    const look = this.lookOf(id);
+    if (!look) return;
+    look.phase = "cancelled";
+    for (const r of look.rows) r.chosen = null;
+    this.host.setLookPreview(null);
+    this.host.setPreview(null);
+    this.renderLook(look);
+  };
+
+  lookUndo = (id: number) => {
+    const look = this.looks.get(id);
+    if (!look || look.phase !== "applied") return;
+    if (look.revisionAfter !== this.host.project?.scene.revision) {
+      // Something else changed after it: undo in order from the top bar instead.
+      this.update(look.entryId, { lines: ["Later changes came after this one: use Undo in the top bar to step back in order."] });
+      return;
+    }
+    const outcome = this.host.undo();
+    if (!outcome?.ok) return;
+    look.phase = "undone";
+    this.renderLook(look);
+  };
+
+  /** No suitable model: describe it to the object generator, or build it by hand. The current
+   * object stays as it is while that runs; a cancelled or failed generation changes nothing. */
+  lookCreate = (id: number, objectId: string, kind: "describe" | "builder") => {
+    const look = this.lookOf(id);
+    const row = look && this.rowOf(look, objectId);
+    const project = this.host.project;
+    if (!look || !row || !project) return;
+    const object = project.scene.objects.find((o) => o.id === objectId);
+    if (!object) return;
+    this.host.openLookCreate(objectId, kind, describeFor(project, object), (outcome) => {
+      if (look.phase !== "review") return;
+      if (outcome === null) row.note = "Closed without a new model: it looks as before.";
+      else if (!outcome.ok) row.note = `Not changed: ${outcome.message}`;
+      else {
+        row.made = outcome.assetName;
+        row.chosen = null;
+        row.note = `Now drawn with “${outcome.assetName}” (its own undo step; size and evidence unchanged).`;
+        // That step was this card's own: the other rows still apply to the world as it is now.
+        look.baseRevision = this.host.project?.scene.revision ?? look.baseRevision;
+      }
+      this.renderLook(look);
+    });
+  };
+
+  /** Answer the part of a plan that was not understood: this plan closes, and the request is
+   * interpreted again with the answer (one new call; nothing was applied). */
+  planClarify = (id: number, answer: string) => {
+    const plan = this.planOf(id);
+    const reply = answer.trim();
+    if (!plan || !reply) return;
+    this.cancelPlan(id, "Asked again with your answer.");
+    void this.send(`${plan.message} (${reply})`);
+  };
+
   cancelPlan = (id: number, note?: string) => {
     const plan = this.plans.get(id);
     if (!plan) return;
@@ -484,6 +812,17 @@ export class ChatController {
   };
 
   private executeSteps = async (plan: PlanState) => {
+    const started = performance.now();
+    try {
+      await this.performSteps(plan);
+    } finally {
+      // The steps' own work, without the pauses between them that let Cancel in.
+      plan.timing.executeMs = Math.max(0, Math.round(performance.now() - started - STEP_PAUSE_MS * plan.steps.length));
+      this.renderPlan(plan);
+    }
+  };
+
+  private performSteps = async (plan: PlanState) => {
     const h = this.host;
     let project = h.project!;
     const pre = project;
@@ -493,7 +832,7 @@ export class ChatController {
     let lastRun: DayRun | null = h.day && !h.facts.runStale ? h.day : null;
     let stopped = false;
     for (let i = 0; i < plan.steps.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 120)); // show progress; let Cancel in
+      await new Promise((resolve) => setTimeout(resolve, STEP_PAUSE_MS)); // show progress; let Cancel in
       if (plan.cancelled) {
         for (let j = i; j < plan.steps.length; j++) plan.statuses[j] = "cancelled";
         plan.phase = "cancelled";
@@ -762,10 +1101,12 @@ export class ChatController {
     if (!made) return null;
     const s = runSentence(made, project);
     const lines = [...s.lines];
-    if (again && previous?.result && made.result) {
+    // "Again" only when there is an earlier run to repeat; otherwise it is simply a run.
+    const repeat = again && previous?.result != null;
+    if (repeat && previous?.result && made.result) {
       lines.unshift(made.result.fingerprint === previous.result.fingerprint ? "Same events as the last run: the change didn't affect this shift." : `Was ${previous.result.metrics.completed} before the change, with the same process and seed.`);
     }
-    this.say(again ? "run-again" : "run", `${again ? "Ran the same shift again" : "Ran the shift"}. Whole-shift result: ${s.text}`, {
+    this.say(repeat ? "run-again" : "run", `${repeat ? "Ran the same shift again" : "Ran the shift"}. Whole-shift result: ${s.text}`, {
       tone: s.tone,
       via,
       lines,
@@ -846,7 +1187,7 @@ export class ChatController {
 
   // ── Typed messages ─────────────────────────────────────────────────────────────────────
 
-  act = (result: ChatResult, message: string) => {
+  act = (result: ChatResult, message: string, timing: NonNullable<Entry["timing"]> = {}) => {
     const via = result.provider.mode;
     const h = this.host;
     if (result.outcome === "unsupported") {
@@ -870,7 +1211,7 @@ export class ChatController {
       this.say("question", result.question!, { tone: "question", via, choices, lines: result.checks });
       return;
     }
-    this.startPlan(result.steps, message, via, result.checks);
+    this.startPlan(result.steps, message, via, result.checks, timing);
   };
 
   send = async (text: string) => {
@@ -878,6 +1219,13 @@ export class ChatController {
     if (message.length < 3 || this.getBusy()) return; // one request at a time: no duplicate sends
     const h = this.host;
     this.push({ role: "user", kind: "user", text: message, tone: "info" });
+    if (LOOK_WORDS.test(message) && h.facts.hasDrawing) {
+      // How equipment looks is matched here, from the catalog, with no model call.
+      // "this equipment" is all of it; "it", "this machine" or "the selected one" is the selection.
+      const selected = h.selectedId && /\b(it|selected|this (?:object|machine|one))\b/i.test(message) ? [h.selectedId] : undefined;
+      void this.startLook(selected);
+      return;
+    }
     if (!h.assist.available) {
       this.say(
         "cannot",
@@ -893,8 +1241,17 @@ export class ChatController {
     const project = h.project;
     const revision = project?.scene.revision ?? -1;
     const loadId = h.loadId;
-    const entryId = this.push({ role: "assistant", kind: "progress", text: "Reading your request…", tone: "progress", buttons: [] });
+    // One deadline for the whole interpretation (the API's, retries included); the browser stops
+    // waiting just after it. Progress is the time elapsed, never an invented percentage.
+    const deadlineS = h.assist.deadlineS ?? 30;
+    const started = performance.now();
+    const waiting = (elapsed: number) => `Reading your request… ${elapsed} s (stops at ${deadlineS} s)`;
+    const entryId = this.push({ role: "assistant", kind: "progress", text: waiting(0), tone: "progress", buttons: [] });
+    const ticker = setInterval(() => {
+      if (this.pending?.entryId === entryId) this.update(entryId, { text: waiting(Math.floor((performance.now() - started) / 1000)) });
+    }, 1000);
     const cancel = () => {
+      clearInterval(ticker);
       controller.abort();
       this.update(entryId, { text: "Cancelled. Nothing was changed.", tone: "info", closed: true, kind: "cancelled" });
       if (this.pending?.entryId === entryId) this.pending = null;
@@ -909,24 +1266,45 @@ export class ChatController {
     const focus = refers && this.focus && project?.scene.objects.some((o) => o.id === this.focus) ? this.focus : null;
     let response: Awaited<ReturnType<ApiClient["interpretChat"]>>;
     try {
-      response = await h.client.interpretChat({ request: message, context, state: chatState(h.facts), focus_object_id: focus }, controller.signal);
+      response = await h.client.interpretChat({ request: message, context, state: chatState(h.facts), focus_object_id: focus }, controller.signal, (deadlineS + 3) * 1000);
     } catch {
       return; // cancelled: the card already says so
+    } finally {
+      clearInterval(ticker);
     }
-    if (controller.signal.aborted) return;
+    if (controller.signal.aborted) return; // a late answer to a cancelled request is dropped
     this.pending = null;
     this.setBusy(false);
+    const interpretMs = Math.round(performance.now() - started);
     const now = this.host;
     if (now.loadId !== loadId || (now.project?.scene.revision ?? -1) !== revision) {
       this.update(entryId, { text: "The world changed while I was reading that, so the answer was set aside and nothing was applied. Ask again.", tone: "warn", closed: true, kind: "stale" });
       return;
     }
     if (!response.ok) {
-      this.update(entryId, { text: `The AI couldn't answer: ${response.error.message}`, tone: "error", closed: true, kind: "error" });
+      const error = response.error;
+      const timedOut = (error.kind === "http" && error.status === 504) || (error.kind === "network" && /did not respond within/.test(error.message));
+      if (timedOut) {
+        // Nothing was changed and no second request is started: Try again is the person's choice.
+        this.update(entryId, {
+          kind: "timeout",
+          tone: "warn",
+          closed: false,
+          text: `No answer within ${deadlineS} s, so nothing was changed.`,
+          lines: [`Your request: “${message}”`, "Try again, or do it by hand: the suggestions below and Move a machine work without the AI."],
+          buttons: [
+            { label: "Try again", testId: "chat-retry", primary: true, run: () => (this.update(entryId, { closed: true, buttons: [] }), void this.send(message)) },
+            { label: "Move a machine by hand", testId: "chat-manual-move", run: () => (this.update(entryId, { closed: true, buttons: [] }), this.suggest("move_any")) },
+          ],
+          timing: { interpretMs },
+        });
+        return;
+      }
+      this.update(entryId, { text: `The AI couldn't answer: ${error.message}`, tone: "error", closed: true, kind: "error" });
       return;
     }
     this.remove(entryId);
-    this.act(response.value, message);
+    this.act(response.value, message, { interpretMs, ...(response.value.timing ? { providerMs: response.value.timing.provider_ms } : {}) });
   };
 
   cancelPending = () => {
@@ -959,6 +1337,7 @@ export class ChatController {
       compare: () => this.doWhy(),
       undo: () => this.doUndo(),
       export: this.doExport,
+      appearance: () => void this.startLook(),
     };
     actions[id]();
   };

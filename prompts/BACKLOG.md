@@ -601,6 +601,17 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   - **Still not met:**
     - matching **imported** equipment to catalog or generated models;
     - free questions about the scene.
+- Update (2026-10-25, ADR-064, UX-05): **imported equipment can be matched to catalog or generated models; AGT-01 stays open.**
+  - **Built:**
+    - deterministic matching from name evidence (names, station names, drawing labels as untrusted words) and fit;
+    - suggestions, questions and a reviewed batch applied by `set_appearance` (display only);
+    - the object generator for an existing object;
+    - all of it works without AI.
+  - **The chat** sends names and kinds only (chat-03), reads every number from each step's own words, and has a 30 s end-to-end deadline.
+  - **Still not met:**
+    - no model ranks or proposes candidates (the criterion allows it; matching here is deterministic only), and the catalog has four models;
+    - free questions about the scene;
+    - "each value records its source and uncertainty" holds for sizes, but a chosen model records no matching confidence (none is calibrated).
 
 ### UX-01 - Three-action main screen
 
@@ -664,7 +675,7 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
     - drawn sizes are `drawn` (design evidence), with one readiness rule for later checks.
   - **Precise gap (why it stays open):**
     - split and merge of drawn objects (IMG-02's patterns);
-    - mapping equipment to catalog or generated models (the done-when's "correct mappings");
+    - mapping equipment to catalog or generated models (the done-when's "correct mappings"). Built in UX-05 (2026-10-25, ADR-064): reviewed, undoable, display-only mappings; not yet split/merge;
     - wall solids from wall lines (no thickness or height is claimed);
     - closing an open shape into an object;
     - more than one known length, rotation or non-uniform scale.
@@ -808,6 +819,37 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   - e2e `plans.spec.ts` (6), `chat.spec.ts`, `local/chat-nokey.spec.ts`, `external/workshop-chat.spec.ts` (local);
   - `apps/web/src/chat/plan.ts`, `controller.test.ts`, `services/api/tests/test_chat.py`.
 
+### UX-05 - Responsive chat, and reviewed models for imported equipment
+
+- Priority: P0
+- Dependencies: UX-04, AGT-01 (partial), IMP-02 (partial)
+- Baseline status: added 2026-10-25 (ADR-064)
+- Done when:
+  - **The chat path is measured stage by stage** (preparation, provider, checking, proposal, execution), with the provider's tokens where it reports them, and made compact:
+    - names and kinds sent, no unrelated geometry;
+    - short typed answers expanded locally;
+    - every number read from the step's own words;
+    - clarifications kept and blocking Apply.
+  - **One end-to-end chat deadline** (30 s, configurable, separate from generation):
+    - elapsed time and Cancel while waiting;
+    - on timeout, the request kept, Try again and the manual controls offered, nothing changed, no hidden second request;
+    - late answers discarded.
+  - **Imported equipment can be drawn with reviewed catalog or generated models, without rebuilding the world:**
+    - deterministic suggestions from name evidence, with fit warnings and no confidence figures;
+    - questions for ambiguous names, and a reviewed batch;
+    - only `asset_id` changes;
+    - generation for an existing object;
+    - all of it without AI.
+  - **Verification:** synthetic and workshop journeys, no-key matching, the failure cases, screens at both sizes, a demo, and a live comparison within 8 calls.
+- Status (2026-10-25): **done for these criteria**, measured by scripts.
+  - The aim of returning common short plans within 10 s was met by the four chat-03 calls whose time was captured (6.2–6.9 s); one of six attempts timed out at 30 s.
+  - Whether people find it easier stays **UX-02**.
+- Evidence:
+  - docs/ux-05/ (measurements, live budget, screens);
+  - docs/demo/ux05-appearance-and-request.mp4;
+  - e2e `appearance.spec.ts` (5), `local/chat-nokey.spec.ts`, `external/workshop-chat.spec.ts` (local);
+  - `assist/chat.py`, `assist/clauses.py`, `apps/web/src/matching/`, and their tests.
+
 ### UX-02 - Measure the onboarding targets with people
 
 - Priority: P1
@@ -822,6 +864,7 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
 - Evidence: not recorded
 - Note (2026-10-20): still open. UX-03 changed the main screen to chat-first; its click and time counts are scripted, not a study with newcomers.
 - Note (2026-10-24): still open. UX-04's journeys and comparisons are scripted; no participant has tried them.
+- Note (2026-10-25): still open after UX-05; no participant has tried it.
 
 ## M5 - Spatial checks
 

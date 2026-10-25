@@ -92,7 +92,7 @@ cp .env.example .env    # then set VOYAGER_API_KEY=... in .env, and restart pnpm
   - **Suggest setup** in Run a day: your sentence about the work, plus the reviewed objects' names. It suggests stations and their order only, never times or staffing.
 
   Details are in [assist.md](assist.md).
-  - A chat request: your words, plus the objects' ids, names, kinds, positions and sizes, the selection and what the app can do now. Never a drawing, a picture or a file's text: attaching a plan only stores it on this computer.
+  - A chat request: your words, plus the objects' ids, names and kinds, the selection and what the app can do now (no positions or sizes). Never a drawing, a picture or a file's text: attaching a plan only stores it on this computer. Matching equipment to catalog models is done on this computer and sends nothing.
 - **Under ASU's AI governance,** send only plans and photos you are authorized to share with ASU Voyager, and treat what comes back as a proposal you review.
 
 ## Limits

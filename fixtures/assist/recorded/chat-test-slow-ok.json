@@ -1,0 +1,16 @@
+{
+  "task": "chat",
+  "key": "Run the shift slowly for the progress test | selected=none | scene=53151f7c69de",
+  "case": "test-slow-ok",
+  "message": "Run the shift slowly for the progress test",
+  "service": "none (synthetic test fixture)",
+  "model": "none (synthetic test fixture)",
+  "prompt_version": "chat-03",
+  "recorded_at": "2026-10-24",
+  "test_only": true,
+  "note": "A synthetic test fixture, NOT a live answer: it replays a provider that answers after replay_delay_ms, to test the chat deadline, progress and timeout offline.",
+  "replay_delay_ms": 4000,
+  "responses": [
+    "{\"steps\":[{\"do\":\"run_day\",\"obj\":null,\"obj2\":null,\"what\":null,\"said\":\"Run the shift slowly for the progress test\",\"alts\":[]}]}"
+  ]
+}

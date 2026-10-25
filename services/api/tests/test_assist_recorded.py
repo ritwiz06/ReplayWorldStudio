@@ -75,8 +75,13 @@ def test_recordings_name_the_live_model_and_hold_no_secrets() -> None:
     assert len(files) >= 10
     for path in files:
         data = json.loads(path.read_text())
-        assert data["service"] == "ASU Voyager"
-        assert data["model"] == LIVE_MODELS[data["task"]]
+        if data.get("test_only"):
+            # A synthetic test fixture (a slow provider, an answer shape) never claims a model.
+            assert data["service"] == data["model"] == "none (synthetic test fixture)"
+            assert "NOT a live answer" in data["note"]
+        else:
+            assert data["service"] == "ASU Voyager"
+            assert data["model"] == LIVE_MODELS[data["task"]]
         if data["task"] == "image":
             # Keyed by the original photo's bytes, which are committed beside the recording.
             photo = (ROOT / "fixtures" / "photos" / data["photo"]).read_bytes()

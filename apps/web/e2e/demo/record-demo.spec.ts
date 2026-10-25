@@ -226,3 +226,103 @@ test("record the UX-04 request", async ({ page }) => {
   writeFileSync(`${dir}/frames.json`, JSON.stringify({ frames }, null, 1));
   console.log(JSON.stringify({ frames: frames.length, seconds: frames.at(-1)!.t - frames[0]!.t }));
 });
+
+// UX-05: upload and review a plan, improve its equipment's look from the catalog, then one
+// connected request on the example factory's shift. Recorded answers (DEMO_ASSIST=recorded),
+// synthetic files only. Run with -g "UX-05"; frames go to test-results/demo-frames-ux05.
+test("record the UX-05 journey", async ({ page }) => {
+  test.skip(process.env.DEMO_ASSIST !== "recorded", "needs DEMO_ASSIST=recorded");
+  test.setTimeout(240_000);
+  const dir = `${ROOT}apps/web/test-results/demo-frames-ux05`;
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  const frames: { file: string; t: number }[] = [];
+  const caption = async () =>
+    page.evaluate(() => {
+      if (document.getElementById("demo-caption")) return;
+      const style = document.createElement("style");
+      style.textContent = `#demo-caption { position: fixed; top: 206px; left: 530px; transform: translateX(-50%); z-index: 99999; pointer-events: none;
+        width: 660px; box-sizing: border-box; background: rgba(13,17,23,.92); color: #fff; font: 500 18px/1.35 system-ui, sans-serif;
+        padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); text-align: center; }
+        #demo-caption:empty { display: none; }`;
+      document.head.append(style);
+      const el = document.createElement("div");
+      el.id = "demo-caption";
+      document.body.append(el);
+    });
+  const record = async () => {
+    const session = await page.context().newCDPSession(page);
+    session.on("Page.screencastFrame", async ({ data, metadata, sessionId }) => {
+      const file = `${String(frames.length).padStart(5, "0")}.jpg`;
+      writeFileSync(`${dir}/${file}`, Buffer.from(data, "base64"));
+      frames.push({ file, t: metadata.timestamp ?? Date.now() / 1000 });
+      await session.send("Page.screencastFrameAck", { sessionId }).catch(() => undefined);
+    });
+    await session.send("Page.startScreencast", { format: "jpeg", quality: 90, maxWidth: 1440, maxHeight: 900, everyNthFrame: 1 });
+    return session;
+  };
+  const hold = (ms: number) => page.waitForTimeout(ms);
+  const chat = page.getByTestId("chat");
+
+  await page.goto("/");
+  await page.evaluate(() => localStorage.setItem("rws.view", "chat"));
+  await page.goto("/");
+  await caption();
+  let session = await record();
+  await say(page, "A synthetic plan (DXF) is attached: read on this computer, then reviewed one question at a time.");
+  await chat.getByTestId("chat-file-input").setInputFiles(`${ROOT}fixtures/drawings/hall-mm.dxf`);
+  const review = chat.getByTestId("chat-review");
+  await expect(review).toBeVisible({ timeout: 30_000 });
+  await hold(3000);
+  for (let i = 0; i < 8 && (await review.count()); i++) {
+    const next = review.locator('[data-testid^="chat-"][data-testid$="-accept"], [data-testid="chat-symbols-none"]').first();
+    if (!(await next.count())) break;
+    await next.click();
+    await hold(900);
+  }
+  await chat.getByTestId("chat-suggest-appearance").click();
+  const look = chat.locator('[data-kind="appearance"]').last();
+  await expect(look).toBeVisible();
+  await say(page, "Improve equipment appearance: catalog models are suggested only where the names agree. Nothing changes until Apply.");
+  const suggested = look.locator('[data-status="suggested"]').first();
+  await suggested.hover();
+  await hold(4500);
+  await suggested.locator('[data-testid^="look-use-"]').click();
+  await hold(1200);
+  await look.getByTestId("look-apply").click();
+  await say(page, "Applied as one undoable step: ids, sizes, evidence and links unchanged.");
+  await hold(4000);
+  await session.send("Page.stopScreencast");
+
+  await page.goto("/");
+  await caption();
+  session = await record();
+  await page.getByTestId("empty-example").click();
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+  await say(page, "The example factory, with its example shift. Its cabinets get the catalog model the same way.");
+  await chat.getByTestId("chat-suggest-appearance").click();
+  const sample = chat.locator('[data-kind="appearance"]').last();
+  await sample.getByTestId("look-use-obj-dxf-10f").click();
+  await sample.getByTestId("look-use-obj-dxf-10c").click();
+  await sample.getByTestId("look-apply").click();
+  await hold(2500);
+  await say(page, "One connected request (a recorded AI answer, replayed).");
+  await page.getByTestId("chat-input").pressSequentially("Move Machine B 1 metre right, check its routes, and run the shift again.", { delay: 20 });
+  await page.getByTestId("chat-send").click();
+  const plan = chat.locator('[data-kind="proposal"]').last();
+  await expect(plan.getByTestId("chat-apply")).toBeVisible();
+  await hold(4500);
+  await plan.getByTestId("chat-apply").click();
+  await expect(chat.locator('[data-kind="plan-done"]').last()).toBeVisible({ timeout: 60_000 });
+  await page.getByTestId("run-speed").selectOption("120");
+  await say(page, "Applied step by step: the move, its routes, then the shift.");
+  await hold(5000);
+  await page.getByTestId("chat-input").fill("Why did output change?");
+  await page.getByTestId("chat-send").click();
+  await expect(chat.locator('[data-kind="why"]').last()).toBeVisible();
+  await say(page, "Why: from the comparison of the two runs, not from the AI.");
+  await hold(5000);
+  await session.send("Page.stopScreencast");
+  writeFileSync(`${dir}/frames.json`, JSON.stringify({ frames }, null, 1));
+  console.log(JSON.stringify({ frames: frames.length }));
+});

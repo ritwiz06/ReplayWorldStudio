@@ -193,7 +193,7 @@ test("external: the workshop's move, rerun and explanation as one request (UX-04
 
   await ask(page, "Move the workbench 1 metre right, run the same shift, and explain the difference.");
   const plan = card(page, "proposal");
-  await expect(plan.getByTestId("plan-rows").locator(".plan-label")).toHaveText(["Move Workbench (Fixtures 5) 1 m right", "Run the shift", "Explain the difference"], { timeout: 30_000 });
+  await expect(plan.getByTestId("plan-rows").locator(".plan-label")).toHaveText(["Move Workbench (Fixtures 5) 1 m right", "Run the same shift again", "Explain the difference"], { timeout: 30_000 });
   await page.screenshot({ path: `${OUT}/chat-workshop-plan-1-review-1440.png` });
   await click(page, "chat-apply");
   const done = card(page, "plan-done");
@@ -231,4 +231,65 @@ test("external: the workshop's move, rerun and explanation as one request (UX-04
   const report = { phases, clicks: tally.clicks, typed: tally.typed, original, edited: again, total: Object.values(phases).reduce((a, b) => a + b, 0) };
   writeFileSync(`${OUT}/chat-workshop-plan-journey.json`, JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report, null, 2));
+});
+
+test("external: the workshop's cabinet and workbench drawn with reviewed models; the operating model is untouched (UX-05)", async ({ page }) => {
+  test.skip(!existsSync(DXF), "data/external/innerscene/garage-and-workshop-72-m2.dxf is not downloaded");
+  test.setTimeout(300_000);
+  mkdirSync(OUT, { recursive: true });
+  await page.goto("/");
+  const original = await reviewAndRun(page, () => undefined);
+  const save = async () => {
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("save").click()]);
+    const text = readFileSync((await download.path())!, "utf8");
+    return { name: download.suggestedFilename(), text, project: JSON.parse(text) as { process: unknown; sources: unknown; scene: { objects: { id: string; asset_id: string | null }[] } } };
+  };
+  const before = await save();
+
+  // The request's own words: matched here from the catalog, with no model call.
+  await ask(page, "Make this equipment easier to recognise");
+  const look = card(page, "appearance");
+  // The right kind of thing, but a poor fit: asked, with the stretch said, not suggested.
+  const cabinet = look.getByTestId("look-row-obj-dxf-71");
+  await expect(cabinet).toHaveAttribute("data-status", "ask");
+  await expect(cabinet).toContainText("are both a cabinet, but the model would be stretched to 287 %");
+  await page.screenshot({ path: `${OUT}/ux05-workshop-suggestions-1440.png` });
+  await cabinet.getByTestId("look-other-obj-dxf-71").click();
+  await expect(cabinet.getByTestId("look-browse-obj-dxf-71")).toContainText("generic model");
+  await cabinet.getByTestId("look-option-obj-dxf-71-asset-electrical-cabinet-800").click();
+  await look.getByTestId("look-apply").click();
+  await expect(card(page, "appearance-applied")).toContainText("Changed the look of 1 object.");
+
+  await ask(page, "Make this equipment easier to recognise");
+  const again = card(page, "appearance");
+  await again.getByTestId("look-rest").locator("summary").click();
+  const bench = again.getByTestId("look-row-obj-dxf-70");
+  await expect(bench).toHaveAttribute("data-status", "none");
+  await bench.getByTestId("look-describe-obj-dxf-70").click();
+  const dialog = page.getByTestId("create-object");
+  await dialog.getByRole("textbox").first().fill("a workbench 1.8 m wide with a monitor and a drawer unit");
+  await dialog.getByRole("button", { name: /Draft|Propose|Describe/ }).first().click();
+  const use = dialog.getByRole("button", { name: "Use for Workbench" });
+  await expect(use).toBeVisible({ timeout: 30_000 });
+  await use.click();
+  await expect(bench).toContainText("Now drawn with");
+  await page.screenshot({ path: `${OUT}/ux05-workshop-after-1440.png` });
+
+  // Same ids, process and drawing links; only two objects reference models.
+  const after = await save();
+  expect(after.project.scene.objects.map((o) => o.id)).toEqual(before.project.scene.objects.map((o) => o.id));
+  expect(after.project.process).toEqual(before.project.process);
+  expect(after.project.sources).toEqual(before.project.sources);
+  expect(after.project.scene.objects.filter((o) => o.asset_id).map((o) => o.id)).toEqual(["obj-dxf-70", "obj-dxf-71"]);
+  // A change of look is not a change of what the run reads: the run stays current.
+  await expect(page.getByTestId("run-bar")).toHaveAttribute("data-fingerprint", original!);
+  await expect(page.getByText("The layout changed since this run")).toHaveCount(0);
+  // Saved, reopened and run afresh with the models: identical events and counts.
+  await page.goto("/");
+  await page.getByTestId("chat-file-input").setInputFiles({ name: after.name, mimeType: "application/json", buffer: Buffer.from(after.text) });
+  await expect(card(page, "done")).toContainText(`Opened ${after.name}`);
+  await click(page, "chat-suggest-run");
+  await expect(card(page, "run")).toContainText("66 kits completed");
+  expect(await fingerprintOf(page, "run")).toBe(original);
+  writeFileSync(`${OUT}/ux05-workshop-appearance.json`, JSON.stringify({ original, models: after.project.scene.objects.filter((o) => o.asset_id) }, null, 2));
 });

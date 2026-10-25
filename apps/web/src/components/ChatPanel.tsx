@@ -6,7 +6,7 @@
 import type { Project } from "@replay-world/contracts";
 import { type KeyboardEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { type SuggestionId, SUGGESTION_TEXT } from "../chat/context";
-import type { CardChoice, ChatController, Entry, PlanRow, PlanView } from "../chat/useChat";
+import type { CardChoice, ChatController, Entry, LookOption, LookRow, LookView, PlanRow, PlanView } from "../chat/useChat";
 import { nameOf } from "../chat/context";
 import type { ReviewCorrection } from "../drawing/review";
 import { reviewItems } from "../drawing/review";
@@ -39,7 +39,9 @@ interface Props {
   setup: ReactNode | null;
   fileInput: React.RefObject<HTMLInputElement | null>;
   /** The controller's plan actions (choices, forms, Apply, Cancel). */
-  plans: Pick<ChatController, "planTarget" | "planMove" | "planRotate" | "planAsset" | "planNear" | "planSide">;
+  plans: Pick<ChatController, "planTarget" | "planMove" | "planRotate" | "planAsset" | "planNear" | "planSide" | "planClarify">;
+  /** The appearance card's actions (UX-05). */
+  looks: Pick<ChatController, "lookUse" | "lookKeep" | "lookBrowse" | "lookHover" | "lookCreate">;
 }
 
 const AI_WORDS = { live: "AI on · ASU Voyager", recorded: "Recorded answers (test)", off: "AI off · no key", checking: "Checking the AI…", unreachable: "AI status unknown · retrying" } as const;
@@ -153,7 +155,15 @@ function UserLine({ entry }: { entry: Entry }) {
 function Card({ entry, project, props }: { entry: Entry; project: Project | null; props: Props }) {
   const live = !entry.closed;
   return (
-    <div className={`chat-card tone-${entry.tone}${entry.closed ? " closed" : ""}`} data-testid="chat-card" data-kind={entry.kind}>
+    <div
+      className={`chat-card tone-${entry.tone}${entry.closed ? " closed" : ""}`}
+      data-testid="chat-card"
+      data-kind={entry.kind}
+      data-interpret-ms={entry.timing?.interpretMs}
+      data-provider-ms={entry.timing?.providerMs}
+      data-prepare-ms={entry.timing?.prepareMs}
+      data-execute-ms={entry.timing?.executeMs}
+    >
       {entry.via && (
         <span className="chat-via" title={entry.via === "live" ? "Interpreted by the language model; the app checked and performed it" : "A recorded answer replayed offline (not live AI)"}>
           {entry.via === "live" ? "AI interpreted" : "recorded answer"}
@@ -168,6 +178,7 @@ function Card({ entry, project, props }: { entry: Entry; project: Project | null
         </ul>
       )}
       {entry.plan && entry.plan.rows.length > 0 && project && <PlanRows plan={entry.plan} project={project} props={props} />}
+      {entry.look && entry.look.rows.length > 0 && <LookRows look={entry.look} actions={props.looks} />}
       {live && entry.choices && entry.choices.length > 0 && <Choices choices={entry.choices} onHighlight={props.onHighlight} />}
       {live && entry.form?.kind === "move" && project && <MoveForm entry={entry} objectId={entry.form.objectId} project={project} onMove={props.onMove} onHighlight={props.onHighlight} />}
       {live && entry.form?.kind === "route" && project && <RouteForm entry={entry} form={entry.form} project={project} onRoute={props.onRoute} />}
@@ -304,8 +315,144 @@ function PlanNeed({ plan, row, project, props }: { plan: PlanView; row: PlanRow;
           ))}
         </div>
       )}
+      {need.kind === "clarify" && <ClarifyForm onAnswer={(text) => p.planClarify(plan.id, text)} />}
       {project === null && null}
     </div>
+  );
+}
+
+/** Reviewing models for imported equipment (UX-05): suggested, to choose, and the rest folded
+ * away; each row highlights its object, and an option draws the object with it while hovered. */
+function LookRows({ look, actions }: { look: LookView; actions: Props["looks"] }) {
+  const first = look.rows.filter((r) => r.status !== "none" && r.status !== "kept");
+  const rest = look.rows.filter((r) => r.status === "none" || r.status === "kept");
+  const row = (r: LookRow) => <LookRowView key={r.objectId} look={look} row={r} actions={actions} />;
+  return (
+    <div className="look-rows" data-testid="look-rows" onMouseLeave={() => actions.lookHover(look.id, null, null)}>
+      {first.map(row)}
+      {rest.length > 0 && look.phase === "review" && (
+        <details className="chat-details look-rest" data-testid="look-rest">
+          <summary>
+            Other equipment ({rest.length}): no catalog model of that kind{rest.some((r) => r.status === "kept") ? ", or kept" : ""}
+          </summary>
+          {rest.map(row)}
+        </details>
+      )}
+    </div>
+  );
+}
+
+function Still({ option }: { option: LookOption }) {
+  return option.preview ? <img className="look-still" src={option.preview} alt="" width={56} height={42} /> : <span className="look-still look-still-none" aria-hidden="true" />;
+}
+
+function LookOptionView({ option, brief = false }: { option: LookOption; brief?: boolean }) {
+  return (
+    <div className="look-option-body">
+      <Still option={option} />
+      <div>
+        <strong>{option.name}</strong>
+        {option.generic && <span className="look-tag">generic model</span>}
+        <p className="small">{option.reason}</p>
+        {brief ? (
+          <p className="small look-warn">{option.summary}</p>
+        ) : (
+          option.warnings.map((w) => (
+            <p key={w} className="small look-warn">
+              {w}
+            </p>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LookRowView({ look, row, actions }: { look: LookView; row: LookRow; actions: Props["looks"] }) {
+  const review = look.phase === "review";
+  const id = row.objectId;
+  const chosen = row.options.find((o) => o.assetId === row.chosen) ?? null;
+  const shown = chosen ?? row.suggestion;
+  const hover = (assetId: string | null) => review && actions.lookHover(look.id, id, assetId);
+  return (
+    <div className={`look-row look-${row.status}`} data-testid={`look-row-${id}`} data-status={row.status} onMouseEnter={() => hover(shown?.assetId ?? null)} onFocus={() => hover(shown?.assetId ?? null)}>
+      <div className="look-head">
+        <strong>{row.label}</strong>
+        <span className="look-state">{{ suggested: "suggested", ask: "your choice", none: "no catalog model", chosen: "✓ chosen", kept: "kept as it is", made: "new model applied" }[row.status]}</span>
+      </div>
+      {shown && row.status !== "made" && <LookOptionView option={shown} />}
+      {row.question && !chosen && row.status !== "kept" && row.status !== "made" && <p className="small">{row.question}</p>}
+      {row.note && <p className="small muted" data-testid={`look-note-${id}`}>{row.note}</p>}
+      {review && row.status !== "made" && (
+        <div className="chat-buttons">
+          {row.status === "suggested" && (
+            <button type="button" className="button button-small button-primary" data-testid={`look-use-${id}`} onClick={() => actions.lookUse(look.id, id, row.suggestion!.assetId)}>
+              Use this model
+            </button>
+          )}
+          {(row.status !== "none" || row.options.length > 0) && (
+            <button type="button" className="button button-small" data-testid={`look-other-${id}`} aria-expanded={row.browsing} onClick={() => actions.lookBrowse(look.id, id)}>
+              {row.status === "ask" ? "Choose a model" : "Choose another"}
+            </button>
+          )}
+          {row.status === "none" && (
+            <>
+              <button type="button" className="button button-small" data-testid={`look-describe-${id}`} onClick={() => actions.lookCreate(look.id, id, "describe")}>
+                Describe this equipment
+              </button>
+              <button type="button" className="button button-small" data-testid={`look-build-${id}`} onClick={() => actions.lookCreate(look.id, id, "builder")}>
+                Build it manually
+              </button>
+            </>
+          )}
+          {row.status !== "kept" && (
+            <button type="button" className="button button-small" data-testid={`look-keep-${id}`} onClick={() => actions.lookKeep(look.id, id)}>
+              {row.status === "none" ? "Keep the current stand-in" : "Keep current appearance"}
+            </button>
+          )}
+        </div>
+      )}
+      {review && row.browsing && <LookBrowse look={look} row={row} actions={actions} />}
+    </div>
+  );
+}
+
+/** Every catalog model that can be fitted to this object, searchable, each previewed on it. */
+function LookBrowse({ look, row, actions }: { look: LookView; row: LookRow; actions: Props["looks"] }) {
+  const [query, setQuery] = useState("");
+  const found = row.options.filter((o) => o.name.toLowerCase().includes(query.trim().toLowerCase()));
+  return (
+    <div className="look-browse" data-testid={`look-browse-${row.objectId}`}>
+      <input type="search" value={query} placeholder="Search the catalog" aria-label={`Search models for ${row.label}`} data-testid={`look-search-${row.objectId}`} onChange={(e) => setQuery(e.target.value)} />
+      {found.length === 0 && <p className="small muted">No catalog model{query ? " with that name" : ""} can be fitted to its recorded size.</p>}
+      {found.map((o) => (
+        <div key={o.assetId} className="look-option" onMouseEnter={() => actions.lookHover(look.id, row.objectId, o.assetId)} onFocus={() => actions.lookHover(look.id, row.objectId, o.assetId)}>
+          <LookOptionView option={o} brief />
+          <button type="button" className="button button-small" data-testid={`look-option-${row.objectId}-${o.assetId}`} onClick={() => actions.lookUse(look.id, row.objectId, o.assetId)}>
+            Use
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** The person says what they meant; the request is then read again with their words. */
+function ClarifyForm({ onAnswer }: { onAnswer: (text: string) => void }) {
+  const [text, setText] = useState("");
+  return (
+    <form
+      className="chat-form-row"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (text.trim()) onAnswer(text);
+      }}
+    >
+      <input type="text" value={text} placeholder="What you meant" aria-label="What you meant" data-testid="chat-clarify-text" onChange={(e) => setText(e.target.value)} />
+      <button type="submit" className="button button-small button-primary" data-testid="chat-clarify-send" disabled={!text.trim()}>
+        Ask again
+      </button>
+    </form>
   );
 }
 

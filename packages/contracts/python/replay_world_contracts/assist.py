@@ -70,6 +70,12 @@ class AssistStatus(ContractModel):
         description="The model that looks at photos (image import), when one is configured."
     )
     message: NonEmptyText
+    chat_deadline_s: float | None = Field(
+        default=None,
+        gt=0,
+        description="The end-to-end deadline for interpreting a chat message (UX-05), every "
+        "attempt included; null when no provider is configured.",
+    )
 
 
 class ProviderRun(ContractModel):
@@ -302,7 +308,9 @@ class ChatAdd(ContractModel):
 class ChatNeed(ContractModel):
     """What one step still needs from the person before it can be shown or applied."""
 
-    kind: Literal["target", "reference", "move_details", "rotate_details"]
+    # "clarify" (UX-05): a part of the message the interpreter could not understand. The plan
+    # stays visible but cannot be applied until the person says what they meant.
+    kind: Literal["target", "reference", "move_details", "rotate_details", "clarify"]
     question: NonEmptyText
     candidates: list[StableId]
 
@@ -322,6 +330,10 @@ class ChatStep(ContractModel):
 
     @model_validator(mode="after")
     def _shape(self) -> ChatStep:
+        if self.needs is not None and self.needs.kind == "clarify":
+            if self.action is not None or self.unsupported is not None:
+                raise ValueError("a step asking what was meant has no action yet")
+            return self
         if (self.action is None) != (self.unsupported is not None):
             raise ValueError("a step either has an action or says why it cannot be done")
         if self.action == "check_route" and self.route is None:
@@ -343,6 +355,22 @@ class ChatStep(ContractModel):
         return self
 
 
+class ChatTiming(ContractModel):
+    """Where the time of one interpretation went, measured on the local API (UX-05).
+
+    Token counts are the provider's own (OpenAI-style ``usage``) and are null when it reports
+    none; sizes are characters of the request and answer text, never called tokens."""
+
+    prepare_ms: int = Field(ge=0, description="Building the prompt and the scene summary.")
+    provider_ms: int = Field(ge=0, description="Waiting for the provider, every attempt.")
+    validate_ms: int = Field(ge=0, description="Parsing, expanding and checking the answer.")
+    request_chars: int = Field(ge=0, description="Characters of the prompt sent (all messages).")
+    schema_chars: int = Field(ge=0, description="Characters of the answer schema sent.")
+    response_chars: int = Field(ge=0, description="Characters of the answers received.")
+    input_tokens: int | None = Field(ge=0)
+    output_tokens: int | None = Field(ge=0)
+
+
 class ChatResult(ContractModel):
     """The interpretation of one chat message: a short plan of checked steps (at most four), a
     question, or why it cannot be done. Nothing here changes the project."""
@@ -354,6 +382,9 @@ class ChatResult(ContractModel):
     message: NonEmptyText | None
     checks: list[NonEmptyText]
     provider: ProviderRun
+    # Null only for results built without the provider (no timing to report). (No Field
+    # description beside a $ref: it makes the TypeScript generator duplicate the interface.)
+    timing: ChatTiming | None = None
 
     @model_validator(mode="after")
     def _one_outcome(self) -> ChatResult:

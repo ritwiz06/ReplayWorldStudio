@@ -3916,3 +3916,90 @@ label.button.disabled {
 .symbol-warn {
   color: var(--warn);
 }
+
+/* ---------- UX-05: a reply to a part not understood ---------- */
+.chat-form-row {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+}
+.chat-form-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- UX-05: equipment appearance ---------- */
+.look-rows {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.look-row {
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.look-row.look-chosen,
+.look-row.look-made {
+  border-color: var(--accent, #37d0ff);
+}
+.look-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+.look-state {
+  font-size: 12px;
+  color: var(--muted, #9aa3ad);
+  white-space: nowrap;
+}
+.look-option-body {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.look-option-body p {
+  margin: 2px 0 0;
+}
+.look-still {
+  flex: none;
+  width: 56px;
+  height: 42px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #20252b;
+}
+.look-tag {
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--muted, #9aa3ad);
+}
+.look-warn {
+  color: #e2b553;
+}
+.look-browse {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.look-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.look-rest summary {
+  cursor: pointer;
+}
+.look-rest .look-row {
+  margin-top: 6px;
+}

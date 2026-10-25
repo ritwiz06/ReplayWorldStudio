@@ -18,23 +18,26 @@ if (!checked.ok) throw new Error("sample");
 const sample = checked.value;
 const foundation = validateProject(JSON.parse(readFileSync(new URL("../../../../fixtures/scenes/foundation-scene.json", import.meta.url), "utf8")));
 if (!foundation.ok) throw new Error("foundation");
-const library = foundation.value.catalog;
+const demo = validateProject(JSON.parse(readFileSync(new URL("../../../../fixtures/scenes/industrial-demo.json", import.meta.url), "utf8")));
+if (!demo.ok) throw new Error("industrial-demo");
+// As the app ships it: the fixtures' catalogs.
+const library = [...foundation.value.catalog, ...demo.value.catalog];
 
 const step = (action: ChatStep["action"], fields: Partial<ChatStep> = {}): ChatStep => ({ action, target_id: null, move: null, rotate: null, route: null, add: null, needs: null, unsupported: null, ...fields });
 const moveB = (metres: number, direction: "left" | "right" | "forward" | "back" = "right") => step("move", { target_id: "obj-dxf-111", move: { direction, distance: metres, unit: "m", quote: `${metres} m ${direction}` } });
 
 /** A host over a real editor, as the App provides one. */
-function world(options: { refuse?: string } = {}) {
+function world(options: { refuse?: string; client?: Partial<ChatHost["client"]> } = {}) {
   let editor: EditorState = createEditor(sample);
   let day: DayRun | null = null;
   const runs: DayRun[] = [];
   const host = (): ChatHost => ({
-    client: {} as ChatHost["client"],
+    client: (options.client ?? {}) as ChatHost["client"],
     project: editor.project,
     loadId: 1,
     source: drawingSource(editor.project),
     selectedId: null,
-    assist: { available: true, mode: "recorded", note: "" },
+    assist: { available: true, mode: "recorded", note: "", deadlineS: 30 },
     facts: { hasWorld: true, hasDrawing: true, reviewOpen: false, hasProcess: true, hasRun: day !== null, runStale: day !== null && day.sceneRevision !== editor.project.scene.revision, layoutEdited: false, canUndo: editor.undo.length > 0, hasSelection: false, canExplain: false, outputChanged: null },
     routeAsk: null,
     day,
@@ -80,6 +83,8 @@ function world(options: { refuse?: string } = {}) {
     },
     library: async () => library,
     openCreate: () => undefined,
+    setLookPreview: () => undefined,
+    openLookCreate: () => undefined,
   });
   const chat = new ChatController();
   const sync = () => chat.setHost(host());
@@ -264,5 +269,70 @@ describe("adding an object from the conversation", () => {
     w.chat.undoPlan(w.plan().plan!.id);
     expect(w.editor.project.catalog).toHaveLength(0);
     expect(w.editor.project.scene.objects).toHaveLength(sample.scene.objects.length);
+  });
+});
+
+
+describe("waiting for the interpretation (UX-05)", () => {
+  it("stops at the deadline with nothing changed, keeps the request, and starts no second request", async () => {
+    let calls = 0;
+    const w = world({ client: { interpretChat: async () => ((calls += 1), { ok: false as const, error: { kind: "http" as const, status: 504, message: "No usable answer within 30 s; nothing was changed.", issues: [] } }) } });
+    await w.chat.send("Move Machine B 1 metre right");
+    const timeout = w.card("timeout")!;
+    expect(timeout.text).toBe("No answer within 30 s, so nothing was changed.");
+    expect(timeout.lines![0]).toBe("Your request: “Move Machine B 1 metre right”");
+    expect(timeout.buttons!.map((b) => b.testId)).toEqual(["chat-retry", "chat-manual-move"]);
+    expect(calls).toBe(1);
+    expect(w.chat.getBusy()).toBe(false);
+    expect(w.editor.project.scene.revision).toBe(sample.scene.revision);
+  });
+
+  it("drops an answer that arrives after Cancel", async () => {
+    let release: (v: unknown) => void = () => undefined;
+    const answer = { outcome: "plan", steps: [step("run_day")], question: null, candidates: [], message: null, checks: [], provider: { service: "t", base_url: "t", model: "t", mode: "recorded", attempts: 1, first_attempt_valid: true, latency_ms: 0 } };
+    const w = world({ client: { interpretChat: (_body: unknown, signal?: AbortSignal) => new Promise((resolve, reject) => { release = resolve; signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))); }) as never } });
+    const sent = w.chat.send("Run the shift");
+    w.chat.cancelPending();
+    release({ ok: true, value: answer });
+    await sent;
+    expect(w.card("cancelled")!.text).toBe("Cancelled. Nothing was changed.");
+    expect(w.runs).toHaveLength(0);
+  });
+
+  it("keeps a part not understood in the plan, blocks Apply, and asks again with the answer", () => {
+    const w = world();
+    const unclear: ChatStep = { ...step(null), needs: { kind: "clarify", question: "What do you mean by “sort out the corner”?", candidates: [] } };
+    w.chat.startPlan([moveB(1), unclear], "Move Machine B 1 m right and sort out the corner.", "recorded");
+    const plan = w.plan();
+    expect(plan.plan!.rows.map((r) => [r.label, r.status])).toEqual([["Move Machine B 1 m right", "ready"], ["Not understood yet", "needs"]]);
+    expect(plan.plan!.canApply).toBe(false);
+    expect(plan.buttons!.map((b) => b.testId)).not.toContain("chat-apply");
+  });
+});
+
+describe("equipment appearance from the conversation (UX-05)", () => {
+  it("applies the reviewed models once, as one undo step, and refuses a review the world has moved past", async () => {
+    const w = world();
+    await w.chat.startLook();
+    const look = () => w.chat.entries.filter((e) => e.look).at(-1)!;
+    expect(look().look!.rows.find((r) => r.objectId === "obj-dxf-111")!.status).toBe("ask");
+    const id = look().look!.id;
+    w.chat.lookUse(id, "obj-dxf-10f", "asset-electrical-cabinet-800");
+    w.chat.lookApply(id);
+    w.sync();
+    expect(look().kind).toBe("appearance-applied");
+    expect(w.editor.project.scene.objects.find((o) => o.id === "obj-dxf-10f")!.asset_id).toBe("asset-electrical-cabinet-800");
+    const revision = w.editor.project.scene.revision;
+    w.chat.lookApply(id); // a second click does nothing
+    expect(w.editor.project.scene.revision).toBe(revision);
+    expect(w.editor.undo).toHaveLength(1);
+    // A second review, overtaken by an edit before Apply, changes nothing.
+    await w.chat.startLook();
+    const second = look().look!.id;
+    w.chat.lookUse(second, "obj-dxf-10c", "asset-electrical-cabinet-800");
+    w.edit({ baseRevision: w.editor.project.scene.revision, command: { type: "set_transform", objectId: "obj-dxf-113", transform: { ...sample.scene.objects.find((o) => o.id === "obj-dxf-113")!.transform, position_m: { x: -6, y: 0, z: 3.6 } } } });
+    w.chat.lookApply(second);
+    expect(look().kind).toBe("appearance-stale");
+    expect(w.editor.project.scene.objects.find((o) => o.id === "obj-dxf-10c")!.asset_id).toBeNull();
   });
 });

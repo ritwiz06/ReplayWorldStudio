@@ -1347,3 +1347,38 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - **The UX-04 provider budget:** 6 of 8 calls and 178 s of 600 s.
   - **AGT-01 stays open:** imported equipment is not matched to catalog or generated models.
   - **UX-02 stays open.**
+
+### ADR-064 - A compact, deadline-bound chat, and display-only models for imported equipment (UX-05, AGT-01, IMP-02)
+
+- Date: 2026-10-25 (America/Phoenix). Status: adopted. Builds on ADR-062 and ADR-063. The project contract stays 0.14.0. Assist-API additions: `ChatTiming`, a "clarify" need, and `AssistStatus.chat_deadline_s`.
+- **Context.**
+  - Chat answers took 10–28 s, and once 85 s.
+  - The request carried every object's geometry, and the answer schema had every field of every action.
+  - A number only had to appear somewhere in the message, and a clarification inside a plan was dropped.
+  - Imported equipment stayed a stand-in, with no way to map it to models (IMP-02's open "correct mappings").
+- **Decision.**
+  1. **Measure first.** The API reports preparation, provider and checking time, characters sent and received, and the provider's own token counts (never estimated). The browser records interpreting, proposal preparation and execution.
+  2. **chat-03.**
+     - The model receives ids, names and kinds (all objects, so a second match stays visible), the selection, the conversation's object and the state flags.
+     - It returns compact steps: `do`, `obj`, `obj2`, `what`, `said` and `alts`.
+     - The app reads every amount, unit, direction, angle and size from that step's own verbatim words (`assist/clauses.py`), never from elsewhere in the message. The words win over a crossed id; sizes need axis words; a negated step is not planned; a part not understood becomes a "clarify" need that blocks Apply.
+     - Older answers replay through explicit compatibility rules.
+  3. **One end-to-end deadline** (`RWS_CHAT_DEADLINE_S`, 30 s, retries included), separate from generation:
+     - elapsed seconds are shown while waiting, and on timeout the request is kept with Try again and manual controls;
+     - nothing changes and no second request is started;
+     - **Cancel** discards the answer, but does not interrupt the local API's request to the provider.
+  4. **Appearance is display only.**
+     - `set_appearance` changes `asset_id` and nothing else, as one undoable `drawing_reviewed` correction ("Equipment appearance (display only)"), adding models to the catalog in the same step.
+     - A run's staleness is keyed on what it reads (objects without their model reference, sources, process), so a change of look does not mark it out of date.
+  5. **Matching is deterministic and reviewed, from the current catalog.**
+     - It is suggested only where head nouns agree and the fit is within 2×; distorted fits and names that say nothing are asked; beyond 3× a model is not offered.
+     - Models are called generic, with no confidence figures. No model may invent an asset id.
+     - Without a fit, the object generator makes that object's model, never a new object.
+- **Consequences.**
+  - **The workshop request:**
+    - input went from 2,361 to 899 tokens and output from 246 to 99;
+    - the provider wait went from 27.1 s to 6.9 s, each measured once;
+    - completed chat-03 calls took 6.2–6.9 s, with one timeout in six attempts.
+  - **The run is unaffected.** Appearance changes keep the event fingerprints and metrics, while the REL-01 layout fingerprint, which hashes object records, does change.
+  - **The catalog's four models** limit how much equipment gets a model.
+  - **AGT-01, IMP-02 and UX-02 stay open.**

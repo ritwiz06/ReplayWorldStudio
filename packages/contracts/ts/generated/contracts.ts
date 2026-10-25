@@ -2089,6 +2089,10 @@ export interface AssistStatus {
    */
   vision_model: string | null;
   message: string;
+  /**
+   * The end-to-end deadline for interpreting a chat message (UX-05), every attempt included; null when no provider is configured.
+   */
+  chat_deadline_s?: number | null;
 }
 export interface ObjectProposalRequest {
   description: string;
@@ -2284,6 +2288,7 @@ export interface ChatResult {
   message: string | null;
   checks: string[];
   provider: ProviderRun;
+  timing?: ChatTiming | null;
 }
 /**
  * One step of a plan. Move and rotate carry their target and the stated amount; a step that
@@ -2347,12 +2352,46 @@ export interface ChatAdd {
  * What one step still needs from the person before it can be shown or applied.
  */
 export interface ChatNeed {
-  kind: "target" | "reference" | "move_details" | "rotate_details";
+  kind: "target" | "reference" | "move_details" | "rotate_details" | "clarify";
   question: string;
   /**
    * Items: Stable, lowercase identifier. Never reused for a different entity.
    */
   candidates: string[];
+}
+/**
+ * Where the time of one interpretation went, measured on the local API (UX-05).
+ *
+ * Token counts are the provider's own (OpenAI-style ``usage``) and are null when it reports
+ * none; sizes are characters of the request and answer text, never called tokens.
+ */
+export interface ChatTiming {
+  /**
+   * Building the prompt and the scene summary.
+   */
+  prepare_ms: number;
+  /**
+   * Waiting for the provider, every attempt.
+   */
+  provider_ms: number;
+  /**
+   * Parsing, expanding and checking the answer.
+   */
+  validate_ms: number;
+  /**
+   * Characters of the prompt sent (all messages).
+   */
+  request_chars: number;
+  /**
+   * Characters of the answer schema sent.
+   */
+  schema_chars: number;
+  /**
+   * Characters of the answers received.
+   */
+  response_chars: number;
+  input_tokens: number | null;
+  output_tokens: number | null;
 }
 /**
  * Build (and optionally store) the model for a geometry draft.

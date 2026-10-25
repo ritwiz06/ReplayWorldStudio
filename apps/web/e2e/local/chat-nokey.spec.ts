@@ -54,3 +54,41 @@ test("no key: the conversation works by hand, and says why typing is off", { tag
   await expect(chat.getByTestId("chat-review")).toBeVisible({ timeout: 30_000 });
   await expect(chat.getByTestId("chat-review")).not.toContainText("LWPOLYLINE");
 });
+
+test("no key: an imported object's look is chosen by hand from the catalog, previewed, applied, undone, redone and reopened", { tag: "@local" }, async ({ page }) => {
+  test.setTimeout(150_000);
+  await page.goto("/");
+  const chat = page.getByTestId("chat");
+  await expect(chat.getByTestId("chat-ai")).toHaveText("AI off · no key");
+  await chat.getByTestId("chat-suggest-example").click();
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+  await page.getByTestId("view-toggle").click();
+  await page.getByRole("button", { name: "Show the object list and details" }).click();
+  await page.getByRole("navigation", { name: "Scene objects" }).getByRole("button", { name: /^Electrical cabinet/ }).click();
+  await page.getByTestId("view-toggle").click();
+  await page.getByTestId("selection-look").click();
+  const look = chat.locator('[data-kind="appearance"]').last();
+  const row = look.getByTestId("look-row-obj-dxf-10f");
+  await row.getByTestId("look-other-obj-dxf-10f").click();
+  await row.getByTestId("look-search-obj-dxf-10f").fill("cabinet");
+  const option = row.getByTestId("look-option-obj-dxf-10f-asset-electrical-cabinet-800");
+  await option.hover(); // the world draws it on the object, fitted to its recorded size
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^1\/1 ready/, { timeout: 30_000 });
+  await option.click();
+  await look.getByTestId("look-apply").click();
+  await expect(chat.locator('[data-kind="appearance-applied"]').last()).toContainText("Changed the look of 1 object.");
+  await page.getByTestId("undo").click();
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^0\/0/);
+  await page.getByTestId("redo").click();
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^1\/1/);
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("save").click()]);
+  const text = readFileSync((await download.path())!, "utf8");
+  const saved = JSON.parse(text) as { scene: { objects: { id: string; asset_id: string | null; dimensions: unknown }[] } };
+  const cabinet = saved.scene.objects.find((o) => o.id === "obj-dxf-10f")!;
+  expect(cabinet.asset_id).toBe("asset-electrical-cabinet-800");
+  expect(cabinet.dimensions).toEqual((SAMPLE.scene.objects.find((o) => o.id === "obj-dxf-10f") as unknown as { dimensions: unknown }).dimensions);
+  await page.goto("/");
+  await chat.getByTestId("chat-file-input").setInputFiles({ name: download.suggestedFilename(), mimeType: "application/json", buffer: Buffer.from(text) });
+  await expect(chat.locator('[data-kind="done"]').last()).toContainText(`Opened ${download.suggestedFilename()}: 12 objects.`);
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^1\/1 ready/, { timeout: 30_000 });
+});

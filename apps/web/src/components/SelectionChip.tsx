@@ -3,21 +3,26 @@
 import type { Project, SceneObject } from "@replay-world/contracts";
 import { nameOf } from "../chat/context";
 import { heightAssumed } from "../evidence";
-import { formatFootprint, formatMetres, ORIGIN_LABEL } from "../format";
+import { formatMetres, ORIGIN_LABEL } from "../format";
 
-export function SelectionChip({ project, object, onEvidence }: { project: Project; object: SceneObject; onEvidence: () => void }) {
+export function SelectionChip({ project, object, onEvidence, onLook }: { project: Project; object: SceneObject; onEvidence: () => void; onLook?: (() => void) | null }) {
   const d = object.dimensions;
   const origins = [...new Set([d.width.origin, d.depth.origin])].map((o) => ORIGIN_LABEL[o]).join(" / ");
   return (
     <div className="selection-chip" data-testid="selection-chip" role="status">
       <strong>{nameOf(project, object.id)}</strong>
       <span>
-        {formatFootprint(d)} · {formatMetres(d.height.value_m)} high{heightAssumed(object) ? " (assumed)" : ""}
+        {formatMetres(d.width.value_m)} × {formatMetres(d.depth.value_m)} · {formatMetres(d.height.value_m)} high{heightAssumed(object) ? " (assumed)" : ""}
       </span>
       <span className="muted">Footprint: {origins.toLowerCase()}</span>
       <button type="button" className="link-button" data-testid="selection-evidence" onClick={onEvidence}>
         Evidence…
       </button>
+      {onLook && (
+        <button type="button" className="link-button" data-testid="selection-look" onClick={onLook}>
+          Change look…
+        </button>
+      )}
     </div>
   );
 }

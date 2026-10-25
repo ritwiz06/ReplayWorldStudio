@@ -1351,6 +1351,66 @@ Append entries in chronological order. If a live repository session log already 
 - Actual effort: about 1 h 50 min of wall-clock time for this request (17:26–19:18 America/Phoenix), including CI.
 - Next concrete task: UX-02 with consenting newcomers, or AGT-01's matching of imported equipment, on the user's priority.
 
+### 2026-10-24/25 - UX-05: a responsive chat, and reviewed models for imported equipment (ADR-064)
+
+- Starting branch and relevant commit: `main` at `9b4f040`.
+- Goal: reduce unnecessary chat latency with a bounded fallback, and draw imported equipment with reviewed catalog or generated models without rebuilding the world. Local only; no redesign, engine change or broad evaluation.
+- Work completed:
+  - **Measurement:**
+    - `ChatTiming` (preparation, provider and checking time, characters sent and received, the provider's own tokens);
+    - the provider's `usage` captured;
+    - browser timings on each card;
+    - `record_chat.py --sizes` (offline) and `--measure`.
+  - **chat-03** (`assist/chat.py`, `assist/clauses.py`):
+    - names and kinds only;
+    - compact steps quoting their own words;
+    - numbers, units, directions and sizes read from each step's words;
+    - the words win over a crossed id; negated steps are dropped with a note;
+    - "clarify" needs block Apply;
+    - every matching object stays a candidate;
+    - chat-01/02 answers replay with explicit compatibility.
+  - **Deadline:**
+    - `RWS_CHAT_DEADLINE_S` (30 s), one budget for every attempt, reported in the assist status;
+    - the browser shows the elapsed time and stops just after the deadline;
+    - a timeout card with Try again and the manual move;
+    - a slow-provider replay for offline tests.
+  - **Appearance:**
+    - `set_appearance` (only `asset_id` changes; one `drawing_reviewed` step; catalog additions undone with it);
+    - `matching/appearance.ts` (head-noun evidence, fit within 2×, asks otherwise);
+    - the appearance card, with stills, generic labels, reasons, fit warnings and search;
+    - the fit preview in the world;
+    - Change look… on a selected object;
+    - the typed shortcut, with no model call;
+    - the object generator making an existing object's model;
+    - catalog stills in `public/catalog-previews/`.
+  - **Fixes found on the way:**
+    - **runs went stale after a change of look:** now keyed on what they read;
+    - **a single supported step plus a question looked like a single-step proposal**, so the question was hidden;
+    - **run_again with no earlier run said "again";**
+    - **the selection chip repeated the height;**
+    - **plan rows hid clarifications.**
+- **Live AI** (ASU Voyager, text only): **8 of 8 calls**, at most 143 s of waiting.
+  - **Before (chat-02):** the sample timed out at 30 s; the workshop took 27.1 s (2,361 in, 246 out).
+  - **After (chat-03):** 6.2, 6.5, 6.7 and 6.9 s (672–899 in, 78–105 out), one timeout, and one call whose time was lost.
+  - **One call was sent by mistake:** a command meant to list files ran the recorder again. It is counted.
+- Commands run and outcomes:
+  - `pnpm check`: exit 0 (pytest 895, Vitest 278, contracts 10);
+  - `pnpm test:e2e`: 74 passed, 24 skipped;
+  - local: 5 passed, including the REL-01 bundle reproduction and the no-key matching;
+  - public: 7 passed, 2 skipped;
+  - external: 9 passed, including the workshop appearance journey (the original event fingerprint `01a894ac49ba38` after reopening);
+  - screens: 14 + 2 (Chrome, GPU);
+  - the demo `ux05-appearance-and-request.mp4` (38 s).
+- Known limitations:
+  - four catalog models;
+  - models are drawn along the recorded axes;
+  - one of six chat-03 attempts timed out;
+  - Cancel does not interrupt the API's provider request;
+  - no model ranks matches;
+  - AGT-01, IMP-02 and UX-02 open.
+- Actual effort: about 2 h 45 min of wall-clock time (2026-10-24 22:10 to 2026-10-25 00:55 America/Phoenix), plus CI.
+- Next concrete task: on the user's priority, UX-02 with consenting newcomers, a larger in-house model catalog, or ENR-01.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

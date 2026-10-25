@@ -354,6 +354,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 else f"Descriptions and edit requests are sent to {provider.service} "
                 f"({provider.base_url}, model {provider.model}) to draft proposals."
             ),
+            chat_deadline_s=settings.assist.chat_deadline_s,
         )
 
     def _provider() -> Provider:
@@ -391,11 +392,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/api/v1/assist/chat")
     def chat(body: ChatRequest) -> ChatResult:
-        """Interpret one chat message as one bounded action (UX-03). Only the words, the
-        reviewed objects' names, kinds, positions and sizes, the selection and the app's state
-        are sent; nothing is changed. The browser checks prerequisites and the revision."""
+        """Interpret one chat message as a short plan of bounded steps (UX-03/04/05), within
+        one interactive deadline (``RWS_CHAT_DEADLINE_S``, retries included). Only the words,
+        the objects' ids, names and kinds, the selection and the app's state are sent to the
+        model; nothing is changed. The browser checks prerequisites and the revision."""
         try:
-            return interpret_chat(_provider(), body)
+            return interpret_chat(_provider(), body, settings.assist.chat_deadline_s)
         except (ProviderError, AssistError) as exc:
             _assist_failure(exc)
 

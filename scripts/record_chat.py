@@ -13,6 +13,7 @@ describe a third-party drawing, go to the git-ignored data/external/recorded/.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import sys
 from datetime import datetime
@@ -21,7 +22,12 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from replay_world_api.assist.chat import PROMPT_VERSION, interpret_chat, recording_key
-from replay_world_api.assist.provider import Completion, OpenAICompatibleProvider, Task
+from replay_world_api.assist.provider import (
+    Completion,
+    OpenAICompatibleProvider,
+    ProviderError,
+    Task,
+)
 from replay_world_api.settings import Settings
 from replay_world_contracts import ChatRequest
 
@@ -113,6 +119,14 @@ PLAN_CASES: list[tuple[str, str, str | None, str | None, str, dict[str, bool]]] 
         {},
     ),
     (
+        "plan-two-moves",
+        "Move Rack A 1 m right and Machine B 2 m left.",
+        None,
+        None,
+        "sample",
+        {},
+    ),
+    (
         "plan-undo-run",
         "Undo that move and run again.",
         None,
@@ -149,6 +163,7 @@ class Recorder:
         self.service, self.base_url, self.model = inner.service, inner.base_url, inner.model
         self.answers: list[str] = []
         self.latency_ms: list[int] = []
+        self.usage: list[dict[str, int | None]] = []
 
     def complete(
         self,
@@ -170,7 +185,37 @@ class Recorder:
         )
         self.answers.append(completion.content)
         self.latency_ms.append(completion.latency_ms)
+        self.usage.append(
+            {"input_tokens": completion.input_tokens, "output_tokens": completion.output_tokens}
+        )
         return completion
+
+
+class Sizer:
+    """Builds each request exactly as the API does and stops before sending it (``--sizes``)."""
+
+    service = "sizes only"
+    base_url = "none"
+    model = "none"
+    mode = "live"
+
+    def __init__(self) -> None:
+        self.request_chars = 0
+        self.schema_chars = 0
+
+    def complete(
+        self,
+        *,
+        task: Task,
+        key: str,
+        messages: list[dict[str, Any]],
+        schema: dict[str, Any],
+        attempt: int,
+        timeout_s: float | None = None,
+    ) -> Completion:
+        self.request_chars = sum(len(m["content"]) for m in messages)
+        self.schema_chars = len(json.dumps(schema, separators=(",", ":")))
+        raise ProviderError("unavailable", "sizes only: nothing is sent")
 
 
 def context_of(project: dict[str, Any], selected: str | None) -> dict[str, Any]:
@@ -208,32 +253,69 @@ def context_of(project: dict[str, Any], selected: str | None) -> dict[str, Any]:
     }
 
 
+def request_of(
+    message: str,
+    selected: str | None,
+    focus: str | None,
+    project: dict[str, Any],
+    state: dict[str, bool],
+) -> ChatRequest:
+    return ChatRequest.model_validate(
+        {
+            "request": message,
+            "context": context_of(project, selected),
+            "state": {**STATE, **state},
+            "focus_object_id": focus,
+        }
+    )
+
+
+def sizes(
+    cases: list[tuple[str, str, str | None, str | None, dict[str, Any], dict[str, bool]]],
+) -> None:
+    """Offline: the characters each request would send. Nothing is sent."""
+    for case, message, selected, focus, project, state in cases:
+        sizer = Sizer()
+        request = request_of(message, selected, focus, project, state)
+        with contextlib.suppress(ProviderError):
+            interpret_chat(sizer, request)  # type: ignore[arg-type]
+        print(
+            f"{case}: {PROMPT_VERSION} request {sizer.request_chars} chars, schema "
+            f"{sizer.schema_chars} chars, objects {len(project['scene']['objects'])}"
+        )
+
+
 def record(
     provider: OpenAICompatibleProvider,
     cases: list[tuple[str, str, str | None, str | None, dict[str, Any], dict[str, bool]]],
-    out: Path,
+    out: Path | None,
     note: str,
 ) -> None:
-    out.mkdir(parents=True, exist_ok=True)
+    """Send each case once (a retry only if the answer is unusable, counted). With ``out`` the
+    raw answers are written as recordings; without it (``--measure``) only timings print."""
+    if out is not None:
+        out.mkdir(parents=True, exist_ok=True)
     calls = 0
+    waited_ms = 0
     for case, message, selected, focus, project, state in cases:
-        request = ChatRequest.model_validate(
-            {
-                "request": message,
-                "context": context_of(project, selected),
-                "state": {**STATE, **state},
-                "focus_object_id": focus,
-            }
-        )
+        request = request_of(message, selected, focus, project, state)
         recorder = Recorder(provider)
         try:
             result = interpret_chat(recorder, request)
             summary = [s.action or f"cannot: {s.unsupported}" for s in result.steps]
             detail = result.question or result.message or ""
             print(f"{case}: {result.outcome} {summary} {detail}")
+            if result.timing is not None:
+                print(f"  timing {result.timing.model_dump_json()}")
         finally:
             calls += len(recorder.answers)
-            print(f"  live calls {len(recorder.answers)}, latency ms {recorder.latency_ms}")
+            waited_ms += sum(recorder.latency_ms)
+            print(
+                f"  live calls {len(recorder.answers)}, latency ms {recorder.latency_ms}, "
+                f"usage {recorder.usage}"
+            )
+        if out is None:
+            continue
         (out / f"chat-{case}.json").write_text(
             json.dumps(
                 {
@@ -247,6 +329,7 @@ def record(
                     "recorded_at": datetime.now(ZoneInfo("America/Phoenix")).date().isoformat(),
                     "note": note,
                     "latency_ms": recorder.latency_ms,
+                    "usage": recorder.usage,
                     "responses": recorder.answers,
                 },
                 indent=2,
@@ -254,7 +337,7 @@ def record(
             )
             + "\n"
         )
-    print(f"total live calls: {calls}")
+    print(f"total live calls: {calls}, provider waiting {waited_ms / 1000:.1f} s")
 
 
 def main() -> None:
@@ -262,13 +345,17 @@ def main() -> None:
     parser.add_argument(
         "--workshop", type=Path, help="a saved, reviewed workshop project (local only)"
     )
-    parser.add_argument("--only", nargs="*", help="case names to record")
+    parser.add_argument("--only", nargs="*", help="case names to send")
     parser.add_argument("--selected", default=None, help="the selected object id when typing")
+    parser.add_argument(
+        "--sizes", action="store_true", help="offline: print each request's size, send nothing"
+    )
+    parser.add_argument(
+        "--measure", action="store_true", help="send and print timings; write no recordings"
+    )
     args = parser.parse_args()
-    settings = Settings.from_env()
-    if not settings.assist.api_key:
-        sys.exit("VOYAGER_API_KEY is not set.")
-    provider = OpenAICompatibleProvider(settings.assist)
+    Case = tuple[str, str, str | None, str | None, dict[str, Any], dict[str, bool]]
+    cases: list[Case]
     if args.workshop:
         project = json.loads(args.workshop.read_text())
         cases = [
@@ -281,30 +368,31 @@ def main() -> None:
                 {"has_run": True},
             ),
         ]
-        record(
-            provider,
-            [c for c in cases if not args.only or c[0] in args.only],
-            ROOT / "data" / "external" / "recorded",
-            "Live answers for a reviewed third-party drawing (CC0 workshop). Local only.",
-        )
-        return
-    projects = {"sample": json.loads(SAMPLE.read_text()), "empty": EMPTY}
-    # Without --only nothing is sent: every live call is chosen deliberately (UX-04 budget).
-    chosen = [
-        (case, message, selected, focus, projects[which], state)
-        for case, message, selected, focus, which, state in [
-            *((c, m, sel, None, w, st) for c, m, sel, w, st in SAMPLE_CASES),
-            *PLAN_CASES,
+        out: Path | None = ROOT / "data" / "external" / "recorded"
+        note = "Live answers for a reviewed third-party drawing (CC0 workshop). Local only."
+    else:
+        projects = {"sample": json.loads(SAMPLE.read_text()), "empty": EMPTY}
+        cases = [
+            (case, message, selected, focus, projects[which], state)
+            for case, message, selected, focus, which, state in [
+                *((c, m, sel, None, w, st) for c, m, sel, w, st in SAMPLE_CASES),
+                *PLAN_CASES,
+            ]
         ]
-        if args.only and case in args.only
-    ]
-    record(
-        provider,
-        chosen,
-        ROOT / "fixtures" / "assist" / "recorded",
-        "Raw answers from the live language model for the synthetic sample, replayed by the "
-        "offline test provider. Not live AI when replayed.",
-    )
+        out = ROOT / "fixtures" / "assist" / "recorded"
+        note = (
+            "Raw answers from the live language model for the synthetic sample, replayed by the "
+            "offline test provider. Not live AI when replayed."
+        )
+    # Without --only nothing is sent: every live call is chosen deliberately (a fixed budget).
+    chosen = [c for c in cases if args.only and c[0] in args.only]
+    if args.sizes:
+        sizes(chosen or cases)
+        return
+    settings = Settings.from_env()
+    if not settings.assist.api_key:
+        sys.exit("VOYAGER_API_KEY is not set.")
+    record(OpenAICompatibleProvider(settings.assist), chosen, None if args.measure else out, note)
 
 
 if __name__ == "__main__":

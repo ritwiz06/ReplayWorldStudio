@@ -25,6 +25,7 @@ import {
   type Transform,
 } from "@replay-world/contracts";
 import { prepareReview, type ReviewCommand } from "../drawing/review";
+import { drawingSource } from "../drawing/world";
 
 export type Axis = keyof Dimensions;
 export const AXIS_ORDER: readonly Axis[] = ["width", "height", "depth"];
@@ -51,6 +52,12 @@ export type EditCommand =
    * every object changes or none does; undo restores the exact previous references and sizes. */
   | { type: "revise_asset"; asset: CatalogAsset; previousAssetId: string; objects: RevisedObjectRequest[] }
   | { type: "remove_object"; objectId: string }
+  /** Change how imported equipment looks (UX-05, IMP-02's equipment mapping): each listed
+   * object references a catalog model, or none (its stand-in again). Display only: ids, names,
+   * placements, dimensions with their evidence, process and source links are untouched. Each
+   * object must still reference `expected`, so a stale review changes nothing. Models not yet in
+   * the project's catalog are added with it; the whole batch is one step. */
+  | { type: "set_appearance"; changes: AppearanceChange[]; assets: CatalogAsset[] }
   /** A correction made while reviewing a draft from a drawing (IMP-02): the floor, the scale,
    * an object's name or kind, or "not an object". It may change many objects and the drawing
    * source's review in one step. */
@@ -60,6 +67,13 @@ export type EditCommand =
   | { type: "attach_source"; source: SourceDocument }
   /** Set, change or remove the process "Run a day" uses (SIM-01); no object changes. */
   | { type: "set_process"; process: ProcessModel | null; summary: string };
+
+/** One object's new look: `assetId` (null for its stand-in) where it referenced `expected`. */
+export interface AppearanceChange {
+  objectId: string;
+  assetId: string | null;
+  expected: string | null;
+}
 
 /** One object to switch to a revised asset; axes not listed keep the object's own value. */
 export interface RevisedObjectRequest {
@@ -131,6 +145,8 @@ export interface Change {
   patches: ObjectPatch[];
   /** Set when the command also changed the catalog (a generated asset was added). */
   catalogPatch?: CatalogPatch;
+  /** Models appended to the catalog, in order (an appearance batch); undo removes them. */
+  catalogAdditions?: CatalogAsset[];
   /** Set when the command also changed a source (a drawing review correction). */
   sourcePatch?: SourcePatch;
   /** Set when the command changed the process (Run a day). */
@@ -461,6 +477,57 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
       };
     }
 
+    case "set_appearance": {
+      const source = drawingSource(project);
+      if (!source) return reject("invalid", "Only equipment from an imported plan can be matched to models here.");
+      if (command.changes.length === 0) return reject("invalid", "Choose at least one object.");
+      if (new Set(command.changes.map((c) => c.objectId)).size !== command.changes.length) return reject("invalid", "An object is listed twice.");
+      const known = new Map(project.catalog.map((a) => [a.id, a]));
+      const additions: CatalogAsset[] = [];
+      for (const asset of command.assets) {
+        const existing = known.get(asset.id);
+        if (existing) {
+          if (JSON.stringify(existing) !== JSON.stringify(asset)) return reject("invalid", `The catalog already has a different asset '${asset.id}'.`);
+          continue;
+        }
+        known.set(asset.id, asset);
+        additions.push(structuredClone(asset));
+      }
+      const patches: ObjectPatch[] = [];
+      const changed: DrawingReviewed["objects"] = [];
+      const names: string[] = [];
+      for (const change of command.changes) {
+        const index = indexOf(change.objectId);
+        const before = objects[index];
+        if (!before) return reject("not_found", `No object '${change.objectId}' in the scene.`);
+        if (before.asset_id !== change.expected) return reject("conflict", `${before.name} changed since these models were suggested; nothing was changed.`);
+        if (before.kind !== "equipment") return reject("invalid", `${before.name} is not equipment, so it keeps its own look.`);
+        const asset = change.assetId === null ? null : known.get(change.assetId);
+        if (asset === undefined) return reject("not_found", `No catalog model '${change.assetId}'.`);
+        if (asset && asset.kind !== before.kind) return reject("invalid", `${asset.name} is not equipment.`);
+        if (before.asset_id === change.assetId) continue;
+        // Only the reference changes: dimensions, evidence, placement and links stay exactly.
+        const after: SceneObject = { ...before, asset_id: change.assetId };
+        patches.push({ index, before, after });
+        changed.push({ object_id: before.id, before: structuredClone(before), after: structuredClone(after) });
+        names.push(`${before.name} → ${asset ? asset.name : "its stand-in"}`);
+      }
+      if (!patches.length) return reject("no_change", "Those objects already look that way.");
+      const used = new Set(patches.map((p) => p.after!.asset_id));
+      const added = additions.filter((a) => used.has(a.id));
+      const first = patches[0]!.before!;
+      return {
+        ok: true,
+        change: {
+          label: patches.length === 1 ? `Change the look of ${first.name}` : `Change the look of ${patches.length} objects`,
+          objectId: first.id,
+          patches,
+          ...(added.length ? { catalogAdditions: added } : {}),
+          record: { type: "drawing_reviewed", source_id: source.id, correction: `Equipment appearance (display only): ${names.join("; ")}`.slice(0, 500), objects: changed },
+        },
+      };
+    }
+
     case "review_drawing":
       return prepareReview(project, command);
 
@@ -589,8 +656,8 @@ export function applyCommand(project: Project, request: CommandRequest): Result<
   if (conflict) return { ok: false, rejection: conflict };
   const prepared = prepare(project, request.command);
   if (!prepared.ok) return prepared;
-  const { patches, catalogPatch, sourcePatch, processPatch } = prepared.change;
-  const next = commit(project, patches, catalogPatch, (revision) => [...project.scene.edit_log, stamp(prepared.change.record, revision)], sourcePatch, processPatch);
+  const { patches, catalogPatch, sourcePatch, processPatch, catalogAdditions } = prepared.change;
+  const next = commit(project, patches, catalogPatch, (revision) => [...project.scene.edit_log, stamp(prepared.change.record, revision)], sourcePatch, processPatch, catalogAdditions && { add: catalogAdditions });
   const problem = guard(next);
   return problem ? { ok: false, rejection: problem } : { ok: true, project: next, change: prepared.change };
 }
@@ -602,13 +669,17 @@ function commit(
   log: (revision: number) => EditRecord[],
   sourcePatch?: SourcePatch,
   processPatch?: ProcessPatch,
+  additions?: { add: CatalogAsset[] } | { remove: number },
 ): Project {
   const revision = project.scene.revision + 1;
+  let catalog = catalogPatch ? patchCatalog(project.catalog, catalogPatch) : project.catalog;
+  if (additions && "add" in additions && additions.add.length) catalog = [...catalog, ...additions.add];
+  if (additions && "remove" in additions && additions.remove) catalog = catalog.slice(0, -additions.remove);
   return {
     ...project,
     process: processPatch ? processPatch.after : project.process,
     sources: sourcePatch ? patchSources(project.sources, sourcePatch) : project.sources,
-    catalog: catalogPatch ? patchCatalog(project.catalog, catalogPatch) : project.catalog,
+    catalog,
     scene: { ...project.scene, revision, objects: patchObjects(project.scene.objects, patches), edit_log: log(revision) },
   };
 }
@@ -625,16 +696,18 @@ export function revertChange(project: Project, change: Change, recordRevision: n
   const catalogInverse = change.catalogPatch && invert(change.catalogPatch);
   const sourceInverse = change.sourcePatch && invert(change.sourcePatch);
   const processInverse = change.processPatch && { before: change.processPatch.after, after: change.processPatch.before };
+  const additions = change.catalogAdditions ?? [];
   if (
     log.at(-1)?.revision !== recordRevision ||
     !patchesApply(project.scene.objects, inverse) ||
     !catalogPatchApplies(project.catalog, catalogInverse) ||
+    !additions.every((a, i) => project.catalog[project.catalog.length - additions.length + i]?.id === a.id) ||
     !sourcePatchApplies(project, sourceInverse) ||
     (processInverse !== undefined && project.process !== processInverse.before)
   ) {
     return reject("conflict", "The scene no longer matches this step, so it cannot be undone.");
   }
-  return { ok: true, project: commit(project, inverse, catalogInverse, () => log.slice(0, -1), sourceInverse, processInverse) };
+  return { ok: true, project: commit(project, inverse, catalogInverse, () => log.slice(0, -1), sourceInverse, processInverse, { remove: additions.length }) };
 }
 
 /** Redo `change`: the same snapshots again, with its record re-added at the new revision. */
@@ -644,6 +717,7 @@ export function reapplyChange(project: Project, change: Change, baseRevision: nu
   if (
     !patchesApply(project.scene.objects, change.patches) ||
     !catalogPatchApplies(project.catalog, change.catalogPatch) ||
+    (change.catalogAdditions ?? []).some((a) => project.catalog.some((c) => c.id === a.id)) ||
     !sourcePatchApplies(project, change.sourcePatch) ||
     (change.processPatch !== undefined && project.process !== change.processPatch.before)
   ) {
@@ -651,6 +725,6 @@ export function reapplyChange(project: Project, change: Change, baseRevision: nu
   }
   return {
     ok: true,
-    project: commit(project, change.patches, change.catalogPatch, (revision) => [...project.scene.edit_log, stamp(change.record, revision)], change.sourcePatch, change.processPatch),
+    project: commit(project, change.patches, change.catalogPatch, (revision) => [...project.scene.edit_log, stamp(change.record, revision)], change.sourcePatch, change.processPatch, change.catalogAdditions && { add: change.catalogAdditions }),
   };
 }

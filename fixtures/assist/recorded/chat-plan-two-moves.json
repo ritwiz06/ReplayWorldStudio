@@ -1,0 +1,23 @@
+{
+  "task": "chat",
+  "key": "Move Rack A 1 m right and Machine B 2 m left. | selected=none | scene=53151f7c69de",
+  "case": "plan-two-moves",
+  "message": "Move Rack A 1 m right and Machine B 2 m left.",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "chat-03",
+  "recorded_at": "2026-10-24",
+  "note": "Raw answers from the live language model for the synthetic sample, replayed by the offline test provider. Not live AI when replayed.",
+  "latency_ms": [
+    6191
+  ],
+  "usage": [
+    {
+      "input_tokens": 672,
+      "output_tokens": 78
+    }
+  ],
+  "responses": [
+    "{\"steps\":[{\"alts\":[],\"do\":\"move\",\"obj\":\"obj-dxf-106\",\"obj2\":null,\"said\":\"Move Rack A 1 m right\",\"what\":null},{\"alts\":[],\"do\":\"move\",\"obj\":\"obj-dxf-111\",\"obj2\":null,\"said\":\"Machine B 2 m left\",\"what\":null}]}"
+  ]
+}

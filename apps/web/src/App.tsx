@@ -35,6 +35,7 @@ import { serializeProject } from "./editing/projectFile";
 import { quantizeMetres } from "./editing/units";
 import { useAssistStatus } from "./hooks/useAssistStatus";
 import { summarise, useCatalogModels } from "./hooks/useCatalogModels";
+import { equipmentToImprove } from "./matching/appearance";
 import { useHealth } from "./hooks/useHealth";
 import { useProject } from "./hooks/useProject";
 import type { CameraMode, CameraProbe, FixedView, ViewCommand } from "./scene/CameraRig";
@@ -64,7 +65,7 @@ import { ExportRun } from "./components/ExportRun";
 import { type ExampleProgress, ShowExample } from "./components/ShowExample";
 import { SetupDay } from "./components/SetupDay";
 import { usePlayback } from "./hooks/usePlayback";
-import { compareDays, type DayComparison, type DayRun, runDay, runOriginal } from "./run/day";
+import { compareDays, type DayComparison, type DayRun, operatingKey, runDay, runOriginal } from "./run/day";
 import { bundleRuns, type Reproduction, reproduce } from "./run/evidence";
 import { emptyGuided, type GuidedDraft, guidedFrom } from "./run/guided";
 
@@ -203,7 +204,22 @@ export function App() {
   const source = scene.status === "loaded" ? scene.source : null;
   /** An opened evidence bundle (REL-01): what it recorded, to compare with runs made here. */
   const bundle = source?.kind === "file" ? (source.bundle ?? null) : null;
-  const { models, retry } = useCatalogModels(client, project);
+  /** One imported object drawn with a candidate model while its look is reviewed (UX-05): the
+   * world shown, never the project edited, checked or run. */
+  const [lookPreview, setLookPreview] = useState<{ loadId: number; revision: number; objectId: string; asset: CatalogAsset } | null>(null);
+  const shown = useMemo(() => {
+    const p = lookPreview;
+    if (!project || !p || p.loadId !== loadId || p.revision !== project.scene.revision) return project;
+    if (!project.scene.objects.some((o) => o.id === p.objectId)) return project;
+    return {
+      ...project,
+      catalog: project.catalog.some((a) => a.id === p.asset.id) ? project.catalog : [...project.catalog, p.asset],
+      scene: { ...project.scene, objects: project.scene.objects.map((o) => (o.id === p.objectId ? { ...o, asset_id: p.asset.id } : o)) },
+    };
+  }, [project, lookPreview, loadId]);
+  const { models, retry } = useCatalogModels(client, shown);
+  /** The object generator, opened for an existing object's look (UX-05). */
+  const [lookCreate, setLookCreate] = useState<{ objectId: string; kind: "describe" | "builder"; initial: { text: string; name: string; size: { width: number; depth: number; height: number } }; done: (outcome: { ok: true; assetName: string } | { ok: false; message: string } | null) => void } | null>(null);
   const { state: assist } = useAssistStatus(client);
   const assistOn = assist.status === "known" && assist.assist.available;
   const assistNote =
@@ -295,7 +311,9 @@ export function App() {
   const highlights = useMemo(() => (checks && drawingPanel.view === "check" ? sceneChecks(checks.now, routeAsk) : null), [checks, drawingPanel.view, routeAsk]);
   const isSample = project?.id === SAMPLE_PROJECT_ID;
   const activeDay = day?.loadId === loadId ? day.run : null;
-  const dayStale = activeDay !== null && project !== null && activeDay.sceneRevision !== project.scene.revision;
+  // Out of date when what the run reads changed; a change of look alone (UX-05) is not one.
+  const currentKey = useMemo(() => (project ? operatingKey(project, project.process) : null), [project]);
+  const dayStale = activeDay !== null && project !== null && activeDay.operatingKey !== currentKey;
   const runKey = activeDay?.result ? `${loadId}:${activeDay.sceneRevision}:${activeDay.result.fingerprint}` : null;
   const playback = usePlayback(activeDay?.result && project?.process ? project.process.shift.duration_s.value * 1000 : 1, runKey, runKey !== null && runKey === autoPlayKey);
   const layoutEdited = useMemo(() => {
@@ -802,6 +820,7 @@ export function App() {
     hasSelection: selected !== null && selected.kind === "equipment",
     canExplain: activeDay?.result != null && !dayStale && layoutEdited && project?.process != null,
     outputChanged,
+    canImproveLook: project !== null && sourceDrawing !== null && equipmentToImprove(project).length > 0,
   };
   const chat = useChat();
   // The conversation acts on the world as it is after this render.
@@ -812,7 +831,7 @@ export function App() {
       loadId,
       source: sourceDrawing,
       selectedId: selected?.id ?? null,
-      assist: { available: assistOn, mode: assistMode, note: assistNote },
+      assist: { available: assistOn, mode: assistMode, note: assistNote, deadlineS: assist.status === "known" ? (assist.assist.chat_deadline_s ?? null) : null },
       facts,
       routeAsk,
       day: activeDay,
@@ -865,6 +884,8 @@ export function App() {
         const own = project?.catalog ?? [];
         return libraryCache.current.then((shipped) => [...own, ...shipped]);
       },
+      setLookPreview: (p) => setLookPreview(p && project ? { loadId, revision: project.scene.revision, ...p } : null),
+      openLookCreate: (objectId, kind, initial, done) => setLookCreate({ objectId, kind, initial, done }),
       openCreate: (kind, description) => {
         const sizes = /(?:,\s*)?([\d.]+) m wide|([\d.]+) m deep|([\d.]+) m high/g;
         let width: number | null = null;
@@ -1059,7 +1080,7 @@ export function App() {
       >
         {project && (
           <SceneViewport
-            project={project}
+            project={shown ?? project}
             documentKey={loadId}
             models={models}
             mode={mode}
@@ -1118,6 +1139,8 @@ export function App() {
                 setDetails(true);
                 setView("editor");
               }}
+              // Imported equipment's look, by hand (UX-05): the same review card, no AI needed.
+              onLook={selected.kind === "equipment" && sourceDrawing?.drawing.objects.some((d) => d.object_id === selected.id) ? () => void chat.controller.startLook([selected.id]) : null}
             />
           )}
           {chatView && project && project.scene.objects.length === 0 && scene.status === "loaded" && (
@@ -1294,6 +1317,7 @@ export function App() {
           onRoute={chat.controller.submitRoute}
           onHighlight={(ids) => setChatPreview((p) => ({ loadId, preview: { ghosts: p?.loadId === loadId ? p.preview.ghosts : [], route: null, candidates: ids } }))}
           plans={chat.controller}
+          looks={chat.controller}
           review={chatReview}
           setup={chatSetup === loadId && guidedNode ? guidedNode : null}
           fileInput={chatFile}
@@ -1418,6 +1442,30 @@ export function App() {
           onClose={() => {
             setCreate(null);
             setCreateInitial(null);
+          }}
+        />
+      )}
+      {lookCreate && project && !prompt && (
+        <CreateObject
+          client={client}
+          assist={assist}
+          startWith={lookCreate.kind}
+          initial={lookCreate.initial}
+          fitTo={lookCreate.initial.size}
+          placeLabel={`Use for ${lookCreate.initial.name}`}
+          onPlace={(asset) => {
+            // The reviewed model becomes this object's look, as one undoable step: never a new
+            // object, and its dimensions, evidence and links stay as they are.
+            const { objectId, done } = lookCreate;
+            setLookCreate(null);
+            const object = project.scene.objects.find((o) => o.id === objectId);
+            if (!object) return done({ ok: false, message: "The object is no longer in the world." });
+            const outcome = run({ baseRevision: project.scene.revision, command: { type: "set_appearance", changes: [{ objectId, assetId: asset.id, expected: object.asset_id }], assets: [asset] } });
+            done(outcome?.ok ? { ok: true, assetName: asset.name } : { ok: false, message: outcome && !outcome.ok ? outcome.rejection.message : "The scene is not editable right now." });
+          }}
+          onClose={() => {
+            lookCreate.done(null);
+            setLookCreate(null);
           }}
         />
       )}

@@ -152,8 +152,9 @@ export function createApiClient(
     getAssistStatus: (signal?: AbortSignal) => request("/api/v1/assist/status", validateAssistStatus, { signal }),
     /** Interpret one chat message as one bounded action (UX-03): only the words and the
      * reviewed scene facts are sent; nothing is applied. */
-    interpretChat: (body: ChatRequest, signal?: AbortSignal) =>
-      request("/api/v1/assist/chat", validateChatResult, { method: "POST", body: JSON.stringify(body), signal, timeoutMs: ASSIST_TIMEOUT_MS }),
+    /** `timeoutMs`: the chat's own deadline (UX-05), shorter than other assistance. */
+    interpretChat: (body: ChatRequest, signal?: AbortSignal, timeoutMs = ASSIST_TIMEOUT_MS) =>
+      request("/api/v1/assist/chat", validateChatResult, { method: "POST", body: JSON.stringify(body), signal, timeoutMs }),
     /** Draft a typed proposal for a described object (sent to the configured provider). */
     proposeObject: (description: string, signal?: AbortSignal) =>
       request("/api/v1/assist/object-proposals", validateObjectProposalResult, {

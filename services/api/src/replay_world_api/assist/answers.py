@@ -190,6 +190,23 @@ class RawChatPlan(_Raw):
     steps: list[RawChatStep]
 
 
+class RawCompactStep(_Raw):
+    """chat-03 (UX-05): one step in the fewest tokens. ``said`` is the person's own words for
+    this step only; the application reads every number, unit and direction from it, so a value
+    belongs to the step (and object) whose words contain it."""
+
+    do: _CHAT_INTENTS
+    obj: str | None
+    obj2: str | None
+    what: str | None
+    said: str
+    alts: list[str]
+
+
+class RawCompactPlan(_Raw):
+    steps: list[RawCompactStep]
+
+
 # Keywords that schema-guided decoders often do not support. Limits are enforced by the
 # Pydantic checks after decoding instead.
 _DROPPED = {"title", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "pattern"}

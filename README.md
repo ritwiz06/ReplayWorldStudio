@@ -32,10 +32,11 @@ RWS_API_PORT=8001 pnpm start    # if port 8000 is taken (pnpm start tells you wh
 - **Drop or attach a plan.** It is read on your computer; the conversation asks one correction at a time (a missing floor outline, the scale, which layers are door swings or notes).
 - **Ask** "Move Machine B 1 metre right, check its routes, and run the shift again": one message becomes a plan of up to four steps. You see the proposed position in the world and what it does to the walks and routes, then **Apply** once; **Undo this request** takes it back.
 - **"Add a packing table, 1.5 metres wide and 0.8 metres deep, beside Machine B"**: a catalog item to accept and a side to choose, at exactly the stated size.
+- **"Improve equipment appearance"** (or "Make this equipment easier to recognise", or **Change look…** on a selected object): imported equipment is offered catalog models where the names agree, asked about where they do not, and described to the object generator where nothing fits. Each is reviewed and applied as one undoable step that changes only how the object is drawn: no AI is needed ([docs/ux-05/](docs/ux-05/README.md)).
 - **"Will the route still fit?"**, **"Run a day"**, **"Run it again"**, **"Why did output change?"**: each answer comes from the existing route check, run engine and comparison, and names the blocked route.
 - **Full editor** (top right) shows every panel; switching keeps the world, selection, camera, review, undo history and run.
 
-Typing a request needs the optional AI (your own key; the words and the objects' names, kinds, positions and sizes are sent to ASU Voyager, never a drawing). Without a key, typing is off and says so; the suggestions, the attachment, small forms for moving and checking routes, and the full editor all work.
+Typing a request needs the optional AI (your own key; the words and the objects' ids, names and kinds are sent to ASU Voyager, never a drawing or a size). The wait shows its elapsed time and stops at 30 s with nothing changed. Without a key, typing is off and says so; the suggestions, the attachment, small forms for moving and checking routes, and the full editor all work.
 
 **Three different things:**
 
@@ -66,7 +67,7 @@ What you can do:
 | Checks | Overlaps, keep-clear zones, floor edge, width-only routes on the reviewed design, before/after | Turning (swept paths), overhead heights, loads, physics |
 | Run a day | One bounded process: stations tied to objects, carrying by hand along route-checked paths, workers with priorities and breaks, finite buffers, planned and seeded stops, deterministic events (`rws-run/1`), playback, comparison with the original layout, guided setup on your own plan with accepted illustrative assumptions, evidence bundles with the event logs (REL-01) | Conveyors and other transport, branching flows, several products, worker congestion |
 | World and editor | Evidence on every value, edit log, undo/redo, save/reopen, walk view, provisional models | Matching equipment to real models (ENR-01), shared private links (SHR-01), accounts |
-| Conversation (UX-03, UX-04) | Chat-first screen, plans of up to four bounded steps with one review and one Apply, adding a catalog object at stated sizes, previews before Apply, a one-at-a-time review card, recorded answers for offline tests, no-key manual use | Matching imported equipment to catalog models, free questions (AGT-01 is not complete) |
+| Conversation (UX-03, UX-04, UX-05) | Chat-first screen, plans of up to four bounded steps with one review and one Apply, adding a catalog object at stated sizes, reviewed catalog or generated models for imported equipment, a 30 s deadline with elapsed time, previews before Apply, a one-at-a-time review card, recorded answers for offline tests, no-key manual use | Free questions about the scene, supplier specifications, STEP/GLB enrichment (AGT-01 is not complete) |
 | AI (optional, your own key) | ASU Voyager interprets chat requests, drafts described objects, plan pictures and photo objects; nothing is applied unreviewed | Any hosted AI |
 
 Older capabilities (described and hand-built objects, one-photo import, improving generated models) remain in development builds; see the sections below and [prompts/PROJECT_STATE.md](prompts/PROJECT_STATE.md).

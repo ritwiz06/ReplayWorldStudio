@@ -451,6 +451,19 @@
           "maxLength": 500,
           "minLength": 1,
           "type": "string"
+        },
+        "chat_deadline_s": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The end-to-end deadline for interpreting a chat message (UX-05), every attempt included; null when no provider is configured."
         }
       },
       "required": [
@@ -687,7 +700,8 @@
             "target",
             "reference",
             "move_details",
-            "rotate_details"
+            "rotate_details",
+            "clarify"
           ],
           "type": "string"
         },
@@ -811,6 +825,17 @@
         },
         "provider": {
           "$ref": "#/$defs/ProviderRun"
+        },
+        "timing": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ChatTiming"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -1047,6 +1072,76 @@
         "unsupported"
       ],
       "title": "ChatStep",
+      "type": "object"
+    },
+    "ChatTiming": {
+      "additionalProperties": false,
+      "description": "Where the time of one interpretation went, measured on the local API (UX-05).\n\nToken counts are the provider's own (OpenAI-style ``usage``) and are null when it reports\nnone; sizes are characters of the request and answer text, never called tokens.",
+      "properties": {
+        "prepare_ms": {
+          "description": "Building the prompt and the scene summary.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "provider_ms": {
+          "description": "Waiting for the provider, every attempt.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "validate_ms": {
+          "description": "Parsing, expanding and checking the answer.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "request_chars": {
+          "description": "Characters of the prompt sent (all messages).",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "schema_chars": {
+          "description": "Characters of the answer schema sent.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "response_chars": {
+          "description": "Characters of the answers received.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "prepare_ms",
+        "provider_ms",
+        "validate_ms",
+        "request_chars",
+        "schema_chars",
+        "response_chars",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "title": "ChatTiming",
       "type": "object"
     },
     "ContextObject": {

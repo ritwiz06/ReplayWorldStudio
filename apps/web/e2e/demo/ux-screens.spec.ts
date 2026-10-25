@@ -9,13 +9,13 @@ import { expect, type Page, test } from "@playwright/test";
 
 const ROOT = new URL("../../../../", import.meta.url).pathname;
 const SET = process.env.UX_SET ?? "after";
-const OUT = SET.startsWith("ux04") ? `${ROOT}docs/ux-04/screens` : `${ROOT}docs/ux-03/${SET}`;
+const OUT = SET.startsWith("ux05") ? `${ROOT}docs/ux-05/screens` : SET.startsWith("ux04") ? `${ROOT}docs/ux-04/screens` : `${ROOT}docs/ux-03/${SET}`;
 const DXF = `${ROOT}fixtures/drawings/hall-mm.dxf`;
 
 async function shot(page: Page, name: string) {
   mkdirSync(OUT, { recursive: true });
   await page.waitForTimeout(700);
-  const prefix = SET === "ux04-nokey" ? "nokey-" : "";
+  const prefix = SET.endsWith("-nokey") ? "nokey-" : "";
   await page.screenshot({ path: `${OUT}/${page.viewportSize()!.width}-${prefix}${name}.jpg`, type: "jpeg", quality: 82 });
 }
 async function ask(page: Page, text: string) {
@@ -36,6 +36,7 @@ for (const [width, height] of [[1440, 900], [1280, 800]] as const) {
     await page.goto("/");
     await expect(page.getByTestId("scene-status")).toHaveText(/Scene loaded/);
     if (SET === "ux04" || SET === "ux04-nokey") return ux04(page);
+    if (SET === "ux05" || SET === "ux05-nokey") return ux05(page);
     await shot(page, "1-first-visit");
     if (SET === "before") {
       await page.evaluate(() => localStorage.setItem("rws.start.seen", "1"));
@@ -186,4 +187,56 @@ async function ux04(page: Page) {
   await page.getByTestId("appearance-toggle").click();
   await page.waitForTimeout(500);
   await shot(page, "12-added-uncertainty-view");
+}
+
+/** UX-05 (run with RWS_CHAT_DEADLINE_S=6): equipment appearance and the chat's wait. */
+async function ux05(page: Page) {
+  const chat = page.getByTestId("chat");
+  await page.evaluate(() => localStorage.setItem("rws.start.seen", "1"));
+  await page.goto("/");
+  await page.getByTestId("empty-example").click();
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+  if (SET === "ux05-nokey") {
+    await page.getByTestId("view-toggle").click();
+    await page.getByRole("button", { name: "Show the object list and details" }).click();
+    await page.getByRole("navigation", { name: "Scene objects" }).getByRole("button", { name: /^Electrical cabinet/ }).click();
+    await page.getByTestId("view-toggle").click();
+    await page.getByTestId("selection-look").click();
+    const row = chat.getByTestId("look-row-obj-dxf-10f");
+    await row.getByTestId("look-other-obj-dxf-10f").click();
+    await row.getByTestId("look-search-obj-dxf-10f").fill("cabinet");
+    await row.getByTestId("look-option-obj-dxf-10f-asset-electrical-cabinet-800").hover();
+    await page.waitForTimeout(1500);
+    await shot(page, "1-manual-choice-preview");
+    return;
+  }
+  await shot(page, "1-imported-before");
+  await chat.getByTestId("chat-suggest-appearance").click();
+  const look = card(page, "appearance");
+  await expect(look.getByTestId("look-row-obj-dxf-10f")).toBeVisible();
+  await look.getByTestId("look-row-obj-dxf-10f").hover();
+  await page.waitForTimeout(1500);
+  await shot(page, "2-suggestions-preview");
+  await look.getByTestId("look-use-obj-dxf-10f").click();
+  await look.getByTestId("look-use-obj-dxf-10c").click();
+  await look.getByTestId("look-other-obj-dxf-111").click();
+  await look.getByTestId("look-row-obj-dxf-111").scrollIntoViewIfNeeded();
+  await shot(page, "3-ambiguous-choice");
+  await look.getByTestId("look-keep-obj-dxf-111").click();
+  await look.getByTestId("look-apply").click();
+  await page.keyboard.press("h");
+  await page.waitForTimeout(1500);
+  await shot(page, "4-imported-after");
+  await chat.getByTestId("chat-suggest-run_example").click();
+  await expect(card(page, "run")).toBeVisible();
+  await page.getByTestId("run-speed").selectOption("120");
+  await page.waitForTimeout(3000);
+  await shot(page, "5-running-with-models");
+  await ask(page, "Run the shift slowly for the progress test");
+  await expect(card(page, "progress")).toContainText(/[23] s \(stops/, { timeout: 10_000 });
+  await shot(page, "6-slow-request");
+  await expect(card(page, "progress")).toHaveCount(0, { timeout: 20_000 });
+  await ask(page, "Run the shift, but the provider is too slow");
+  await expect(card(page, "timeout")).toBeVisible({ timeout: 30_000 });
+  await shot(page, "7-timed-out");
 }

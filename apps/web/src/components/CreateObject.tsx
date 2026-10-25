@@ -46,6 +46,10 @@ interface Props {
   initial?: { text: string; name: string; size: { width: number | null; depth: number | null; height: number | null } } | null;
   onPlace: (asset: CatalogAsset) => void;
   onClose: () => void;
+  /** Making the model of an existing object (UX-05): the draft takes its recorded size. */
+  fitTo?: { width: number; depth: number; height: number } | null;
+  /** The final button's words, when it does something other than place a new object. */
+  placeLabel?: string;
 }
 
 const SIZE_LABEL: Record<DimensionKey, string> = { width: "Width", height: "Height", depth: "Depth" };
@@ -59,7 +63,7 @@ function assistNote(assist: AssistState): { available: boolean; text: string } {
   return { available: true, text: `Your description is sent to ${a.service} (${a.model}) to draft a proposal. Nothing else from the project is sent.` };
 }
 
-export function CreateObject({ client, assist, startWith, onPlace, onClose, initial = null }: Props) {
+export function CreateObject({ client, assist, startWith, onPlace, onClose, initial = null, fitTo = null, placeLabel }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [step, setStep] = useState<Step>(() => {
     if (startWith !== "builder") return { kind: "describe", text: initial?.text ?? "", notice: null };
@@ -139,7 +143,10 @@ export function CreateObject({ client, assist, startWith, onPlace, onClose, init
     } else if (value.outcome === "unsupported") {
       setStep({ kind: "describe", text, notice: { tone: "warning", text: value.message ?? "That cannot be made into an object." } });
     } else {
-      const draft = draftFromProposal(trimmed, value);
+      const proposed = draftFromProposal(trimmed, value);
+      // For an existing object, its recorded size wins over the proposal's: the model is made to
+      // fit what the drawing says, and the object's own dimensions are never changed.
+      const draft = proposed && fitTo ? (["width", "depth", "height"] as const).reduce((d, key) => setDimension(d, key, fitTo[key]), proposed) : proposed;
       if (draft) setStep({ kind: "review", draft, result: value, editingParts: false });
     }
   }
@@ -253,7 +260,7 @@ export function CreateObject({ client, assist, startWith, onPlace, onClose, init
                 title={canPlace(step.draft) ? "Add it to the catalog and place it on the floor" : "Confirm the estimated sizes first"}
                 onClick={() => void place(step.draft)}
               >
-                {placing.busy ? "Saving model…" : "Place in scene"}
+                {placing.busy ? "Saving model…" : (placeLabel ?? "Place in scene")}
               </button>
               <button
                 type="button"

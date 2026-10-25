@@ -57,6 +57,9 @@ class AssistSettings:
     # repr=False keeps the key out of tracebacks, logs and debug output.
     api_key: str = field(default="", repr=False)
     timeout_s: float = 150.0
+    # One end-to-end deadline for interpreting a chat message, retries included (UX-05); the
+    # object generator keeps ``timeout_s``.
+    chat_deadline_s: float = 30.0
     recordings_dir: Path = _REPO_ROOT / "fixtures" / "assist" / "recorded"
 
 
@@ -155,6 +158,13 @@ def _assist_from_env(env: Mapping[str, str]) -> AssistSettings:
         timeout_s = float(timeout) if timeout else defaults.timeout_s
     except ValueError:
         raise ValueError(f"RWS_ASSIST_TIMEOUT_S must be a number, got {timeout!r}") from None
+    deadline = env.get("RWS_CHAT_DEADLINE_S", "").strip()
+    try:
+        chat_deadline_s = float(deadline) if deadline else defaults.chat_deadline_s
+    except ValueError:
+        raise ValueError(f"RWS_CHAT_DEADLINE_S must be a number, got {deadline!r}") from None
+    if not 1.0 <= chat_deadline_s <= 600.0:
+        raise ValueError(f"RWS_CHAT_DEADLINE_S must be between 1 and 600 s, got {deadline!r}")
     recordings = env.get("RWS_ASSIST_RECORDINGS_DIR", "").strip()
     return AssistSettings(
         provider=provider,
@@ -163,6 +173,7 @@ def _assist_from_env(env: Mapping[str, str]) -> AssistSettings:
         vision_model=env.get("VOYAGER_VISION_MODEL", "").strip() or defaults.vision_model,
         api_key=key,
         timeout_s=timeout_s,
+        chat_deadline_s=chat_deadline_s,
         recordings_dir=Path(recordings) if recordings else defaults.recordings_dir,
     )
 

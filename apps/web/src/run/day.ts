@@ -14,6 +14,10 @@ export interface DayRun {
   engine: string;
   seed: number;
   sceneRevision: number;
+  /** What the run reads (UX-05): the objects without the model that draws them, the sources
+   * and the process. A run is out of date only when this changes, not after an edit that only
+   * changes how equipment looks. */
+  operatingKey: string;
   processFingerprint: string;
   plan: RunPlan;
   result: RunResult | null;
@@ -28,11 +32,18 @@ export function runDay(project: Project, process: ProcessModel, layout: DayRun["
     engine: ENGINE_VERSION,
     seed: process.seed,
     sceneRevision: project.scene.revision,
+    operatingKey: operatingKey(project, process),
     processFingerprint: fingerprint(JSON.stringify(process)),
     plan,
     result,
     replay: result ? new Replay(result, plan, process.shift.start_clock_s.value, process.item_name) : null,
   };
+}
+
+/** The inputs a run reads, as one fingerprint: everything but which model draws an object. */
+export function operatingKey(project: Project, process: ProcessModel | null): string {
+  const objects = project.scene.objects.map((o) => (o.asset_id === null ? o : { ...o, asset_id: null }));
+  return fingerprint(JSON.stringify({ objects, sources: project.sources, process }));
 }
 
 /** The same process on the drawing's own arrangement, or null without a reviewed drawing. */
