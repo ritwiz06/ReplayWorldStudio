@@ -1,6 +1,6 @@
 import type { GltfVisual, Project } from "@replay-world/contracts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Group } from "three";
+import { type Group, type Mesh, Texture } from "three";
 import type { ApiClient } from "../api/client";
 import { loadCatalogModel, type ModelFailure } from "../scene/modelLoader";
 
@@ -33,7 +33,22 @@ function gltfAssets(catalog: Project["catalog"] | null): [string, GltfVisual][] 
   return (catalog ?? []).flatMap((a) => (a.visual.type === "gltf" ? [[a.id, a.visual]] : []));
 }
 
-const keyOf = (id: string, visual: GltfVisual, attempt: number) => `${id}|${visual.sha256}|${attempt}`;
+// The correction is part of what is loaded (an attached model is turned when it is parsed), so a
+// different orientation of the same file is a different template.
+const keyOf = (id: string, visual: GltfVisual, attempt: number) => `${id}|${visual.sha256}|${JSON.stringify(visual.correction)}|${attempt}`;
+
+/** Free a template's GPU resources: geometry, materials and their textures. */
+function dispose(template: Group): void {
+  template.traverse((node) => {
+    const mesh = node as Mesh;
+    if (!mesh.isMesh) return;
+    mesh.geometry.dispose();
+    for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+      for (const value of Object.values(material)) if (value instanceof Texture) value.dispose();
+      material.dispose();
+    }
+  });
+}
 
 /**
  * Loads every glTF visual in the project's catalog once (instances share the template).
@@ -69,6 +84,27 @@ export function useCatalogModels(client: ApiClient, project: Project | null) {
       );
     }
   }, [client, assets, attempt]);
+
+  // Templates no longer wanted (a previewed orientation replaced, an asset removed) are freed
+  // after the render that stopped using them; requested again later, they load again.
+  useEffect(() => {
+    const wanted = new Set(assets.map(([id, visual]) => keyOf(id, visual, attempt)));
+    const stale = [...results.keys()].filter((key) => !wanted.has(key));
+    if (!stale.length) return;
+    const timer = setTimeout(() => {
+      setResults((current) => {
+        const next = new Map(current);
+        for (const key of stale) {
+          const state = next.get(key);
+          if (state?.status === "ready") dispose(state.template);
+          next.delete(key);
+          requested.current.delete(key);
+        }
+        return next;
+      });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [assets, results, attempt]);
 
   const models: ModelStates = useMemo(
     () => new Map(assets.map(([id, visual]) => [id, results.get(keyOf(id, visual, attempt)) ?? { status: "loading" }])),

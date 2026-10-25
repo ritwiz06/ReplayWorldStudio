@@ -6,7 +6,7 @@
 import type { Project } from "@replay-world/contracts";
 import { type KeyboardEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { type SuggestionId, SUGGESTION_TEXT } from "../chat/context";
-import type { CardChoice, ChatController, Entry, LookOption, LookRow, LookView, PlanRow, PlanView } from "../chat/useChat";
+import type { CardChoice, ChatController, Entry, LookOption, LookRow, LookView, ModelUnit, ModelView, PlanRow, PlanView, UpAxis } from "../chat/useChat";
 import { nameOf } from "../chat/context";
 import type { ReviewCorrection } from "../drawing/review";
 import { reviewItems } from "../drawing/review";
@@ -41,7 +41,9 @@ interface Props {
   /** The controller's plan actions (choices, forms, Apply, Cancel). */
   plans: Pick<ChatController, "planTarget" | "planMove" | "planRotate" | "planAsset" | "planNear" | "planSide" | "planClarify">;
   /** The appearance card's actions (UX-05). */
-  looks: Pick<ChatController, "lookUse" | "lookKeep" | "lookBrowse" | "lookHover" | "lookCreate">;
+  looks: Pick<ChatController, "lookUse" | "lookKeep" | "lookBrowse" | "lookHover" | "lookCreate" | "lookUpload">;
+  /** The attached-model review's actions (ENR-01). */
+  models: Pick<ChatController, "modelChoose" | "modelShow">;
 }
 
 const AI_WORDS = { live: "AI on · ASU Voyager", recorded: "Recorded answers (test)", off: "AI off · no key", checking: "Checking the AI…", unreachable: "AI status unknown · retrying" } as const;
@@ -118,7 +120,7 @@ export function ChatPanel(props: Props) {
           ref={fileInput}
           type="file"
           hidden
-          accept=".dxf,.dwg,.pdf,.png,.jpg,.jpeg,.json,.zip"
+          accept=".dxf,.dwg,.pdf,.png,.jpg,.jpeg,.json,.zip,.glb"
           data-testid="chat-file-input"
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -179,6 +181,7 @@ function Card({ entry, project, props }: { entry: Entry; project: Project | null
       )}
       {entry.plan && entry.plan.rows.length > 0 && project && <PlanRows plan={entry.plan} project={project} props={props} />}
       {entry.look && entry.look.rows.length > 0 && <LookRows look={entry.look} actions={props.looks} />}
+      {entry.model && <ModelReview view={entry.model} actions={props.models} />}
       {live && entry.choices && entry.choices.length > 0 && <Choices choices={entry.choices} onHighlight={props.onHighlight} />}
       {live && entry.form?.kind === "move" && project && <MoveForm entry={entry} objectId={entry.form.objectId} project={project} onMove={props.onMove} onHighlight={props.onHighlight} />}
       {live && entry.form?.kind === "route" && project && <RouteForm entry={entry} form={entry.form} project={project} onRoute={props.onRoute} />}
@@ -405,6 +408,9 @@ function LookRowView({ look, row, actions }: { look: LookView; row: LookRow; act
               </button>
             </>
           )}
+          <button type="button" className="button button-small" data-testid={`look-upload-${id}`} onClick={() => actions.lookUpload(id)}>
+            Upload a 3D model…
+          </button>
           {row.status !== "kept" && (
             <button type="button" className="button button-small" data-testid={`look-keep-${id}`} onClick={() => actions.lookKeep(look.id, id)}>
               {row.status === "none" ? "Keep the current stand-in" : "Keep current appearance"}
@@ -433,6 +439,105 @@ function LookBrowse({ look, row, actions }: { look: LookView; row: LookRow; acti
           </button>
         </div>
       ))}
+    </div>
+  );
+}
+
+const UP_LABELS: Record<string, string> = { "+Y": "Y up (glTF)", "+Z": "Z up (CAD)", "-Z": "−Z up", "-Y": "−Y up", "+X": "X up", "-X": "−X up" };
+const triple = (t: [number, number, number]) => `${t[0].toFixed(2)} × ${t[2].toFixed(2)} m, ${t[1].toFixed(2)} m high`;
+
+/** An attached .glb under review for one object (ENR-01): is it the right object, which way
+ * does it face, does it fit the recorded space? Problems sit beside Apply; the rest is folded. */
+function ModelReview({ view, actions }: { view: ModelView; actions: Props["models"] }) {
+  if (view.phase !== "review") return null;
+  const id = view.id;
+  return (
+    <div className="model-review" data-testid="model-review" data-busy={view.busy ? "true" : "false"}>
+      <p className="small">
+        For <strong data-testid="model-target">{view.label}</strong> (highlighted). Only how it is drawn changes.
+      </p>
+      <div className="chat-buttons" role="group" aria-label="Show">
+        <button type="button" className={`button button-small${view.showing === "proposed" ? " button-primary" : ""}`} aria-pressed={view.showing === "proposed"} data-testid="model-show-proposed" onClick={() => actions.modelShow(id, "proposed")}>
+          Proposed look
+        </button>
+        <button type="button" className={`button button-small${view.showing === "current" ? " button-primary" : ""}`} aria-pressed={view.showing === "current"} data-testid="model-show-current" onClick={() => actions.modelShow(id, "current")}>
+          Current look
+        </button>
+      </div>
+      <div className="model-row">
+        <span className="small muted">Facing</span>
+        <button type="button" className="button button-small" data-testid="model-turn-left" aria-label="Turn the model a quarter left" onClick={() => actions.modelChoose(id, { turn: -1 })}>
+          ↺ Turn
+        </button>
+        <button type="button" className="button button-small" data-testid="model-turn-right" aria-label="Turn the model a quarter right" onClick={() => actions.modelChoose(id, { turn: 1 })}>
+          Turn ↻
+        </button>
+        <select aria-label="Which axis of the file is up" data-testid="model-up" value={view.up} onChange={(e) => actions.modelChoose(id, { up: e.target.value as UpAxis })}>
+          {Object.entries(UP_LABELS).map(([axis, label]) => (
+            <option key={axis} value={axis}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <p className="small muted">Its front should face the object's front: toward the bottom of the plan in Top view.</p>
+      <div className="model-row" role="radiogroup" aria-label="Fit">
+        <label className="small">
+          <input type="radio" name={`fit-${id}`} checked={view.fit === "contain"} data-testid="model-fit-contain" onChange={() => actions.modelChoose(id, { fit: "contain" })} /> Keep proportions, inside the recorded space
+        </label>
+        <label className="small">
+          <input type="radio" name={`fit-${id}`} checked={view.fit === "scale_to_dimensions"} data-testid="model-fit-stretch" onChange={() => actions.modelChoose(id, { fit: "scale_to_dimensions" })} /> Stretch to fill it (distorts)
+        </label>
+      </div>
+      <table className="model-sizes small" data-testid="model-sizes">
+        <tbody>
+          <tr>
+            <th scope="row">Recorded object</th>
+            <td>
+              {triple(view.recorded)} <span className="muted">({view.recordedNote}; unchanged)</span>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Model file</th>
+            <td>{view.model ? triple(view.model) : "…"}</td>
+          </tr>
+          <tr>
+            <th scope="row">Drawn as</th>
+            <td>{view.drawn ? triple(view.drawn) : "…"}</td>
+          </tr>
+        </tbody>
+      </table>
+      {view.scaleHint && (
+        <div className="model-row">
+          <span className="small muted">File unit</span>
+          <select aria-label="The unit the file was written in" data-testid="model-unit" value={view.unit} onChange={(e) => actions.modelChoose(id, { unit: e.target.value as ModelUnit })}>
+            <option value="m">metres (glTF)</option>
+            <option value="cm">centimetres</option>
+            <option value="mm">millimetres</option>
+            <option value="in">inches</option>
+            <option value="ft">feet</option>
+          </select>
+        </div>
+      )}
+      {view.warnings.length > 0 && (
+        <ul className="model-warnings" data-testid="model-warnings">
+          {view.warnings.map((w) => (
+            <li key={w} className="small look-warn">
+              {w}
+            </li>
+          ))}
+        </ul>
+      )}
+      <details className="chat-details" data-testid="model-details">
+        <summary>Details</summary>
+        <ul>
+          {view.details.map((d) => (
+            <li key={d} className="small">
+              {d}
+            </li>
+          ))}
+        </ul>
+      </details>
     </div>
   );
 }

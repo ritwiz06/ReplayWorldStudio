@@ -47,6 +47,7 @@ export function generatedAsset(id = "asset-gen-guarded-conveyor-0a1b2c3d"): Cata
       model_bounds_m: { min: { x: -1.1, y: 0, z: -0.35 }, max: { x: 1.1, y: 1.2, z: 0.35 } },
       fit: "scale_to_dimensions",
       max_fit_distortion: 0.05,
+      correction: null,
     },
     nominal_dimensions: {
       width: length(2.2, "user_supplied", "Stated in the description: “about 2.2 m long”"),
@@ -87,5 +88,6 @@ export function generatedAsset(id = "asset-gen-guarded-conveyor-0a1b2c3d"): Cata
       })),
       revision: null,
     },
+    upload: null,
   } satisfies CatalogAsset);
 }

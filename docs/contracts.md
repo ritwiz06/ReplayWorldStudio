@@ -1,6 +1,6 @@
 # Contracts: units, frames, provenance and the schema pipeline
 
-Contract version **0.14.0** (`SCHEMA_VERSION`; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, 0.4.0 → 0.5.0 in GEN-01, all 2026-10-10; 0.5.0 → 0.6.0 in IMG-01, 2026-10-14; 0.6.0 → 0.7.0 in GEN-02, 2026-10-15; 0.7.0 → 0.8.0 in IMG-02, 2026-10-16; 0.8.0 → 0.9.0 in ONB-01/IMP-01 and 0.9.0 → 0.10.0 in IMP-02, both 2026-10-16; 0.10.0 → 0.11.0 in GEO-01/02, 2026-10-17; 0.11.0 → 0.12.0 in IMP-03, 2026-10-18; 0.12.0 → 0.13.0 in SIM-01..04 and 0.13.0 → 0.14.0 for the guided setup, both 2026-10-18). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
+Contract version **0.15.0** (`SCHEMA_VERSION`; 0.14.0 → 0.15.0 in ENR-01, 2026-10-25; 0.1.0 → 0.2.0 in WRL-01, 0.2.0 → 0.3.0 in WRL-02, 0.3.0 → 0.4.0 in WRL-03, 0.4.0 → 0.5.0 in GEN-01, all 2026-10-10; 0.5.0 → 0.6.0 in IMG-01, 2026-10-14; 0.6.0 → 0.7.0 in GEN-02, 2026-10-15; 0.7.0 → 0.8.0 in IMG-02, 2026-10-16; 0.8.0 → 0.9.0 in ONB-01/IMP-01 and 0.9.0 → 0.10.0 in IMP-02, both 2026-10-16; 0.10.0 → 0.11.0 in GEO-01/02, 2026-10-17; 0.11.0 → 0.12.0 in IMP-03, 2026-10-18; 0.12.0 → 0.13.0 in SIM-01..04 and 0.13.0 → 0.14.0 for the guided setup, both 2026-10-18). Source: [`packages/contracts/python/replay_world_contracts/models.py`](../packages/contracts/python/replay_world_contracts/models.py).
 
 ## One source of truth
 
@@ -104,6 +104,7 @@ Worked example (foundation fixture): the plan is in mm with translation (−10, 
 
   Its note reads `schema_version 0.9.0 -> 0.10.0 (adds an unchecked review to N drawing source(s) and footprint_fit to M drawn object(s); K drawn footprint value(s) recorded as measured become drawn (a design drawing, not a site measurement); nothing is strengthened)`. The edit log's history is not rewritten.
 - 0.10.0 → 0.11.0 adds `omitted: null` to every drawing reading and changes nothing else: where its left-out shapes lie was not recorded, so the layout checks treat them as possibly anywhere (keep-clear zones and routes answer "cannot determine yet" until the drawing is uploaded again). Its note reads `schema_version 0.10.0 -> 0.11.0 (adds 'omitted: null' to N drawing reading(s): where their left-out shapes lie was not recorded, so checks treat them as possibly anywhere)`. A 0.10.0 document whose drawing already has `omitted` is refused as malformed.
+- 0.14.0 → 0.15.0 adds `upload: null` to every catalog asset and `correction: null` to every glTF visual: no model had been uploaded. Its note reads `schema_version 0.14.0 -> 0.15.0 (adds 'upload: null' to N catalog asset(s) and 'correction: null' to M glTF visual(s): no model was uploaded; no values or evidence changed)`. A 0.14.0 document that already has either is refused as malformed. An evidence manifest keeps the contract it was written with (`0.14.0` or `0.15.0`), so a 0.14.0 bundle still opens; its project file is upgraded on opening.
 - 0.13.0 → 0.14.0 adds `symbol_layers: []` to every drawing review: no layer was marked as drawing symbols. Its note reads `schema_version 0.13.0 -> 0.14.0 (adds 'symbol_layers: []' to N drawing review(s): no layer is treated as drawing symbols; no values or evidence changed)`. A 0.13.0 review that already has `symbol_layers` is refused as malformed.
 - 0.12.0 → 0.13.0 adds `process: null` to the project: no process for Run a day was set up before 0.13.0. Its note reads `schema_version 0.12.0 -> 0.13.0 (adds 'process: null': no process for Run a day was set up; no values or evidence changed)`. A 0.12.0 document that already has `process` is refused as malformed.
 - 0.11.0 → 0.12.0 adds `raster: null` to every drawing reading, and `tolerance: null` to every drawn object and reference length: a DXF's geometry is exact as drawn. Nothing else changes. Its note reads `schema_version 0.11.0 -> 0.12.0 (adds 'raster: null' to N drawing reading(s) and 'tolerance: null' to M drawn outline(s): DXF geometry is exact as drawn; no values or evidence changed)`. A 0.11.0 document whose drawing already has `raster` is refused as malformed.
@@ -410,3 +411,33 @@ Runs are not stored. They are made again from the process, the layout, the seed 
 - **"Suggest setup"** (`POST /api/v1/assist/process-suggestions`):
   - takes `ProcessSuggestionRequest` (the person's description, and the reviewed objects' id, name, kind and footprint);
   - returns `ProcessSuggestionResult`: an item name, stations in order with roles and reasons, and questions. It has no field for an operating value.
+
+## Uploaded models (0.15.0, ENR-01)
+
+A person can attach a binary glTF (.glb) to make an existing object easier to recognise.
+
+- **The file is kept as it is,** at `uploaded/<sha256>.glb` in the catalog library. That directory is git-ignored, because the files are the person's own. The visual names it directly (`uri`, `sha256`).
+- **`GltfVisual.correction`** records how the file is drawn as if it followed the catalog conventions:
+  - `up_axis`: which file axis is up;
+  - `turns`: quarter turns clockwise seen from above;
+  - `file_bounds`: the exact bounds as written, through every node transform;
+  - `offset`: the translation, in file units after turning, that puts the bounding-box bottom-centre at the origin.
+
+  Only quarter turns are allowed, so the corrected bounds stay exact. `model_bounds_m` must follow from these (checked), and `metres_per_model_unit` is the unit the person chose (metres unless they say otherwise; an implausible size is pointed out, never fixed for them). The map is `corrected_point` in Python and `correctedPoint` in the browser.
+- **`fit: "contain"`** is one scale for every axis: the largest that keeps the model inside the object's recorded dimensions, bottom-centred. The unused space is drawn as a faint outline. `scale_to_dimensions` (stretching) is used only when chosen.
+- **`AssetSource.kind: "uploaded"` and `CatalogAsset.upload`** (`filename`, `bytes`, `triangles`, `note`) go together.
+  - **The note** is only what the person said about the file's origin or terms.
+  - **Rights** stay `NOASSERTION` / `unknown`; a licence is never assigned.
+  - **Nominal dimensions** are the model's geometry: origin `inferred`, with a `source_ref` that says it is not a measurement of the machine.
+- **Using it changes no physical fact.** The object references the asset through `set_appearance`, recorded as a `drawing_reviewed` correction ("Equipment appearance (display only): … (reason)"). Its id, name, placement, dimensions and their evidence, process and source links, keep-clear and route geometry are unchanged, and runs read the same layout.
+- **The supported subset** (`services/api/src/replay_world_api/uploads.py`): self-contained GLB 2.0; static triangle meshes, materials, embedded PNG/JPEG textures.
+  - **Limits:** 25 MB, a 4 MB JSON chunk, 4,000 nodes, a nesting depth of 32, 2,000 meshes, 4,000 primitives, 500,000 vertices, 1,000,000 triangles, 512 materials, 32 images, each at most 4,096 px per side, and 32 M decoded texture pixels in all.
+  - **Refused, with the reason:** any `uri` (external or data), compressed or quantized content, unreadable required extensions, skins, morph targets, sparse accessors, points or lines, malformed references and node cycles.
+  - **Shown at rest:** animations are not played.
+  - **Ignored:** cameras and lights.
+- **API:**
+  - `POST /api/v1/catalog/uploaded-models` (the raw .glb) returns an `UploadedModelReport`;
+  - `POST /api/v1/catalog/uploaded-assets` (`UploadedAssetRequest`: the stored file's hash and the person's choices) returns the `CatalogAsset`.
+
+  Neither calls a language model.
+- **A missing attached file** does not stop a project opening. It is drawn as "Model unavailable", and only the same file (its hash checked) restores it, or its objects return to their stand-in. A different file under its name is refused.

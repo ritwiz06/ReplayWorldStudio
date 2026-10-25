@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.14.0",
+  "schema_version": "0.15.0",
   "id": "proj-gen09-regressions",
   "name": "GEN-09 regressions (GEN-08 t2 and p3 targets)",
   "units": {
@@ -82,7 +82,8 @@
         "attribution": null,
         "terms_ref": "No project license has been chosen yet (see README)"
       },
-      "generation": null
+      "generation": null,
+      "upload": null
     },
     {
       "id": "asset-generic-processing-station",
@@ -125,7 +126,8 @@
         "attribution": null,
         "terms_ref": "No project license has been chosen yet (see README)"
       },
-      "generation": null
+      "generation": null,
+      "upload": null
     },
     {
       "id": "asset-generic-packing-station",
@@ -168,7 +170,8 @@
         "attribution": null,
         "terms_ref": "No project license has been chosen yet (see README)"
       },
-      "generation": null
+      "generation": null,
+      "upload": null
     },
     {
       "id": "asset-gen-cabinet-43502bb1",
@@ -195,7 +198,8 @@
           }
         },
         "fit": "scale_to_dimensions",
-        "max_fit_distortion": 0.05
+        "max_fit_distortion": 0.05,
+        "correction": null
       },
       "nominal_dimensions": {
         "width": {
@@ -350,7 +354,8 @@
           }
         ],
         "revision": null
-      }
+      },
+      "upload": null
     },
     {
       "id": "asset-gen-left-machine-with-yellow-safety-cage-08999b73",
@@ -377,7 +382,8 @@
           }
         },
         "fit": "scale_to_dimensions",
-        "max_fit_distortion": 0.05
+        "max_fit_distortion": 0.05,
+        "correction": null
       },
       "nominal_dimensions": {
         "width": {
@@ -532,7 +538,8 @@
           }
         ],
         "revision": null
-      }
+      },
+      "upload": null
     }
   ],
   "scene": {

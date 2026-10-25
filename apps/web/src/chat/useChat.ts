@@ -7,7 +7,8 @@
 // layout checks, the guided setup and the run engine. Suggestions, forms and attachments use the
 // same actions directly, with no model at all. A late answer - after Cancel, or after the scene
 // changed - is never applied; a plan never runs twice; a failed step stops the steps after it.
-import type { CatalogAsset, ChatResult, ChatStep, Project } from "@replay-world/contracts";
+import type { CatalogAsset, ChatResult, ChatStep, Project, UploadedModelReport } from "@replay-world/contracts";
+import { envelopeFill, fitScale, modelExtents } from "../scene/fit";
 import { useState, useSyncExternalStore } from "react";
 import type { ApiClient } from "../api/client";
 import { type RouteAsk, runChecks, type SceneChecks, sceneChecks } from "../checks/results";
@@ -64,6 +65,8 @@ export interface Entry {
   plan?: PlanView;
   /** Reviewing models for imported equipment (UX-05). */
   look?: LookView;
+  /** Reviewing an attached .glb for one object (ENR-01). */
+  model?: ModelView;
   /** Where the time went (UX-05), in ms: interpreting (and the provider's part of it),
    * preparing the proposal in the browser, and performing it after Apply. */
   timing?: { interpretMs?: number; providerMs?: number; prepareMs?: number; executeMs?: number };
@@ -138,6 +141,10 @@ export interface ChatHost {
   library(): Promise<CatalogAsset[]>;
   /** The existing Describe-an-object or builder window, with the person's words kept. */
   openCreate(kind: "describe" | "builder", description: string): void;
+  /** Choose a .glb from this computer for one object (ENR-01). */
+  pickModelFile(objectId: string): void;
+  /** Select an object and bring it into view (for reviewing its look closely). */
+  focusObject(objectId: string): void;
   /** Draw one object with a candidate model while it is reviewed (display only; UX-05). */
   setLookPreview(preview: { objectId: string; asset: CatalogAsset } | null): void;
   /** The object generator for an existing object (UX-05): its words and recorded size carried
@@ -193,11 +200,82 @@ interface LookState {
   applied: number;
 }
 
+export type UpAxis = "+Y" | "-Y" | "+Z" | "-Z" | "+X" | "-X";
+export type ModelUnit = "m" | "cm" | "mm" | "in" | "ft";
+type Triple = [number, number, number];
+
+/** An attached model under review for one object (ENR-01): the choices, and what they give. */
+export interface ModelView {
+  id: number;
+  phase: "review" | "applied" | "cancelled" | "stale" | "undone";
+  objectId: string;
+  label: string;
+  filename: string;
+  up: UpAxis;
+  turns: number;
+  unit: ModelUnit;
+  fit: "contain" | "scale_to_dimensions";
+  showing: "proposed" | "current";
+  busy: boolean;
+  /** Sizes, width × height × depth in metres: the model as turned; the object's recorded ones
+   * (never changed); and the model as drawn in that space. */
+  model: Triple | null;
+  recorded: Triple;
+  recordedNote: string;
+  drawn: Triple | null;
+  /** Problems to see before Apply, beside it. */
+  warnings: string[];
+  /** Technical details, folded. */
+  details: string[];
+  scaleHint: string | null;
+}
+
+interface ModelState {
+  id: number;
+  entryId: number;
+  loadId: number;
+  baseRevision: number;
+  objectId: string;
+  expected: string | null;
+  report: UploadedModelReport;
+  up: UpAxis;
+  turns: number;
+  unit: ModelUnit;
+  fit: ModelView["fit"];
+  showing: ModelView["showing"];
+  asset: CatalogAsset | null;
+  busy: boolean;
+  problem: string | null;
+  phase: ModelView["phase"];
+  revisionAfter: number | null;
+  /** Bumped on every choice, so a slower earlier proposal never overwrites a newer one. */
+  ask: number;
+}
+
+const ORIGIN_WORDS: Record<string, string> = { drawn: "drawn", default: "assumed", inferred: "estimated", measured: "measured", supplier: "supplier", user_supplied: "entered" };
+
 /** Stills of the shipped models (public/catalog-previews/), for the appearance card. */
 const SHIPPED_PREVIEWS = new Set(["asset-belt-conveyor-3m", "asset-guarded-machine-cell", "asset-electrical-cabinet-800", "asset-pallet-cartons"]);
 
 function lookOption(c: Candidate): LookOption {
   return { assetId: c.asset.id, name: c.asset.name, reason: c.reason, warnings: c.warnings, summary: c.summary, generic: c.generic, preview: SHIPPED_PREVIEWS.has(c.asset.id) ? `/catalog-previews/${c.asset.id}.jpg` : null };
+}
+
+/** Why a model was used, as recorded with the change: the suggestion's reason or the choice. */
+function reasonOf(match: Match, assetId: string): string {
+  const options = match.kind === "suggested" ? [match.best, ...match.others] : match.options;
+  const option = options.find((o) => o.asset.id === assetId);
+  if (match.kind === "suggested" && match.best.asset.id === assetId) return `suggested: ${option?.reason ?? "the names agree"}`;
+  return "chosen by the person";
+}
+
+/** A file is a binary glTF by its content (the first four bytes), whatever its name. */
+async function isGlb(file: File): Promise<boolean> {
+  try {
+    return new TextDecoder().decode(await file.slice(0, 4).arrayBuffer()) === "glTF";
+  } catch {
+    return false;
+  }
 }
 
 /** Typed requests about how equipment looks are handled here, without the AI. */
@@ -542,6 +620,238 @@ export class ChatController {
     this.renderPlan(plan);
   };
 
+  // ---------- An attached 3D model for one object (ENR-01) ----------
+
+  private models = new Map<number, ModelState>();
+  private nextModel = 1;
+
+  /** A .glb for an existing object: which object (the selection is offered first), then its
+   * review. The file is read and stored by the local API only; nothing goes to the AI. */
+  attachModel = async (file: File, objectId?: string) => {
+    const h = this.host;
+    const project = h.project;
+    if (!project || !project.scene.objects.length) {
+      this.say("cannot", "A 3D model improves an object already in a world. Open the example or attach a plan first; then choose the object it is for.", { tone: "warn" });
+      return;
+    }
+    if (file.name.toLowerCase().endsWith(".gltf")) {
+      this.say("cannot", `${file.name} is a text glTF that keeps its data in other files, which are never fetched. Export the model as a single binary .glb (glTF 2.0) with everything embedded.`, { tone: "error" });
+      return;
+    }
+    const equipment = project.scene.objects.filter((o) => o.kind === "equipment");
+    const target = objectId ?? null;
+    if (target) return this.reviewModel(file, target);
+    const selected = h.selectedId && equipment.some((o) => o.id === h.selectedId) ? h.selectedId : null;
+    const others = equipment.filter((o) => o.id !== selected);
+    let asked = 0;
+    const choose = (id: string) => {
+      this.update(asked, { closed: true, choices: [], lines: [`For ${nameOf(project, id)}.`] });
+      void this.reviewModel(file, id);
+    };
+    const choices: CardChoice[] = [
+      ...(selected ? [{ label: `Use for ${nameOf(project, selected)}`, testId: `model-for-${selected}`, objectId: selected, run: () => choose(selected) }] : []),
+      ...others.map((o) => ({ label: nameOf(project, o.id), testId: `model-for-${o.id}`, objectId: o.id, run: () => choose(o.id) })),
+    ];
+    asked = this.say("question", selected ? `Is ${file.name} a better model of ${nameOf(project, selected)}? Or choose the object it belongs to.` : `Which object is ${file.name} a better model of? It improves that object; it never adds a new one or replaces the world.`, { tone: "question", choices });
+  };
+
+  private reviewModel = async (file: File, objectId: string) => {
+    const h = this.host;
+    const project = h.project;
+    const object = project?.scene.objects.find((o) => o.id === objectId);
+    if (!project || !object) return;
+    h.setPreview({ ghosts: [], candidates: [objectId], route: null });
+    const controller = new AbortController();
+    const entryId = this.push({ role: "assistant", kind: "progress", tone: "progress", text: `Reading ${file.name} on this computer… (it is not sent to the AI)`, buttons: [] });
+    this.update(entryId, { buttons: [{ label: "Cancel", testId: "model-cancel-upload", run: () => (controller.abort(), this.update(entryId, { kind: "cancelled", text: "Cancelled: nothing was changed.", tone: "info", closed: true, buttons: [] })) }] });
+    const result = await h.client.uploadModel(file, file.name, controller.signal).catch(() => null);
+    if (!result || controller.signal.aborted) return;
+    if (!result.ok) {
+      this.update(entryId, { kind: "model-rejected", tone: "error", closed: true, buttons: [], text: `${file.name} can't be used: ${result.error.message}`, lines: ["Nothing was changed: the object keeps its current look."] });
+      h.setPreview(null);
+      return;
+    }
+    const now = this.host.project;
+    if (!now) return;
+    const id = this.nextModel++;
+    const state: ModelState = { id, entryId, loadId: this.host.loadId, baseRevision: now.scene.revision, objectId, expected: object.asset_id, report: result.value, up: "+Y", turns: 0, unit: "m", fit: "contain", showing: "proposed", asset: null, busy: true, problem: null, phase: "review", revisionAfter: null, ask: 0 };
+    this.models.set(id, state);
+    this.renderModel(state);
+    await this.proposeModel(state);
+  };
+
+  private async proposeModel(state: ModelState) {
+    const ask = ++state.ask;
+    state.busy = true;
+    this.renderModel(state);
+    const r = state.report;
+    const name = r.filename.replace(/\.glb$/i, "") || "Attached model";
+    const result = await this.host.client.uploadedAsset({ sha256: r.sha256, filename: r.filename, name, up_axis: state.up, turns: state.turns, unit: state.unit, fit: state.fit, note: null }).catch(() => null);
+    if (ask !== state.ask || state.phase !== "review") return; // a newer choice, or no longer open
+    state.busy = false;
+    if (!result || !result.ok) {
+      state.asset = null;
+      state.problem = result && !result.ok ? result.error.message : "The local API did not answer.";
+    } else {
+      state.asset = result.value;
+      state.problem = null;
+    }
+    this.showModel(state);
+    this.renderModel(state);
+    // The first proposal is brought into view, close enough to judge its facing and fit.
+    if (ask === 1) this.host.focusObject(state.objectId);
+  }
+
+  private showModel(state: ModelState) {
+    const h = this.host;
+    h.setLookPreview(state.phase === "review" && state.showing === "proposed" && state.asset ? { objectId: state.objectId, asset: state.asset } : null);
+  }
+
+  private renderModel(state: ModelState) {
+    const project = this.host.project;
+    const object = project?.scene.objects.find((o) => o.id === state.objectId);
+    if (!project || !object) return;
+    const d = object.dimensions;
+    const recorded: Triple = [d.width.value_m, d.height.value_m, d.depth.value_m];
+    const visual = state.asset?.visual.type === "gltf" ? state.asset.visual : null;
+    const model = visual ? modelExtents(visual) : null;
+    const drawn = visual && model ? (fitScale(visual, d).map((f, i) => f * model[i]!) as Triple) : null;
+    const warnings: string[] = [];
+    const axes = ["width", "height", "depth"] as const;
+    if (visual && model) {
+      const fill = envelopeFill(visual, d);
+      if (state.fit === "contain") {
+        const low = fill.map((f, i) => [axes[i]!, f] as const).filter(([, f]) => f < 0.5);
+        if (low.length) warnings.push(`The model fills only ${low.map(([a, f]) => `${Math.round(f * 100)} % of the recorded ${a}`).join(" and ")}: check it is the right model and the right way up.`);
+      } else {
+        const stretch = fitScale(visual, d).map((f, i) => [axes[i]!, f] as const).filter(([, f]) => Math.abs(f - 1) > 0.25);
+        if (stretch.length) warnings.push(`Stretched to fill: ${stretch.map(([a, f]) => `${a} ×${f.toFixed(2)}`).join(", ")}. The model is distorted.`);
+      }
+    }
+    if (state.unit === "m" && state.report.scale_hint) warnings.push(state.report.scale_hint);
+    warnings.push(...state.report.notes.filter((n) => /animation|skin|morph/i.test(n)));
+    if (state.problem) warnings.unshift(state.problem);
+    const r = state.report;
+    const details = [
+      `File: ${r.filename}, ${(r.bytes / 1024).toFixed(0)} KB, sha256 ${r.sha256.slice(0, 12)}…, kept unchanged on this computer (${r.uri}).`,
+      `${r.triangles.toLocaleString()} triangles, ${r.vertices.toLocaleString()} vertices, ${r.nodes} node${r.nodes === 1 ? "" : "s"}, ${r.meshes} mesh${r.meshes === 1 ? "" : "es"}, ${r.materials} material${r.materials === 1 ? "" : "s"}, ${r.textures} texture${r.textures === 1 ? "" : "s"} (${r.texture_pixels.toLocaleString()} pixels).`,
+      `Bounds as written (file units, through every node transform): ${["x", "y", "z"].map((a) => `${a} ${r.file_bounds.min[a as "x"].toFixed(3)} to ${r.file_bounds.max[a as "x"].toFixed(3)}`).join(", ")}.`,
+      ...(r.extensions_used.length ? [`Extensions: ${r.extensions_used.join(", ")}.`] : []),
+      ...r.notes,
+      "The model's sizes are its geometry, not a measurement of the machine. The object keeps its recorded dimensions and their evidence; adopting sizes from a supplier's document is a separate, reviewed step.",
+      "No licence is assumed: the file's origin and terms are recorded as not stated.",
+    ];
+    const view: ModelView = {
+      id: state.id,
+      phase: state.phase,
+      objectId: state.objectId,
+      label: nameOf(project, state.objectId),
+      filename: r.filename,
+      up: state.up,
+      turns: state.turns,
+      unit: state.unit,
+      fit: state.fit,
+      showing: state.showing,
+      busy: state.busy,
+      model,
+      recorded,
+      recordedNote: axes.map((a) => ORIGIN_WORDS[d[a].origin] ?? d[a].origin).join(" / "),
+      drawn,
+      warnings,
+      details,
+      scaleHint: r.scale_hint,
+    };
+    const title = {
+      review: `A new look for ${view.label}?`,
+      applied: `${view.label} now uses ${r.filename}.`,
+      cancelled: "Cancelled: the object keeps its current look.",
+      stale: "The world changed since this review, so nothing was changed.",
+      undone: `Undone: ${view.label} looks as it did before.`,
+    }[state.phase];
+    const buttons: CardButton[] = [];
+    if (state.phase === "review") {
+      buttons.push({ label: "Apply", testId: "model-apply", primary: true, run: () => this.modelApply(state.id) });
+      buttons.push({ label: "Cancel", testId: "model-cancel", run: () => this.modelCancel(state.id) });
+    } else if (state.phase === "applied") {
+      buttons.push({ label: "Undo", testId: "model-undo", run: () => this.modelUndo(state.id) });
+    }
+    this.update(state.entryId, {
+      kind: state.phase === "review" ? "model-review" : `model-${state.phase}`,
+      tone: state.phase === "review" ? "question" : state.phase === "applied" ? "done" : state.phase === "stale" ? "warn" : "info",
+      text: title,
+      lines: state.phase === "applied" ? ["Only its look changed: id, name, position, turn, recorded dimensions and their evidence, drawing and process links, routes and the run are as they were."] : [],
+      details: [],
+      buttons,
+      closed: state.phase !== "review" && state.phase !== "applied",
+      model: view,
+    });
+  }
+
+  private modelOf(id: number): ModelState | null {
+    const state = this.models.get(id);
+    return state && state.phase === "review" ? state : null;
+  }
+
+  /** Change one choice and propose again: which way is up, the quarter turn, the unit, the fit. */
+  modelChoose = (id: number, choice: { up?: UpAxis; turn?: 1 | -1; unit?: ModelUnit; fit?: ModelView["fit"] }) => {
+    const state = this.modelOf(id);
+    if (!state) return;
+    if (choice.up) state.up = choice.up;
+    if (choice.turn) state.turns = (state.turns + choice.turn + 4) % 4;
+    if (choice.unit) state.unit = choice.unit;
+    if (choice.fit) state.fit = choice.fit;
+    state.showing = "proposed";
+    void this.proposeModel(state);
+  };
+
+  /** Show the object as it is now, or with the proposed model (display only). */
+  modelShow = (id: number, showing: ModelView["showing"]) => {
+    const state = this.modelOf(id);
+    if (!state) return;
+    state.showing = showing;
+    this.showModel(state);
+    this.renderModel(state);
+  };
+
+  modelApply = (id: number) => {
+    const state = this.modelOf(id);
+    if (!state || !state.asset || state.busy) return;
+    const h = this.host;
+    state.phase = "applied"; // before executing: a second click finds nothing to apply
+    h.setLookPreview(null);
+    h.setPreview(null);
+    const outcome = h.loadId === state.loadId ? h.execute({ baseRevision: state.baseRevision, command: { type: "set_appearance", changes: [{ objectId: state.objectId, assetId: state.asset.id, expected: state.expected, reason: `attached file ${state.report.filename}, reviewed; ${state.fit === "contain" ? "kept in proportion" : "stretched to fill"}` }], assets: [state.asset] } }) : null;
+    if (!outcome?.ok) {
+      state.phase = "stale";
+      this.renderModel(state);
+      if (outcome && outcome.rejection.kind !== "conflict") this.update(state.entryId, { lines: [outcome.rejection.message] });
+      return;
+    }
+    state.revisionAfter = outcome.state.project.scene.revision;
+    this.renderModel(state);
+  };
+
+  modelCancel = (id: number) => {
+    const state = this.modelOf(id);
+    if (!state) return;
+    state.phase = "cancelled";
+    this.host.setLookPreview(null);
+    this.host.setPreview(null);
+    this.renderModel(state);
+  };
+
+  modelUndo = (id: number) => {
+    const state = this.models.get(id);
+    if (!state || state.phase !== "applied") return;
+    if (state.revisionAfter !== this.host.project?.scene.revision) {
+      this.update(state.entryId, { lines: ["Later changes came after this one: use Undo in the top bar to step back in order."] });
+      return;
+    }
+    if (!this.host.undo()?.ok) return;
+    state.phase = "undone";
+    this.renderModel(state);
+  };
+
   // ---------- Equipment appearance (UX-05) ----------
 
   private looks = new Map<number, LookState>();
@@ -657,6 +967,9 @@ export class ChatController {
     this.renderLook(look);
   };
 
+  /** Upload a 3D model for this object instead (ENR-01): its own review follows. */
+  lookUpload = (objectId: string) => this.host.pickModelFile(objectId);
+
   lookKeep = (id: number, objectId: string) => {
     const look = this.lookOf(id);
     const row = look && this.rowOf(look, objectId);
@@ -699,7 +1012,7 @@ export class ChatController {
     if (!chosen.length) return;
     look.phase = "applied"; // before executing: a second click finds nothing to apply
     const assets = [...new Set(chosen.map((r) => r.chosen!))].map((a) => look.library.find((x) => x.id === a)!).filter(Boolean);
-    const outcome = h.loadId === look.loadId ? h.execute({ baseRevision: look.baseRevision, command: { type: "set_appearance", changes: chosen.map((r) => ({ objectId: r.match.object.id, assetId: r.chosen, expected: r.match.object.asset_id })), assets } }) : null;
+    const outcome = h.loadId === look.loadId ? h.execute({ baseRevision: look.baseRevision, command: { type: "set_appearance", changes: chosen.map((r) => ({ objectId: r.match.object.id, assetId: r.chosen, expected: r.match.object.asset_id, reason: reasonOf(r.match, r.chosen!) })), assets } }) : null;
     h.setLookPreview(null);
     h.setPreview(null);
     if (!outcome?.ok) {
@@ -1345,6 +1658,10 @@ export class ChatController {
   attach = async (file: File) => {
     const h = this.host;
     this.push({ role: "user", kind: "user", text: `Attached ${file.name}`, tone: "info" });
+    if (/\.(glb|gltf)$/i.test(file.name) || (await isGlb(file))) {
+      void this.attachModel(file);
+      return;
+    }
     if (/\.(json|zip)$/i.test(file.name)) {
       h.openFile(file);
       const entryId = this.say("progress", `Opening ${file.name}…`, { tone: "progress" });

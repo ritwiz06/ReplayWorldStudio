@@ -317,6 +317,9 @@ def test_a_0_9_0_drawing_is_reviewed_as_unchecked_and_its_drawn_sizes_are_weaken
     old = copy.deepcopy(current)
     old["schema_version"] = "0.9.0"
     del old["process"]
+    for asset in old["catalog"]:
+        del asset["upload"]
+        asset["visual"].pop("correction", None)
     drawing = old["sources"][-1]["drawing"]
     del drawing["review"]
     del drawing["omitted"]
@@ -344,6 +347,9 @@ def test_a_0_9_0_drawing_is_reviewed_as_unchecked_and_its_drawn_sizes_are_weaken
         "schema_version 0.13.0 -> 0.14.0 (adds 'symbol_layers: []' to 1 drawing "
         "review: no layer is treated as drawing symbols; no values or "
         "evidence changed)",
+        "schema_version 0.14.0 -> 0.15.0 (adds 'upload: null' to 3 catalog assets and "
+        "'correction: null' to 0 glTF visuals: no model was uploaded; no values or evidence "
+        "changed)",
     ]
     project = Project.model_validate(upgrade.document)
     review = project.sources[-1].drawing.review  # type: ignore[union-attr]
@@ -404,11 +410,17 @@ def test_a_0_13_0_review_gains_no_symbol_layers(fixture_data: dict[str, Any]) ->
     old = copy.deepcopy(current)
     old["schema_version"] = "0.13.0"
     del old["sources"][-1]["drawing"]["review"]["symbol_layers"]
+    for asset in old["catalog"]:
+        del asset["upload"]
+        asset["visual"].pop("correction", None)
     upgrade = upgrade_document(old)
     assert upgrade.document == current
     assert upgrade.notes == [
         "schema_version 0.13.0 -> 0.14.0 (adds 'symbol_layers: []' to 1 drawing review: no layer "
-        "is treated as drawing symbols; no values or evidence changed)"
+        "is treated as drawing symbols; no values or evidence changed)",
+        "schema_version 0.14.0 -> 0.15.0 (adds 'upload: null' to 3 catalog assets and "
+        "'correction: null' to 0 glTF visuals: no model was uploaded; no values or evidence "
+        "changed)",
     ]
     old["sources"][-1]["drawing"]["review"]["symbol_layers"] = []
     with pytest.raises(MigrationError, match=r"symbol layers only exist from 0\.14\.0"):

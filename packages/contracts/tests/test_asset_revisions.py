@@ -154,6 +154,7 @@ def generated_asset() -> dict[str, Any]:
             },
             "fit": "scale_to_dimensions",
             "max_fit_distortion": 0.05,
+            "correction": None,
         },
         "nominal_dimensions": {"width": length(1.0), "height": length(2.0), "depth": length(0.5)},
         "source": {"kind": "generated", "author": "Test generator", "reference": None},
@@ -195,6 +196,7 @@ def generated_asset() -> dict[str, Any]:
             ],
             "revision": None,
         },
+        "upload": None,
     }
 
 
@@ -265,6 +267,8 @@ def as_0_6_0(current: dict[str, Any]) -> dict[str, Any]:
     for source in old["sources"]:
         del source["drawing"]
     for asset in old["catalog"]:
+        del asset["upload"]
+        asset["visual"].pop("correction", None)
         if asset["generation"] is not None:
             del asset["generation"]["revision"]
     for source in old["sources"]:
@@ -299,6 +303,9 @@ def test_0_6_0_documents_gain_a_null_revision_and_an_unstated_size_basis(
         "schema_version 0.13.0 -> 0.14.0 (adds 'symbol_layers: []' to 0 drawing "
         "reviews: no layer is treated as drawing symbols; no values or "
         "evidence changed)",
+        "schema_version 0.14.0 -> 0.15.0 (adds 'upload: null' to 4 catalog assets and "
+        "'correction: null' to 1 glTF visual: no model was uploaded; no values or evidence "
+        "changed)",
     ]
     assert "revision" not in old["catalog"][-1]["generation"]  # input untouched
     Project.model_validate(upgrade.document)

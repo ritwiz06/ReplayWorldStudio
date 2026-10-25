@@ -34,6 +34,10 @@ Output depends on the three.js revision (r186 now). Upgrading three.js may chang
 
 `generated/` (git-ignored) holds models that users create by describing an object or with the object builder. The API's own generator (`services/api/src/replay_world_api/objects/`) builds them from a bounded geometry specification recorded in the project. Each file is named by its sha256 (`generated/<sha256>.glb`) and follows the conventions above: metres, +Y up, front +Z, bottom-centre origin, bounds equal to the confirmed size. They are original, provisional illustrations with `source.kind = generated` and `license: NOASSERTION`. A project that uses them can rebuild a missing file from its own record; the rebuilt file is kept only if its hash matches. See docs/contracts.md#generated-objects-050-gen-01.
 
+## Uploaded models (ENR-01)
+
+`uploaded/` (git-ignored) holds .glb files that people attach to make an existing object easier to recognise. Each is stored unchanged as `uploaded/<sha256>.glb` after the API has checked it against the supported subset (docs/contracts.md#uploaded-models-0150-enr-01). Its origin and rights are recorded as the person stated them, or as unknown: nothing is assumed. Unlike a generated model, it cannot be rebuilt. A project whose file is missing asks for the same file (hash-checked), or draws the object with its stand-in.
+
 ## Adding licensed third-party assets later
 
 Record `source.kind` (`vendor` or `third_party`), a `reference` to the original, and the actual SPDX license or `LicenseRef-…`. Large or restricted vendor files belong outside version control in a separate library directory pointed to by `RWS_CATALOG_DIR`.

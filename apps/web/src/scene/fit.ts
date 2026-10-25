@@ -12,10 +12,32 @@ export function modelExtents(visual: GltfVisual): Vec3Tuple {
   return [max.x - min.x, max.y - min.y, max.z - min.z];
 }
 
-/** Per-axis factor that turns the model's metre extents into the instance's dimensions. */
+/** Per-axis factor that turns the model's metre extents into the instance's dimensions. With
+ * the "contain" fit (0.15.0) one factor for every axis: the largest that keeps the model inside
+ * the recorded envelope, so its proportions are kept and the unused space stays visible. */
 export function fitScale(visual: GltfVisual, dimensions: Dimensions): Vec3Tuple {
   const [ex, ey, ez] = modelExtents(visual);
-  return [dimensions.width.value_m / ex, dimensions.height.value_m / ey, dimensions.depth.value_m / ez];
+  const per: Vec3Tuple = [dimensions.width.value_m / ex, dimensions.height.value_m / ey, dimensions.depth.value_m / ez];
+  if (visual.fit !== "contain") return per;
+  const s = Math.min(...per);
+  return [s, s, s];
+}
+
+/** How much of the recorded envelope a model fills on each axis (1 = all of it). */
+export function envelopeFill(visual: GltfVisual, dimensions: Dimensions): Vec3Tuple {
+  const [ex, ey, ez] = modelExtents(visual);
+  const [sx, sy, sz] = fitScale(visual, dimensions);
+  return [(ex * sx) / dimensions.width.value_m, (ey * sy) / dimensions.height.value_m, (ez * sz) / dimensions.depth.value_m];
+}
+
+type Up = NonNullable<GltfVisual["correction"]>["up_axis"];
+
+/** A file point in the corrected frame (0.15.0): the file's up axis turned to +Y, then quarter
+ * turns clockwise seen from above. The same map as the contract's `corrected_point`. */
+export function correctedPoint(up: Up, turns: number, [x, y, z]: Vec3Tuple): Vec3Tuple {
+  let p: Vec3Tuple = { "+Y": [x, y, z], "-Y": [x, -y, -z], "+Z": [x, z, -y], "-Z": [x, -z, y], "+X": [-y, x, z], "-X": [y, -x, z] }[up] as Vec3Tuple;
+  for (let i = 0; i < ((turns % 4) + 4) % 4; i++) p = [-p[2], p[1], p[0]];
+  return p;
 }
 
 /** Scale applied to the loaded scene: file units → metres, then the fit. */

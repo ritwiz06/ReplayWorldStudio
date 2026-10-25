@@ -77,6 +77,22 @@ DEMO_ASSIST=recorded pnpm --filter @replay-world/web exec playwright test -c pla
 swift scripts/demo/frames-to-mp4.swift apps/web/test-results/demo-frames-ux05 docs/demo/ux05-appearance-and-request.mp4 25 1000000
 ```
 
+## ENR-01: a better 3D model of one machine
+
+[`enr01-better-model.mp4`](enr01-better-model.mp4) is a 28 s recording: H.264, 1440 × 900, 25 fps, 3.5 MB. It uses the example factory and the repository's own `guarded-machine-cell.glb`, with no key and no AI.
+
+1. The world starts from its plan, and Machine B is a stand-in.
+2. The model file is attached and read on this computer.
+3. The review frames Machine B and shows the model fitted inside its recorded space, kept in proportion. A quarter turn and back checks the facing.
+4. **Apply** improves the same object, and the shift runs on the unchanged layout.
+
+Made with:
+
+```bash
+pnpm --filter @replay-world/web exec playwright test -c playwright.demo.config.ts e2e/demo/record-demo.spec.ts -g "ENR-01"
+swift scripts/demo/frames-to-mp4.swift apps/web/test-results/demo-frames-enr01 docs/demo/enr01-better-model.mp4 25 1000000
+```
+
 ## Reproducing the bundle on another computer
 
 You need:

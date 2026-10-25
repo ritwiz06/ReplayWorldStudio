@@ -73,6 +73,9 @@ export interface AppearanceChange {
   objectId: string;
   assetId: string | null;
   expected: string | null;
+  /** Why this model (kept in the edit log): the suggestion's reason, the person's choice, or an
+   * attached file they reviewed. Never a confidence figure. */
+  reason?: string | null;
 }
 
 /** One object to switch to a revised asset; axes not listed keep the object's own value. */
@@ -510,7 +513,7 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
         const after: SceneObject = { ...before, asset_id: change.assetId };
         patches.push({ index, before, after });
         changed.push({ object_id: before.id, before: structuredClone(before), after: structuredClone(after) });
-        names.push(`${before.name} → ${asset ? asset.name : "its stand-in"}`);
+        names.push(`${before.name} → ${asset ? asset.name : "its stand-in"}${change.reason ? ` (${change.reason})` : ""}`);
       }
       if (!patches.length) return reject("no_change", "Those objects already look that way.");
       const used = new Set(patches.map((p) => p.after!.asset_id));

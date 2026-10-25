@@ -4,12 +4,12 @@
 // no key at all. UX_SET=ux04 (recorded answers) and ux04-nokey write docs/ux-04/screens/: the
 // start screen, an imported world, a plan, a running shift at two times and from two angles, a
 // blocked result and an object placement. Repository-owned sample files only.
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 
 const ROOT = new URL("../../../../", import.meta.url).pathname;
 const SET = process.env.UX_SET ?? "after";
-const OUT = SET.startsWith("ux05") ? `${ROOT}docs/ux-05/screens` : SET.startsWith("ux04") ? `${ROOT}docs/ux-04/screens` : `${ROOT}docs/ux-03/${SET}`;
+const OUT = SET === "enr01" ? `${ROOT}docs/enr-01/screens` : SET.startsWith("ux05") ? `${ROOT}docs/ux-05/screens` : SET.startsWith("ux04") ? `${ROOT}docs/ux-04/screens` : `${ROOT}docs/ux-03/${SET}`;
 const DXF = `${ROOT}fixtures/drawings/hall-mm.dxf`;
 
 async function shot(page: Page, name: string) {
@@ -37,6 +37,7 @@ for (const [width, height] of [[1440, 900], [1280, 800]] as const) {
     await expect(page.getByTestId("scene-status")).toHaveText(/Scene loaded/);
     if (SET === "ux04" || SET === "ux04-nokey") return ux04(page);
     if (SET === "ux05" || SET === "ux05-nokey") return ux05(page);
+    if (SET === "enr01") return enr01(page);
     await shot(page, "1-first-visit");
     if (SET === "before") {
       await page.evaluate(() => localStorage.setItem("rws.start.seen", "1"));
@@ -239,4 +240,53 @@ async function ux05(page: Page) {
   await ask(page, "Run the shift, but the provider is too slow");
   await expect(card(page, "timeout")).toBeVisible({ timeout: 30_000 });
   await shot(page, "7-timed-out");
+}
+
+/** ENR-01: a better model of one machine, from before to the missing-file recovery (no key). */
+async function enr01(page: Page) {
+  const chat = page.getByTestId("chat");
+  const cell = `${ROOT}assets/catalog/models/guarded-machine-cell.glb`;
+  await page.evaluate(() => localStorage.setItem("rws.start.seen", "1"));
+  await page.goto("/");
+  await page.getByTestId("empty-example").click();
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+  await page.getByTestId("view-toggle").click();
+  await page.getByRole("button", { name: "Show the object list and details" }).click();
+  await page.getByRole("navigation", { name: "Scene objects" }).getByRole("button", { name: /^Machine B/ }).click();
+  await page.getByTestId("view-toggle").click();
+  await page.keyboard.press("f");
+  await page.waitForTimeout(1500);
+  await shot(page, "1-before");
+  await chat.getByTestId("chat-file-input").setInputFiles(`${ROOT}fixtures/models/draco-required.glb`);
+  await chat.getByTestId("model-for-obj-dxf-111").click();
+  await expect(card(page, "model-rejected")).toBeVisible({ timeout: 30_000 });
+  await shot(page, "2-rejected-file");
+  await chat.getByTestId("chat-file-input").setInputFiles(cell);
+  await chat.getByTestId("model-for-obj-dxf-111").click();
+  const review = page.getByTestId("model-review");
+  await expect(review).toHaveAttribute("data-busy", "false", { timeout: 30_000 });
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^1\/1 ready/, { timeout: 30_000 });
+  await page.waitForTimeout(1500);
+  await shot(page, "3-review-fit-orientation");
+  await card(page, "model-review").getByTestId("model-apply").click();
+  await page.waitForTimeout(1000);
+  await shot(page, "4-after");
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("h");
+  await chat.getByTestId("chat-suggest-run_example").click();
+  await expect(card(page, "run")).toBeVisible();
+  await page.getByTestId("run-speed").selectOption("120");
+  await page.waitForTimeout(3000);
+  await shot(page, "5-running-shift");
+  // The attached file goes missing: the world still opens, and says how to recover.
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("save").click()]);
+  const text = readFileSync((await download.path())!, "utf8");
+  const uri = (JSON.parse(text) as { catalog: { visual: { uri: string } }[] }).catalog[0]!.visual.uri;
+  const stored = `${ROOT}assets/catalog/${uri}`;
+  if (existsSync(stored)) unlinkSync(stored);
+  await page.goto("/");
+  await chat.getByTestId("chat-file-input").setInputFiles({ name: download.suggestedFilename(), mimeType: "application/json", buffer: Buffer.from(text) });
+  await expect(page.getByTestId("model-notice")).toBeVisible({ timeout: 30_000 });
+  await page.waitForTimeout(800);
+  await shot(page, "6-missing-model-recovery");
 }

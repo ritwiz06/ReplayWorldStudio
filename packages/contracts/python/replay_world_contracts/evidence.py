@@ -36,6 +36,9 @@ BundlePath = Annotated[
     Field(description="A relative path inside the bundle: no '..', no leading '/', no backslash."),
 ]
 Fingerprint = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{14}$")]
+# The contract a bundle was written with: bundles began at 0.14.0, and an older bundle stays
+# readable (its project file is upgraded when opened). A new bundle is always the current one.
+BundleSchemaVersion = Literal["0.14.0", SchemaVersion]
 RunOutcome = Literal["ready", "blocked", "cannot_determine", "needs_input"]
 
 
@@ -108,7 +111,7 @@ class EvidenceComparison(ContractModel):
 class EvidenceManifest(ContractModel):
     format: Literal["rws-evidence/1"]
     created_utc: NonEmptyText
-    schema_version: SchemaVersion
+    schema_version: BundleSchemaVersion
     engine: NonEmptyText
     project: EvidenceProject
     process: EvidenceProcess

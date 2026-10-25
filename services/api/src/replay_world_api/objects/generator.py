@@ -274,6 +274,7 @@ def gltf_visual(model: BuiltModel) -> GltfVisual:
         model_bounds_m=ModelBounds(min=rounded(model.bounds.min), max=rounded(model.bounds.max)),
         fit="scale_to_dimensions",
         max_fit_distortion=MAX_FIT_DISTORTION,
+        correction=None,
     )
 
 

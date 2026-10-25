@@ -20,6 +20,7 @@ import pytest
 from fastapi.testclient import TestClient
 from replay_world_api.app import create_app
 from replay_world_api.settings import AssistSettings, Settings
+from replay_world_contracts import SCHEMA_VERSION
 
 ROOT = Path(__file__).resolve().parents[3]
 SAMPLE = json.loads((ROOT / "fixtures" / "scenes" / "sample-factory.json").read_text())
@@ -188,6 +189,27 @@ def test_a_bundle_opens_and_returns_its_project_and_event_logs(client: TestClien
     assert any(v.startswith(f"files/{DXF_URI}") for v in opened["verified"])
     assert opened["stored"] == []  # the sample drawing is part of the repository
     assert opened["problems"] == []
+
+
+def test_the_committed_rel01_bundle_written_at_0_14_0_still_opens(client: TestClient) -> None:
+    # Bundles began at 0.14.0; an older bundle is read as written (its manifest unchanged) and
+    # its project file is upgraded on opening, as a saved project is.
+    bundle = ROOT / "docs" / "demo" / "sample-factory-hall-synthetic-run-0c9d70a92abb83.zip"
+    response = open_bundle(client, bundle.read_bytes())
+    assert response.status_code == 200, response.text
+    opened = response.json()
+    assert opened["manifest"]["schema_version"] == "0.14.0"
+    assert opened["project"]["schema_version"] == SCHEMA_VERSION
+    assert len(opened["verified"]) == 8
+    assert opened["problems"] == []
+
+
+def test_a_new_bundle_is_written_with_the_current_contract(client: TestClient) -> None:
+    body = request()
+    body["manifest"]["schema_version"] = "0.14.0"
+    response = client.post("/api/v1/exports", json=body)
+    assert response.status_code == 422
+    assert "current contract" in response.json()["detail"]
 
 
 def test_a_changed_file_is_refused_and_nothing_is_stored(

@@ -24,7 +24,7 @@ Every field is checked by the contract (`EvidenceManifest` in `packages/contract
 - **Identity:**
   - `format: "rws-evidence/1"`;
   - `created_utc`;
-  - `schema_version` (the contract), `engine` (`rws-run/1`).
+  - `schema_version` (the contract the bundle was written with; a new bundle is always the current one), `engine` (`rws-run/1`). A bundle written at an older contract (0.14.0 or later, when bundles began) opens as written, and its project file is upgraded on opening, as a saved project is; the bundle check says so. The committed REL-01 bundle is 0.14.0.
 - **`project`:**
   - `file` (`project.json`, or null in a summary-only bundle);
   - `id`, `name`;
@@ -108,7 +108,7 @@ Every field is checked by the contract (`EvidenceManifest` in `packages/contract
 ## What is never in a bundle
 
 - **Never read:** the Voyager key, `.env`, settings, other projects' files and anything not listed in the export review.
-- **Not selected unless you tick them:** a person's own drawings, plan pictures, photos and generated models.
+- **Not selected unless you tick them:** a person's own drawings, plan pictures, photos, generated models and attached models (`uploaded/`, ENR-01). An included attached model is hash-checked on opening and stored by its hash; a left-out one is named as missing, and the runs still replay from the project file.
 - **Not bundled:** third-party files (for example the drawings in `data/external/`). They are the person's own library files, so they are never selected by default; their licences may forbid sharing.
 
 ## Checking a bundle by hand

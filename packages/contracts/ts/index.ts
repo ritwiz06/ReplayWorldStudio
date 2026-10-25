@@ -6,6 +6,7 @@ import type {
   AssistStatus,
   CatalogAsset,
   ChatResult,
+  UploadedModelReport,
   DrawingAnalysis,
   EditProposalResult,
   EvidenceBundleOpened,
@@ -30,7 +31,7 @@ import type {
 
 export type * from "./generated/contracts";
 
-export const SCHEMA_VERSION: Project["schema_version"] = "0.14.0";
+export const SCHEMA_VERSION: Project["schema_version"] = "0.15.0";
 
 /** One structural problem, located by a JSON Pointer such as `/scene/objects/2/dimensions`. */
 export interface ContractIssue {
@@ -92,3 +93,4 @@ export const validateEvidenceInventory = validatorFor<EvidenceInventory>("Eviden
 export const validateEvidenceBundleOpened = validatorFor<EvidenceBundleOpened>("EvidenceBundleOpened");
 export const validateEvidenceManifest = validatorFor<EvidenceManifest>("EvidenceManifest");
 export const validateChatResult = validatorFor<ChatResult>("ChatResult");
+export const validateUploadedModelReport = validatorFor<UploadedModelReport>("UploadedModelReport");

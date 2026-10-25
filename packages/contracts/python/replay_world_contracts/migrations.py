@@ -68,6 +68,11 @@ each change, and the result is then validated like any other document.
     * every drawing review gains ``symbol_layers: []``: no layer was marked as drawing symbols, so
       the checks keep treating every loose line and left-out shape as a possible obstacle.
 
+0.14.0 -> 0.15.0
+    * every catalog asset gains ``upload: null`` and every glTF visual ``correction: null``: no
+      model had been uploaded (ENR-01 adds uploaded models, the 'uploaded' source kind and the
+      ``contain`` fit).
+
 Steps run in sequence, so a 0.1.0 document passes through 0.2.0 on its way to the current
 version and its notes describe every step.
 """
@@ -457,6 +462,28 @@ def _from_0_13_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     ]
 
 
+def _from_0_14_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    upgraded = copy.deepcopy(dict(old))
+    assets = visuals = 0
+    for asset in upgraded["catalog"]:
+        if "upload" in asset or "correction" in asset["visual"]:
+            raise MigrationError(
+                "malformed 0.14.0 document: uploaded models only exist from 0.15.0"
+            )
+        asset["upload"] = None
+        assets += 1
+        if asset["visual"].get("type") == "gltf":
+            asset["visual"]["correction"] = None
+            visuals += 1
+    upgraded["schema_version"] = "0.15.0"
+    return upgraded, [
+        f"schema_version 0.14.0 -> 0.15.0 (adds 'upload: null' to {assets} catalog "
+        f"asset{'' if assets == 1 else 's'} and 'correction: null' to {visuals} glTF "
+        f"visual{'' if visuals == 1 else 's'}: no model was uploaded; no values or evidence "
+        "changed)"
+    ]
+
+
 _STEPS: Final[dict[str, Step]] = {
     "0.1.0": _from_0_1_0,
     "0.2.0": _from_0_2_0,
@@ -471,5 +498,6 @@ _STEPS: Final[dict[str, Step]] = {
     "0.11.0": _from_0_11_0,
     "0.12.0": _from_0_12_0,
     "0.13.0": _from_0_13_0,
+    "0.14.0": _from_0_14_0,
 }
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)

@@ -326,3 +326,70 @@ test("record the UX-05 journey", async ({ page }) => {
   writeFileSync(`${dir}/frames.json`, JSON.stringify({ frames }, null, 1));
   console.log(JSON.stringify({ frames: frames.length }));
 });
+
+// ENR-01: an existing world (the example, from its DXF) → attach a better 3D model of Machine B
+// → review its fit and facing → the same object, improved → the shift runs. No AI. Run with
+// -g "ENR-01"; frames go to test-results/demo-frames-enr01.
+test("record the ENR-01 journey", async ({ page }) => {
+  test.setTimeout(240_000);
+  const dir = `${ROOT}apps/web/test-results/demo-frames-enr01`;
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  const frames: { file: string; t: number }[] = [];
+  const chat = page.getByTestId("chat");
+  const hold = (ms: number) => page.waitForTimeout(ms);
+  await page.goto("/");
+  await page.evaluate(() => localStorage.setItem("rws.view", "chat"));
+  await page.goto("/");
+  await page.evaluate(() => {
+    const style = document.createElement("style");
+    style.textContent = `#demo-caption { position: fixed; top: 206px; left: 530px; transform: translateX(-50%); z-index: 99999; pointer-events: none;
+      width: 660px; box-sizing: border-box; background: rgba(13,17,23,.92); color: #fff; font: 500 18px/1.35 system-ui, sans-serif;
+      padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); text-align: center; }
+      #demo-caption:empty { display: none; }`;
+    document.head.append(style);
+    const el = document.createElement("div");
+    el.id = "demo-caption";
+    document.body.append(el);
+  });
+  const session = await page.context().newCDPSession(page);
+  session.on("Page.screencastFrame", async ({ data, metadata, sessionId }) => {
+    const file = `${String(frames.length).padStart(5, "0")}.jpg`;
+    writeFileSync(`${dir}/${file}`, Buffer.from(data, "base64"));
+    frames.push({ file, t: metadata.timestamp ?? Date.now() / 1000 });
+    await session.send("Page.screencastFrameAck", { sessionId }).catch(() => undefined);
+  });
+  await session.send("Page.startScreencast", { format: "jpeg", quality: 90, maxWidth: 1440, maxHeight: 900, everyNthFrame: 1 });
+
+  await page.getByTestId("empty-example").click();
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+  await say(page, "The world starts from its plan (a synthetic DXF). Machine B is a generic stand-in.");
+  await hold(4000);
+  await say(page, "A more detailed 3D model of Machine B is attached: read and kept on this computer.");
+  await chat.getByTestId("chat-file-input").setInputFiles(`${ROOT}assets/catalog/models/guarded-machine-cell.glb`);
+  await hold(2000);
+  await chat.getByTestId("model-for-obj-dxf-111").click();
+  const review = page.getByTestId("model-review");
+  await expect(review).toHaveAttribute("data-busy", "false", { timeout: 30_000 });
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^1\/1 ready/, { timeout: 30_000 });
+  await say(page, "Review: the right object, facing the right way, kept in proportion inside its recorded space.");
+  await hold(4000);
+  await review.getByTestId("model-turn-right").click();
+  await hold(2500);
+  await review.getByTestId("model-turn-left").click();
+  await hold(2500);
+  await chat.locator('[data-kind="model-review"]').last().getByTestId("model-apply").click();
+  await say(page, "Applied to the same object: its id, size, evidence and links are unchanged.");
+  await hold(4000);
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("h");
+  await chat.getByTestId("chat-suggest-run_example").click();
+  await expect(chat.locator('[data-kind="run"]').last()).toBeVisible();
+  await page.getByTestId("run-speed").selectOption("120");
+  await say(page, "The shift runs on the same layout: the new model changed only how Machine B is drawn.");
+  await hold(7000);
+  await session.send("Page.stopScreencast");
+  writeFileSync(`${dir}/frames.json`, JSON.stringify({ frames }, null, 1));
+  console.log(JSON.stringify({ frames: frames.length }));
+});

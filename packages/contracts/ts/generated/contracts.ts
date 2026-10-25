@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.14.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.15.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -40,9 +40,11 @@ export interface ReplayWorldContracts {
   EvidenceBundleRequest: EvidenceBundleRequest;
   EvidenceBundleOpened: EvidenceBundleOpened;
   EvidenceInventory: EvidenceInventory;
+  UploadedModelReport: UploadedModelReport;
+  UploadedAssetRequest: UploadedAssetRequest;
 }
 export interface Project {
-  schema_version: "0.14.0";
+  schema_version: "0.15.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -862,6 +864,7 @@ export interface CatalogAsset {
   source: AssetSource;
   rights: UsageRights;
   generation: AssetGeneration | null;
+  upload: AssetUpload | null;
 }
 /**
  * A plain labelled box sized from each instance's dimensions. Always provisional.
@@ -900,11 +903,12 @@ export interface GltfVisual {
   front_axis: "+Z";
   origin: "bottom_centre";
   model_bounds_m: ModelBounds;
-  fit: "scale_to_dimensions";
+  fit: "scale_to_dimensions" | "contain";
   /**
    * Largest per-axis scale departure from 1 still shown as faithful.
    */
   max_fit_distortion: number;
+  correction: VisualCorrection | null;
 }
 /**
  * Axis-aligned bounds of a model in metres, in its own authored frame.
@@ -912,6 +916,21 @@ export interface GltfVisual {
 export interface ModelBounds {
   min: Vec3;
   max: Vec3;
+}
+/**
+ * How a model that does not follow the catalog conventions is drawn as if it did (0.15.0):
+ * which of its axes is up, quarter turns about the vertical so its front faces +Z, and the
+ * offset (in file units, after turning) that puts its bounding-box bottom-centre at the origin.
+ * The file itself is never changed; ``file_bounds`` are its exact bounds as written.
+ */
+export interface VisualCorrection {
+  up_axis: "+Y" | "-Y" | "+Z" | "-Z" | "+X" | "-X";
+  /**
+   * Quarter turns clockwise, seen from above.
+   */
+  turns: number;
+  file_bounds: ModelBounds;
+  offset: Vec3;
 }
 /**
  * Physical bounding-box extents along the object's local axes, each with its own evidence.
@@ -932,7 +951,7 @@ export interface Dimensions {
  * recorded geometry specification; such an asset carries a ``generation`` record.
  */
 export interface AssetSource {
-  kind: "synthetic" | "in_house" | "vendor" | "third_party" | "generated";
+  kind: "synthetic" | "in_house" | "vendor" | "third_party" | "generated" | "uploaded";
   author: string;
   /**
    * URL, catalogue number or document that identifies the original.
@@ -1232,6 +1251,17 @@ export interface AssetRevision {
         string,
         string
       ];
+}
+/**
+ * A model file the person attached (0.15.0, ENR-01). The file is the visual itself, kept
+ * byte for byte (``visual.uri`` and ``visual.sha256``); this records what came with it. Its
+ * geometry is not evidence of a machine's size: objects keep their own recorded dimensions.
+ */
+export interface AssetUpload {
+  filename: string;
+  bytes: number;
+  triangles: number;
+  note: string | null;
 }
 /**
  * Placed objects plus the record of every edit in effect.
@@ -2009,14 +2039,14 @@ export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.14.0";
+  schema_version: "0.15.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.14.0";
+  schema_version: "0.15.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -2053,7 +2083,7 @@ export interface UpgradeReport {
    * Schema version of the submitted document.
    */
   from_version: string;
-  to_version: "0.14.0";
+  to_version: "0.15.0";
   notes: string[];
   project: Project;
   validation: ValidationReport;
@@ -3667,7 +3697,7 @@ export interface EvidenceBundleRequest {
 export interface EvidenceManifest {
   format: "rws-evidence/1";
   created_utc: string;
-  schema_version: "0.14.0";
+  schema_version: "0.14.0" | "0.15.0";
   engine: string;
   project: EvidenceProject;
   process: EvidenceProcess;
@@ -3819,4 +3849,49 @@ export interface EvidenceAsset {
    * 'repo_owned': a synthetic fixture or catalog model in this repository, verified by hash; 'library': the person's own file in their local library; 'missing' or 'changed': not available as the project recorded it.
    */
   status: "repo_owned" | "library" | "missing" | "changed";
+}
+/**
+ * What an uploaded .glb holds, read from its content (never its name).
+ */
+export interface UploadedModelReport {
+  /**
+   * Where it is stored: uploaded/<sha256>.glb.
+   */
+  uri: string;
+  sha256: string;
+  bytes: number;
+  filename: string;
+  file_bounds: ModelBounds;
+  triangles: number;
+  vertices: number;
+  nodes: number;
+  meshes: number;
+  materials: number;
+  textures: number;
+  /**
+   * Decoded pixels of every embedded image.
+   */
+  texture_pixels: number;
+  extensions_used: string[];
+  /**
+   * What is in the file but not shown: cameras, lights, animations, ignored extensions. Names and extras in the file are data and are not interpreted.
+   */
+  notes: string[];
+  /**
+   * Said when the size in metres looks implausible for equipment; the unit is never changed for the person.
+   */
+  scale_hint: string | null;
+}
+/**
+ * The person's reviewed choices for an uploaded file.
+ */
+export interface UploadedAssetRequest {
+  sha256: string;
+  filename: string;
+  name: string;
+  up_axis: "+Y" | "-Y" | "+Z" | "-Z" | "+X" | "-X";
+  turns: number;
+  unit: "m" | "cm" | "mm" | "in" | "ft";
+  fit: "contain" | "scale_to_dimensions";
+  note: string | null;
 }

@@ -167,6 +167,7 @@ def create_generated_asset(request: GeneratedAssetRequest, catalog_dir: Path) ->
                 "terms_ref": GENERATED_TERMS,
             },
             "generation": generation.model_dump(),
+            "upload": None,
         }
     )
 
@@ -303,6 +304,7 @@ def create_asset_revision(
             },
             "rights": previous.rights.model_dump(),
             "generation": generation.model_dump(),
+            "upload": None,
         }
     )
     store_model(model, catalog_dir)  # never replaces an existing file

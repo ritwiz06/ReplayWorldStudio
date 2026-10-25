@@ -53,6 +53,8 @@ from replay_world_contracts import (
     Project,
     StoredPhoto,
     UpgradeReport,
+    UploadedAssetRequest,
+    UploadedModelReport,
     ValidationErrorResponse,
     ValidationIssue,
     ValidationReport,
@@ -103,6 +105,8 @@ from .photos import (
 from .plans import PlanError, library_file, read_pdf_page, store_plan
 from .public import CURRENT, clear_visitor, ensure_room, public_middleware, start_sweeper
 from .settings import Settings
+from .uploads import MAX_BYTES as MAX_MODEL_BYTES
+from .uploads import UploadError, store_upload, uploaded_asset
 
 logger = logging.getLogger(__name__)
 
@@ -664,6 +668,55 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             stored=store,
             glb_base64=None if store else base64.b64encode(model.glb).decode("ascii"),
         )
+
+    @app.post(
+        "/api/v1/catalog/uploaded-models",
+        openapi_extra={
+            "requestBody": {
+                "required": True,
+                "content": {
+                    "model/gltf-binary": {"schema": {"type": "string", "format": "binary"}}
+                },
+            }
+        },
+    )
+    async def upload_model(
+        request: Request,
+        filename: Annotated[str, Depends(source_filename)],
+    ) -> UploadedModelReport:
+        """Inspect a .glb against the supported subset and store it unchanged under
+        uploaded/<sha256>.glb (ENR-01). Read from its content, never its name; nothing is sent
+        to any model provider and nothing is added to a project."""
+        if settings.public:
+            raise HTTPException(status_code=403, detail="Model files are not taken here.")
+        chunks: list[bytes] = []
+        size = 0
+        async for chunk in request.stream():
+            size += len(chunk)
+            if size > MAX_MODEL_BYTES:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"The model is larger than {MAX_MODEL_BYTES // 1048576} MB.",
+                )
+            chunks.append(chunk)
+        data = b"".join(chunks)
+        folder = catalog_dir()
+        try:
+            return await anyio.to_thread.run_sync(lambda: store_upload(data, filename, folder))
+        except UploadError as exc:
+            status = 413 if exc.kind == "too_large" else 422
+            raise HTTPException(status_code=status, detail=exc.message) from None
+
+    @app.post("/api/v1/catalog/uploaded-assets")
+    def upload_asset(body: UploadedAssetRequest) -> CatalogAsset:
+        """A catalog asset for a stored upload with the person's reviewed orientation, unit and
+        fit: the same file, drawn with a recorded correction. Nothing else changes."""
+        try:
+            return uploaded_asset(body, catalog_dir())
+        except UploadError as exc:
+            raise HTTPException(
+                status_code=404 if exc.kind == "missing" else 422, detail=exc.message
+            ) from None
 
     @app.post("/api/v1/catalog/generated-models/preview")
     def preview_generated_model(body: GeneratedModelRequest) -> GeneratedModel:

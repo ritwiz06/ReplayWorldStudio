@@ -1412,6 +1412,59 @@ Append entries in chronological order. If a live repository session log already 
 - Actual effort: about 2 h 55 min of wall-clock time (2026-10-24 22:10 to 2026-10-25 01:05 America/Phoenix), including CI.
 - Next concrete task: on the user's priority, UX-02 with consenting newcomers, a larger in-house model catalog, or ENR-01.
 
+### 2026-10-25 - ENR-01 (GLB part): a better 3D model improves one existing object (ADR-065, contract 0.15.0)
+
+- Active milestone / issue IDs: ENR-01 (GLB part), AGT-01 reconciliation (closed; extras → AGT-02), UX-02 (open).
+- Starting commit: `644bd3b`.
+- Goal: "Here is a better 3D model of this machine. Use it here." Select an object, attach a GLB, review its fit, and improve that same object, with layout, edits, process and run intact. No Voyager key needed; no file sent to a model.
+- Work completed (details in [docs/enr-01/README.md](../docs/enr-01/README.md)):
+  - **Contract 0.15.0:**
+    - `GltfVisual.correction` (up axis, quarter turns, exact file bounds, offset) and the `contain` fit;
+    - `CatalogAsset.upload` and the "uploaded" source kind;
+    - `UploadedModelReport` and `UploadedAssetRequest`;
+    - the 0.14.0 → 0.15.0 migration (nulls, tested).
+  - **API:**
+    - `inspect_glb` (a bounded subset; exact bounds through every node transform; refusals with reasons; limits);
+    - content-addressed storage of the unchanged original;
+    - `POST /api/v1/catalog/uploaded-models` and `/uploaded-assets`;
+    - a missing upload opens, while a different file is refused;
+    - bundles include uploads only when selected, and check them by hash.
+  - **Browser:**
+    - Change look… → Upload a 3D model…, and a .glb in the conversation (Use for X, or object choices);
+    - the review card: the object highlighted and framed; Current/Proposed; quarter turns; up axis; contain/stretch; sizes compared; warnings beside Apply; Details;
+    - Apply as one undoable `set_appearance`;
+    - stale and cancel handling;
+    - missing-model recovery (Attach the same file…, Use the stand-in);
+    - correction applied when parsing, with the bounds checked within 1 mm;
+    - stale model templates disposed.
+  - **AGT-01** was closed against its original "Done when", with evidence; its extras moved to AGT-02.
+  - **REL-01 compatibility fix:**
+    - The committed bundle (written at 0.14.0) was at first refused by the 0.15.0 manifest type.
+    - The manifest now keeps the contract a bundle was written with (`0.14.0` or the current one). The project file is upgraded on opening, and a new bundle must be the current version.
+    - The bundle is unchanged, and it reruns with identical events.
+- Fixtures:
+  - `fixtures/models/` (10 synthetic GLBs: off-centre, nested, textured, tall-thin, Z-up, millimetres, Draco-required, skinned, external-buffer, malformed), from `scripts/build_model_fixtures.py` (check by default, `--write` to write), in `pnpm fixtures:check`;
+  - Khronos glTF-Sample-Assets BoomBox (CC0-1.0, Microsoft 2017), commit `8f492390ddc7a2ae221a1369ef560589cf8c70fb`, sha256 `f8b918445ebdd006768232205a62f5182d2208ca57f84c6ccc084943c0bc8f15`. It is in the git-ignored `data/external/khronos/BoomBox/` with LICENSE.md and metadata.json, and is tested locally only.
+- Commands run and outcomes:
+  - `pnpm check`: exit 0 (pytest 914, Vitest 282, contracts 10);
+  - `pnpm test:e2e`: 79 passed, 24 skipped;
+  - local: 5 passed, including the committed REL-01 bundle's reproduction;
+  - public: 7 passed, 2 skipped;
+  - external: 10 passed, including the BoomBox;
+  - screens: 12 (1440 × 900 and 1280 × 800, Chrome, GPU, no key) in `docs/enr-01/screens/`;
+  - demo: `docs/demo/enr01-better-model.mp4` (28 s).
+- Live AI: **none**. No provider call was made, and no image or model was sent anywhere.
+- Evidence: Machine B's saved object equals the sample's except `asset_id`. The event fingerprint is unchanged after the new look, and the run stays current. A real move changes the fingerprint. Undo/redo work, and reopen verifies the hash. Cancel and stale proposals change nothing. Five refusals give their reasons. Missing-file recovery works. GPU resources do not grow over repeated previews, and an idle world draws no frames.
+- Known limitations:
+  - quarter turns only;
+  - sizes are compared, never adopted (ENR-02);
+  - worlds without a drawing source cannot be enriched yet;
+  - photo and STEP enrichment are not built;
+  - REL-01's *layout* fingerprint includes `asset_id`, so it changes with a new look (events and metrics do not);
+  - UX-02 open.
+- Actual effort: wall-clock from 2026-10-25 14:22 America/Phoenix to the commit, plus CI (recorded below).
+- Next concrete task: on the user's priority, UX-02 with consenting newcomers, ENR-01's photo or STEP part, ENR-02 (adopting documented dimensions), or QA-01.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

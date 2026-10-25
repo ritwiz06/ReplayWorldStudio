@@ -27,6 +27,7 @@ from typing import Any, Final, Literal
 
 from pydantic import ValidationError
 from replay_world_contracts import (
+    SCHEMA_VERSION,
     EvidenceAsset,
     EvidenceBundleOpened,
     EvidenceBundleRequest,
@@ -121,7 +122,8 @@ def _locate(asset: _Asset, libs: Libraries) -> tuple[Path | None, bool]:
             path = resolve_catalog_file(libs.catalog, asset.uri, libs.generated)
         except CatalogFileError:
             return None, False
-        return path, not asset.uri.startswith("generated/")
+        # Generated and uploaded models are the person's own files, not the repository's.
+        return path, not asset.uri.startswith(("generated/", "uploaded/"))
     if asset.kind == "photo":
         try:
             return resolve_source_file(libs.sources, asset.uri), False
@@ -196,6 +198,10 @@ def _parse_project(text: str, where: str) -> Project:
 def build_bundle(request: EvidenceBundleRequest, libs: Libraries) -> tuple[bytes, EvidenceManifest]:
     """The ZIP for ``request`` and the manifest written into it."""
     manifest = request.manifest
+    if manifest.schema_version != SCHEMA_VERSION:
+        raise EvidenceError(
+            "invalid", f"A new bundle is written with the current contract ({SCHEMA_VERSION})."
+        )
     texts = {t.path: t for t in request.texts}
     if len(texts) != len(request.texts) or MANIFEST in texts:
         raise EvidenceError(
@@ -416,14 +422,19 @@ def open_bundle(data: bytes, libs: Libraries) -> EvidenceBundleOpened:
                 )
             continue
         if asset.kind == "model":
-            if not asset.uri.startswith("generated/"):
+            if not asset.uri.startswith(("generated/", "uploaded/")):
                 # A shipped catalog model is part of the repository, not of anyone's bundle.
                 problems.append(
                     f"{asset.label} is missing from this checkout's catalog; rebuild it with "
                     "`pnpm assets:build`."
                 )
                 continue
-            write_library_file(libs.generated or libs.catalog, asset.uri, content, "model")
+            library = (
+                libs.catalog
+                if asset.uri.startswith("uploaded/")
+                else libs.generated or libs.catalog
+            )
+            write_library_file(library, asset.uri, content, "model")
         else:
             write_library_file(libs.sources, asset.uri, content, asset.kind)
         stored.append(f"{asset.label} → {asset.uri}")

@@ -16,13 +16,13 @@ function issuesFor(data: unknown): ContractIssue[] {
 }
 
 describe("validateProject", () => {
-  it("accepts the 0.14.0 foundation fixture with its catalog and per-axis evidence", () => {
+  it("accepts the 0.15.0 foundation fixture with its catalog and per-axis evidence", () => {
     const result = validateProject(foundation());
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     const project = result.value;
     expect(project.schema_version).toBe(SCHEMA_VERSION);
-    expect(SCHEMA_VERSION).toBe("0.14.0");
+    expect(SCHEMA_VERSION).toBe("0.15.0");
     expect(project.catalog.map((a) => a.id)).toContain("asset-generic-packing-station");
     const packing = project.scene.objects.find((o) => o.id === "obj-packing-station")!;
     expect([packing.dimensions.width.origin, packing.dimensions.height.origin]).toEqual([

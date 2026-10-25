@@ -511,6 +511,7 @@ def test_visual_passes_the_catalog_asset_checks(example: str) -> None:
                 "attribution": None,
                 "terms_ref": None,
             },
+            "upload": None,
             "generation": {
                 "method": "builder",
                 "description": None,

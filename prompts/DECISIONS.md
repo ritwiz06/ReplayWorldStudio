@@ -1382,3 +1382,41 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - **The run is unaffected.** Appearance changes keep the event fingerprints and metrics, while the REL-01 layout fingerprint, which hashes object records, does change.
   - **The catalog's four models** limit how much equipment gets a model.
   - **AGT-01, IMP-02 and UX-02 stay open.**
+
+### ADR-065 - An attached GLB improves one existing object; AGT-01 reconciled (ENR-01, contract 0.15.0)
+
+- Date: 2026-10-25 (America/Phoenix). Status: adopted. Builds on ADR-064 (`set_appearance`) and the glTF visual of WRL-02.
+- **Context.**
+  - ENR-01 asks that a model file improve an existing object in place, keeping its placement, edits, name and links, as one undoable step.
+  - AGT-01 had been kept open for capabilities its "Done when" never listed.
+- **Decision.**
+  1. **The original file is the visual.**
+     - Stored unchanged by its sha256 under `uploaded/` (git-ignored).
+     - The person's choices are recorded as `GltfVisual.correction`: up axis, quarter turns, exact file bounds, offset to the bottom-centre. Quarter turns keep the corrected bounds exact; the same map is used by the contract (Python) and the browser.
+     - No derived file is written, so there is nothing to keep in step with the original.
+  2. **A bounded subset, read from the content** before rendering:
+     - **Read:** self-contained GLB 2.0, static triangle meshes, materials, embedded PNG/JPEG textures.
+     - **Limits:** on size, the JSON chunk, nodes, nesting depth, meshes, primitives, vertices, triangles, materials, images and decoded pixels.
+     - **Refused, with the reason:** external or data URIs, compression, unreadable required extensions, skins and morph targets.
+     - **Not played:** animations. **Ignored:** cameras and lights.
+     - **Bounds:** exact, through every node transform.
+  3. **Fit is display only.**
+     - **`contain`** (new, the default for uploads): proportions kept inside the recorded envelope, bottom-centred, with the unused space outlined.
+     - **Stretching:** only when chosen, and the distortion is said.
+     - **Nothing physical changes:** model sizes are `inferred` geometry and never replace or upgrade an object's recorded dimensions, evidence, or any operating value.
+  4. **Applied by `set_appearance`:**
+     - one undoable step, refused when the world moved past the review;
+     - the reason recorded in the edit log;
+     - the run's staleness keyed on what it reads, so it stays current.
+  5. **Recovery and bundles.**
+     - **A missing attached file** opens (drawn as "Model unavailable"). Only the same file, its hash checked, restores it, or the objects return to their stand-in. A different file under its name is refused.
+     - **Bundles** include such a file only when selected, and check its hash on opening.
+     - **Never pretended:** an attached file is never "rebuilt" from a description.
+  6. **Contract 0.15.0** adds `CatalogAsset.upload`, `GltfVisual.correction`, the `contain` fit and the "uploaded" source kind. The migration adds nulls and nothing else.
+  7. **AGT-01 is closed against its original requirements,** each mapped to evidence in BACKLOG. AI ranking, a larger catalog, calibrated confidence and free questions become AGT-02 (optional).
+- **Consequences.**
+  - **What is proven:**
+    - a model changes only how an object is drawn: the same ids, dimensions, evidence, process and sources, and the same events and metrics;
+    - REL-01's layout fingerprint does change, because it hashes the object records;
+    - repeated previews free their GPU resources (tested).
+  - **ENR-01 stays open:** photos, STEP, accepting geometry as checked, and worlds without a drawing source.

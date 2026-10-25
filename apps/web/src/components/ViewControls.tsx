@@ -123,9 +123,13 @@ interface ModelNoticeProps {
   /** Rebuild failed generated models from their recorded specifications, then retry. */
   onRebuild: () => void;
   rebuild: { busy: boolean; message: string | null };
+  /** An attached model (ENR-01) cannot be rebuilt: attach the same file (checked by its hash),
+   * or draw its objects with their stand-in again. */
+  onAttachSame?: (asset: CatalogAsset) => void;
+  onStandIn?: (asset: CatalogAsset) => void;
 }
 
-export function ModelNotice({ catalog, models, onRetry, onRebuild, rebuild }: ModelNoticeProps) {
+export function ModelNotice({ catalog, models, onRetry, onRebuild, rebuild, onAttachSame, onStandIn }: ModelNoticeProps) {
   const failed = catalog.flatMap((asset) => {
     const state = models.get(asset.id);
     return state?.status === "failed" ? [{ asset, message: state.failure.message }] : [];
@@ -140,6 +144,20 @@ export function ModelNotice({ catalog, models, onRetry, onRebuild, rebuild }: Mo
         {failed.map(({ asset, message }) => (
           <li key={asset.id}>
             <strong>{asset.name}:</strong> {message}
+            {asset.upload && (
+              <span className="modal-actions">
+                {onAttachSame && (
+                  <button type="button" className="button button-small button-primary" data-testid={`model-attach-same-${asset.id}`} onClick={() => onAttachSame(asset)}>
+                    Attach the same file…
+                  </button>
+                )}
+                {onStandIn && (
+                  <button type="button" className="button button-small" data-testid={`model-stand-in-${asset.id}`} onClick={() => onStandIn(asset)}>
+                    Use the stand-in
+                  </button>
+                )}
+              </span>
+            )}
           </li>
         ))}
       </ul>

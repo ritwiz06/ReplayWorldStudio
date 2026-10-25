@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.14.0",
+  "$id": "urn:replay-world:contracts:0.15.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.14.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.15.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -97,6 +97,12 @@
     },
     "EvidenceInventory": {
       "$ref": "#/$defs/EvidenceInventory"
+    },
+    "UploadedModelReport": {
+      "$ref": "#/$defs/UploadedModelReport"
+    },
+    "UploadedAssetRequest": {
+      "$ref": "#/$defs/UploadedAssetRequest"
     }
   },
   "required": [
@@ -130,7 +136,9 @@
     "ProcessSuggestionResult",
     "EvidenceBundleRequest",
     "EvidenceBundleOpened",
-    "EvidenceInventory"
+    "EvidenceInventory",
+    "UploadedModelReport",
+    "UploadedAssetRequest"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -351,7 +359,8 @@
             "in_house",
             "vendor",
             "third_party",
-            "generated"
+            "generated",
+            "uploaded"
           ],
           "type": "string"
         },
@@ -380,6 +389,45 @@
         "reference"
       ],
       "title": "AssetSource",
+      "type": "object"
+    },
+    "AssetUpload": {
+      "additionalProperties": false,
+      "description": "A model file the person attached (0.15.0, ENR-01). The file is the visual itself, kept\nbyte for byte (``visual.uri`` and ``visual.sha256``); this records what came with it. Its\ngeometry is not evidence of a machine's size: objects keep their own recorded dimensions.",
+      "properties": {
+        "filename": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "bytes": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "triangles": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "filename",
+        "bytes",
+        "triangles",
+        "note"
+      ],
+      "title": "AssetUpload",
       "type": "object"
     },
     "AssistStatus": {
@@ -591,6 +639,16 @@
               "type": "null"
             }
           ]
+        },
+        "upload": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AssetUpload"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -601,7 +659,8 @@
         "nominal_dimensions",
         "source",
         "rights",
-        "generation"
+        "generation",
+        "upload"
       ],
       "title": "CatalogAsset",
       "type": "object"
@@ -2339,7 +2398,10 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.14.0",
+          "enum": [
+            "0.14.0",
+            "0.15.0"
+          ],
           "type": "string"
         },
         "engine": {
@@ -3367,7 +3429,10 @@
           "$ref": "#/$defs/ModelBounds"
         },
         "fit": {
-          "const": "scale_to_dimensions",
+          "enum": [
+            "scale_to_dimensions",
+            "contain"
+          ],
           "type": "string"
         },
         "max_fit_distortion": {
@@ -3375,6 +3440,16 @@
           "maximum": 0.5,
           "minimum": 0,
           "type": "number"
+        },
+        "correction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VisualCorrection"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -3387,7 +3462,8 @@
         "origin",
         "model_bounds_m",
         "fit",
-        "max_fit_distortion"
+        "max_fit_distortion",
+        "correction"
       ],
       "title": "GltfVisual",
       "type": "object"
@@ -3409,7 +3485,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.14.0",
+          "const": "0.15.0",
           "type": "string"
         }
       },
@@ -5431,7 +5507,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.14.0",
+          "const": "0.15.0",
           "type": "string"
         },
         "id": {
@@ -7077,7 +7153,7 @@
           "type": "string"
         },
         "to_version": {
-          "const": "0.14.0",
+          "const": "0.15.0",
           "type": "string"
         },
         "notes": {
@@ -7103,6 +7179,189 @@
         "validation"
       ],
       "title": "UpgradeReport",
+      "type": "object"
+    },
+    "UploadedAssetRequest": {
+      "additionalProperties": false,
+      "description": "The person's reviewed choices for an uploaded file.",
+      "properties": {
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "filename": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "up_axis": {
+          "enum": [
+            "+Y",
+            "-Y",
+            "+Z",
+            "-Z",
+            "+X",
+            "-X"
+          ],
+          "type": "string"
+        },
+        "turns": {
+          "maximum": 3,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unit": {
+          "enum": [
+            "m",
+            "cm",
+            "mm",
+            "in",
+            "ft"
+          ],
+          "type": "string"
+        },
+        "fit": {
+          "enum": [
+            "contain",
+            "scale_to_dimensions"
+          ],
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "sha256",
+        "filename",
+        "name",
+        "up_axis",
+        "turns",
+        "unit",
+        "fit",
+        "note"
+      ],
+      "title": "UploadedAssetRequest",
+      "type": "object"
+    },
+    "UploadedModelReport": {
+      "additionalProperties": false,
+      "description": "What an uploaded .glb holds, read from its content (never its name).",
+      "properties": {
+        "uri": {
+          "description": "Where it is stored: uploaded/<sha256>.glb.",
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "bytes": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "filename": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "file_bounds": {
+          "$ref": "#/$defs/ModelBounds"
+        },
+        "triangles": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "vertices": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "nodes": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "meshes": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "materials": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "textures": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "texture_pixels": {
+          "description": "Decoded pixels of every embedded image.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "extensions_used": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "notes": {
+          "description": "What is in the file but not shown: cameras, lights, animations, ignored extensions. Names and extras in the file are data and are not interpreted.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "scale_hint": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Said when the size in metres looks implausible for equipment; the unit is never changed for the person."
+        }
+      },
+      "required": [
+        "uri",
+        "sha256",
+        "bytes",
+        "filename",
+        "file_bounds",
+        "triangles",
+        "vertices",
+        "nodes",
+        "meshes",
+        "materials",
+        "textures",
+        "texture_pixels",
+        "extensions_used",
+        "notes",
+        "scale_hint"
+      ],
+      "title": "UploadedModelReport",
       "type": "object"
     },
     "UsageRights": {
@@ -7219,7 +7478,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.14.0",
+          "const": "0.15.0",
           "type": "string"
         },
         "project_id": {
@@ -7304,6 +7563,43 @@
         "z"
       ],
       "title": "Vec3",
+      "type": "object"
+    },
+    "VisualCorrection": {
+      "additionalProperties": false,
+      "description": "How a model that does not follow the catalog conventions is drawn as if it did (0.15.0):\nwhich of its axes is up, quarter turns about the vertical so its front faces +Z, and the\noffset (in file units, after turning) that puts its bounding-box bottom-centre at the origin.\nThe file itself is never changed; ``file_bounds`` are its exact bounds as written.",
+      "properties": {
+        "up_axis": {
+          "enum": [
+            "+Y",
+            "-Y",
+            "+Z",
+            "-Z",
+            "+X",
+            "-X"
+          ],
+          "type": "string"
+        },
+        "turns": {
+          "description": "Quarter turns clockwise, seen from above.",
+          "maximum": 3,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "file_bounds": {
+          "$ref": "#/$defs/ModelBounds"
+        },
+        "offset": {
+          "$ref": "#/$defs/Vec3"
+        }
+      },
+      "required": [
+        "up_axis",
+        "turns",
+        "file_bounds",
+        "offset"
+      ],
+      "title": "VisualCorrection",
       "type": "object"
     },
     "WorldFrame": {

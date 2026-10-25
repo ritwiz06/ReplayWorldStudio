@@ -4003,3 +4003,41 @@ label.button.disabled {
 .look-rest .look-row {
   margin-top: 6px;
 }
+
+/* ---------- ENR-01: an attached model under review ---------- */
+.model-review {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.model-review[data-busy="true"] .model-sizes {
+  opacity: 0.6;
+}
+.model-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.model-sizes th {
+  text-align: left;
+  font-weight: 500;
+  padding-right: 8px;
+  white-space: nowrap;
+  vertical-align: top;
+}
+.model-warnings {
+  margin: 0;
+  padding-left: 18px;
+}
+.model-review .chat-details li {
+  overflow-wrap: anywhere;
+}
+/* While a shift plays, the run bar takes the bottom: the selection sits above it. */
+main:has(.run-bar) .selection-chip {
+  bottom: 128px;
+}
+.notice .issues li {
+  overflow-wrap: anywhere;
+}

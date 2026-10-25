@@ -46,6 +46,13 @@ def resolve_catalog_file(root: Path, uri: str, generated_root: Path | None = Non
     if not candidate.is_relative_to(library):
         raise CatalogFileError("unsafe", f"'{uri}' resolves outside the catalog library")
     if not candidate.is_file():
+        if uri.startswith("uploaded/"):
+            # An attached file cannot be rebuilt from anything: only the same file restores it.
+            raise CatalogFileError(
+                "missing",
+                f"The attached model '{uri}' is not on this computer. Attach the same file again "
+                "(it is checked by its hash), or draw the object with its stand-in.",
+            )
         raise CatalogFileError(
             "missing", f"Model file '{uri}' is not in the catalog library. {REBUILD_HINT}"
         )
@@ -70,6 +77,11 @@ def check_model_files(
         try:
             path = resolve_catalog_file(root, visual.uri, generated_root)
         except CatalogFileError as exc:
+            if exc.kind == "missing" and asset.upload is not None:
+                # An attached model cannot be rebuilt: the project opens, the object is drawn as
+                # "model unavailable", and the person attaches the same file (checked by its
+                # hash) or returns the object to its stand-in. A different file is still refused.
+                continue
             issues.append({"loc": (*loc, "uri"), "msg": exc.message, "type": f"model_{exc.kind}"})
             continue
         digest = sha256_of(path)

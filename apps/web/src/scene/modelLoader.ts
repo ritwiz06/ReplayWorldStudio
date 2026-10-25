@@ -2,12 +2,12 @@
 // recorded in the catalog, parse as binary glTF, and measure the bounds the catalog records.
 // Any failure is reported with an actionable message; nothing else is drawn in its place.
 import type { GltfVisual, SceneObject } from "@replay-world/contracts";
-import { Box3, EdgesGeometry, Group, type Material, type Mesh, type Object3D, Vector2 } from "three";
+import { Box3, type Camera, EdgesGeometry, Group, type Light, type Material, Matrix4, type Mesh, type Object3D, Vector2 } from "three";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { renderScale } from "./fit";
+import { correctedPoint, renderScale, type Vec3Tuple } from "./fit";
 import { placementOf } from "./placement";
 
 export type ModelFailureKind =
@@ -57,7 +57,27 @@ export async function parseCatalogModel(bytes: ArrayBuffer, visual: GltfVisual):
     return fail("invalid_gltf", `${visual.uri} is not a valid binary glTF file (${reason}). ${REBUILD}`);
   }
 
-  const box = new Box3().setFromObject(scene);
+  // A model kept as attached (0.15.0) is drawn through its recorded correction: turned and
+  // offset so its bounding-box bottom-centre is at the origin. The file itself is never changed.
+  const correction = visual.correction;
+  if (correction) {
+    const image = (v: Vec3Tuple) => correctedPoint(correction.up_axis, correction.turns, v);
+    const [ex, ey, ez] = [image([1, 0, 0]), image([0, 1, 0]), image([0, 0, 1])];
+    const o = correction.offset;
+    const matrix = new Matrix4().set(ex[0], ey[0], ez[0], o.x, ex[1], ey[1], ez[1], o.y, ex[2], ey[2], ez[2], o.z, 0, 0, 0, 1);
+    const turned = new Group();
+    turned.add(scene);
+    matrix.decompose(turned.position, turned.quaternion, turned.scale);
+    scene = turned;
+  }
+  // Cameras and lights in a file never steer or light the world.
+  const foreign: Object3D[] = [];
+  scene.traverse((node) => {
+    if ((node as Camera).isCamera || (node as Light).isLight) foreign.push(node);
+  });
+  for (const node of foreign) node.removeFromParent();
+
+  const box = new Box3().setFromObject(scene, true);
   const unit = visual.metres_per_model_unit;
   const recorded = visual.model_bounds_m;
   const error = Math.max(

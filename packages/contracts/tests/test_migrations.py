@@ -69,6 +69,12 @@ def test_upgrade_does_not_modify_its_input(legacy: dict[str, Any]) -> None:
     assert legacy == before
 
 
+def before_0_15_0(asset: dict[str, Any]) -> dict[str, Any]:
+    """A catalog asset as written before 0.15.0: no upload record, no visual correction."""
+    visual = {k: v for k, v in asset["visual"].items() if k != "correction"}
+    return {**{k: v for k, v in asset.items() if k != "upload"}, "visual": visual}
+
+
 def as_version(current: dict[str, Any], version: str) -> dict[str, Any]:
     """An older document with the same content: before 0.4.0 there was no edit log, before
     0.5.0 catalog assets had no generation record, before 0.6.0 sources had no image or photo
@@ -91,6 +97,7 @@ def as_version(current: dict[str, Any], version: str) -> dict[str, Any]:
         catalog = [without_revision(a) for a in current["catalog"]]
     else:
         catalog = [{k: v for k, v in a.items() if k != "generation"} for a in current["catalog"]]
+    catalog = [before_0_15_0(a) for a in catalog]
     scene = current["scene"]
     if version not in ("0.4.0", "0.5.0", "0.6.0", "0.7.0", "0.8.0"):
         scene = {k: v for k, v in scene.items() if k != "edit_log"}
@@ -210,6 +217,15 @@ def note_0_14_0(reviews: int = 0) -> str:
     )
 
 
+def note_0_15_0(assets: int = 0, visuals: int = 0) -> str:
+    return (
+        f"schema_version 0.14.0 -> 0.15.0 (adds 'upload: null' to {assets} catalog "
+        f"asset{'' if assets == 1 else 's'} and 'correction: null' to {visuals} glTF "
+        f"visual{'' if visuals == 1 else 's'}: no model was uploaded; no values or evidence "
+        "changed)"
+    )
+
+
 def note_0_12_0(readings: int = 0, outlines: int = 0) -> str:
     return (
         f"schema_version 0.11.0 -> 0.12.0 (adds 'raster: null' to {readings} drawing "
@@ -228,7 +244,15 @@ def test_0_8_0_documents_gain_a_null_drawing_on_each_source(
     assert [s["drawing"] for s in upgrade.document["sources"]] == [None]
     assert (upgrade.from_version, upgrade.notes) == (
         "0.8.0",
-        [note_0_9_0(1), note_0_10_0(), note_0_11_0(), note_0_12_0(), NOTE_0_13_0, note_0_14_0()],
+        [
+            note_0_9_0(1),
+            note_0_10_0(),
+            note_0_11_0(),
+            note_0_12_0(),
+            NOTE_0_13_0,
+            note_0_14_0(),
+            note_0_15_0(3),
+        ],
     )
     assert all("drawing" not in source for source in old["sources"])  # input untouched
 
@@ -273,6 +297,7 @@ def test_0_2_0_documents_gain_only_the_version_and_an_empty_edit_log(
         note_0_12_0(),
         NOTE_0_13_0,
         note_0_14_0(),
+        note_0_15_0(3),
     ]
 
 
@@ -295,6 +320,7 @@ def test_0_3_0_documents_gain_an_empty_edit_log(fixture_data: dict[str, Any]) ->
             note_0_12_0(),
             NOTE_0_13_0,
             note_0_14_0(),
+            note_0_15_0(3),
         ],
     )
     assert "edit_log" not in old["scene"]  # input untouched
@@ -320,6 +346,7 @@ def test_0_4_0_documents_gain_a_null_generation_on_each_asset(
             note_0_12_0(),
             NOTE_0_13_0,
             note_0_14_0(),
+            note_0_15_0(3),
         ],
     )
     assert all("generation" not in asset for asset in old["catalog"])  # input untouched
@@ -344,6 +371,7 @@ def test_0_5_0_documents_gain_a_null_image_and_photo_import_on_each_source(
             note_0_12_0(),
             NOTE_0_13_0,
             note_0_14_0(),
+            note_0_15_0(3),
         ],
     )
     assert all("image" not in source for source in old["sources"])  # input untouched
@@ -374,7 +402,7 @@ def test_a_0_3_0_document_claiming_an_edit_log_is_refused(fixture_data: dict[str
 def test_legacy_upgrade_runs_every_step_in_order(legacy: dict[str, Any]) -> None:
     notes = upgrade_document(legacy).notes
     assert notes[0] == "schema_version 0.1.0 -> 0.2.0"
-    assert notes[-12:] == [
+    assert notes[-13:] == [
         NOTE_0_3_0,
         NOTE_0_4_0,
         note_0_5_0(0),
@@ -387,6 +415,7 @@ def test_legacy_upgrade_runs_every_step_in_order(legacy: dict[str, Any]) -> None
         note_0_12_0(),
         NOTE_0_13_0,
         note_0_14_0(),
+        note_0_15_0(0),
     ]
     upgraded = Project.model_validate(upgrade_document(legacy).document)
     assert upgraded.scene.edit_log == []
@@ -397,7 +426,7 @@ def test_current_documents_pass_through_unchanged(fixture_data: dict[str, Any]) 
     assert (upgrade.document, upgrade.changed, upgrade.notes) == (fixture_data, False, [])
 
 
-@pytest.mark.parametrize("version", ["0.0.1", "0.15.0", "1.0.0", None])
+@pytest.mark.parametrize("version", ["0.0.1", "0.16.0", "1.0.0", None])
 def test_unknown_versions_are_refused(legacy: dict[str, Any], version: str | None) -> None:
     legacy["schema_version"] = version
     with pytest.raises(MigrationError, match="unsupported schema_version"):
@@ -425,7 +454,7 @@ def test_migrate_command_writes_a_validated_upgrade(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert "note: schema_version 0.1.0 -> 0.2.0" in result.stderr
     project = Project.model_validate_json(out.read_text())
-    assert project.schema_version == "0.14.0"
+    assert project.schema_version == "0.15.0"
     assert "note: schema_version 0.2.0 -> 0.3.0" in result.stderr
     assert "note: schema_version 0.3.0 -> 0.4.0" in result.stderr
     assert "note: schema_version 0.4.0 -> 0.5.0" in result.stderr
@@ -438,6 +467,7 @@ def test_migrate_command_writes_a_validated_upgrade(tmp_path: Path) -> None:
     assert "note: schema_version 0.11.0 -> 0.12.0" in result.stderr
     assert "note: schema_version 0.12.0 -> 0.13.0" in result.stderr
     assert "note: schema_version 0.13.0 -> 0.14.0" in result.stderr
+    assert "note: schema_version 0.14.0 -> 0.15.0" in result.stderr
     assert LEGACY.read_text().startswith('{\n  "schema_version": "0.1.0"')  # input untouched
 
 
@@ -535,6 +565,7 @@ def test_0_7_0_photo_observations_gain_not_recorded_visibility_and_no_correction
         note_0_12_0(),
         NOTE_0_13_0,
         note_0_14_0(),
+        note_0_15_0(3),
     ]
     Project.model_validate(upgrade.document)
     claimed = copy.deepcopy(old)
@@ -590,3 +621,18 @@ def test_a_split_observation_needs_its_pieces(fixture_data: dict[str, Any]) -> N
     project = {**fixture_data, "sources": [*fixture_data["sources"], photo_source(lonely)]}
     with pytest.raises(ValidationError, match="split observation 'obs-1' has no pieces"):
         Project.model_validate(project)
+
+
+def test_0_14_0_documents_upgrade_unchanged_and_refuse_upload_records() -> None:
+    """0.15.0 only adds uploaded models (ENR-01): a 0.14.0 document upgrades with no other
+    change, and a 0.14.0 document that already has an upload record is malformed."""
+    current = json.loads((FIXTURES / "scenes" / "sample-factory.json").read_text())
+    old = copy.deepcopy(current)
+    old["schema_version"] = "0.14.0"
+    report = upgrade_document(old)
+    assert report.notes == [note_0_15_0(0, 0)]
+    assert report.document == current
+    bad = copy.deepcopy(old)
+    bad["catalog"] = [{"id": "asset-x", "upload": {}, "visual": {"type": "placeholder_box"}}]
+    with pytest.raises(MigrationError, match=r"uploaded models only exist from 0\.15\.0"):
+        upgrade_document(bad)

@@ -63,3 +63,5 @@ customer-data/
 
 # --- Generated object models (GEN-01): built locally from specifications recorded in projects ---
 assets/catalog/generated/
+# Models people attach (ENR-01): their own files, never committed.
+assets/catalog/uploaded/

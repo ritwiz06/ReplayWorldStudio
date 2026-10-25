@@ -84,6 +84,8 @@ function world(options: { refuse?: string; client?: Partial<ChatHost["client"]> 
     library: async () => library,
     openCreate: () => undefined,
     setLookPreview: () => undefined,
+    pickModelFile: () => undefined,
+    focusObject: () => undefined,
     openLookCreate: () => undefined,
   });
   const chat = new ChatController();

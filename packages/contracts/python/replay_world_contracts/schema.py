@@ -51,6 +51,7 @@ from .models import (
     ValidationErrorResponse,
     ValidationReport,
 )
+from .uploads import UploadedAssetRequest, UploadedModelReport
 
 ROOT_MODELS: Final[tuple[type[BaseModel], ...]] = (
     Project,
@@ -84,6 +85,8 @@ ROOT_MODELS: Final[tuple[type[BaseModel], ...]] = (
     EvidenceBundleRequest,
     EvidenceBundleOpened,
     EvidenceInventory,
+    UploadedModelReport,
+    UploadedAssetRequest,
 )
 BUNDLE_ID: Final = f"urn:replay-world:contracts:{SCHEMA_VERSION}"
 

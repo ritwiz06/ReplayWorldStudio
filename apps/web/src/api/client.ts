@@ -18,6 +18,7 @@ import {
   validatePlanProposalResult,
   validateProcessSuggestionResult,
   validatePlanUpload,
+  validateUploadedModelReport,
   validateProject,
   validateStoredPhoto,
   validateUpgradeReport,
@@ -28,6 +29,7 @@ import {
   type EditProposalRequest,
   type EvidenceBundleRequest,
   type GeneratedAssetRequest,
+  type UploadedAssetRequest,
   type GeneratedAssetRevisionRequest,
   type GeometryDraft,
   type ImageAnalysisRequest,
@@ -238,6 +240,20 @@ export function createApiClient(
       }),
     /** Store a floor-plan PDF, PNG or JPEG (IMP-03; no language model). An image or a one-page
      * PDF comes back read as a picture in pixels; a longer PDF lists its pages. */
+    /** Inspect a .glb and store it unchanged (ENR-01). Kept on this computer; never sent to a
+     * language model. */
+    uploadModel: (file: Blob, filename: string, signal?: AbortSignal) =>
+      request("/api/v1/catalog/uploaded-models", validateUploadedModelReport, {
+        method: "POST",
+        body: file,
+        filename,
+        contentType: "model/gltf-binary",
+        signal,
+        timeoutMs: GENERATE_TIMEOUT_MS,
+      }),
+    /** The reviewed choices for a stored upload, as a catalog asset (nothing is changed). */
+    uploadedAsset: (body: UploadedAssetRequest, signal?: AbortSignal) =>
+      request("/api/v1/catalog/uploaded-assets", validateCatalogAsset, { method: "POST", body: JSON.stringify(body), signal }),
     uploadPlan: (file: Blob, filename: string, signal?: AbortSignal) =>
       request("/api/v1/sources/plans", validatePlanUpload, {
         method: "POST",

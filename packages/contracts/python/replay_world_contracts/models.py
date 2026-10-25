@@ -63,7 +63,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.14.0"]
+SchemaVersion = Literal["0.15.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -285,6 +285,54 @@ class ModelBounds(ContractModel):
         return self
 
 
+UpAxis = Literal["+Y", "-Y", "+Z", "-Z", "+X", "-X"]
+
+
+def corrected_point(
+    up_axis: str, turns: int, p: tuple[float, float, float]
+) -> tuple[float, float, float]:
+    """A file point in the corrected frame (0.15.0): first the file's ``up_axis`` is turned to +Y,
+    then the model is turned ``turns`` quarter turns clockwise as seen from above. Only quarter
+    turns: a box stays a box, so corrected bounds are exact. The browser applies the same map."""
+    x, y, z = p
+    x, y, z = {
+        "+Y": (x, y, z),
+        "-Y": (x, -y, -z),
+        "+Z": (x, z, -y),
+        "-Z": (x, -z, y),
+        "+X": (-y, x, z),
+        "-X": (y, -x, z),
+    }[up_axis]
+    for _ in range(turns % 4):
+        x, z = -z, x
+    return x, y, z
+
+
+class VisualCorrection(ContractModel):
+    """How a model that does not follow the catalog conventions is drawn as if it did (0.15.0):
+    which of its axes is up, quarter turns about the vertical so its front faces +Z, and the
+    offset (in file units, after turning) that puts its bounding-box bottom-centre at the origin.
+    The file itself is never changed; ``file_bounds`` are its exact bounds as written."""
+
+    up_axis: UpAxis
+    turns: int = Field(ge=0, le=3, description="Quarter turns clockwise, seen from above.")
+    file_bounds: ModelBounds
+    offset: Vec3
+
+    def corrected_bounds(self) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
+        lo, hi = self.file_bounds.min, self.file_bounds.max
+        corners = [
+            corrected_point(self.up_axis, self.turns, (x, y, z))
+            for x in (lo.x, hi.x)
+            for y in (lo.y, hi.y)
+            for z in (lo.z, hi.z)
+        ]
+        o = (self.offset.x, self.offset.y, self.offset.z)
+        low = tuple(min(c[i] for c in corners) + o[i] for i in range(3))
+        high = tuple(max(c[i] for c in corners) + o[i] for i in range(3))
+        return (low[0], low[1], low[2]), (high[0], high[1], high[2])
+
+
 class GltfVisual(ContractModel):
     """A binary glTF (.glb) file from the catalog library, drawn at an instance's dimensions.
 
@@ -307,10 +355,35 @@ class GltfVisual(ContractModel):
     front_axis: Literal["+Z"]
     origin: Literal["bottom_centre"]
     model_bounds_m: ModelBounds
-    fit: Literal["scale_to_dimensions"]
+    # scale_to_dimensions: each axis scaled to the instance's dimensions (it may distort);
+    # contain (0.15.0): one scale for every axis, the largest that keeps the model inside the
+    # instance's dimensions, bottom-centred; the unused space is left visible.
+    fit: Literal["scale_to_dimensions", "contain"]
     max_fit_distortion: float = Field(
         ge=0, le=0.5, description="Largest per-axis scale departure from 1 still shown as faithful."
     )
+    # A model drawn with a correction (0.15.0): an uploaded file kept as it is. Its
+    # ``model_bounds_m`` are the corrected bounds. (No Field description beside a $ref.)
+    correction: VisualCorrection | None
+
+    @model_validator(mode="after")
+    def _correction_gives_the_bounds(self) -> GltfVisual:
+        if self.correction is None:
+            return self
+        low, high = self.correction.corrected_bounds()
+        unit = self.metres_per_model_unit
+        lo, hi = self.model_bounds_m.min, self.model_bounds_m.max
+        for i, axis in enumerate(("x", "y", "z")):
+            for got, want in (
+                (getattr(lo, axis), low[i] * unit),
+                (getattr(hi, axis), high[i] * unit),
+            ):
+                if abs(got - want) > NOMINAL_MATCH_TOLERANCE_M:
+                    raise ValueError(
+                        f"model bounds {axis} {got} m do not follow from the file bounds and its "
+                        f"correction ({want} m)"
+                    )
+        return self
 
     @model_validator(mode="after")
     def _origin_is_bottom_centre(self) -> GltfVisual:
@@ -339,7 +412,9 @@ class AssetSource(ContractModel):
     recorded geometry specification; such an asset carries a ``generation`` record.
     """
 
-    kind: Literal["synthetic", "in_house", "vendor", "third_party", "generated"]
+    # 'uploaded' (0.15.0): a model file the person attached; its origin and rights are what
+    # they said, or unknown.
+    kind: Literal["synthetic", "in_house", "vendor", "third_party", "generated", "uploaded"]
     author: NonEmptyText
     reference: NonEmptyText | None = Field(
         description="URL, catalogue number or document that identifies the original."
@@ -645,6 +720,22 @@ class AssetGeneration(ContractModel):
         return self
 
 
+UPLOADED_MODEL_PREFIX: Final = "uploaded/"
+
+
+class AssetUpload(ContractModel):
+    """A model file the person attached (0.15.0, ENR-01). The file is the visual itself, kept
+    byte for byte (``visual.uri`` and ``visual.sha256``); this records what came with it. Its
+    geometry is not evidence of a machine's size: objects keep their own recorded dimensions."""
+
+    filename: NonEmptyText
+    bytes: int = Field(ge=1)
+    triangles: int = Field(ge=1)
+    # Anything the person said about where the file comes from or its terms; null when nothing
+    # was said. Never filled in for them.
+    note: NonEmptyText | None
+
+
 class CatalogAsset(ContractModel):
     """A reusable definition that scene objects instantiate by referencing its ``id``.
 
@@ -663,6 +754,25 @@ class CatalogAsset(ContractModel):
     # How a generated asset was made; null for every other source. (No Field description: a
     # description beside a $ref makes the TypeScript generator emit duplicate interfaces.)
     generation: AssetGeneration | None
+    # The attached file (0.15.0); set exactly when the source is 'uploaded'.
+    upload: AssetUpload | None
+
+    @model_validator(mode="after")
+    def _uploaded_assets_record_their_file(self) -> CatalogAsset:
+        uploaded = self.source.kind == "uploaded"
+        if uploaded != (self.upload is not None):
+            raise ValueError(
+                f"asset '{self.id}': an upload record belongs to, and only to, a source of kind "
+                "'uploaded'"
+            )
+        if uploaded and not (
+            isinstance(self.visual, GltfVisual)
+            and self.visual.uri.startswith(UPLOADED_MODEL_PREFIX)
+        ):
+            raise ValueError(
+                f"uploaded asset '{self.id}' must use its glTF file under '{UPLOADED_MODEL_PREFIX}'"
+            )
+        return self
 
     @model_validator(mode="after")
     def _generated_assets_record_their_generation(self) -> CatalogAsset:

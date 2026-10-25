@@ -1,6 +1,6 @@
 // An opened evidence bundle (REL-01): what the API checked, and the comparison of each recorded
 // run with the same layout run again here, with the bundle's own process and seed.
-import type { EvidenceBundleOpened } from "@replay-world/contracts";
+import { type EvidenceBundleOpened, SCHEMA_VERSION } from "@replay-world/contracts";
 import type { Reproduction } from "../run/evidence";
 
 interface Props {
@@ -27,6 +27,11 @@ export function BundleCheck({ filename, bundle, check, onRerun }: Props) {
           </>
         )}
       </p>
+      {m.schema_version !== SCHEMA_VERSION && (
+        <p className="small muted" data-testid="bundle-upgraded">
+          Written with contract {m.schema_version}; its project file was upgraded to {SCHEMA_VERSION} on opening, as a saved project is. The bundle itself is unchanged.
+        </p>
+      )}
       {bundle.stored.length > 0 && <p className="small muted">Stored from the bundle: {bundle.stored.join("; ")}.</p>}
       {bundle.problems.map((p) => (
         <p key={p} className="small status-warn">

@@ -70,6 +70,7 @@ def catalog_asset(asset_id: str, name: str, model: dict[str, Any]) -> dict[str, 
             "model_bounds_m": model["bounds_m"],
             "fit": "scale_to_dimensions",
             "max_fit_distortion": MAX_FIT_DISTORTION,
+            "correction": None,
         },
         "nominal_dimensions": dims(
             width, height, depth, f"Authored extent of the procedural model {model['uri']}"
@@ -89,6 +90,7 @@ def catalog_asset(asset_id: str, name: str, model: dict[str, Any]) -> dict[str, 
             ),
         },
         "generation": None,
+        "upload": None,
     }
 
 

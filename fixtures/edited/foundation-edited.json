@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.14.0",
+  "schema_version": "0.15.0",
   "id": "proj-foundation-fixture",
   "name": "Foundation fixture - packaging area",
   "units": {
@@ -82,7 +82,8 @@
         "attribution": null,
         "terms_ref": "No project license has been chosen yet (see README)"
       },
-      "generation": null
+      "generation": null,
+      "upload": null
     },
     {
       "id": "asset-generic-processing-station",
@@ -125,7 +126,8 @@
         "attribution": null,
         "terms_ref": "No project license has been chosen yet (see README)"
       },
-      "generation": null
+      "generation": null,
+      "upload": null
     },
     {
       "id": "asset-generic-packing-station",
@@ -168,7 +170,8 @@
         "attribution": null,
         "terms_ref": "No project license has been chosen yet (see README)"
       },
-      "generation": null
+      "generation": null,
+      "upload": null
     }
   ],
   "scene": {

@@ -98,7 +98,7 @@ test("run a day: play the example shift, edit the layout, run again, compare, sa
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("save").click()]);
   const text = readFileSync((await download.path())!, "utf8");
   const saved = JSON.parse(text) as { schema_version: string; process: { name: string; seed: number } | null };
-  expect(saved.schema_version).toBe("0.14.0");
+  expect(saved.schema_version).toBe("0.15.0");
   expect(saved.process).toMatchObject({ name: "Example shift: mixing, forming and packing", seed: 1 });
   await page.goto("/");
   await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 15 objects");

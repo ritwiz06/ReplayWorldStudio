@@ -37,6 +37,8 @@ test("the committed sample bundle reruns with the recorded events; playback neve
   await page.getByTestId("scene-file-input").setInputFiles(`${ROOT}docs/demo/${BUNDLE}`);
   const check = page.getByTestId("bundle-check");
   await expect(check).toContainText("8 files checked against its manifest");
+  // Written at contract 0.14.0: read as written, its project upgraded on opening.
+  await expect(check.getByTestId("bundle-upgraded")).toContainText("Written with contract 0.14.0");
   await check.getByTestId("bundle-rerun").click();
   await expect(check).toHaveAttribute("data-same", "true");
   const recorded = await rows(page);

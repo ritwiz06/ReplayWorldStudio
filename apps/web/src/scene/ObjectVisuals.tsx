@@ -4,13 +4,14 @@
 import type { CatalogAsset, GltfVisual, SceneObject } from "@replay-world/contracts";
 import { Edges, Html } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { memo, type ReactNode, useContext, useMemo } from "react";
+import { memo, type ReactNode, useContext, useEffect, useMemo } from "react";
 import { type Appearance, AppearanceContext } from "./appearance";
 import { BoxGeometry, CanvasTexture, EdgesGeometry, type Group, RepeatWrapping, SRGBColorSpace } from "three";
 import { heightAssumed } from "../evidence";
 import { formatFootprint } from "../format";
 import type { ModelState } from "../hooks/useCatalogModels";
 import { displayForm, type DisplayForm, partsOf } from "./displayForms";
+import { envelopeFill } from "./fit";
 import { instanceModel } from "./modelLoader";
 import { placementOf } from "./placement";
 import { isSlab } from "./sceneBounds";
@@ -60,6 +61,8 @@ export const ObjectVisual = memo(function ObjectVisual({ object, asset, model, s
   };
   const gltf = asset?.visual.type === "gltf" ? asset.visual : null;
 
+  // A model kept in proportion (0.15.0) may not fill the recorded space: the space shows.
+  const unfilled = gltf && model?.status === "ready" && gltf.fit === "contain" && envelopeFill(gltf, object.dimensions).some((f) => f < 0.95);
   let body;
   if (object.kind === "walkway" || object.kind === "keep_clear") body = <FloorMarking object={object} />;
   else if (gltf && model?.status === "ready") body = <GltfInstance template={model.template} visual={gltf} object={object} />;
@@ -74,11 +77,26 @@ export const ObjectVisual = memo(function ObjectVisual({ object, asset, model, s
   return (
     <group name={object.id} {...(interactive ? handlers : {})}>
       {body}
+      {unfilled && <EnvelopeOutline object={object} />}
       {(selected || hovered) && <SelectionBox object={object} strong={selected} />}
       {!hideLabel && (selected || planLabelWidth !== undefined) && <ObjectLabel object={object} emphasis={selected} planWidth={planLabelWidth} />}
     </group>
   );
 });
+
+/** The recorded envelope's edges, faint: what a smaller, proportion-kept model leaves unused. */
+function EnvelopeOutline({ object }: { object: SceneObject }) {
+  const p = placementOf(object);
+  const edges = useMemo(() => new EdgesGeometry(new BoxGeometry(...p.size)), [p.size[0], p.size[1], p.size[2]]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => edges.dispose(), [edges]);
+  return (
+    <group position={p.position} rotation={p.rotation}>
+      <lineSegments geometry={edges} position={p.meshOffset}>
+        <lineBasicMaterial color="#9fb3c8" transparent opacity={0.6} />
+      </lineSegments>
+    </group>
+  );
+}
 
 function GltfInstance({ template, visual, object }: { template: Group; visual: GltfVisual; object: SceneObject }) {
   const placed = useMemo(() => instanceModel(template, visual, object), [template, visual, object]);

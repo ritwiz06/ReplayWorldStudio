@@ -613,6 +613,33 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
     - free questions about the scene;
     - "each value records its source and uncertainty" holds for sizes, but a chosen model records no matching confidence (none is calibrated).
 
+- Reconciliation (2026-10-25, ADR-065): **closed against its original "Done when", with evidence.** The history above is kept. Each requirement:
+  - **One agent, invisible as such, through typed, validated tools:**
+    - **identify a file:** by content, not name. DXF, PDF, PNG, JPEG, project JSON, bundle ZIP, GLB; a DWG is refused with the export route (`drawing/orchestrator.ts`, `uploads.py`; ONB-01, IMP-03, ENR-01).
+    - **extract layout candidates:** the DXF reader, and the plan-picture draft (IMP-01, IMP-03).
+    - **match equipment to catalog or generated models:** deterministic, reviewed matching, the object generator for an existing object (UX-05), and an attached model reviewed for that object (ENR-01). Each change records its reason in the edit log ("suggested: both are a cabinet …", "chosen by the person", "attached file …, reviewed"), and the model's source and provisional status in the catalog. No confidence figure is made up.
+    - **build the draft world:** ONB-01.
+    - **propose changes:** chat plans of up to four typed steps, previewed and applied once (UX-03, UX-04, UX-05).
+    - **evidence:** `e2e/drawing.spec.ts`, `chat.spec.ts`, `plans.spec.ts`, `appearance.spec.ts`, `enrich.spec.ts`, `services/api/tests/test_chat.py`, `test_uploads.py`.
+  - **Geometry and checks stay deterministic code:** GEO-01/02, the run engine, the clause parsing (`assist/clauses.py`), the fit (`scene/fit.ts`), and the GLB bounds (`uploads.py`).
+  - **Each value records its source and uncertainty:** `Length` origin, `source_ref` and uncertainty; asset source and rights (unknown kept unknown); the reasons above.
+  - **Uploaded files are data, never instructions:** drawing text, chat words, GLB names and extras (`test_chat.py` hostile case; `uploads.py`).
+  - **It runs without AI (R09):** the no-key journeys (`e2e/local/chat-nokey.spec.ts`), manual matching and GLB enrichment.
+  - **Not original requirements, tracked as AGT-02:** AI-ranked candidates, a larger catalog, calibrated confidence and free questions about the scene.
+- Status (2026-10-25): **done for its criteria.**
+
+### AGT-02 - Optional additions to the assistant (not required by AGT-01)
+
+- Priority: P2
+- Dependencies: AGT-01
+- Baseline status: added 2026-10-25 (ADR-065)
+- Scope, each only if someone needs it:
+  - an optional model that ranks catalog candidates it is given (never inventing an id);
+  - a larger in-house model catalog (racks, tables, tanks, presses);
+  - confidence figures only once they are calibrated against reviewed outcomes;
+  - free questions about the scene, answered from the app's own data.
+- Evidence: not recorded
+
 ### UX-01 - Three-action main screen
 
 - Priority: P0
@@ -697,7 +724,23 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   - STEP conversion has its licence and units decided first.
   - The previous version is kept.
   - Journey step 3: `Filling-Cell.step` makes the existing cell more detailed without resetting it.
-- Evidence: not recorded
+- Status (2026-10-25, ADR-065, contract 0.15.0): **open; the GLB part is built.**
+  - **Built:** a GLB attached to an existing object (Change look… → Upload a 3D model…, or attached in the conversation) is reviewed for the right object, its facing and its fit, then applied as one undoable `set_appearance` step that keeps its id, name, placement, recorded dimensions and evidence, and its links and run.
+    - **The file:** kept unchanged by its sha256; the person's quarter-turn orientation, unit and fit are recorded as the visual's correction. Bounds come from every vertex through every node transform.
+    - **What is refused, with the reason:** limits on size, nodes, depth, vertices, triangles and textures; external or text-embedded resources; compression; unreadable required extensions; skins and morph targets.
+    - **Fit:** proportions kept inside the recorded envelope by default, with the unused space outlined; stretching only when chosen.
+    - **The previous look:** kept through undo.
+    - **A missing file:** opens, then recovers only with the same file (hash-checked) or the stand-in.
+    - **Bundles:** the model is included only when selected, and hash-checked on opening.
+  - **Still open:**
+    - photo enrichment;
+    - STEP (licence and units first; the "Filling-Cell.step" journey);
+    - accepting geometry as checked where a file supports it (the sizes are only compared now, never adopted);
+    - an enriched object from a world without a drawing source.
+- Evidence:
+  - docs/enr-01/;
+  - e2e `enrich.spec.ts` (5), `external/khronos-model.spec.ts` (local);
+  - `services/api/tests/test_uploads.py`, `src/scene/uploads.test.ts`, `packages/contracts/tests/test_migrations.py` (0.14.0 → 0.15.0).
 
 ### ENR-02 - Enrich from a supplier drawing or specification
 
@@ -865,6 +908,7 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
 - Note (2026-10-20): still open. UX-03 changed the main screen to chat-first; its click and time counts are scripted, not a study with newcomers.
 - Note (2026-10-24): still open. UX-04's journeys and comparisons are scripted; no participant has tried them.
 - Note (2026-10-25): still open after UX-05; no participant has tried it.
+- Note (2026-10-25, ENR-01): still open; no participant has tried the model upload.
 
 ## M5 - Spatial checks
 

@@ -218,6 +218,14 @@ export function App() {
     };
   }, [project, lookPreview, loadId]);
   const { models, retry } = useCatalogModels(client, shown);
+  /** An object to frame once it is the selection (a model review brings it into view). */
+  const frameAfter = useRef<string | null>(null);
+  /** The same file again for a missing attached model (ENR-01), checked by its hash. */
+  const sameFile = useRef<HTMLInputElement>(null);
+  const sameTarget = useRef<CatalogAsset | null>(null);
+  /** A .glb chosen for one object (ENR-01): the hidden file input and the object it is for. */
+  const modelFile = useRef<HTMLInputElement>(null);
+  const modelTarget = useRef<string | null>(null);
   /** The object generator, opened for an existing object's look (UX-05). */
   const [lookCreate, setLookCreate] = useState<{ objectId: string; kind: "describe" | "builder"; initial: { text: string; name: string; size: { width: number; depth: number; height: number } }; done: (outcome: { ok: true; assetName: string } | { ok: false; message: string } | null) => void } | null>(null);
   const { state: assist } = useAssistStatus(client);
@@ -343,6 +351,11 @@ export function App() {
     },
     [issue, mode],
   );
+  useEffect(() => {
+    if (!selectedId || frameAfter.current !== selectedId) return;
+    frameAfter.current = null;
+    issue("frame-selection");
+  }, [selectedId, issue]);
   useEffect(() => {
     if (mode !== "orbit" || !pendingView.current) return;
     const view = pendingView.current;
@@ -658,6 +671,25 @@ export function App() {
     retry();
   }, [project, retry]);
 
+  const attachSame = useCallback(
+    async (file: File) => {
+      const asset = sameTarget.current;
+      if (!asset || asset.visual.type !== "gltf") return;
+      setRebuild({ busy: true, message: null });
+      const stored = await client.uploadModel(file, file.name);
+      if (!stored.ok) return setRebuild({ busy: false, message: `${file.name} can't be used: ${stored.error.message}` });
+      if (stored.value.sha256 !== asset.visual.sha256) {
+        // Never a silent replacement: a different file is a new version, reviewed on its own.
+        return setRebuild({
+          busy: false,
+          message: `${file.name} is a different file (sha256 ${stored.value.sha256.slice(0, 12)}…, not ${asset.visual.sha256.slice(0, 12)}…), so it was not used here. To use it, choose it with Change look… as a new reviewed version.`,
+        });
+      }
+      setRebuild({ busy: false, message: `Restored ${asset.name}: the same file (its hash matches).` });
+      retry();
+    },
+    [retry],
+  );
   const remove = useCallback(() => {
     if (!selected || !project || !editable) return;
     runAndReport({ baseRevision: project.scene.revision, command: { type: "remove_object", objectId: selected.id } });
@@ -883,6 +915,15 @@ export function App() {
         libraryCache.current ??= Promise.all((["foundation", "industrial-demo"] as const).map((name) => client.getFixture(name))).then((all) => all.flatMap((r) => (r.ok ? r.value.catalog : [])));
         const own = project?.catalog ?? [];
         return libraryCache.current.then((shipped) => [...own, ...shipped]);
+      },
+      focusObject: (objectId) => {
+        if (selectedId === objectId) return issue("frame-selection");
+        frameAfter.current = objectId;
+        select(objectId);
+      },
+      pickModelFile: (objectId) => {
+        modelTarget.current = objectId;
+        modelFile.current?.click();
       },
       setLookPreview: (p) => setLookPreview(p && project ? { loadId, revision: project.scene.revision, ...p } : null),
       openLookCreate: (objectId, kind, initial, done) => setLookCreate({ objectId, kind, initial, done }),
@@ -1112,7 +1153,24 @@ export function App() {
           {ghost && editable && <PlacementBanner label={ghost.label} onCancel={() => setPlacement(null)} />}
           {rejection && <EditRejectedNotice message={rejection} onDismiss={() => setRejection(null)} />}
           {project && (
-            <ModelNotice catalog={project.catalog} models={models} onRetry={retry} onRebuild={() => void rebuildModels()} rebuild={rebuild} />
+            <ModelNotice
+              // Only models some object is drawn with: an unused one (its objects back on their
+              // stand-in) is not a problem to report.
+              catalog={project.catalog.filter((a) => project.scene.objects.some((o) => o.asset_id === a.id))}
+              models={models}
+              onRetry={retry}
+              onRebuild={() => void rebuildModels()}
+              rebuild={rebuild}
+              onAttachSame={(asset) => {
+                sameTarget.current = asset;
+                sameFile.current?.click();
+              }}
+              onStandIn={(asset) => {
+                // Placeholder recovery: the objects drawn with it get their stand-in back (undoable).
+                const changes = project.scene.objects.filter((o) => o.asset_id === asset.id).map((o) => ({ objectId: o.id, assetId: null, expected: asset.id }));
+                if (changes.length) runAndReport({ baseRevision: project.scene.revision, command: { type: "set_appearance", changes, assets: [] } });
+              }}
+            />
           )}
           {scene.status === "loading" && <div className="notice">Loading scene from the API…</div>}
           {scene.status === "error" && <LoadErrorPanel error={scene.error} onRetry={session.reloadFixture} />}
@@ -1318,6 +1376,7 @@ export function App() {
           onHighlight={(ids) => setChatPreview((p) => ({ loadId, preview: { ghosts: p?.loadId === loadId ? p.preview.ghosts : [], route: null, candidates: ids } }))}
           plans={chat.controller}
           looks={chat.controller}
+          models={chat.controller}
           review={chatReview}
           setup={chatSetup === loadId && guidedNode ? guidedNode : null}
           fileInput={chatFile}
@@ -1445,6 +1504,31 @@ export function App() {
           }}
         />
       )}
+      <input
+        ref={sameFile}
+        type="file"
+        accept=".glb,model/gltf-binary"
+        hidden
+        data-testid="model-same-input"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          if (file) void attachSame(file);
+        }}
+      />
+      <input
+        ref={modelFile}
+        type="file"
+        accept=".glb,model/gltf-binary"
+        hidden
+        data-testid="model-file-input"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          const target = modelTarget.current;
+          if (file && target) void chat.controller.attachModel(file, target);
+        }}
+      />
       {lookCreate && project && !prompt && (
         <CreateObject
           client={client}
