@@ -1347,7 +1347,8 @@ Append entries in chronological order. If a live repository session log already 
   - undo can only come first in a plan;
   - real drawings still need tracing and symbol layers;
   - UX-02 has no participants.
-- Actual effort: about 1 h 45 min of wall-clock time for this request (17:26–19:10 America/Phoenix), plus CI.
+- CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/40153230653 passed all three jobs on `3771bfd`: contracts, lint, types, tests and build; the public preview; and the browser smoke test.
+- Actual effort: about 1 h 50 min of wall-clock time for this request (17:26–19:18 America/Phoenix), including CI.
 - Next concrete task: UX-02 with consenting newcomers, or AGT-01's matching of imported equipment, on the user's priority.
 
 ## Copy this template for a coding session
