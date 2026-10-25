@@ -69,11 +69,13 @@ test("frames a newly opened document afresh even when it has the same project ID
   await expect.poll(async () => (await camera(page))?.pixelsPerMetre ?? null).not.toBeNull();
   const demoScale = (await camera(page))!.pixelsPerMetre!;
 
-  // The same project, saved with a floor four times as deep: the plan must show all of it.
-  const doc = JSON.parse(demoText) as { scene: { objects: { id: string; transform: { position_m: { z: number } }; dimensions: { depth: { value_m: number } } }[] } };
+  // The same project, saved with a floor four times as deep and one object near its far end: the
+  // plan must show all of the content (the floor slab alone is not framed, UX-04).
+  const doc = JSON.parse(demoText) as { scene: { objects: { id: string; kind: string; transform: { position_m: { z: number } }; dimensions: { depth: { value_m: number } } }[] } };
   const floor = doc.scene.objects.find((o) => o.id === "obj-floor")!;
   floor.dimensions.depth.value_m = 60;
   floor.transform.position_m.z = 22.5;
+  doc.scene.objects.find((o) => o.kind === "equipment")!.transform.position_m.z = 50;
   await page.getByTestId("scene-file-input").setInputFiles({ name: "deeper.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(doc)) });
   await expect(page.getByTestId("scene-source")).toHaveText("deeper.json (accepted by API)");
   // Before the fix the top view reused the previous document's framing (same scale).

@@ -79,12 +79,13 @@ export function answerAsked(project: Project, ask: RouteAsk): RouteAnswer | null
 }
 
 /** The routes the shift uses, checked on the layout as it is. */
-export function answerProcess(project: Project): RouteAnswer | null {
+export function answerProcess(project: Project, objectId: string | null = null): RouteAnswer | null {
   const process = project.process;
   if (!process) return null;
   const plan = planRun(project, process);
   const named = (r: RouteUse) => `${plan.locations[r.from]?.name} ↔ ${plan.locations[r.to]?.name}`;
-  const carried = plan.routes.filter((r) => r.uses.some((u) => u.startsWith("carrying")));
+  const touches = (r: RouteUse) => objectId === null || plan.locations[r.from]?.objectId === objectId || plan.locations[r.to]?.objectId === objectId;
+  const carried = plan.routes.filter((r) => r.uses.some((u) => u.startsWith("carrying")) && touches(r));
   const routes = carried.length ? carried : plan.routes;
   if (!routes.length) return null;
   const blocked = routes.filter((r) => r.outcome === "conflict");
@@ -94,7 +95,9 @@ export function answerProcess(project: Project): RouteAnswer | null {
     ? `No: ${named(blocked[0]!)} is blocked (${brief(blocked[0]!.summary)}).`
     : unknown.length
       ? `Can't tell for ${named(unknown[0]!)}: ${unknown[0]!.summary.replace(/\.$/, "")}.`
-      : `Yes: the shift's ${routes.length} carrying routes all still fit.`;
+      : objectId
+        ? `Yes: ${routes.length === 1 ? `its route (${named(routes[0]!)}) still fits` : `its ${routes.length} routes still fit`}.`
+        : `Yes: the shift's ${routes.length} carrying routes all still fit.`;
   const details = routes.map((r) => `${named(r)}: ${r.outcome === "fits" ? `fits, ${r.lengthM?.toFixed(1)} m` : r.summary} (path ${m2(r.corridorM)})`);
   details.push("Width only, on the reviewed design: turning, heights and the real site are not checked.");
   const shown = first ?? routes[0]!;

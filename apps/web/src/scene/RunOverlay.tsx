@@ -114,16 +114,27 @@ export function RunLabelProjector({ replay, clock, objects, layer }: Props & { l
       const object = objects.find((o) => o.id === s.objectId);
       if (object) anchors.set(`s:${s.id}`, [object.transform.position_m.x, Math.max(object.dimensions.height.value_m + 1.3, 2.6), object.transform.position_m.z]);
     }
-    for (const el of Array.from(root.children) as HTMLElement[]) {
+    // Most important first; a label that would overlap one already shown is hidden this frame.
+    const elements = (Array.from(root.children) as HTMLElement[]).sort((a, b) => Number(a.dataset.priority ?? 9) - Number(b.dataset.priority ?? 9));
+    const shown: { x0: number; y0: number; x1: number; y1: number }[] = [];
+    for (const el of elements) {
       const anchor = anchors.get(el.dataset.anchor ?? "");
       if (!anchor) {
         el.style.visibility = "hidden";
         continue;
       }
       v.set(...anchor).project(camera);
+      const x = ((v.x + 1) / 2) * size.width;
+      const y = ((1 - v.y) / 2) * size.height;
+      const half = { w: el.offsetWidth / 2 + 3, h: el.offsetHeight / 2 + 2 };
+      const rect = { x0: x - half.w, y0: y - half.h, x1: x + half.w, y1: y + half.h };
       const behind = v.z > 1 || v.z < -1;
-      el.style.visibility = behind ? "hidden" : "visible";
-      el.style.transform = `translate(${((v.x + 1) / 2) * size.width}px, ${((1 - v.y) / 2) * size.height}px) translate(-50%, -50%)`;
+      const overlaps = shown.some((r) => rect.x0 < r.x1 && rect.x1 > r.x0 && rect.y0 < r.y1 && rect.y1 > r.y0);
+      const visible = !behind && !overlaps;
+      el.style.visibility = visible ? "visible" : "hidden";
+      el.dataset.shown = visible ? "true" : "false";
+      if (visible) shown.push(rect);
+      el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
     }
   });
   return null;

@@ -1296,6 +1296,60 @@ Append entries in chronological order. If a live repository session log already 
 - Actual effort: about 2.5 hours of wall-clock time today (about 07:00–09:45 America/Phoenix), plus the CI follow-up.
 - Next concrete task: UX-02 with consenting newcomers, or AGT-01's catalog matching, on the user's priority.
 
+### 2026-10-24 - UX-04: a readable workspace and short, connected requests (ADR-063)
+
+- Starting branch and relevant commit: `main` at `1d1921e`.
+- Goal: "A person can see what is happening, give a short instruction, review the change, and understand its result without navigating technical panels." Local only; no new engine, physics, hosting or DWG conversion.
+- Work completed:
+  - **Contract** (assist API; Project still 0.14.0): `ChatResult.steps` (at most 4), `ChatStep` with `needs` and `unsupported`, `ChatAdd`, and `focus_object_id` on the request.
+  - **API** (`assist/chat.py`, prompt chat-02):
+    - one model call per message, each step checked;
+    - "it" from an earlier step, the conversation's object or the selection;
+    - stated sizes only;
+    - more than four steps refused;
+    - old one-intent answers parsed as one step.
+  - **Web:**
+    - `chat/plan.ts`: step labels and needs, catalog suggestions, besides-placement, and a dry run of the whole plan;
+    - the controller's plan lifecycle: review → Apply once → sequential, revision-checked steps, Cancel, a failure stopping dependents, and Undo this request;
+    - the command `add_catalog_instance` (stated sizes `user_supplied`);
+    - `EmptyStart`, `SelectionChip`, draft materials with an uncertainty view, label priorities, Overview, See through, "Completed so far" / "Whole shift";
+    - the one-at-a-time review card, with wall-like layers warned about;
+    - guided-setup hints in place of forced renames.
+  - **Fixed along the way:**
+    - **the top view tilted toward the origin:** its controls kept the origin as target, which had been hidden while layouts were centred on it;
+    - **a request could start while a plan was executing,** acting on a half-changed world; the conversation is now busy until the plan ends;
+    - **a route highlight stayed drawn after undo:** previews are now cleared by any revision change;
+    - **plan-view labels broke words** ("Packin g…");
+    - **the same "two stations are called" need was listed twice** (a duplicate React key);
+    - **recordings were dated in UTC;** they now use America/Phoenix.
+- **Live AI** (ASU Voyager, text only):
+  - 6 of the 8 allowed calls, no retries: five sample plans (9.8, 11.1, 19.5, 24.9, 27.6 s) and one workshop plan (85.1 s, kept in the git-ignored data/external/recorded);
+  - 178 s of the 600 s allowed;
+  - no images or files sent.
+- Commands run and outcomes:
+  - `pnpm check`: exit 0 (pytest 887, Vitest 270, contracts 10);
+  - `pnpm test:e2e`: 69 passed, 24 skipped (opt-in screens);
+  - local: 4 passed;
+  - public: 7 passed, 2 skipped;
+  - external: 8 passed, including the new workshop plan journey;
+  - screenshots: 24 + 4 at 1440 × 900 and 1280 × 800 (Chrome, GPU);
+  - the demo: docs/demo/ux04-one-request.mp4 (30 s).
+- **Measured** (scripted, not a user study), on one identical sample task:
+  - one plan: 2 clicks, 72 characters;
+  - three messages: 4 clicks, 81 characters;
+  - forms: 6 clicks, 1 character;
+  - each about 5.5 s of app time with recorded answers.
+
+  Workshop journey B: 29 clicks and 119 characters, with undo reproducing `01a894ac49ba38` and the reopened save reproducing `1de7effbc944f8`.
+- Known limitations:
+  - live plan answers take 10–28 s (85 s once);
+  - catalog matching is word overlap, for described new objects only, so AGT-01 stays open;
+  - undo can only come first in a plan;
+  - real drawings still need tracing and symbol layers;
+  - UX-02 has no participants.
+- Actual effort: about 1 h 45 min of wall-clock time for this request (17:26–19:10 America/Phoenix), plus CI.
+- Next concrete task: UX-02 with consenting newcomers, or AGT-01's matching of imported equipment, on the user's priority.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

@@ -50,9 +50,14 @@ import { GuidedSetup } from "./components/GuidedSetup";
 import { RunLabels } from "./components/RunLabels";
 import { RunPanel } from "./components/RunPanel";
 import { ChatPanel } from "./components/ChatPanel";
+import { SelectionChip } from "./components/SelectionChip";
+import { DWG_MESSAGE, EmptyStart } from "./components/EmptyStart";
 import { suggestions as chatSuggestions, symbolCandidates, type WorldFacts } from "./chat/context";
 import { type ChatPreview, useChat } from "./chat/useChat";
 import { footprint } from "./checks/geometry";
+import { heightAssumed } from "./evidence";
+import { frameBox } from "./scene/cameras";
+import { sceneBounds } from "./scene/sceneBounds";
 import type { AccentSpec } from "./scene/SceneViewport";
 import { BundleCheck } from "./components/BundleCheck";
 import { ExportRun } from "./components/ExportRun";
@@ -245,7 +250,18 @@ export function App() {
   const [sheet, setSheet] = useState<{ loadId: number; trace: boolean } | null>(null);
   const [pictureFile, setPictureFile] = useState<File | null>(null);
   const [symbolsAnswered, setSymbolsAnswered] = useState<number | null>(null);
+  /** How objects look (display only): solid draft or the uncertainty view; see-through while a
+   * shift plays. And whether the person has moved the camera in this document (then a run does
+   * not reframe it). */
+  const [appearance, setAppearance] = useState<"draft" | "uncertainty">("draft");
+  const [seeThrough, setSeeThrough] = useState(false);
+  const [cameraTouched, setCameraTouched] = useState<number | null>(null);
+  /** A file being dragged over the world, and the reason the start screen refused one. */
+  const [dropActive, setDropActive] = useState(false);
+  const [startRefused, setStartRefused] = useState<string | null>(null);
   const chatFile = useRef<HTMLInputElement>(null);
+  const libraryCache = useRef<Promise<CatalogAsset[]> | null>(null);
+  const [createInitial, setCreateInitial] = useState<{ text: string; name: string; size: { width: number | null; depth: number | null; height: number | null } } | null>(null);
   /** REL-01: the sample's step-by-step example, the export review, and an opened bundle's check. */
   const [example, setExample] = useState<{ loadId: number; progress: ExampleProgress } | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -400,10 +416,11 @@ export function App() {
       setDayComparison(null);
       setRunShown(true);
       setAutoPlayKey(made.result ? `${loadId}:${made.sceneRevision}:${made.result.fingerprint}` : null);
-      if (mode !== "walk") issue("frame-all");
+      // A camera the person moved stays where they put it.
+      if (mode !== "walk" && cameraTouched !== loadId) issue("frame-all");
       return made;
     },
-    [issue, loadId, mode],
+    [cameraTouched, issue, loadId, mode],
   );
   /** Run a day: run the project's process on the layout as it is now (or open the sample hall
    * and its example shift when there is no reviewed plan), then play it from the shift start. */
@@ -823,7 +840,10 @@ export function App() {
       },
       setRouteAsk: (ask) => setRouteAsk(ask),
       setPreview: (preview) => setChatPreview(preview ? { loadId, preview } : null),
-      runDay: (target) => (target ?? project ? runOn((target ?? project)!) : null),
+      runDay: (target) => {
+        const on = target ?? project;
+        return on ? runOn(on) : null;
+      },
       compare: () => compareDay(),
       openSetup: () => setChatSetup(loadId),
       save: () => save(),
@@ -838,8 +858,37 @@ export function App() {
         setDrawingPanel({ open: true, view: sheetView });
       },
       pickFile: () => chatFile.current?.click(),
+      previewUndo: () => session.previewUndo(),
+      library: () => {
+        // The catalogs the app ships with (the fixtures'), fetched once, after this project's own.
+        libraryCache.current ??= Promise.all((["foundation", "industrial-demo"] as const).map((name) => client.getFixture(name))).then((all) => all.flatMap((r) => (r.ok ? r.value.catalog : [])));
+        const own = project?.catalog ?? [];
+        return libraryCache.current.then((shipped) => [...own, ...shipped]);
+      },
+      openCreate: (kind, description) => {
+        const sizes = /(?:,\s*)?([\d.]+) m wide|([\d.]+) m deep|([\d.]+) m high/g;
+        let width: number | null = null;
+        let depth: number | null = null;
+        let height: number | null = null;
+        for (const m of description.matchAll(sizes)) {
+          if (m[1]) width = Number(m[1]);
+          if (m[2]) depth = Number(m[2]);
+          if (m[3]) height = Number(m[3]);
+        }
+        const name = description.split(",")[0]!.trim();
+        setCreateInitial({ text: description, name: name.charAt(0).toUpperCase() + name.slice(1), size: { width, depth, height } });
+        setCreate(kind);
+      },
     });
   });
+  // What the conversation points at belongs to the layout it was made for: a change (an applied
+  // step, an undo, an edit in the editor) clears it, so no stale route or ghost stays drawn.
+  const revision = project?.scene.revision;
+  const [previewRevision, setPreviewRevision] = useState(revision);
+  if (previewRevision !== revision) {
+    setPreviewRevision(revision);
+    setChatPreview(null);
+  }
   const preview = chatPreview?.loadId === loadId ? chatPreview.preview : null;
   const accent: AccentSpec | null = useMemo(() => {
     if (!preview || !project) return null;
@@ -848,16 +897,7 @@ export function App() {
       const o = objectOf(id);
       return o ? [{ points: footprint(o), top: o.transform.position_m.y + o.dimensions.height.value_m }] : [];
     });
-    const moved = preview.move ? objectOf(preview.move.objectId) : null;
-    const ghost = moved && preview.move
-      ? {
-          points: footprint({ ...moved, transform: preview.move.transform }),
-          top: preview.move.transform.position_m.y + moved.dimensions.height.value_m,
-          from: { x: moved.transform.position_m.x, z: moved.transform.position_m.z },
-          to: { x: preview.move.transform.position_m.x, z: preview.move.transform.position_m.z },
-        }
-      : null;
-    return outlines.length || ghost ? { outlines, ghost } : null;
+    return outlines.length || preview.ghosts.length ? { outlines, ghosts: preview.ghosts } : null;
   }, [preview, project]);
   const chatView = view === "chat";
   const sheetOpen = chatView && sheet?.loadId === loadId && drawingPanel.open;
@@ -880,6 +920,15 @@ export function App() {
       : null;
   // A floor traced from the conversation closes the plan it opened.
   if (sheet?.trace && sheet.loadId === loadId && sourceDrawing && sourceDrawing.drawing.review.floor.status !== "proposed") setSheet(null);
+  /** A file offered by drop, the start screen or the paperclip: the conversation reads it (chat
+   * view); the editor opens its usual import or file check. A DWG gets the export it needs. */
+  const offerFile = (file: File) => {
+    setStartRefused(/\.dwg$/i.test(file.name) ? DWG_MESSAGE : null);
+    if (chatView) return void chat.controller.attach(file);
+    if (/\.(json|zip)$/i.test(file.name)) return openAny(file);
+    setPictureFile(file);
+    setDrawingImport(true);
+  };
   const help = MODES.find((m) => m.id === mode)!.help;
   const hint = mode !== "walk" && tool !== "select" ? (selected ? TOOL_HELP[tool](snapOn) : TOOL_FIRST[tool]) : help;
 
@@ -986,6 +1035,27 @@ export function App() {
         data-models={`${summary.ready}/${summary.total} ready, ${summary.failed} failed`}
         data-dragging={dragging ? "true" : "false"}
         data-selected={selected?.id ?? ""}
+        data-appearance={runShownNow && seeThrough ? "see-through" : appearance}
+        data-revision={project?.scene.revision ?? ""}
+        data-ghosts={chatView ? (accent?.ghosts.length ?? 0) : 0}
+        onPointerDown={() => cameraTouched !== loadId && setCameraTouched(loadId)}
+        onDragOver={(e) => {
+          if (!e.dataTransfer.types.includes("Files")) return;
+          e.preventDefault();
+          if (!dropActive) setDropActive(true);
+        }}
+        onDragLeave={(e) => {
+          if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+          setDropActive(false);
+        }}
+        onDrop={(e) => {
+          const file = e.dataTransfer.files[0];
+          if (!file) return;
+          e.preventDefault();
+          setDropActive(false);
+          offerFile(file);
+        }}
+        onWheel={() => cameraTouched !== loadId && setCameraTouched(loadId)}
       >
         {project && (
           <SceneViewport
@@ -1013,6 +1083,7 @@ export function App() {
             run={runShownNow}
             runLabels={runLabels}
             accent={chatView ? accent : null}
+            appearance={runShownNow && seeThrough ? "see-through" : appearance}
           />
         )}
         <div className="viewport-overlays">
@@ -1039,6 +1110,32 @@ export function App() {
             />
           )}
         </div>
+          {chatView && project && selected && (
+            <SelectionChip
+              project={project}
+              object={selected}
+              onEvidence={() => {
+                setDetails(true);
+                setView("editor");
+              }}
+            />
+          )}
+          {chatView && project && project.scene.objects.length === 0 && scene.status === "loaded" && (
+            <EmptyStart dragging={dropActive} refused={startRefused} onUpload={() => chatFile.current?.click()} onExample={() => chat.controller.suggest("example")} />
+          )}
+          {dropActive && !(chatView && project?.scene.objects.length === 0) && (
+            <div className="drop-veil" data-testid="drop-veil">
+              Drop to open this file
+            </div>
+          )}
+          {project && project.scene.objects.some((o) => o.kind !== "walkway" && o.kind !== "keep_clear" && heightAssumed(o)) && (
+            <div className="appearance-chip" data-testid="appearance-chip">
+              <span>{appearance === "draft" ? "Draft appearance · some heights assumed" : "Uncertainty view · see-through heights are assumed"}</span>
+              <button type="button" className="link-button" data-testid="appearance-toggle" aria-pressed={appearance === "uncertainty"} onClick={() => setAppearance(appearance === "draft" ? "uncertainty" : "draft")}>
+                {appearance === "draft" ? "Show uncertainty" : "Back to draft"}
+              </button>
+            </div>
+          )}
         {project && (!chatView || project.scene.objects.length > 0) && (
           <ViewToolbar
             mode={mode}
@@ -1049,7 +1146,7 @@ export function App() {
           />
         )}
         {project && mode === "top" && <PlanOverlay pixelsPerMetre={pixelsPerMetre} />}
-        {runFrame && <RunLabels frame={runFrame} layer={runLabels} />}
+        {runFrame && <RunLabels frame={runFrame} layer={runLabels} selectedId={selected?.id ?? null} />}
         {runShown && activeDay && dayStale && (
           <div className="notice run-stale-notice" data-testid="run-stale-notice">
             The layout changed since this run.{" "}
@@ -1066,6 +1163,20 @@ export function App() {
             itemName={project.process.item_name}
             breaks={activeDay.plan.input?.breaks ?? []}
             example={project.process.example_note !== null}
+            wholeShift={activeDay.result?.metrics.completed ?? 0}
+            fingerprint={activeDay.result?.fingerprint ?? ""}
+            seeThrough={seeThrough}
+            onSeeThrough={setSeeThrough}
+            onOverview={() => {
+              // The process's stations from high above, to watch the whole flow.
+              const ids = new Set(project.process?.stations.map((st) => st.object_id));
+              const stations = project.scene.objects.filter((o) => ids.has(o.id));
+              const el = viewport.current;
+              if (!stations.length || !el) return;
+              const box = sceneBounds(stations).expandByScalar(1.5);
+              const pose = frameBox(box, 45, el.clientWidth / Math.max(el.clientHeight, 1), [0.25, 1.35, 0.55], 0.95);
+              showView({ position: pose.position, target: pose.target, fovDeg: 45 });
+            }}
             onDetails={() => {
               if (mode === "walk") setMode("orbit");
               setDrawingPanel({ open: true, view: "run" });
@@ -1178,10 +1289,11 @@ export function App() {
           onCollapse={setChatCollapsed}
           onSend={(text) => void chat.controller.send(text)}
           onSuggest={chat.controller.suggest}
-          onAttach={(file) => void chat.controller.attach(file)}
+          onAttach={offerFile}
           onMove={chat.controller.submitMove}
           onRoute={chat.controller.submitRoute}
-          onHighlight={(ids) => setChatPreview((p) => ({ loadId, preview: { move: p?.loadId === loadId ? p.preview.move : null, route: null, candidates: ids } }))}
+          onHighlight={(ids) => setChatPreview((p) => ({ loadId, preview: { ghosts: p?.loadId === loadId ? p.preview.ghosts : [], route: null, candidates: ids } }))}
+          plans={chat.controller}
           review={chatReview}
           setup={chatSetup === loadId && guidedNode ? guidedNode : null}
           fileInput={chatFile}
@@ -1297,7 +1409,17 @@ export function App() {
         />
       )}
       {create && !prompt && (
-        <CreateObject client={client} assist={assist} startWith={create} onPlace={startGenerated} onClose={() => setCreate(null)} />
+        <CreateObject
+          client={client}
+          assist={assist}
+          startWith={create}
+          initial={createInitial}
+          onPlace={startGenerated}
+          onClose={() => {
+            setCreate(null);
+            setCreateInitial(null);
+          }}
+        />
       )}
       {exporting && project && exportRuns && !prompt && <ExportRun client={client} project={project} runs={exportRuns} onClose={() => setExporting(false)} />}
       {setupDay && project && !prompt && (

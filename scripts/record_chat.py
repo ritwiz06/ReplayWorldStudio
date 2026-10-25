@@ -15,9 +15,10 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from replay_world_api.assist.chat import PROMPT_VERSION, interpret_chat, recording_key
 from replay_world_api.assist.provider import Completion, OpenAICompatibleProvider, Task
@@ -93,8 +94,53 @@ SAMPLE_CASES: list[tuple[str, str, str | None, str, dict[str, bool]]] = [
 ]
 
 
+# UX-04: short plans of several steps (chat-02). (case, message, selected, focus, project, state)
+PLAN_CASES: list[tuple[str, str, str | None, str | None, str, dict[str, bool]]] = [
+    (
+        "plan-move-check-run",
+        "Move Machine B 1 metre right, check its routes, and run the shift again.",
+        None,
+        None,
+        "sample",
+        {},
+    ),
+    (
+        "plan-select-turn-check",
+        "Select the mixer, turn it 90 degrees clockwise, and check the layout.",
+        None,
+        None,
+        "sample",
+        {},
+    ),
+    (
+        "plan-undo-run",
+        "Undo that move and run again.",
+        None,
+        "obj-dxf-111",
+        "sample",
+        {"has_run": True, "layout_edited": True, "can_undo": True},
+    ),
+    (
+        "plan-add-table",
+        "Add a packing table, 1.5 metres wide and 0.8 metres deep, beside Machine B.",
+        None,
+        None,
+        "sample",
+        {},
+    ),
+    (
+        "plan-ambiguous-rack",
+        "Move the rack 1 m back and run the shift again.",
+        None,
+        None,
+        "sample",
+        {},
+    ),
+]
+
+
 class Recorder:
-    """Wraps the live provider and keeps every raw answer, for recordings."""
+    """Wraps the live provider and keeps every raw answer and its latency, for recordings."""
 
     mode: Any = "live"
 
@@ -102,6 +148,7 @@ class Recorder:
         self.inner = inner
         self.service, self.base_url, self.model = inner.service, inner.base_url, inner.model
         self.answers: list[str] = []
+        self.latency_ms: list[int] = []
 
     def complete(
         self,
@@ -122,6 +169,7 @@ class Recorder:
             timeout_s=timeout_s,
         )
         self.answers.append(completion.content)
+        self.latency_ms.append(completion.latency_ms)
         return completion
 
 
@@ -162,23 +210,30 @@ def context_of(project: dict[str, Any], selected: str | None) -> dict[str, Any]:
 
 def record(
     provider: OpenAICompatibleProvider,
-    cases: list[tuple[str, str, str | None, dict[str, Any], dict[str, bool]]],
+    cases: list[tuple[str, str, str | None, str | None, dict[str, Any], dict[str, bool]]],
     out: Path,
     note: str,
 ) -> None:
     out.mkdir(parents=True, exist_ok=True)
-    for case, message, selected, project, state in cases:
+    calls = 0
+    for case, message, selected, focus, project, state in cases:
         request = ChatRequest.model_validate(
             {
                 "request": message,
                 "context": context_of(project, selected),
                 "state": {**STATE, **state},
+                "focus_object_id": focus,
             }
         )
         recorder = Recorder(provider)
-        result = interpret_chat(recorder, request)
-        detail = result.question or result.message or ""
-        print(f"{case}: {result.outcome} {result.action or ''} {detail}")
+        try:
+            result = interpret_chat(recorder, request)
+            summary = [s.action or f"cannot: {s.unsupported}" for s in result.steps]
+            detail = result.question or result.message or ""
+            print(f"{case}: {result.outcome} {summary} {detail}")
+        finally:
+            calls += len(recorder.answers)
+            print(f"  live calls {len(recorder.answers)}, latency ms {recorder.latency_ms}")
         (out / f"chat-{case}.json").write_text(
             json.dumps(
                 {
@@ -189,8 +244,9 @@ def record(
                     "service": provider.service,
                     "model": provider.model,
                     "prompt_version": PROMPT_VERSION,
-                    "recorded_at": datetime.now(UTC).date().isoformat(),
+                    "recorded_at": datetime.now(ZoneInfo("America/Phoenix")).date().isoformat(),
                     "note": note,
+                    "latency_ms": recorder.latency_ms,
                     "responses": recorder.answers,
                 },
                 indent=2,
@@ -198,6 +254,7 @@ def record(
             )
             + "\n"
         )
+    print(f"total live calls: {calls}")
 
 
 def main() -> None:
@@ -215,13 +272,13 @@ def main() -> None:
     if args.workshop:
         project = json.loads(args.workshop.read_text())
         cases = [
-            ("workshop-move", "Move the workbench 1.5 m right", None, project, {}),
             (
-                "workshop-why",
-                "Why did it change?",
+                "workshop-plan",
+                "Move the workbench 1 metre right, run the same shift, and explain the difference.",
+                args.selected or None,
                 None,
                 project,
-                {"has_run": True, "layout_edited": True},
+                {"has_run": True},
             ),
         ]
         record(
@@ -232,13 +289,18 @@ def main() -> None:
         )
         return
     projects = {"sample": json.loads(SAMPLE.read_text()), "empty": EMPTY}
+    # Without --only nothing is sent: every live call is chosen deliberately (UX-04 budget).
+    chosen = [
+        (case, message, selected, focus, projects[which], state)
+        for case, message, selected, focus, which, state in [
+            *((c, m, sel, None, w, st) for c, m, sel, w, st in SAMPLE_CASES),
+            *PLAN_CASES,
+        ]
+        if args.only and case in args.only
+    ]
     record(
         provider,
-        [
-            (case, message, selected, projects[which], state)
-            for case, message, selected, which, state in SAMPLE_CASES
-            if not args.only or case in args.only
-        ],
+        chosen,
         ROOT / "fixtures" / "assist" / "recorded",
         "Raw answers from the live language model for the synthetic sample, replayed by the "
         "offline test provider. Not live AI when replayed.",

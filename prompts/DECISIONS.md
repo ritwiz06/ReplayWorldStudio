@@ -1304,3 +1304,46 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - The workshop journey through the conversation took 31 clicks against 42 in the full editor, with 68 characters typed against 43, in a similar scripted time (docs/ux-03/README.md).
   - A live interpretation takes about 8–14 s (four requests measured).
   - One action per message; no catalog matching (AGT-01 stays open). Whether newcomers find it easier is UX-02.
+
+### ADR-063 - Short plans from one message, a readable world, and catalog objects from the conversation (UX-04, AGT-01)
+
+- Date: 2026-10-24 (America/Phoenix). Status: adopted. Builds on ADR-062. No new engine, physics or hosting; the project contract is unchanged (0.14.0). The assist API's chat types change (below).
+- **Context.** UX-03 handled one action per message. The world was translucent and floated in space. The run view showed "0 batches done" beside a chat result of 102. Labels overlapped while a shift played. An empty world gave no visible way in.
+- **Decision.**
+  1. **One model call maps a message to at most four typed steps** (`ChatResult.steps`, prompt chat-02, `ChatStep` with `needs` and `unsupported`).
+     - **The API checks each step** as before: ids, amounts and directions in the words, stated sizes only.
+     - **An ambiguous object or a missing amount becomes a need on its step,** so the rest of the plan is kept.
+     - **"It"** is an earlier step's object, then the object the conversation was about (`focus_object_id`, sent only when the words refer back), then the selection.
+     - **More than four steps,** or an unsupported part, is said, never partly attempted silently.
+     - **Old one-intent answers still parse as one step,** so the UX-03 recordings replay.
+  2. **The app reviews and applies the plan:**
+     - **Before Apply:** it resolves the needs locally (choices, a small form, a side) and dry-runs every change in order through the command engine. The ghosts and consequences are those of the whole plan, from the checks.
+     - **Apply runs once.** Steps are sequential and checked against the expected revision, including the plan's own earlier changes. A failure stops dependent steps. Cancel stops before the next step and says what was applied.
+     - **While a plan runs,** no new request starts. **Undo this request** undoes exactly its changes.
+     - **The explanation compares** against the layout before the request, with the same process and seed.
+  3. **Adding an object** (`add_object` → `add_catalog_instance`):
+     - the closest catalog item by name is offered for acceptance, never used silently;
+     - the side is chosen in plan view, with a 0.2 m gap;
+     - stated sizes are `user_supplied` with the source "Stated in the conversation", and unstated ones keep the catalog's assumed values;
+     - one undo step;
+     - Describe or the builder, prefilled, when nothing fits.
+  4. **Appearance is display only:**
+     - solid draft materials by default, the chip "Draft appearance · some heights assumed", and **Show uncertainty**;
+     - see-through for runs;
+     - run labels by priority, hiding overlapping lower ones;
+     - "Completed so far" and "Whole shift" side by side.
+
+     The event fingerprints are unchanged by any of them (tested).
+  5. **Framing:**
+     - the camera frames the layout, and a floor slab more than twice the layout's area is left out;
+     - a camera the person moved is not reset by a run;
+     - the top view's controls start at the content centre: it had tilted toward the origin.
+
+     A conversation preview belongs to the scene revision it was made for, and is cleared by any change.
+  6. **The review shows one correction at a time,** with answered ones collapsed. Layers named like walls are never preselected as symbols, and are warned about when ticked. A station's ambiguous layer name is a hint, not a forced rename.
+- **Consequences.**
+  - **On the sample**, one task took 2 clicks and 72 characters as one plan, against 4 clicks and 81 characters as three messages, and 6 clicks with forms (scripted).
+  - **A live plan answer took 10–28 s** (five, measured once each), and 85 s once on the workshop.
+  - **The UX-04 provider budget:** 6 of 8 calls and 178 s of 600 s.
+  - **AGT-01 stays open:** imported equipment is not matched to catalog or generated models.
+  - **UX-02 stays open.**

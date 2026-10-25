@@ -38,6 +38,10 @@ export type EditCommand =
   | { type: "add_instance"; assetId: string; objectId: string; name: string; transform: Transform }
   /** Copy an object (dimensions, evidence, asset and parameters) to a new placement. */
   | { type: "duplicate_object"; sourceId: string; objectId: string; name: string; transform: Transform }
+  /** Place one instance of a catalog asset, adding the asset to this project's catalog if it is
+   * not there yet, with the sizes the person stated (each recorded with `sourceRef`); axes not
+   * stated keep the asset's nominal size and its evidence. One step: undo removes both. */
+  | { type: "add_catalog_instance"; asset: CatalogAsset; objectId: string; name: string; transform: Transform; values: Partial<Record<Axis, number>>; sourceRef: string }
   /** Add a generated asset (built and stored by the API) to the catalog and place one instance of
    * it, as one step: undo removes both. */
   | { type: "add_generated_instance"; asset: CatalogAsset; objectId: string; name: string; transform: Transform }
@@ -328,6 +332,44 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
           objectId: after.id,
           patches: [{ index: index + 1, before: null, after }],
           record: { type: "object_added", object_id: after.id, asset_id: source.asset_id, duplicate_of: source.id },
+        },
+      };
+    }
+
+    case "add_catalog_instance": {
+      const asset = command.asset;
+      const existing = project.catalog.find((a) => a.id === asset.id);
+      if (existing && JSON.stringify(existing) !== JSON.stringify(asset)) {
+        return reject("invalid", `The catalog already has a different asset '${asset.id}'.`);
+      }
+      const problem = checkNewObject(project, command.objectId, command.name) ?? checkTransform(command.transform);
+      if (problem) return { ok: false, rejection: problem };
+      const dimensions: Dimensions = structuredClone(asset.nominal_dimensions);
+      for (const axis of AXIS_ORDER) {
+        const value = command.values[axis];
+        if (value === undefined) continue;
+        const bad = checkLength(axis, value);
+        if (bad) return { ok: false, rejection: bad };
+        dimensions[axis] = { value_m: value, origin: "user_supplied", source_ref: command.sourceRef, review_status: "unreviewed", uncertainty_m: null };
+      }
+      const added = structuredClone(asset);
+      const after: SceneObject = {
+        id: command.objectId,
+        name: command.name,
+        kind: added.kind,
+        asset_id: added.id,
+        transform: copyTransform(command.transform),
+        dimensions,
+        parameters: [],
+      };
+      return {
+        ok: true,
+        change: {
+          label: `Add ${command.name}`,
+          objectId: after.id,
+          patches: [{ index: objects.length, before: null, after }],
+          ...(existing ? {} : { catalogPatch: { index: project.catalog.length, before: null, after: added } }),
+          record: { type: "object_added", object_id: after.id, asset_id: added.id, duplicate_of: null },
         },
       };
     }

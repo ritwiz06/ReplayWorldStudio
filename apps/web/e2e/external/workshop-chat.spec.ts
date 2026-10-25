@@ -30,6 +30,7 @@ const ask = async (page: Page, text: string) => {
 };
 const card = (page: Page, kind: string) => page.getByTestId("chat").locator(`[data-kind="${kind}"]`).last();
 const RECORDED = `${ROOT}data/external/recorded/chat-workshop-move.json`;
+const RECORDED_PLAN = `${ROOT}data/external/recorded/chat-workshop-plan.json`;
 /** The event fingerprint a run card records (in its details). */
 const fingerprintOf = async (page: Page, kind: string) => /fingerprint ([0-9a-f]{14})/.exec((await card(page, kind).textContent()) ?? "")?.[1] ?? null;
 
@@ -49,20 +50,9 @@ async function clickPlan(page: Page, x: number, y: number) {
   await page.mouse.click(at.x, at.y);
 }
 
-test("external: the CC0 workshop through the conversation, measured", async ({ page }) => {
-  test.skip(!existsSync(DXF), "data/external/innerscene/garage-and-workshop-72-m2.dxf is not downloaded");
-  test.setTimeout(300_000);
-  mkdirSync(OUT, { recursive: true });
-  const phases: Record<string, number> = {};
-  let started = Date.now();
-  const phase = (name: string) => {
-    phases[name] = Date.now() - started;
-    started = Date.now();
-  };
-  await page.goto("/");
-  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 0 objects");
-  phase("open the app");
-
+/** Attach the workshop DXF, answer the review, set up the illustrative process and run it once;
+ * the run's fingerprint. */
+async function reviewAndRun(page: Page, phase: (name: string) => void) {
   // Attach: read on this computer, built at once (the header gives the unit).
   tally.clicks++;
   await page.getByTestId("chat-file-input").setInputFiles(DXF);
@@ -82,7 +72,11 @@ test("external: the CC0 workshop through the conversation, measured", async ({ p
   await click(page, "chat-objects-accept");
   await click(page, "chat-omissions-accept");
   await expect(review.getByTestId("chat-symbol-DOORS")).toBeChecked();
+  // WALLS is never ticked by its name: ticking it says what that removes (UX-04). Here its loose
+  // lines are the wall fill between closed wall outlines, which stay obstacles.
+  await expect(review.getByTestId("chat-symbol-WALLS")).not.toBeChecked();
   await click(page, "chat-symbol-WALLS");
+  await expect(review.getByTestId("chat-symbols-warning")).toContainText("its loose lines would stop blocking routes");
   await click(page, "chat-symbols-apply");
   await expect(page.getByTestId("chat-review")).toHaveCount(0);
   phase("review");
@@ -104,9 +98,27 @@ test("external: the CC0 workshop through the conversation, measured", async ({ p
   await click(page, "guided-accept-all");
   await click(page, "guided-run");
   const first = card(page, "run");
-  await expect(first).toContainText("Ran the shift: 66 kits completed by 14:00");
+  await expect(first).toContainText("Ran the shift. Whole-shift result: 66 kits completed by 14:00");
   const original = await fingerprintOf(page, "run");
   phase("set up and run the shift");
+  return original;
+}
+
+test("external: the CC0 workshop through the conversation, measured", async ({ page }) => {
+  test.skip(!existsSync(DXF), "data/external/innerscene/garage-and-workshop-72-m2.dxf is not downloaded");
+  test.setTimeout(300_000);
+  mkdirSync(OUT, { recursive: true });
+  const phases: Record<string, number> = {};
+  let started = Date.now();
+  const phase = (name: string) => {
+    phases[name] = Date.now() - started;
+    started = Date.now();
+  };
+  await page.goto("/");
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 0 objects");
+  phase("open the app");
+
+  const original = await reviewAndRun(page, phase);
   await page.screenshot({ path: `${OUT}/chat-workshop-2-running-1440.png` });
 
   // Ask to move the workbench: a recorded live answer, previewed, then applied.
@@ -130,7 +142,7 @@ test("external: the CC0 workshop through the conversation, measured", async ({ p
   await expect(card(page, "route")).toContainText("No: Workbench ↔ Kit cabinet is blocked");
   phase("check the routes");
   await click(page, "chat-suggest-run_again");
-  await expect(card(page, "run-again")).toContainText("Ran the same shift again: 0 kits completed by 14:00");
+  await expect(card(page, "run-again")).toContainText("Ran the same shift again. Whole-shift result: 0 kits completed by 14:00");
   await click(page, "chat-suggest-why");
   const why = card(page, "why");
   await expect(why).toContainText("Output goes from 66 to 0 completed kits (−66).");
@@ -158,5 +170,65 @@ test("external: the CC0 workshop through the conversation, measured", async ({ p
 
   const report = { phases, clicks: tally.clicks, typed: tally.typed, original, total: Object.values(phases).reduce((a, b) => a + b, 0) };
   writeFileSync(`${OUT}/chat-workshop-journey.json`, JSON.stringify(report, null, 2));
+  console.log(JSON.stringify(report, null, 2));
+});
+
+test("external: the workshop's move, rerun and explanation as one request (UX-04), saved and reopened", async ({ page }) => {
+  test.skip(!existsSync(DXF), "data/external/innerscene/garage-and-workshop-72-m2.dxf is not downloaded");
+  test.skip(!existsSync(RECORDED_PLAN), "Record it first: scripts/record_chat.py --workshop data/external/results/chat-workshop-before-move.json --only workshop-plan");
+  test.setTimeout(300_000);
+  mkdirSync(OUT, { recursive: true });
+  tally.clicks = 0;
+  tally.typed = 0;
+  const phases: Record<string, number> = {};
+  let started = Date.now();
+  const phase = (name: string) => {
+    phases[name] = Date.now() - started;
+    started = Date.now();
+  };
+  await page.goto("/");
+  await expect(page.getByTestId("empty-start")).toBeVisible();
+  phase("open the app");
+  const original = await reviewAndRun(page, phase);
+
+  await ask(page, "Move the workbench 1 metre right, run the same shift, and explain the difference.");
+  const plan = card(page, "proposal");
+  await expect(plan.getByTestId("plan-rows").locator(".plan-label")).toHaveText(["Move Workbench (Fixtures 5) 1 m right", "Run the shift", "Explain the difference"], { timeout: 30_000 });
+  await page.screenshot({ path: `${OUT}/chat-workshop-plan-1-review-1440.png` });
+  await click(page, "chat-apply");
+  const done = card(page, "plan-done");
+  await expect(done).toContainText("Done: 3 of 3 steps.", { timeout: 60_000 });
+  const again = await fingerprintOf(page, "run-again");
+  expect(again).not.toBeNull();
+  expect(again).not.toBe(original); // the moved workbench changes the walks, so the events
+  await expect(card(page, "why").or(card(page, "compare"))).toContainText("before this request");
+  phase("one request: move, run again, explain");
+  await page.screenshot({ path: `${OUT}/chat-workshop-plan-2-done-1440.png` });
+
+  // Undo the request: the original run again, identical.
+  await done.getByTestId("chat-undo-request").click();
+  tally.clicks++;
+  await click(page, "chat-suggest-run_again");
+  await expect(card(page, "run-again")).toContainText("66 kits completed");
+  expect(await fingerprintOf(page, "run-again")).toBe(original);
+  phase("undo the request and rerun");
+
+  // Redo it, save, reopen: the edited run's events again.
+  tally.clicks++;
+  await page.getByTestId("redo").click();
+  tally.clicks++;
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("save").click()]);
+  const text = readFileSync((await download.path())!, "utf8");
+  await page.goto("/");
+  tally.clicks++;
+  await page.getByTestId("chat-file-input").setInputFiles({ name: download.suggestedFilename(), mimeType: "application/json", buffer: Buffer.from(text) });
+  await expect(card(page, "done")).toContainText(`Opened ${download.suggestedFilename()}`);
+  await click(page, "chat-suggest-run");
+  await expect(card(page, "run")).toContainText("Ran the shift.");
+  expect(await fingerprintOf(page, "run")).toBe(again);
+  phase("redo, save, reopen, run");
+
+  const report = { phases, clicks: tally.clicks, typed: tally.typed, original, edited: again, total: Object.values(phases).reduce((a, b) => a + b, 0) };
+  writeFileSync(`${OUT}/chat-workshop-plan-journey.json`, JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report, null, 2));
 });

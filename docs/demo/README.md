@@ -41,6 +41,26 @@ swift scripts/demo/frames-to-mp4.swift apps/web/test-results/demo-frames docs/de
 - **The encoding:** macOS AVFoundation (`scripts/demo/frames-to-mp4.swift`), with no ffmpeg. Each output frame shows the latest captured frame at its time, so the video plays at the speed it was recorded.
 - **The check:** `scripts/demo/stills.swift` decodes stills from the MP4 at chosen seconds. They were checked at 3 s to 74 s for legibility and for captions clear of the toolbar, the playback bar and the side panels.
 
+## UX-04: one request progressing
+
+[`ux04-one-request.mp4`](ux04-one-request.mp4) is a 30 s recording: H.264, 1440 × 900, 25 fps, 3.5 MB. It uses the synthetic sample, on the chat-first screen. The request's interpretation is a **recorded live answer, replayed**: the app shows "Recorded answers (test)" and "recorded answer" on each card, and the caption says so.
+
+| Time | Step |
+| --- | --- |
+| 0:00 | The start screen; **Explore example** opens the sample. |
+| 0:05 | Typed: "Move Machine B 1 metre right, check its routes, and run the shift again." |
+| 0:09 | **Plan: 3 steps.** The proposed position is shown as a ghost, with the walks it lengthens. Nothing has changed yet. |
+| 0:15 | **Apply:** the move, the route check ("Yes: its 2 routes still fit."), then the shift. |
+| 0:19 | Playing at 120×: "Completed so far" follows the clock; "Whole shift 102 batches". |
+| 0:26 | **Undo this request:** the layout is back as it was. The run is marked as made for another layout. |
+
+Made with:
+
+```bash
+DEMO_ASSIST=recorded pnpm --filter @replay-world/web exec playwright test -c playwright.demo.config.ts e2e/demo/record-demo.spec.ts -g "UX-04"
+swift scripts/demo/frames-to-mp4.swift apps/web/test-results/demo-frames-ux04 docs/demo/ux04-one-request.mp4 25 1000000
+```
+
 ## Reproducing the bundle on another computer
 
 You need:

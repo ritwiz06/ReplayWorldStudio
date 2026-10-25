@@ -27,11 +27,12 @@ import { type CameraMemory, type CameraMode, type CameraProbe, CameraRig, type V
 import type { EditTool, Snap } from "./drag";
 import { EditHandles, type HandleProbe } from "./EditHandles";
 import type { Vec3Tuple } from "./fit";
+import { type Appearance, AppearanceContext } from "./appearance";
 import { ObjectVisual } from "./ObjectVisuals";
 import { type GhostSpec, PlacementGhost } from "./PlacementGhost";
 import { worldBounds } from "./placement";
 import { RunLabelProjector, RunOverlay } from "./RunOverlay";
-import { isFloorMarking, sceneBounds, walkWorldOf } from "./sceneBounds";
+import { isFloorMarking, isSlab, sceneBounds, walkWorldOf } from "./sceneBounds";
 import type { PlaybackClock } from "../hooks/usePlayback";
 import type { Replay } from "../run/replay";
 
@@ -71,13 +72,16 @@ interface Props {
   runLabels?: RefObject<HTMLDivElement | null>;
   /** The conversation's emphasis (UX-03): a proposed position, and objects a question is about. */
   accent?: AccentSpec | null;
+  /** Solid draft materials, the uncertainty view, or see-through while a shift plays. */
+  appearance?: Appearance;
 }
 
 export interface AccentSpec {
   /** Outlines of objects to point at (footprint and top height). */
   outlines: { points: { x: number; z: number }[]; top: number }[];
-  /** A proposed new place for one object: its footprint there, and from where to where. */
-  ghost: { points: { x: number; z: number }[]; top: number; from: { x: number; z: number }; to: { x: number; z: number } } | null;
+  /** Proposed new places (a chat plan's moves, turns and additions): each footprint there, and
+   * from where it moves (null for a new object). */
+  ghosts: { points: { x: number; z: number }[]; top: number; from: { x: number; z: number } | null; to: { x: number; z: number } }[];
 }
 
 const ACCENT = "#37d0ff";
@@ -93,27 +97,26 @@ function AccentOverlay({ accent }: { accent: AccentSpec }) {
     }
     return segments;
   };
-  const ghost = accent.ghost;
-  const shape = useMemo(() => (ghost ? new ShapeGeometry(new Shape(ghost.points.map((p) => new Vector2(p.x, -p.z)))) : null), [ghost]);
-  useEffect(() => () => shape?.dispose(), [shape]);
+  const shapes = useMemo(() => accent.ghosts.map((g) => new ShapeGeometry(new Shape(g.points.map((p) => new Vector2(p.x, -p.z))))), [accent.ghosts]);
+  useEffect(() => () => shapes.forEach((shape) => shape.dispose()), [shapes]);
   return (
     <group name="chat-accent">
       {accent.outlines.map((o, i) => (
         <Line key={`c${i}`} raycast={none} points={box(o.points, o.top)} segments color={ACCENT} lineWidth={3} depthTest={false} renderOrder={14} />
       ))}
-      {ghost && shape && (
-        <>
-          <mesh raycast={none} geometry={shape} rotation={[-Math.PI / 2, 0, 0]} position={[0, lift, 0]} renderOrder={14}>
+      {accent.ghosts.map((ghost, i) => (
+        <group key={`g${i}`}>
+          <mesh raycast={none} geometry={shapes[i]!} rotation={[-Math.PI / 2, 0, 0]} position={[0, lift, 0]} renderOrder={14}>
             <meshBasicMaterial color={ACCENT} transparent opacity={0.42} side={DoubleSide} depthTest={false} depthWrite={false} />
           </mesh>
           <Line raycast={none} points={box(ghost.points, ghost.top)} segments color={ACCENT} lineWidth={3.5} dashed dashSize={0.25} gapSize={0.15} depthTest={false} renderOrder={15} />
-          <Line raycast={none} points={[[ghost.from.x, lift + 0.02, ghost.from.z], [ghost.to.x, lift + 0.02, ghost.to.z]]} color={ACCENT} lineWidth={4} depthTest={false} renderOrder={15} />
+          {ghost.from && <Line raycast={none} points={[[ghost.from.x, lift + 0.02, ghost.from.z], [ghost.to.x, lift + 0.02, ghost.to.z]]} color={ACCENT} lineWidth={4} depthTest={false} renderOrder={15} />}
           <mesh raycast={none} position={[ghost.to.x, lift + 0.03, ghost.to.z]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={16}>
             <circleGeometry args={[0.16, 24]} />
             <meshBasicMaterial color={ACCENT} depthTest={false} />
           </mesh>
-        </>
-      )}
+        </group>
+      ))}
     </group>
   );
 }
@@ -163,6 +166,7 @@ export function SceneViewport({
   run = null,
   runLabels,
   accent = null,
+  appearance = "draft",
 }: Props) {
   const objects = project.scene.objects;
   // While a handle is dragged, the object is drawn from this preview; the scene is unchanged
@@ -170,6 +174,15 @@ export function SceneViewport({
   const [draft, setDraft] = useState<SceneObject | null>(null);
   const [handleHover, setHandleHover] = useState(false);
   const sceneBox = useMemo(() => sceneBounds(objects), [objects]);
+  // Framing uses what is on the floor (UX-04): a small layout on a much larger floor slab fills the
+  // view instead of floating in empty space. A floor about the layout's size is framed with it.
+  const frameBox = useMemo(() => {
+    const content = objects.filter((o) => !isSlab(o));
+    if (!content.length) return sceneBox;
+    const box = sceneBounds(content);
+    const area = (b: typeof box) => Math.max((b.max.x - b.min.x) * (b.max.z - b.min.z), 1);
+    return area(sceneBox) > 2 * area(box) ? box : sceneBox;
+  }, [objects, sceneBox]);
   const walkWorld = useMemo(() => walkWorldOf(objects), [objects]);
   const assets = useMemo(() => new Map(project.catalog.map((a) => [a.id, a])), [project.catalog]);
   const committed = objects.find((o) => o.id === selectedId) ?? null;
@@ -232,6 +245,7 @@ export function SceneViewport({
       {accent && <AccentOverlay accent={accent} />}
       {run && <RunOverlay replay={run.replay} clock={run.clock} objects={objects} />}
       {run && runLabels && <RunLabelProjector replay={run.replay} clock={run.clock} objects={objects} layer={runLabels} />}
+      <AppearanceContext.Provider value={appearance}>
       {objects.map((o) => (
         <ObjectVisual
           key={o.id}
@@ -247,6 +261,7 @@ export function SceneViewport({
           onHover={setHoveredId}
         />
       ))}
+      </AppearanceContext.Provider>
       {showHandles && selected && (
         <EditHandles
           object={selected}
@@ -267,7 +282,7 @@ export function SceneViewport({
       <CameraRig
         key={`${documentKey}:${mode}`}
         mode={mode}
-        sceneBox={sceneBox}
+        sceneBox={frameBox}
         selectedBox={selectedBox}
         walkWorld={walkWorld}
         command={command}

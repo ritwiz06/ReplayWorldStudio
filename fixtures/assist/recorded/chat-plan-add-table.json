@@ -1,0 +1,17 @@
+{
+  "task": "chat",
+  "key": "Add a packing table, 1.5 metres wide and 0.8 metres deep, beside Machine B. | selected=none | scene=53151f7c69de",
+  "case": "plan-add-table",
+  "message": "Add a packing table, 1.5 metres wide and 0.8 metres deep, beside Machine B.",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "chat-02",
+  "recorded_at": "2026-10-24",
+  "note": "Raw answers from the live language model for the synthetic sample, replayed by the offline test provider. Not live AI when replayed.",
+  "latency_ms": [
+    9842
+  ],
+  "responses": [
+    "{\n  \"steps\": [\n    {\n      \"add\": {\n        \"depth\": 0.8,\n        \"description\": \"packing table\",\n        \"height\": null,\n        \"near_object_id\": \"obj-dxf-111\",\n        \"side\": null,\n        \"unit\": \"m\",\n        \"width\": 1.5\n      },\n      \"candidates\": [],\n      \"intent\": \"add_object\",\n      \"message\": null,\n      \"move\": null,\n      \"question\": null,\n      \"rotate\": null,\n      \"route\": null,\n      \"target\": null\n    }\n  ]\n}"
+  ]
+}

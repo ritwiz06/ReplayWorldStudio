@@ -207,6 +207,10 @@ class RecordedProvider:
         timeout_s: float | None = None,
     ) -> Completion:
         responses = self._recordings.get(recording_key(task, key))
+        if not responses and " | focus=" in key:
+            # A chat answer recorded without a focus object also answers the same message with
+            # one: the focus only resolves "it"/"that", and the checks resolve it the same way.
+            responses = self._recordings.get(recording_key(task, key.split(" | focus=")[0]))
         if not responses:
             raise ProviderError(
                 "not_recorded",

@@ -1,19 +1,22 @@
-// UX-03 screenshots (local only): the same states at 1440 × 900 and 1280 × 800, written to
+// UX-03 and UX-04 screenshots (local only): the same states at 1440 × 900 and 1280 × 800, written to
 // docs/ux-03/<UX_SET>/. UX_SET=before was taken on the previous main screen; UX_SET=after uses
 // the chat-first screen with recorded AI answers (DEMO_ASSIST=recorded), and UX_SET=nokey with
-// no key at all. Repository-owned sample files only.
+// no key at all. UX_SET=ux04 (recorded answers) and ux04-nokey write docs/ux-04/screens/: the
+// start screen, an imported world, a plan, a running shift at two times and from two angles, a
+// blocked result and an object placement. Repository-owned sample files only.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 
 const ROOT = new URL("../../../../", import.meta.url).pathname;
 const SET = process.env.UX_SET ?? "after";
-const OUT = `${ROOT}docs/ux-03/${SET}`;
+const OUT = SET.startsWith("ux04") ? `${ROOT}docs/ux-04/screens` : `${ROOT}docs/ux-03/${SET}`;
 const DXF = `${ROOT}fixtures/drawings/hall-mm.dxf`;
 
 async function shot(page: Page, name: string) {
   mkdirSync(OUT, { recursive: true });
   await page.waitForTimeout(700);
-  await page.screenshot({ path: `${OUT}/${page.viewportSize()!.width}-${name}.jpg`, type: "jpeg", quality: 82 });
+  const prefix = SET === "ux04-nokey" ? "nokey-" : "";
+  await page.screenshot({ path: `${OUT}/${page.viewportSize()!.width}-${prefix}${name}.jpg`, type: "jpeg", quality: 82 });
 }
 async function ask(page: Page, text: string) {
   await page.getByTestId("chat-input").fill(text);
@@ -32,6 +35,7 @@ for (const [width, height] of [[1440, 900], [1280, 800]] as const) {
     }, SET);
     await page.goto("/");
     await expect(page.getByTestId("scene-status")).toHaveText(/Scene loaded/);
+    if (SET === "ux04" || SET === "ux04-nokey") return ux04(page);
     await shot(page, "1-first-visit");
     if (SET === "before") {
       await page.evaluate(() => localStorage.setItem("rws.start.seen", "1"));
@@ -63,9 +67,10 @@ for (const [width, height] of [[1440, 900], [1280, 800]] as const) {
     await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
     await shot(page, "2-example");
     await ask(page, "Move the rack 1 m back");
-    await expect(card(page, "question")).toBeVisible();
-    await card(page, "question").getByTestId("chat-choice-obj-dxf-106").hover();
+    await expect(card(page, "proposal").getByTestId("plan-need-0")).toBeVisible();
+    await card(page, "proposal").getByTestId("chat-choice-obj-dxf-106").hover();
     await shot(page, "3-ambiguity");
+    await card(page, "proposal").getByTestId("chat-cancel").click();
     await ask(page, "Move Machine B 3.5 m forward");
     await expect(card(page, "proposal").getByTestId("chat-apply")).toBeVisible();
     await shot(page, "4-proposal");
@@ -106,4 +111,79 @@ for (const [width, height] of [[1440, 900], [1280, 800]] as const) {
     await expect(page.getByTestId("chat-review")).toBeVisible({ timeout: 30_000 });
     await shot(page, "10-import-review");
   });
+}
+
+/** UX-04: each state the request asked to inspect, at two playback times and camera angles. */
+async function ux04(page: Page) {
+  const chat = page.getByTestId("chat");
+  await page.evaluate(() => localStorage.setItem("rws.start.seen", "1"));
+  await page.goto("/");
+  await expect(page.getByTestId("empty-start")).toBeVisible();
+  await shot(page, "1-empty-start");
+  if (SET === "ux04-nokey") {
+    await page.getByTestId("empty-example").click();
+    await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+    await chat.getByTestId("chat-suggest-move_any").click();
+    await page.getByTestId("chat-move-object").selectOption("obj-dxf-111");
+    await page.getByTestId("chat-move-distance").fill("3.5");
+    await page.getByTestId("chat-move-forward").click();
+    await expect(card(page, "proposal").getByTestId("chat-apply")).toBeVisible();
+    await shot(page, "2-move-form-proposal");
+    return;
+  }
+  // An imported plan, reviewed in the conversation.
+  await page.getByTestId("chat-file-input").setInputFiles(DXF);
+  await expect(page.getByTestId("chat-review")).toBeVisible({ timeout: 30_000 });
+  await shot(page, "2-imported-review");
+  await page.getByTestId("chat-floor-accept").click();
+  await shot(page, "3-imported-next-correction");
+
+  // The example: a plan of three steps, its proposed change shown in the world.
+  await page.goto("/");
+  await page.getByTestId("empty-example").click();
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+  await shot(page, "4-example");
+  await ask(page, "Move Machine B 1 metre right, check its routes, and run the shift again.");
+  await expect(card(page, "proposal").getByTestId("chat-apply")).toBeVisible();
+  await shot(page, "5-plan-proposed");
+  await card(page, "proposal").getByTestId("chat-apply").click();
+  await expect(card(page, "plan-done")).toBeVisible({ timeout: 60_000 });
+  await page.getByTestId("run-speed").selectOption("120");
+  await page.waitForTimeout(1500);
+  await shot(page, "6-running-early");
+  await page.getByTestId("run-overview").click();
+  await page.waitForTimeout(6000);
+  await shot(page, "7-running-overview-later");
+  await page.getByTestId("run-see-through").click();
+  await shot(page, "8-running-see-through");
+  await page.getByTestId("run-see-through").click();
+
+  // A blocked result, from the top view.
+  await page.goto("/");
+  await page.getByTestId("empty-example").click();
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+  await ask(page, "Move Machine B 3.5 m forward");
+  await card(page, "proposal").getByTestId("chat-apply").click();
+  await ask(page, "What happens during a shift?");
+  await expect(card(page, "run")).toContainText("Whole-shift result: 0 batches", { timeout: 30_000 });
+  await page.keyboard.press("2");
+  await page.waitForTimeout(1500);
+  await shot(page, "9-blocked-top");
+  await page.keyboard.press("1");
+
+  // An object placed from the conversation: the suggestion, the side, the ghost.
+  await page.goto("/");
+  await page.getByTestId("empty-example").click();
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+  await ask(page, "Add a packing table, 1.5 metres wide and 0.8 metres deep, beside Machine B.");
+  await expect(card(page, "proposal").getByTestId("chat-asset-use")).toBeVisible();
+  await shot(page, "10-add-suggestion");
+  await card(page, "proposal").getByTestId("chat-asset-use").click();
+  await card(page, "proposal").getByTestId("chat-side-left").click();
+  await expect(card(page, "proposal").getByTestId("chat-apply")).toBeVisible();
+  await shot(page, "11-add-proposed");
+  await card(page, "proposal").getByTestId("chat-apply").click();
+  await page.getByTestId("appearance-toggle").click();
+  await page.waitForTimeout(500);
+  await shot(page, "12-added-uncertainty-view");
 }

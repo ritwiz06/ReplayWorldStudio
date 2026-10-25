@@ -56,6 +56,9 @@ export interface Guided {
   process: ProcessModel | null;
   /** What has to be done before any example can stand in: in plain words. */
   needs: string[];
+  /** Optional improvements, never blocking (UX-04): a friendlier name for a station whose
+   * object is called, say, "Fixtures 5". The object keeps its own name and source id. */
+  hints: string[];
   assumptions: Assumption[];
   /** Examples not yet accepted: Run stays off until there are none. */
   unaccepted: Assumption[];
@@ -157,6 +160,7 @@ export function assignWorkers(stations: number, people: number): number[][] {
 
 export function buildGuided(project: Project, draft: GuidedDraft): Guided {
   const needs: string[] = [];
+  const hints: string[] = [];
   const assumptions: Assumption[] = [];
   const objects = new Map(project.scene.objects.map((o) => [o.id, o]));
   const accepted = new Set(draft.accepted);
@@ -193,9 +197,12 @@ export function buildGuided(project: Project, draft: GuidedDraft): Guided {
   draft.stations.forEach((s, i) => {
     if (!objects.has(s.objectId)) needs.push(`Station ${i + 1} (${s.name || s.objectId}) is no longer in the layout: remove it or choose its object again`);
     if (s.name.trim() === "") needs.push(`Station ${i + 1}: give it a name`);
-    else if ((names.get(s.name.trim().toLowerCase()) ?? 0) > 1) needs.push(`Two stations are called “${s.name.trim()}”: give each its own name`);
+    else if ((names.get(s.name.trim().toLowerCase()) ?? 0) > 1) {
+      const same = `Two stations are called “${s.name.trim()}”: give each its own name`;
+      if (!needs.includes(same)) needs.push(same);
+    }
     const why = ambiguous(project, s.objectId, s.name);
-    if (why) needs.push(`Rename station ${i + 1} (“${s.name}”): ${why}, so the name would not say which one it is`);
+    if (why) hints.push(`Station ${i + 1} is called “${s.name}”: ${why}. A friendly name makes runs easier to read (optional; the object keeps its own name)`);
     if (draft.stations.findIndex((o) => o.objectId === s.objectId) !== i) needs.push(`${s.name} is in the list twice: each step is at its own object`);
   });
 
@@ -281,7 +288,7 @@ export function buildGuided(project: Project, draft: GuidedDraft): Guided {
   const basisOf = (key: string): "example" | "entered" => assumptions.find((a) => a.key === key)?.basis ?? "example";
   const ov = (v: number, key: string): OperatingValue => ({ value: v, basis: basisOf(key) });
   if (needs.length > 0 || pace.some((v) => v === null) || people === null || start === null || shiftHours === null || access.some((a) => a === null) || [carryWidth, carryClear, carrySpeed, handling, walkSpeed, walkWidth].some((v) => v === null) || [...queue, ...ready, ...attended].some((v) => v === null) || breaks.some((b) => b === null)) {
-    return { process: null, needs, assumptions, unaccepted, counts };
+    return { process: null, needs, hints, assumptions, unaccepted, counts };
   }
 
   const used = new Set<string>();
@@ -338,7 +345,7 @@ export function buildGuided(project: Project, draft: GuidedDraft): Guided {
     workers: workers as ProcessModel["workers"],
     seed: 1,
   };
-  return { process, needs, assumptions, unaccepted, counts };
+  return { process, needs, hints, assumptions, unaccepted, counts };
 }
 
 /** What to correct for each move the run needs that is not clear, in plain words. */

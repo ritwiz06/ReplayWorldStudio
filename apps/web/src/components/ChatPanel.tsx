@@ -6,7 +6,7 @@
 import type { Project } from "@replay-world/contracts";
 import { type KeyboardEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { type SuggestionId, SUGGESTION_TEXT } from "../chat/context";
-import type { CardChoice, Entry } from "../chat/useChat";
+import type { CardChoice, ChatController, Entry, PlanRow, PlanView } from "../chat/useChat";
 import { nameOf } from "../chat/context";
 import type { ReviewCorrection } from "../drawing/review";
 import { reviewItems } from "../drawing/review";
@@ -38,6 +38,8 @@ interface Props {
   /** The guided setup, when the conversation asked for it. */
   setup: ReactNode | null;
   fileInput: React.RefObject<HTMLInputElement | null>;
+  /** The controller's plan actions (choices, forms, Apply, Cancel). */
+  plans: Pick<ChatController, "planTarget" | "planMove" | "planRotate" | "planAsset" | "planNear" | "planSide">;
 }
 
 const AI_WORDS = { live: "AI on · ASU Voyager", recorded: "Recorded answers (test)", off: "AI off · no key", checking: "Checking the AI…", unreachable: "AI status unknown · retrying" } as const;
@@ -88,7 +90,7 @@ export function ChatPanel(props: Props) {
           </div>
         )}
         {entries.map((e) => (e.role === "user" ? <UserLine key={e.id} entry={e} /> : <Card key={e.id} entry={e} project={project} props={props} />))}
-        {review && <ReviewCard {...review} project={project} />}
+        {review && <ReviewCard {...review} project={project} onHighlight={props.onHighlight} />}
         {setup && (
           <div className="chat-card chat-setup" data-testid="chat-setup">
             {setup}
@@ -165,6 +167,7 @@ function Card({ entry, project, props }: { entry: Entry; project: Project | null
           ))}
         </ul>
       )}
+      {entry.plan && entry.plan.rows.length > 0 && project && <PlanRows plan={entry.plan} project={project} props={props} />}
       {live && entry.choices && entry.choices.length > 0 && <Choices choices={entry.choices} onHighlight={props.onHighlight} />}
       {live && entry.form?.kind === "move" && project && <MoveForm entry={entry} objectId={entry.form.objectId} project={project} onMove={props.onMove} onHighlight={props.onHighlight} />}
       {live && entry.form?.kind === "route" && project && <RouteForm entry={entry} form={entry.form} project={project} onRoute={props.onRoute} />}
@@ -196,6 +199,112 @@ function Card({ entry, project, props }: { entry: Entry; project: Project | null
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+const MARK: Record<PlanRow["status"], string> = { ready: "○", needs: "?", running: "…", done: "✓", failed: "✗", skipped: "–", cancelled: "–", unsupported: "✗" };
+
+/** A plan's steps, each with its status, and in review the one answer it still needs. */
+function PlanRows({ plan, project, props }: { plan: PlanView; project: Project; props: Props }) {
+  return (
+    <ol className="plan-rows" data-testid="plan-rows">
+      {plan.rows.map((row, i) => (
+        <li key={`${row.index}-${i}`} className={`plan-row plan-${row.status}`} data-testid={`plan-row-${i}`} data-status={row.status}>
+          <span className="plan-mark" aria-hidden="true">
+            {MARK[row.status]}
+          </span>
+          <span className="plan-label">
+            {row.label}
+            {row.note && <span className="plan-note"> · {row.note}</span>}
+          </span>
+          {row.need && <PlanNeed plan={plan} row={row} project={project} props={props} />}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function PlanNeed({ plan, row, project, props }: { plan: PlanView; row: PlanRow; project: Project; props: Props }) {
+  const need = row.need!;
+  const p = props.plans;
+  const [metres, setMetres] = useState("1");
+  const [degrees, setDegrees] = useState("90");
+  const id = `plan-${plan.id}-${row.index}`;
+  return (
+    <div className="plan-need" data-testid={`plan-need-${row.index}`} data-kind={need.kind}>
+      <p className="small">{need.question}</p>
+      {(need.kind === "target" || need.kind === "near") && (
+        <div className="chat-buttons">
+          {need.candidates.slice(0, 8).map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className="button button-small"
+              data-testid={`chat-choice-${c.id}`}
+              onMouseEnter={() => props.onHighlight([c.id])}
+              onFocus={() => props.onHighlight([c.id])}
+              onClick={() => (need.kind === "target" ? p.planTarget(plan.id, row.index, c.id) : p.planNear(plan.id, row.index, c.id))}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
+      {need.kind === "move" && (
+        <div className="chat-form">
+          <label className="chat-field">
+            Distance <input type="number" min="0.01" step="0.1" value={metres} data-testid={`${id}-distance`} onChange={(e) => setMetres(e.target.value)} /> m
+          </label>
+          <div className="chat-buttons">
+            {DIRECTIONS.map(({ d, label }) => (
+              <button key={d} type="button" className="button button-small" data-testid={`chat-move-${d}`} disabled={!(Number(metres) > 0)} onClick={() => p.planMove(plan.id, row.index, d, Number(metres))}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {need.kind === "rotate" && (
+        <div className="chat-form">
+          <label className="chat-field">
+            Angle <input type="number" min="1" max="360" step="5" value={degrees} data-testid={`${id}-angle`} onChange={(e) => setDegrees(e.target.value)} /> °
+          </label>
+          <div className="chat-buttons">
+            <button type="button" className="button button-small" data-testid="chat-turn-clockwise" onClick={() => p.planRotate(plan.id, row.index, "clockwise", Number(degrees))}>
+              ↻ Clockwise
+            </button>
+            <button type="button" className="button button-small" data-testid="chat-turn-counterclockwise" onClick={() => p.planRotate(plan.id, row.index, "counterclockwise", Number(degrees))}>
+              ↺ Counterclockwise
+            </button>
+          </div>
+        </div>
+      )}
+      {need.kind === "asset" && (
+        <div className="chat-buttons">
+          {need.suggestion && (
+            <button type="button" className="button button-small button-primary" data-testid="chat-asset-use" onClick={() => p.planAsset(plan.id, row.index, "use")}>
+              Use “{need.suggestion.label}”
+            </button>
+          )}
+          <button type="button" className="button button-small" data-testid="chat-asset-describe" onClick={() => p.planAsset(plan.id, row.index, "describe")}>
+            Describe a new object…
+          </button>
+          <button type="button" className="button button-small" data-testid="chat-asset-builder" onClick={() => p.planAsset(plan.id, row.index, "builder")}>
+            Build it by hand…
+          </button>
+        </div>
+      )}
+      {need.kind === "side" && (
+        <div className="chat-buttons">
+          {(["left", "right", "back", "front"] as const).map((side) => (
+            <button key={side} type="button" className="button button-small" data-testid={`chat-side-${side}`} onClick={() => p.planSide(plan.id, row.index, side)}>
+              {{ left: "← Left", right: "Right →", back: "↑ Behind", front: "↓ In front" }[side]}
+            </button>
+          ))}
+        </div>
+      )}
+      {project === null && null}
     </div>
   );
 }
@@ -319,33 +428,66 @@ function RouteForm({ entry, form, project, onRoute }: { entry: Entry; form: { fr
   );
 }
 
-/** The review, as the conversation asks it: only the open items, each with its usual answer. */
-function ReviewCard({ source, onCorrect, onCorrectAll, onPlan, onSymbolsDone, project }: NonNullable<Props["review"]> & { project: Project | null }) {
+const ITEM_NAME: Record<string, string> = { floor: "Floor", scale: "Scale", objects: "Objects", omissions: "Left out" };
+
+/** The review, as the conversation asks it (UX-04): one line of summary, the next correction
+ * that needs an answer (shown in the world), and what is already answered, folded but still
+ * changeable. Nothing is accepted for the person. */
+function ReviewCard({ source, onCorrect, onCorrectAll, onPlan, onSymbolsDone, onHighlight, project }: NonNullable<Props["review"]> & { project: Project | null; onHighlight: Props["onHighlight"] }) {
   const [problem, setProblem] = useState<string | null>(null);
-  const [symbols, setSymbols] = useState<Set<string>>(() => new Set(symbolCandidates(source).filter((c) => c.likely).map((c) => c.layer)));
-  const items = reviewItems(source).filter((i) => !i.done);
+  const loose = symbolCandidates(source);
+  const [symbols, setSymbols] = useState<Set<string>>(() => new Set(loose.filter((c) => c.likely).map((c) => c.layer)));
+  const items = reviewItems(source);
+  const open = items.filter((i) => !i.done);
+  const done = items.filter((i) => i.done);
+  const next = open[0] ?? null;
   const review = source.drawing.review;
   const apply = (c: ReviewCorrection) => setProblem(onCorrect(c));
-  const loose = symbolCandidates(source);
-  const proposed = review.objects.filter((o) => o.status === "proposed").length;
+  const proposed = review.objects.filter((o) => o.status === "proposed");
   const names = source.drawing.objects
-    .filter((d) => review.objects.some((o) => o.drawn_id === d.id && o.status === "proposed"))
-    .slice(0, 5)
+    .filter((d) => proposed.some((o) => o.drawn_id === d.id))
+    .slice(0, 4)
     .map((d) => d.label);
   const noOutline = review.floor.drawn_id === null;
-  // Plain words for the floor and scale: where the outline is, not its CAD entity.
   const floorLayer = source.drawing.objects.find((d) => d.id === review.floor.drawn_id)?.refs[0]?.layer;
-  const floorSize = reviewItems(source).find((i) => i.id === "floor")?.detail.split(", ").at(-1) ?? "";
+  const floorSize = items.find((i) => i.id === "floor")?.detail.split(", ").at(-1) ?? "";
   const plain = (text: string) => text.replace(/ \(the drawing's own unit, \$INSUNITS\)/, " (from the drawing)").replace(/\$INSUNITS/g, "the drawing's unit");
   const likely = loose.some((c) => c.likely);
+  // Show what is being asked about in the world: the floor, or the objects still to accept.
+  const floorId = review.floor.object_id;
+  const ask = next?.id ?? (likely ? "symbols" : null);
+  const objectIds = proposed.map((o) => source.drawing.objects.find((d) => d.id === o.drawn_id)?.object_id).filter((x): x is string => Boolean(x));
+  const highlight = ask === "floor" && floorId ? [floorId] : ask === "objects" ? objectIds : [];
+  const key = highlight.join(",");
+  useEffect(() => {
+    if (key) onHighlight(key.split(","));
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  const what = (c: (typeof loose)[number]) => [c.lines && `${c.lines} loose line${c.lines === 1 ? "" : "s"}`, ...Object.entries(c.shapes).map(([e, n]) => `${n} ${e.toLowerCase()}${n === 1 ? "" : "s"}`)].filter(Boolean).join(", ");
   return (
     <div className="chat-card tone-question chat-review" data-testid="chat-review">
-      <p className="chat-text">{items.length ? `Before anything is checked, confirm what ${source.filename} shows:` : `One more thing about ${source.filename}:`}</p>
-      {items.map((item) => (
-        <div key={item.id} className="chat-review-item" data-testid={`chat-review-${item.id}`}>
-          {item.id === "floor" && (
+      <p className="chat-text">
+        {source.filename}: {review.objects.length} outlines · {done.length} of {items.length} answered
+      </p>
+      {done.length > 0 && (
+        <details className="chat-details review-done" data-testid="chat-review-done">
+          <summary>Answered ({done.map((i) => ITEM_NAME[i.id]).join(", ")})</summary>
+          <ul>
+            {done.map((i) => (
+              <li key={i.id}>
+                {ITEM_NAME[i.id]}: {i.title.toLowerCase()} ·{" "}
+                <button type="button" className="link-button" data-testid={`chat-review-change-${i.id}`} onClick={() => onPlan(false)}>
+                  change
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {next && (
+        <div className="chat-review-item" data-testid={`chat-review-${next.id}`}>
+          {next.id === "floor" && (
             <>
-              <p>{noOutline ? "The drawing has no closed floor outline, so routes can't be checked yet. Trace the floor's corners on the plan." : `Floor: the outline${floorLayer ? ` on layer ${floorLayer}` : ""}, ${floorSize}.`}</p>
+              <p>{noOutline ? "The drawing has no closed floor outline, so routes can't be checked yet. Trace the floor's corners on the plan." : `Is this the floor? The outline${floorLayer ? ` on layer ${floorLayer}` : ""}, ${floorSize} (shown in the world).`}</p>
               <div className="chat-buttons">
                 {!noOutline && (
                   <button type="button" className="button button-small button-primary" data-testid="chat-floor-accept" onClick={() => apply({ kind: "accept_floor" })}>
@@ -358,9 +500,9 @@ function ReviewCard({ source, onCorrect, onCorrectAll, onPlan, onSymbolsDone, pr
               </div>
             </>
           )}
-          {item.id === "scale" && (
+          {next.id === "scale" && (
             <>
-              <p>Scale: {plain(item.detail)}.</p>
+              <p>Is the scale right? {plain(next.detail)}.</p>
               <div className="chat-buttons">
                 {review.scale.unit !== "px" && (
                   <button type="button" className="button button-small button-primary" data-testid="chat-scale-accept" onClick={() => apply({ kind: "unit", unit: review.scale.unit as "mm" })}>
@@ -373,10 +515,10 @@ function ReviewCard({ source, onCorrect, onCorrectAll, onPlan, onSymbolsDone, pr
               </div>
             </>
           )}
-          {item.id === "objects" && (
+          {next.id === "objects" && (
             <>
               <p>
-                {proposed} object{proposed === 1 ? "" : "s"} found in the drawing{names.length ? ` (${names.join(", ")}${proposed > names.length ? ", …" : ""})` : ""}. Footprints come from the drawing; heights are assumed for display.
+                {proposed.length} object{proposed.length === 1 ? "" : "s"} found (highlighted){names.length ? `: ${names.join(", ")}${proposed.length > names.length ? ", …" : ""}` : ""}. Footprints come from the drawing; heights are assumed for display.
               </p>
               <div className="chat-buttons">
                 <button type="button" className="button button-small button-primary" data-testid="chat-objects-accept" onClick={() => apply({ kind: "accept_remaining" })}>
@@ -388,9 +530,9 @@ function ReviewCard({ source, onCorrect, onCorrectAll, onPlan, onSymbolsDone, pr
               </div>
             </>
           )}
-          {item.id === "omissions" && (
+          {next.id === "omissions" && (
             <>
-              <p>Not taken from the drawing: {item.detail}.</p>
+              <p>Not taken from the drawing: {next.detail}.</p>
               <div className="chat-buttons">
                 <button type="button" className="button button-small button-primary" data-testid="chat-omissions-accept" onClick={() => apply({ kind: "accept_omissions" })}>
                   Understood
@@ -399,47 +541,55 @@ function ReviewCard({ source, onCorrect, onCorrectAll, onPlan, onSymbolsDone, pr
             </>
           )}
         </div>
-      ))}
-      {likely && (
+      )}
+      {!next && likely && (
         <div className="chat-review-item" data-testid="chat-review-symbols">
-          <p>Loose lines count as possible obstacles, so routes past them can't be determined. Which layers only hold drawing symbols (door swings, wall fill, notes)?</p>
+          <p>Loose lines and left-out shapes count as possible obstacles, so routes past them can't be determined. Which layers hold only drawing symbols? Closed outlines on them stay objects.</p>
           <div className="chat-symbols">
-            {loose.map(({ layer }) => (
-              <label key={layer} className="check-row small">
+            {loose.map((c) => (
+              <label key={c.layer} className={`check-row small${c.physical ? " symbol-physical" : ""}`} title={c.physical ? "May hold real walls or structure: excluding its loose lines lets routes pass through them." : undefined}>
                 <input
                   type="checkbox"
-                  data-testid={`chat-symbol-${layer}`}
-                  checked={symbols.has(layer)}
+                  data-testid={`chat-symbol-${c.layer}`}
+                  checked={symbols.has(c.layer)}
                   onChange={(e) =>
                     setSymbols((set) => {
-                      const next = new Set(set);
-                      if (e.target.checked) next.add(layer);
-                      else next.delete(layer);
-                      return next;
+                      const next2 = new Set(set);
+                      if (e.target.checked) next2.add(c.layer);
+                      else next2.delete(c.layer);
+                      return next2;
                     })
                   }
                 />{" "}
-                {layer}
+                <strong>{c.layer}</strong> <span className="muted">({what(c)})</span>
+                {c.physical && <span className="symbol-warn"> · may be walls</span>}
               </label>
             ))}
           </div>
-          <button
-            type="button"
-            className="button button-small"
-            data-testid="chat-symbols-apply"
-            disabled={symbols.size === 0}
-            onClick={() => {
-              const refused = onCorrectAll([...symbols].map((layer) => ({ kind: "symbols", layer, symbols: true })));
-              if (refused) return setProblem(refused);
-              setSymbols(new Set());
-              onSymbolsDone();
-            }}
-          >
-            Treat {symbols.size || "these"} as drawing symbols
-          </button>{" "}
-          <button type="button" className="button button-small" data-testid="chat-symbols-none" onClick={onSymbolsDone}>
-            They're real things
-          </button>
+          {[...symbols].some((l) => loose.find((c) => c.layer === l)?.physical) && (
+            <p className="small status-warn" data-testid="chat-symbols-warning">
+              A layer that may hold walls is ticked: its loose lines would stop blocking routes. Tick it only if those lines are wall fill or notes, not walls.
+            </p>
+          )}
+          <div className="chat-buttons">
+            <button
+              type="button"
+              className="button button-small"
+              data-testid="chat-symbols-apply"
+              disabled={symbols.size === 0}
+              onClick={() => {
+                const refused = onCorrectAll([...symbols].map((layer) => ({ kind: "symbols", layer, symbols: true })));
+                if (refused) return setProblem(refused);
+                setSymbols(new Set());
+                onSymbolsDone();
+              }}
+            >
+              Treat {symbols.size || "these"} as drawing symbols
+            </button>
+            <button type="button" className="button button-small" data-testid="chat-symbols-none" onClick={onSymbolsDone}>
+              They're real things
+            </button>
+          </div>
         </div>
       )}
       {problem && (

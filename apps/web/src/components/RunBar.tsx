@@ -14,15 +14,24 @@ interface Props {
   itemName: string;
   breaks: { name: string; startMs: number; durationMs: number }[];
   example: boolean;
+  /** The finished simulation's result for the whole shift (playback only reveals it). */
+  wholeShift: number;
+  /** The run's event fingerprint: display changes must leave it alone. */
+  fingerprint: string;
+  /** Equipment drawn see-through so workers show (display only). */
+  seeThrough: boolean;
+  onSeeThrough: (on: boolean) => void;
+  /** Frame the stations of the process from above. */
+  onOverview: () => void;
   onDetails: () => void;
   onClose: () => void;
 }
 
-export function RunBar({ playback, replay, startClockS, itemName, breaks, example, onDetails, onClose }: Props) {
+export function RunBar({ playback, replay, startClockS, itemName, breaks, example, wholeShift, fingerprint, seeThrough, onSeeThrough, onOverview, onDetails, onClose }: Props) {
   const { t, durationMs, playing } = playback;
   const now = replay.frame(t);
   return (
-    <div className="run-bar" role="region" aria-label="Run a day playback" data-testid="run-bar" data-t={Math.round(t)} data-playing={playing ? "true" : "false"} data-speed={playback.speed}>
+    <div className="run-bar" role="region" aria-label="Run a day playback" data-testid="run-bar" data-t={Math.round(t)} data-fingerprint={fingerprint} data-playing={playing ? "true" : "false"} data-speed={playback.speed}>
       <span className="run-bar-title">
         Run a day{example && <span className="badge badge-example">example</span>}
       </span>
@@ -66,9 +75,20 @@ export function RunBar({ playback, replay, startClockS, itemName, breaks, exampl
           <span key={b.name} className="run-bar-break" title={`${b.name} ${clockText(startClockS, b.startMs)}`} style={{ left: `${(b.startMs / durationMs) * 100}%`, width: `${(b.durationMs / durationMs) * 100}%` }} />
         ))}
       </div>
-      <span className="run-bar-count" data-testid="run-bar-completed" data-completed={now.completed}>
-        {now.completed} {plural(itemName)} done
+      <span className="run-bar-count" data-testid="run-bar-completed" data-completed={now.completed} title={`At ${clockText(startClockS, t)}: ${now.completed} completed so far. The finished simulation completes ${wholeShift} by the end of the shift.`}>
+        <span className="run-bar-sofar">
+          Completed so far <strong>{now.completed}</strong>
+        </span>
+        <span className="run-bar-whole" data-testid="run-bar-whole">
+          Whole shift {wholeShift} {plural(itemName)}
+        </span>
       </span>
+      <button type="button" className="button button-small" data-testid="run-overview" onClick={onOverview} title="Frame the process's stations from above">
+        Overview
+      </button>
+      <button type="button" className="button button-small" aria-pressed={seeThrough} data-testid="run-see-through" onClick={() => onSeeThrough(!seeThrough)} title="Draw equipment and walls see-through so the workers show (display only: they still block every route)">
+        See through
+      </button>
       <button type="button" className="link-button small" data-testid="run-details" onClick={onDetails}>
         Details
       </button>

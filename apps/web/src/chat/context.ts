@@ -119,14 +119,23 @@ export function brief(summary: string): string {
     .replace(/\.$/, "");
 }
 
-/** Layers with loose lines or left-out shapes not yet marked as symbols; `likely` when the name
- * says doors, windows, dimensions, hatches, text or a title block. */
-export function symbolCandidates(source: DrawingSource): { layer: string; likely: boolean }[] {
-  const layers = new Set<string>();
-  for (const line of source.drawing.lines) if (!line.closed && line.ref.block === null) layers.add(line.ref.layer);
-  for (const shape of source.drawing.omitted ?? []) layers.add(shape.layer);
-  return [...layers]
-    .filter((l) => !source.drawing.review.symbol_layers.includes(l))
-    .sort()
-    .map((layer) => ({ layer, likely: /door|window|dim|hatch|text|title|anno|note|symbol/i.test(layer) }));
+/** Layers with loose lines or left-out shapes not yet marked as symbols, with what marking them
+ * would stop treating as possible obstacles. `likely` when the name says doors, windows,
+ * dimensions, hatches, text or a title block; `physical` when it may hold real walls or
+ * structure - never offered as likely, whatever else its name says. */
+export function symbolCandidates(source: DrawingSource): { layer: string; likely: boolean; physical: boolean; lines: number; shapes: Record<string, number> }[] {
+  const layers = new Map<string, { lines: number; shapes: Record<string, number> }>();
+  const of = (layer: string) => layers.get(layer) ?? layers.set(layer, { lines: 0, shapes: {} }).get(layer)!;
+  for (const line of source.drawing.lines) if (!line.closed && line.ref.block === null) of(line.ref.layer).lines++;
+  for (const shape of source.drawing.omitted ?? []) {
+    const entry = of(shape.layer);
+    entry.shapes[shape.entity] = (entry.shapes[shape.entity] ?? 0) + 1;
+  }
+  return [...layers.entries()]
+    .filter(([layer]) => !source.drawing.review.symbol_layers.includes(layer))
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([layer, counts]) => {
+      const physical = /wall|struct|column|partition|beam|pillar|mur|wand/i.test(layer);
+      return { layer, likely: !physical && /door|window|dim|hatch|text|title|anno|note|symbol/i.test(layer), physical, ...counts };
+    });
 }

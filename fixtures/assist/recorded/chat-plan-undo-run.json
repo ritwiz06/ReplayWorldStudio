@@ -1,0 +1,17 @@
+{
+  "task": "chat",
+  "key": "Undo that move and run again. | selected=none | scene=53151f7c69de | focus=obj-dxf-111",
+  "case": "plan-undo-run",
+  "message": "Undo that move and run again.",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "chat-02",
+  "recorded_at": "2026-10-24",
+  "note": "Raw answers from the live language model for the synthetic sample, replayed by the offline test provider. Not live AI when replayed.",
+  "latency_ms": [
+    11109
+  ],
+  "responses": [
+    "{\n  \"steps\": [\n    {\n      \"add\": null,\n      \"candidates\": [],\n      \"intent\": \"undo\",\n      \"message\": null,\n      \"move\": null,\n      \"question\": null,\n      \"rotate\": null,\n      \"route\": null,\n      \"target\": null\n    },\n    {\n      \"add\": null,\n      \"candidates\": [],\n      \"intent\": \"run_day\",\n      \"message\": null,\n      \"move\": null,\n      \"question\": null,\n      \"rotate\": null,\n      \"route\": null,\n      \"target\": null\n    }\n  ]\n}"
+  ]
+}

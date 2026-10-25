@@ -41,6 +41,9 @@ interface Props {
   assist: AssistState;
   /** Start in the builder rather than the description step. */
   startWith: "describe" | "builder";
+  /** Words and sizes from the conversation (UX-04): the description, or the builder's name and
+   * envelope. Nothing else is assumed from them. */
+  initial?: { text: string; name: string; size: { width: number | null; depth: number | null; height: number | null } } | null;
   onPlace: (asset: CatalogAsset) => void;
   onClose: () => void;
 }
@@ -56,13 +59,15 @@ function assistNote(assist: AssistState): { available: boolean; text: string } {
   return { available: true, text: `Your description is sent to ${a.service} (${a.model}) to draft a proposal. Nothing else from the project is sent.` };
 }
 
-export function CreateObject({ client, assist, startWith, onPlace, onClose }: Props) {
+export function CreateObject({ client, assist, startWith, onPlace, onClose, initial = null }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [step, setStep] = useState<Step>(() =>
-    startWith === "builder"
-      ? { kind: "review", draft: draftFromTemplate("Box", "box", TEMPLATES[0]!.spec), result: null, editingParts: true }
-      : { kind: "describe", text: "", notice: null },
-  );
+  const [step, setStep] = useState<Step>(() => {
+    if (startWith !== "builder") return { kind: "describe", text: initial?.text ?? "", notice: null };
+    const spec = structuredClone(TEMPLATES[0]!.spec);
+    const size = initial?.size;
+    if (size) spec.envelope_m = { x: size.width ?? spec.envelope_m.x, y: size.height ?? spec.envelope_m.y, z: size.depth ?? spec.envelope_m.z };
+    return { kind: "review", draft: draftFromTemplate(initial?.name ?? "Box", "box", spec), result: null, editingParts: true };
+  });
   const [preview, setPreview] = useState<Preview | null>(null);
   const [placing, setPlacing] = useState<{ busy: boolean; error: string | null }>({ busy: false, error: null });
   const [details, setDetails] = useState(false);

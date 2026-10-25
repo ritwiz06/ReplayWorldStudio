@@ -363,6 +363,14 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
     return editor ? update(redoStep(editor, editor.project.scene.revision)) : null;
   }, [update]);
 
+  /** The project an undo would leave, without changing anything (a chat plan's preview). */
+  const previewUndo = useCallback((): Project | null => {
+    const editor = editorOf(current.current);
+    if (!editor) return null;
+    const outcome = undoStep(editor, editor.project.scene.revision);
+    return outcome.ok ? outcome.state.project : null;
+  }, []);
+
   /** Download the project as JSON; the saved revision becomes the clean state. */
   const save = useCallback((): string | null => {
     const s = current.current;
@@ -439,6 +447,7 @@ export function useProject(client: ApiClient, initial: FixtureName = "industrial
     execute,
     undo,
     redo,
+    previewUndo,
     save,
     resolveUnsaved,
     openUpgraded,

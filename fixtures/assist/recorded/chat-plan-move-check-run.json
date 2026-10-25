@@ -1,0 +1,17 @@
+{
+  "task": "chat",
+  "key": "Move Machine B 1 metre right, check its routes, and run the shift again. | selected=none | scene=53151f7c69de",
+  "case": "plan-move-check-run",
+  "message": "Move Machine B 1 metre right, check its routes, and run the shift again.",
+  "service": "ASU Voyager",
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "prompt_version": "chat-02",
+  "recorded_at": "2026-10-24",
+  "note": "Raw answers from the live language model for the synthetic sample, replayed by the offline test provider. Not live AI when replayed.",
+  "latency_ms": [
+    19463
+  ],
+  "responses": [
+    "{\n  \"steps\": [\n    {\n      \"add\": null,\n      \"candidates\": [],\n      \"intent\": \"move\",\n      \"message\": null,\n      \"move\": {\n        \"direction\": \"right\",\n        \"distance\": 1,\n        \"quote\": \"1 metre\",\n        \"unit\": \"m\"\n      },\n      \"question\": null,\n      \"rotate\": null,\n      \"route\": null,\n      \"target\": {\n        \"object_id\": \"obj-dxf-111\",\n        \"phrase\": \"Machine B\",\n        \"reference\": \"named\"\n      }\n    },\n    {\n      \"add\": null,\n      \"candidates\": [],\n      \"intent\": \"check_route\",\n      \"message\": null,\n      \"move\": null,\n      \"question\": null,\n      \"rotate\": null,\n      \"route\": {\n        \"from_object_id\": \"obj-dxf-111\",\n        \"quote\": \"its routes\",\n        \"to_object_id\": null,\n        \"unit\": null,\n        \"width\": null\n      },\n      \"target\": null\n    },\n    {\n      \"add\": null,\n      \"candidates\": [],\n      \"intent\": \"run_day\",\n      \"message\": null,\n      \"move\": null,\n      \"question\": null,\n      \"rotate\": null,\n      \"route\": null,\n      \"target\": null\n    }\n  ]\n}"
+  ]
+}

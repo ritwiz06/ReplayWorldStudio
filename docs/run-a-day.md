@@ -18,12 +18,14 @@ From the first screen, press **Run a day** on the left. The sample hall opens an
 
 - **The playback bar** over the 3D view:
   - shows the shift clock, Play/Pause, Restart, the speed (real time to 600×) and a timeline with the breaks marked;
-  - stays in every camera mode (Orbit, Top and Walk). Switching cameras never restarts or changes the run.
+  - stays in every camera mode (Orbit, Top and Walk). Switching cameras never restarts or changes the run;
+  - shows two counts (UX-04): **Completed so far** is what the playback has reached at the clock shown, and **Whole shift** is the finished run's result. Early in the playback the first is 0 while the second is, for the sample, 102 batches;
+  - has **Overview** (the stations framed from above) and **See through** (tall equipment faded so workers show). Both are display only: routes and the run are unchanged.
 - **In the 3D view:**
   - simple worker figures, each carrying a box while they carry a batch;
   - boxes in each station's queue (input) and beside it (finished, waiting to be carried);
   - a box on a station while it works;
-  - a coloured ring and label for each station: running, loading, needs a worker, idle, blocked (output full) or stopped.
+  - a coloured ring and label for each station: running, loading, needs a worker, idle, blocked (output full) or stopped. Where labels would overlap, the more important one shows: the selection first, then blocked or stopped stations, then waiting ones, then the rest.
 - **The Run tab** beside the view:
   - what is happening at that moment;
   - the whole shift's results: output, unfinished items, station and worker shares, longest queues;

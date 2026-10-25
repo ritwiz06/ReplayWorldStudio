@@ -4,7 +4,7 @@
 // so every camera change made here (animations, walking, commands) requests a frame.
 import { MapControls, OrbitControls, OrthographicCamera } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { type ComponentRef, type RefObject, useEffect, useLayoutEffect, useRef } from "react";
+import { type ComponentRef, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { type Box3, type OrthographicCamera as OrthographicCameraImpl, type PerspectiveCamera, Vector3 } from "three";
 import { type CameraPose, frameBox, PLAN_UP, planView } from "./cameras";
 import type { Vec3Tuple } from "./fit";
@@ -187,8 +187,12 @@ function TopRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps) {
     invalidate();
   };
 
+  // The first view is given to the camera and the controls as they mount: the controls' own target
+  // otherwise stays at the origin and tilts the plan toward it when the content is off-centre.
+  const [initial] = useState(() => memory.current.top ?? { centre: planView(sceneBox, size.width, size.height).position, zoom: planView(sceneBox, size.width, size.height).zoom });
+
   useLayoutEffect(() => {
-    const view = memory.current.top ?? { centre: planView(sceneBox, size.width, size.height).position, zoom: planView(sceneBox, size.width, size.height).zoom };
+    const view = initial;
     place(view.centre, view.zoom);
     const saved = memory.current;
     const cam = cameraRef.current;
@@ -217,8 +221,8 @@ function TopRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps) {
 
   return (
     <>
-      <OrthographicCamera makeDefault ref={cameraRef} up={PLAN_UP} near={0.1} far={height + 60} position={[0, height, 0]} />
-      <MapControls ref={controls} makeDefault enableRotate={false} screenSpacePanning zoomToCursor minZoom={2} maxZoom={400} />
+      <OrthographicCamera makeDefault ref={cameraRef} up={PLAN_UP} near={0.1} far={height + 60} position={[initial.centre[0], height, initial.centre[2]]} zoom={initial.zoom} />
+      <MapControls ref={controls} makeDefault target={[initial.centre[0], 0, initial.centre[2]]} enableRotate={false} screenSpacePanning zoomToCursor minZoom={2} maxZoom={400} />
     </>
   );
 }

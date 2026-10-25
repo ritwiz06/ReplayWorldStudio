@@ -141,23 +141,38 @@ class RawRoute(_Raw):
     quote: str | None
 
 
-class RawChatAnswer(_Raw):
-    intent: Literal[
-        "move",
-        "rotate",
-        "check_route",
-        "run_day",
-        "run_again",
-        "explain_change",
-        "undo",
-        "show_example",
-        "capabilities",
-        "select",
-        "save",
-        "export",
-        "ask",
-        "cannot",
-    ]
+_CHAT_INTENTS = Literal[
+    "move",
+    "rotate",
+    "select",
+    "add_object",
+    "check_route",
+    "check_layout",
+    "run_day",
+    "run_again",
+    "explain_change",
+    "undo",
+    "show_example",
+    "capabilities",
+    "save",
+    "export",
+    "ask",
+    "cannot",
+]
+
+
+class RawAdd(_Raw):
+    description: str
+    width: float | None
+    depth: float | None
+    height: float | None
+    unit: DistanceUnit | None
+    near_object_id: str | None
+    side: Literal["left", "right", "front", "back"] | None
+
+
+class RawChatStep(_Raw):
+    intent: _CHAT_INTENTS
     question: str | None
     candidates: list[str]
     message: str | None
@@ -165,6 +180,14 @@ class RawChatAnswer(_Raw):
     move: RawMove | None
     rotate: RawRotate | None
     route: RawRoute | None
+    add: RawAdd | None
+
+
+class RawChatPlan(_Raw):
+    """chat-02: a short plan. An answer in the older one-intent form (chat-01) is read as a plan
+    of one step, so recordings made with it still replay."""
+
+    steps: list[RawChatStep]
 
 
 # Keywords that schema-guided decoders often do not support. Limits are enforced by the

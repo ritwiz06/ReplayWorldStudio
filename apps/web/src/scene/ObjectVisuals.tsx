@@ -4,7 +4,8 @@
 import type { CatalogAsset, GltfVisual, SceneObject } from "@replay-world/contracts";
 import { Edges, Html } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
-import { memo, type ReactNode, useMemo } from "react";
+import { memo, type ReactNode, useContext, useMemo } from "react";
+import { type Appearance, AppearanceContext } from "./appearance";
 import { BoxGeometry, CanvasTexture, EdgesGeometry, type Group, RepeatWrapping, SRGBColorSpace } from "three";
 import { heightAssumed } from "../evidence";
 import { formatFootprint } from "../format";
@@ -15,6 +16,17 @@ import { placementOf } from "./placement";
 import { isSlab } from "./sceneBounds";
 
 const ACCENT = "#37d0ff";
+
+
+/** Consistent illustrative colours: one per kind of stand-in, one for generic equipment. */
+const DRAFT = { equipment: "#6a92b8", rack: "#7f95aa", table: "#c4a47e", conveyor: "#55606c", wall: "#d2ccc1", floor: "#a8a49b" } as const;
+
+/** Material settings for a body: opaque in the draft view, see-through where the view asks. */
+function look(appearance: Appearance, assumed: boolean, uncertaintyOpacity: number) {
+  if (appearance === "see-through") return { transparent: true, opacity: 0.18, depthWrite: false };
+  if (appearance === "uncertainty" && assumed) return { transparent: true, opacity: uncertaintyOpacity, depthWrite: false };
+  return { transparent: false, opacity: 1, depthWrite: true };
+}
 /** Pointer travel (px) above which a release ends a drag, not a click. */
 const CLICK_TOLERANCE_PX = 4;
 
@@ -87,19 +99,14 @@ function PlacedBox({ object, children }: { object: SceneObject; children: ReactN
 }
 
 function StructureBox({ object }: { object: SceneObject }) {
+  const appearance = useContext(AppearanceContext);
   const slab = isSlab(object);
   const assumed = heightAssumed(object);
+  const m = look(slab ? "draft" : appearance, assumed, 0.62);
   return (
     <PlacedBox object={object}>
-      <meshStandardMaterial
-        color={slab ? "#8b8880" : "#c8c3b9"}
-        roughness={slab ? 0.72 : 0.92}
-        metalness={0}
-        envMapIntensity={slab ? 0.6 : 0.4}
-        transparent={assumed}
-        opacity={assumed ? 0.62 : 1}
-      />
-      {assumed && <Edges color="#d6dbe0" />}
+      <meshStandardMaterial color={slab ? DRAFT.floor : DRAFT.wall} roughness={slab ? 0.78 : 0.9} metalness={0} envMapIntensity={slab ? 0.6 : 0.4} {...m} />
+      {!slab && <Edges color={appearance === "uncertainty" && assumed ? "#d6dbe0" : "#9d978c"} />}
     </PlacedBox>
   );
 }
@@ -107,12 +114,13 @@ function StructureBox({ object }: { object: SceneObject }) {
 /** A box with no model. One whose height is only assumed is see-through, so it reads as a
  * provisional footprint with a display height, not as a measured solid. */
 function PlaceholderBox({ object }: { object: SceneObject }) {
-  const color = object.kind === "reference" ? "#c4a24a" : "#6f9fca";
+  const appearance = useContext(AppearanceContext);
+  const color = object.kind === "reference" ? "#c4a24a" : DRAFT.equipment;
   const assumed = heightAssumed(object);
   return (
     <PlacedBox object={object}>
-      <meshStandardMaterial color={color} roughness={0.8} metalness={0.05} transparent={assumed} opacity={assumed ? 0.6 : 1} depthWrite={!assumed} />
-      <Edges color={object.kind === "reference" ? "#e0c477" : assumed ? "#d4e9ff" : "#a9c3dc"} />
+      <meshStandardMaterial color={color} roughness={0.7} metalness={0.08} {...look(appearance, assumed, 0.6)} />
+      <Edges color={object.kind === "reference" ? "#e0c477" : appearance === "uncertainty" && assumed ? "#d4e9ff" : "#3f5f7d"} />
     </PlacedBox>
   );
 }
@@ -120,22 +128,26 @@ function PlaceholderBox({ object }: { object: SceneObject }) {
 /** A simple stand-in shape (rack, table, conveyor) inside the recorded box, see-through like
  * every provisional object; the box's outline shows the extent the object actually records. */
 function ProvisionalForm({ object, form }: { object: SceneObject; form: Exclude<DisplayForm, "box"> }) {
+  const appearance = useContext(AppearanceContext);
   const p = placementOf(object);
   const [w, h, d] = p.size;
   const parts = useMemo(() => partsOf(form, w, h, d), [form, w, h, d]);
+  const uncertain = appearance === "uncertainty";
   return (
     <group position={p.position} rotation={p.rotation} name={`form-${form}`}>
       {parts.map((part, i) => (
         <mesh key={i} position={part.centre} castShadow receiveShadow>
           <boxGeometry args={part.size} />
-          <meshStandardMaterial color="#85afd6" roughness={0.65} metalness={0.1} transparent opacity={0.8} />
+          <meshStandardMaterial color={uncertain ? "#85afd6" : DRAFT[form]} roughness={0.65} metalness={form === "table" ? 0 : 0.15} {...look(appearance, true, 0.8)} />
         </mesh>
       ))}
-      <mesh position={p.meshOffset}>
-        <boxGeometry args={p.size} />
-        <meshBasicMaterial transparent opacity={0.06} color="#7891ad" depthWrite={false} />
-        <Edges color="#d3e2f1" />
-      </mesh>
+      {uncertain && (
+        <mesh position={p.meshOffset}>
+          <boxGeometry args={p.size} />
+          <meshBasicMaterial transparent opacity={0.06} color="#7891ad" depthWrite={false} />
+          <Edges color="#d3e2f1" />
+        </mesh>
+      )}
     </group>
   );
 }

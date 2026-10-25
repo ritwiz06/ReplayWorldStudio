@@ -58,7 +58,7 @@ test("chat: move a machine, check the route, run the shift, ask why it changed, 
   // Run the shift: the same run the canvas plays.
   await ask(page, "What happens during a shift?");
   const run = lastCard(page, "run");
-  await expect(run).toContainText("Ran the shift: 0 batches completed by 14:00");
+  await expect(run).toContainText("Ran the shift. Whole-shift result: 0 batches completed by 14:00");
   await expect(run).toContainText("Blocked: Rack A (material) ↔ Mixer: narrows to 0.70 m between Machine B and Rack B; needs 0.80 m.");
   await expect(page.getByTestId("run-bar")).toBeVisible();
 
@@ -72,7 +72,7 @@ test("chat: move a machine, check the route, run the shift, ask why it changed, 
   await chat.getByTestId("chat-suggest-undo").click();
   await expect(lastCard(page, "done")).toContainText("Undone: Move Machine B");
   await chat.getByTestId("chat-suggest-run_again").click();
-  await expect(lastCard(page, "run-again")).toContainText("Ran the same shift again: 102 batches completed by 14:00");
+  await expect(lastCard(page, "run-again")).toContainText("Ran the same shift again. Whole-shift result: 102 batches completed by 14:00");
   await expect(lastCard(page, "run-again")).toContainText("Was 0 before the change, with the same process and seed.");
 
   // Save, and reopen the file through the attachment: the conversation reports what opened.
@@ -88,15 +88,17 @@ test("chat: ambiguous names ask with clickable choices; refusals and unsupported
   test.setTimeout(process.env.CI ? 180_000 : 90_000);
   await openExample(page);
   await ask(page, "Move the rack 1 m back");
-  const question = lastCard(page, "question");
-  await expect(question).toContainText("“the rack” could be Rack A (material), Rack B. Which one?");
-  await expect(question.getByRole("button")).toHaveText(["Rack A (material)", "Rack B"]);
-  await question.getByTestId("chat-choice-obj-dxf-106").hover(); // highlighted in the world
-  await question.getByTestId("chat-choice-obj-dxf-106").click();
+  // The step asks which rack; the rest of the request (1 m back) is kept, with no new model call.
   const proposal = lastCard(page, "proposal");
+  const need = proposal.getByTestId("plan-need-0");
+  await expect(need).toContainText("“the rack” could be Rack A (material), Rack B. Which one?");
+  await expect(need.getByRole("button")).toHaveText(["Rack A (material)", "Rack B"]);
+  await expect(proposal.getByTestId("chat-apply")).toHaveCount(0); // nothing to apply until answered
+  await need.getByTestId("chat-choice-obj-dxf-106").hover(); // highlighted in the world
+  await need.getByTestId("chat-choice-obj-dxf-106").click();
   await expect(proposal).toContainText("Move Rack A (material) 1 m back?");
   await proposal.getByTestId("chat-cancel").click();
-  await expect(proposal).toContainText("Cancelled: nothing changed.");
+  await expect(lastCard(page, "plan-cancelled")).toContainText("Cancelled: nothing changed.");
   await expect(page.getByTestId("undo")).toBeDisabled();
 
   await ask(page, "Paint the mixer red");

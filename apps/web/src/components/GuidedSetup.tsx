@@ -297,6 +297,13 @@ export function GuidedSetup({ project, selected, client, suggestions, draft, onD
             </ul>
           </div>
         )}
+        {guided.hints.length > 0 && (
+          <div className="setup-hints small muted" data-testid="guided-hints">
+            {guided.hints.map((h) => (
+              <p key={h}>{h}</p>
+            ))}
+          </div>
+        )}
         {guided.needs.length === 0 && pending > 0 && (
           <div className="setup-needs" data-testid="guided-pending">
             <strong>

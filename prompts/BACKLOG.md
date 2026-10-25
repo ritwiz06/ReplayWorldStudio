@@ -592,6 +592,15 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
     - matching equipment to catalog or generated models;
     - multi-step plans (one action per message);
     - free questions about the scene.
+- Update (2026-10-24, ADR-063, UX-04): **multi-step plans and adding a catalog object from the conversation are built; AGT-01 stays open.**
+  - **Built:**
+    - one model call per message, mapped to at most four typed steps (prompt chat-02), with check_layout and add_object added;
+    - the API checks every step, as before;
+    - the app dry-runs the whole plan through the command engine, then applies it once, revision-checked, cancellable, stopping on failure, and undoable as one request;
+    - a described new object is offered the closest catalog item by name, never matched silently.
+  - **Still not met:**
+    - matching **imported** equipment to catalog or generated models;
+    - free questions about the scene.
 
 ### UX-01 - Three-action main screen
 
@@ -765,6 +774,40 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   - e2e `chat.spec.ts` (4), `local/chat-nokey.spec.ts`, `external/workshop-chat.spec.ts` (local);
   - `apps/web/src/chat/`, `services/api/src/replay_world_api/assist/chat.py`, tests `test_chat.py` and `chat.test.ts`.
 
+### UX-04 - Readable workspace and short, connected requests
+
+- Priority: P0
+- Dependencies: UX-03, AGT-01 (partial)
+- Baseline status: added 2026-10-24 (ADR-063)
+- Done when:
+  - **An inviting first screen:**
+    - "Drop your plan here" in the canvas, with Upload plan, Explore example, a picture of the real example, the formats, and a DWG answered with the DXF export;
+    - an open world framed beside the conversation, and an adjusted camera never reset.
+  - **A readable world:**
+    - solid, illustrative materials by default, with a compact appearance status and an optional uncertainty view;
+    - appearance never changes dimensions, provenance, readiness or the run;
+    - run labels by priority, without overlaps;
+    - a process overview, and see-through for display only;
+    - "Completed so far" separated from the whole-shift result.
+  - **One message → at most four typed steps,** shown as one plan:
+    - IDs, units, directions and missing inputs resolved;
+    - consequences from the checks, with the change previewed in the world;
+    - ambiguous objects as clickable choices that keep the rest of the plan.
+  - **Applied once, step by step:**
+    - revision-checked;
+    - cancel, failure stopping dependent steps, what was applied stated;
+    - no duplicates, and the request undoable as a whole;
+    - unsupported parts named before Apply and never attempted.
+  - **Adding an object from the conversation:** a catalog suggestion to accept (never a silent match), a side to choose, the stated sizes kept with their source, an assumed height marked, one undoable step, saved and reopened; Describe or the builder when nothing fits.
+  - **A compact review:** a summary, the next correction, answered items collapsed but changeable; wall-like layers never preselected, and warned about when ticked.
+  - **Journeys A–D,** targeted failure tests, screenshots at both sizes, a short recording, and scripted measurements with live latency reported separately.
+- Status (2026-10-24): **done for these criteria**, measured by scripts. Whether people find it easier stays **UX-02**.
+- Evidence:
+  - docs/ux-04/ (screens, measurements, live budget);
+  - docs/demo/ux04-one-request.mp4;
+  - e2e `plans.spec.ts` (6), `chat.spec.ts`, `local/chat-nokey.spec.ts`, `external/workshop-chat.spec.ts` (local);
+  - `apps/web/src/chat/plan.ts`, `controller.test.ts`, `services/api/tests/test_chat.py`.
+
 ### UX-02 - Measure the onboarding targets with people
 
 - Priority: P1
@@ -778,6 +821,7 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   The tasks, participants and consent are recorded, after an ASU research-ethics check if results are reported as research. Failures are kept. Scripted timings are not a substitute.
 - Evidence: not recorded
 - Note (2026-10-20): still open. UX-03 changed the main screen to chat-first; its click and time counts are scripted, not a study with newcomers.
+- Note (2026-10-24): still open. UX-04's journeys and comparisons are scripted; no participant has tried them.
 
 ## M5 - Spatial checks
 

@@ -39,7 +39,7 @@ export function editImpact(before: Project, after: Project, ask: RouteAsk | null
       if (!old) continue;
       if (r.outcome === "conflict" && old.outcome !== "conflict") lines.push(`${name} would be blocked: ${brief(r.summary)}.`);
       else if (r.outcome === "fits" && old.outcome === "conflict") lines.push(`Clears: ${name} would fit again.`);
-      else if (r.lengthM !== null && old.lengthM !== null && Math.abs(r.lengthM - old.lengthM) >= 0.05) lines.push(`${name}: ${old.lengthM.toFixed(1)} m → ${r.lengthM.toFixed(1)} m.`);
+      else if (r.lengthM !== null && old.lengthM !== null && Math.abs(r.lengthM - old.lengthM) >= 0.05) lines.push(`Walk ${name}: ${old.lengthM.toFixed(1)} m → ${r.lengthM.toFixed(1)} m.`);
     }
   }
   return lines;

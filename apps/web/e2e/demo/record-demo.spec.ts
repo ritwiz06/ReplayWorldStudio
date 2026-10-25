@@ -163,3 +163,66 @@ test("record the REL-01 demo", async ({ page }) => {
   writeFileSync(`${ROOT}apps/web/test-results/demo-report.json`, JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report, null, 2));
 });
+
+// UX-04: one request progressing, on the chat-first screen with a recorded live answer (DEMO_ASSIST=
+// recorded; the app labels it "Recorded answers (test)"). Run with -g "UX-04"; frames go to
+// test-results/demo-frames-ux04 for scripts/demo/frames-to-mp4.swift.
+test("record the UX-04 request", async ({ page }) => {
+  test.skip(process.env.DEMO_ASSIST !== "recorded", "needs DEMO_ASSIST=recorded");
+  test.setTimeout(180_000);
+  const dir = `${ROOT}apps/web/test-results/demo-frames-ux04`;
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  await page.goto("/");
+  await page.evaluate(() => localStorage.setItem("rws.view", "chat"));
+  await page.goto("/");
+  await expect(page.getByTestId("empty-start")).toBeVisible();
+  await page.evaluate(() => {
+    const style = document.createElement("style");
+    // Over the 3D view (x 0-1060 at 1440 × 900), under its toolbar, clear of the run bar.
+    style.textContent = `#demo-caption { position: fixed; top: 206px; left: 530px; transform: translateX(-50%); z-index: 99999; pointer-events: none;
+      width: 660px; box-sizing: border-box; background: rgba(13,17,23,.92); color: #fff; font: 500 18px/1.35 system-ui, sans-serif;
+      padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); text-align: center; }
+      #demo-caption:empty { display: none; }`;
+    document.head.append(style);
+    const caption = document.createElement("div");
+    caption.id = "demo-caption";
+    document.body.append(caption);
+  });
+  const frames: { file: string; t: number }[] = [];
+  const session = await page.context().newCDPSession(page);
+  session.on("Page.screencastFrame", async ({ data, metadata, sessionId }) => {
+    const file = `${String(frames.length).padStart(5, "0")}.jpg`;
+    writeFileSync(`${dir}/${file}`, Buffer.from(data, "base64"));
+    frames.push({ file, t: metadata.timestamp ?? Date.now() / 1000 });
+    await session.send("Page.screencastFrameAck", { sessionId }).catch(() => undefined);
+  });
+  await session.send("Page.startScreencast", { format: "jpeg", quality: 90, maxWidth: 1440, maxHeight: 900, everyNthFrame: 1 });
+  const hold = (ms: number) => page.waitForTimeout(ms);
+
+  await say(page, "Synthetic example. The AI's reading of the request is a recorded live answer, replayed.");
+  await hold(3000);
+  await page.getByTestId("empty-example").click();
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+  await hold(2000);
+  const request = "Move Machine B 1 metre right, check its routes, and run the shift again.";
+  await page.getByTestId("chat-input").pressSequentially(request, { delay: 25 });
+  await page.getByTestId("chat-send").click();
+  const plan = page.getByTestId("chat").locator('[data-kind="proposal"]').last();
+  await expect(plan.getByTestId("chat-apply")).toBeVisible();
+  await say(page, "One message, three steps. The proposed position is shown in the world; nothing changes until Apply.");
+  await hold(6000);
+  await plan.getByTestId("chat-apply").click();
+  await say(page, "Applied once, step by step: the move, the route check, then the shift.");
+  await expect(page.getByTestId("chat").locator('[data-kind="plan-done"]').last()).toBeVisible({ timeout: 60_000 });
+  await page.getByTestId("run-speed").selectOption("120");
+  await hold(4000);
+  await say(page, "“Completed so far” follows the playback clock; the whole shift completes 102 batches.");
+  await hold(6000);
+  await page.getByTestId("chat").locator('[data-kind="plan-done"]').last().getByTestId("chat-undo-request").click();
+  await say(page, "Undo this request: the layout is back as it was.");
+  await hold(4000);
+  await session.send("Page.stopScreencast");
+  writeFileSync(`${dir}/frames.json`, JSON.stringify({ frames }, null, 1));
+  console.log(JSON.stringify({ frames: frames.length, seconds: frames.at(-1)!.t - frames[0]!.t }));
+});

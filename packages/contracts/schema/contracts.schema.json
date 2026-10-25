@@ -593,9 +593,129 @@
       "title": "CatalogAsset",
       "type": "object"
     },
+    "ChatAdd": {
+      "additionalProperties": false,
+      "description": "A new object asked for: what it is in the person's words, the sizes they stated (metres;\nnull when not stated), and where (beside which object, on which side if said).",
+      "properties": {
+        "description": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "width_m": {
+          "anyOf": [
+            {
+              "description": "Strictly positive length in metres.",
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "depth_m": {
+          "anyOf": [
+            {
+              "description": "Strictly positive length in metres.",
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height_m": {
+          "anyOf": [
+            {
+              "description": "Strictly positive length in metres.",
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "near_object_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "side": {
+          "anyOf": [
+            {
+              "enum": [
+                "left",
+                "right",
+                "front",
+                "back"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "description",
+        "width_m",
+        "depth_m",
+        "height_m",
+        "near_object_id",
+        "side"
+      ],
+      "title": "ChatAdd",
+      "type": "object"
+    },
+    "ChatNeed": {
+      "additionalProperties": false,
+      "description": "What one step still needs from the person before it can be shown or applied.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "target",
+            "reference",
+            "move_details",
+            "rotate_details"
+          ],
+          "type": "string"
+        },
+        "question": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "candidates": {
+          "items": {
+            "description": "Stable, lowercase identifier. Never reused for a different entity.",
+            "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "question",
+        "candidates"
+      ],
+      "title": "ChatNeed",
+      "type": "object"
+    },
     "ChatRequest": {
       "additionalProperties": false,
-      "description": "One chat message, the reviewed scene facts it may need, and the app's state.",
+      "description": "One chat message, the reviewed scene facts it may need, and the app's state.\n``focus_object_id`` is the object the conversation last acted on, for \"it\" and \"that\".",
       "properties": {
         "request": {
           "maxLength": 300,
@@ -607,6 +727,19 @@
         },
         "state": {
           "$ref": "#/$defs/ChatState"
+        },
+        "focus_object_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -619,74 +752,22 @@
     },
     "ChatResult": {
       "additionalProperties": false,
-      "description": "The interpretation of one chat message: one action with its typed parameters, a\nquestion, or why it cannot be done. Nothing here changes the project.",
+      "description": "The interpretation of one chat message: a short plan of checked steps (at most four), a\nquestion, or why it cannot be done. Nothing here changes the project.",
       "properties": {
         "outcome": {
           "enum": [
-            "action",
+            "plan",
             "clarification",
             "unsupported"
           ],
           "type": "string"
         },
-        "action": {
-          "anyOf": [
-            {
-              "enum": [
-                "move",
-                "rotate",
-                "check_route",
-                "run_day",
-                "run_again",
-                "explain_change",
-                "undo",
-                "show_example",
-                "capabilities",
-                "select",
-                "save",
-                "export"
-              ],
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "edit": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/EditIntent"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "For move and rotate."
-        },
-        "route": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ChatRoute"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "For check_route."
-        },
-        "object_id": {
-          "anyOf": [
-            {
-              "description": "Stable, lowercase identifier. Never reused for a different entity.",
-              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "For select."
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/ChatStep"
+          },
+          "maxItems": 4,
+          "type": "array"
         },
         "question": {
           "anyOf": [
@@ -734,10 +815,7 @@
       },
       "required": [
         "outcome",
-        "action",
-        "edit",
-        "route",
-        "object_id",
+        "steps",
         "question",
         "candidates",
         "message",
@@ -850,6 +928,125 @@
         "can_undo"
       ],
       "title": "ChatState",
+      "type": "object"
+    },
+    "ChatStep": {
+      "additionalProperties": false,
+      "description": "One step of a plan. Move and rotate carry their target and the stated amount; a step that\ncannot be done says why in ``unsupported`` and has no action.",
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "enum": [
+                "move",
+                "rotate",
+                "select",
+                "add_object",
+                "check_route",
+                "check_layout",
+                "run_day",
+                "run_again",
+                "explain_change",
+                "undo",
+                "show_example",
+                "capabilities",
+                "save",
+                "export"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "For move, rotate and select."
+        },
+        "move": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoveIntent"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rotate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RotateIntent"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "route": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ChatRoute"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "add": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ChatAdd"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "needs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ChatNeed"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unsupported": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "action",
+        "target_id",
+        "move",
+        "rotate",
+        "route",
+        "add",
+        "needs",
+        "unsupported"
+      ],
+      "title": "ChatStep",
       "type": "object"
     },
     "ContextObject": {

@@ -1,8 +1,10 @@
 // UX-03 with no Voyager key, on the app as `pnpm start` serves it: the chat-first screen says AI
 // is off and does not offer typing, and every suggestion, the attachment, the manual move card,
-// the route check, the run and the full editor still work. Nothing pretends to be live AI.
+// the route check, the run, saving and the full editor still work. Nothing pretends to be live AI.
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 
+const SAMPLE = JSON.parse(readFileSync(new URL("../../../../fixtures/scenes/sample-factory.json", import.meta.url), "utf8")) as { scene: { objects: { id: string; transform: { position_m: { x: number } } }[] } };
 const HALL = new URL("../../../../fixtures/drawings/hall-mm.dxf", import.meta.url).pathname;
 
 test("no key: the conversation works by hand, and says why typing is off", { tag: "@local" }, async ({ page }) => {
@@ -38,13 +40,17 @@ test("no key: the conversation works by hand, and says why typing is off", { tag
   await chat.getByTestId("chat-suggest-route").click();
   await expect(chat.locator('[data-kind="route"]').last()).toContainText(/^Yes: a 1\.40 m wide path gets through/);
   await chat.getByTestId("chat-suggest-run_example").click();
-  await expect(chat.locator('[data-kind="run"]').last()).toContainText(/Ran the shift: \d+ batches completed by 14:00/);
+  await expect(chat.locator('[data-kind="run"]').last()).toContainText(/Ran the shift. Whole-shift result: \d+ batches completed by 14:00/);
   await expect(page.getByTestId("run-bar")).toBeVisible();
+
+  // Save: the moved machine is in the file (journey D, UX-04).
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("save").click()]);
+  const saved = JSON.parse(readFileSync((await download.path())!, "utf8")) as { scene: { objects: { id: string; transform: { position_m: { x: number } } }[] } };
+  const machine = (p: typeof saved) => p.scene.objects.find((o) => o.id === "obj-dxf-111")!.transform.position_m.x;
+  expect(machine(saved) - machine(SAMPLE)).toBeCloseTo(1);
 
   // Attaching a DXF reads it on this computer and asks only for what the review needs.
   await chat.getByTestId("chat-file-input").setInputFiles(HALL);
-  // The edited sample is not saved: the usual question comes first; nothing is lost silently.
-  await page.getByRole("button", { name: "Discard changes" }).click();
   await expect(chat.getByTestId("chat-review")).toBeVisible({ timeout: 30_000 });
   await expect(chat.getByTestId("chat-review")).not.toContainText("LWPOLYLINE");
 });

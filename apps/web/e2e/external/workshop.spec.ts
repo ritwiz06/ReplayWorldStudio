@@ -98,7 +98,7 @@ test("external: the CC0 workshop DXF through the whole guided Run a day journey"
     tally.clicks += 2;
     await guided.getByTestId("guided-add").selectOption({ label: name });
   }
-  await expect(guided.getByTestId("guided-needs")).toContainText("Rename station 1 (“Fixtures 7”): several objects are called “Fixtures …”");
+  await expect(guided.getByTestId("guided-hints")).toContainText("Station 1 is called “Fixtures 7”: several objects are called “Fixtures …”");
   await page.screenshot({ path: `${OUT}/workshop-2-ambiguous-names-1440.png` });
   await type(page, "guided-station-0-name", "Store shelving");
   await type(page, "guided-station-1-name", "Workbench");

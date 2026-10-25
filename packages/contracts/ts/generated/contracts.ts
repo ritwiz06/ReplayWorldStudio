@@ -2244,11 +2244,13 @@ export interface RotateIntent {
 }
 /**
  * One chat message, the reviewed scene facts it may need, and the app's state.
+ * ``focus_object_id`` is the object the conversation last acted on, for "it" and "that".
  */
 export interface ChatRequest {
   request: string;
   context: EditContext;
   state: ChatState;
+  focus_object_id?: string | null;
 }
 /**
  * What the open world allows right now, so the answer can name only workable actions.
@@ -2264,39 +2266,16 @@ export interface ChatState {
   can_undo: boolean;
 }
 /**
- * The interpretation of one chat message: one action with its typed parameters, a
+ * The interpretation of one chat message: a short plan of checked steps (at most four), a
  * question, or why it cannot be done. Nothing here changes the project.
  */
 export interface ChatResult {
-  outcome: "action" | "clarification" | "unsupported";
-  action:
-    | (
-        | "move"
-        | "rotate"
-        | "check_route"
-        | "run_day"
-        | "run_again"
-        | "explain_change"
-        | "undo"
-        | "show_example"
-        | "capabilities"
-        | "select"
-        | "save"
-        | "export"
-      )
-    | null;
+  outcome: "plan" | "clarification" | "unsupported";
   /**
-   * For move and rotate.
+   * @maxItems 4
    */
-  edit: EditIntent | null;
-  /**
-   * For check_route.
-   */
-  route: ChatRoute | null;
-  /**
-   * For select.
-   */
-  object_id: string | null;
+  steps:
+    [] | [ChatStep] | [ChatStep, ChatStep] | [ChatStep, ChatStep, ChatStep] | [ChatStep, ChatStep, ChatStep, ChatStep];
   question: string | null;
   /**
    * Items: Stable, lowercase identifier. Never reused for a different entity.
@@ -2305,6 +2284,40 @@ export interface ChatResult {
   message: string | null;
   checks: string[];
   provider: ProviderRun;
+}
+/**
+ * One step of a plan. Move and rotate carry their target and the stated amount; a step that
+ * cannot be done says why in ``unsupported`` and has no action.
+ */
+export interface ChatStep {
+  action:
+    | (
+        | "move"
+        | "rotate"
+        | "select"
+        | "add_object"
+        | "check_route"
+        | "check_layout"
+        | "run_day"
+        | "run_again"
+        | "explain_change"
+        | "undo"
+        | "show_example"
+        | "capabilities"
+        | "save"
+        | "export"
+      )
+    | null;
+  /**
+   * For move, rotate and select.
+   */
+  target_id: string | null;
+  move: MoveIntent | null;
+  rotate: RotateIntent | null;
+  route: ChatRoute | null;
+  add: ChatAdd | null;
+  needs: ChatNeed | null;
+  unsupported: string | null;
 }
 /**
  * The route a request asks about: endpoints by object id, and a width only when stated.
@@ -2317,6 +2330,29 @@ export interface ChatRoute {
    */
   width_m: number | null;
   width_quote: string | null;
+}
+/**
+ * A new object asked for: what it is in the person's words, the sizes they stated (metres;
+ * null when not stated), and where (beside which object, on which side if said).
+ */
+export interface ChatAdd {
+  description: string;
+  width_m: number | null;
+  depth_m: number | null;
+  height_m: number | null;
+  near_object_id: string | null;
+  side: ("left" | "right" | "front" | "back") | null;
+}
+/**
+ * What one step still needs from the person before it can be shown or applied.
+ */
+export interface ChatNeed {
+  kind: "target" | "reference" | "move_details" | "rotate_details";
+  question: string;
+  /**
+   * Items: Stable, lowercase identifier. Never reused for a different entity.
+   */
+  candidates: string[];
 }
 /**
  * Build (and optionally store) the model for a geometry draft.

@@ -236,19 +236,23 @@ class EditProposalResult(ContractModel):
 ChatAction = Literal[
     "move",
     "rotate",
+    "select",
+    "add_object",
     "check_route",
+    "check_layout",
     "run_day",
     "run_again",
     "explain_change",
     "undo",
     "show_example",
     "capabilities",
-    "select",
     "save",
     "export",
 ]
-"""The bounded actions a chat request can map to (UX-03, AGT-01). The browser checks each
+"""The bounded actions a chat request can map to (UX-03/UX-04, AGT-01). The browser checks each
 action's prerequisites and performs it with the existing deterministic code."""
+
+MAX_CHAT_STEPS: Final = 4
 
 
 class ChatState(ContractModel):
@@ -265,11 +269,13 @@ class ChatState(ContractModel):
 
 
 class ChatRequest(ContractModel):
-    """One chat message, the reviewed scene facts it may need, and the app's state."""
+    """One chat message, the reviewed scene facts it may need, and the app's state.
+    ``focus_object_id`` is the object the conversation last acted on, for "it" and "that"."""
 
     request: EditRequestText
     context: EditContext
     state: ChatState
+    focus_object_id: StableId | None = None
 
 
 class ChatRoute(ContractModel):
@@ -281,15 +287,68 @@ class ChatRoute(ContractModel):
     width_quote: NonEmptyText | None
 
 
+class ChatAdd(ContractModel):
+    """A new object asked for: what it is in the person's words, the sizes they stated (metres;
+    null when not stated), and where (beside which object, on which side if said)."""
+
+    description: NonEmptyText
+    width_m: PositiveLength | None
+    depth_m: PositiveLength | None
+    height_m: PositiveLength | None
+    near_object_id: StableId | None
+    side: Literal["left", "right", "front", "back"] | None
+
+
+class ChatNeed(ContractModel):
+    """What one step still needs from the person before it can be shown or applied."""
+
+    kind: Literal["target", "reference", "move_details", "rotate_details"]
+    question: NonEmptyText
+    candidates: list[StableId]
+
+
+class ChatStep(ContractModel):
+    """One step of a plan. Move and rotate carry their target and the stated amount; a step that
+    cannot be done says why in ``unsupported`` and has no action."""
+
+    action: ChatAction | None
+    target_id: StableId | None = Field(description="For move, rotate and select.")
+    move: MoveIntent | None
+    rotate: RotateIntent | None
+    route: ChatRoute | None
+    add: ChatAdd | None
+    needs: ChatNeed | None
+    unsupported: NonEmptyText | None
+
+    @model_validator(mode="after")
+    def _shape(self) -> ChatStep:
+        if (self.action is None) != (self.unsupported is not None):
+            raise ValueError("a step either has an action or says why it cannot be done")
+        if self.action == "check_route" and self.route is None:
+            raise ValueError("check_route carries a route")
+        if self.action == "add_object" and self.add is None:
+            raise ValueError("add_object carries what to add")
+        if (
+            self.action == "move"
+            and self.needs is None
+            and (self.move is None or self.target_id is None)
+        ):
+            raise ValueError("a move without a need carries its target and amount")
+        if (
+            self.action == "rotate"
+            and self.needs is None
+            and (self.rotate is None or self.target_id is None)
+        ):
+            raise ValueError("a turn without a need carries its target and angle")
+        return self
+
+
 class ChatResult(ContractModel):
-    """The interpretation of one chat message: one action with its typed parameters, a
+    """The interpretation of one chat message: a short plan of checked steps (at most four), a
     question, or why it cannot be done. Nothing here changes the project."""
 
-    outcome: Literal["action", "clarification", "unsupported"]
-    action: ChatAction | None
-    edit: EditIntent | None = Field(description="For move and rotate.")
-    route: ChatRoute | None = Field(description="For check_route.")
-    object_id: StableId | None = Field(description="For select.")
+    outcome: Literal["plan", "clarification", "unsupported"]
+    steps: list[ChatStep] = Field(max_length=MAX_CHAT_STEPS)
     question: NonEmptyText | None
     candidates: list[StableId]
     message: NonEmptyText | None
@@ -298,18 +357,12 @@ class ChatResult(ContractModel):
 
     @model_validator(mode="after")
     def _one_outcome(self) -> ChatResult:
-        if (self.outcome == "action") != (self.action is not None):
-            raise ValueError("an action result, and only one, names its action")
+        if (self.outcome == "plan") != bool(self.steps):
+            raise ValueError("a plan, and only a plan, has steps")
         if self.outcome == "clarification" and self.question is None:
             raise ValueError("a clarification asks a question")
         if self.outcome == "unsupported" and self.message is None:
             raise ValueError("an unsupported result says why")
-        if (self.action in ("move", "rotate")) != (self.edit is not None):
-            raise ValueError("move and rotate, and only they, carry an edit")
-        if (self.action == "check_route") != (self.route is not None):
-            raise ValueError("check_route, and only it, carries a route")
-        if (self.action == "select") != (self.object_id is not None):
-            raise ValueError("select, and only it, names an object")
         return self
 
 
