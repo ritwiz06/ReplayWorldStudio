@@ -1513,7 +1513,10 @@ Append entries in chronological order. If a live repository session log already 
   - no accepted geometry or supplier dimensions (ENR-02);
   - no STEP;
   - UX-02 open.
-- Actual effort: about 1 h 40 min of active work (2026-10-25 20:58–21:58 and 2026-10-26 08:23–09:05 America/Phoenix), then commit and CI.
+- CI:
+  - **`2a50438`:** https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/40355315484 failed. Photo look A's "no missing-reference notice" check raced `photo.spec.ts`, which deletes the same shared photo; apt also stalled for 11 min.
+  - **`af4fb61`:** removed that check (a missing reference photo has its own test, with a file only it uses) and gave the browser job 30 min. https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/40358719740 passed all three jobs (smoke 22, local 6).
+- Actual effort: about 2 h of active work (2026-10-25 20:58–21:58 and 2026-10-26 08:23–09:35 America/Phoenix), including CI.
 - Next concrete task: on the user's priority, UX-02 with consenting newcomers, ENR-02, or ENR-01's STEP part.
 
 ## Copy this template for a coding session
