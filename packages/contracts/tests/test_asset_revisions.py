@@ -195,6 +195,7 @@ def generated_asset() -> dict[str, Any]:
                 for p in ("mass", "strength", "chemical_composition", "operating_behaviour")
             ],
             "revision": None,
+            "reference": None,
         },
         "upload": None,
     }
@@ -255,7 +256,7 @@ def photo_source() -> dict[str, Any]:
 def current(fixture_data: dict[str, Any]) -> dict[str, Any]:
     """The foundation fixture with a generated asset and a photo source, as 0.7.0 writes it."""
     fixture_data["catalog"].append(generated_asset())
-    fixture_data["sources"].append({**photo_source(), "drawing": None})
+    fixture_data["sources"].append({**photo_source(), "drawing": None, "reference": None})
     Project.model_validate(fixture_data)
     return fixture_data
 
@@ -264,6 +265,11 @@ def as_0_6_0(current: dict[str, Any]) -> dict[str, Any]:
     old = copy.deepcopy(current)
     old["schema_version"] = "0.6.0"
     del old["process"]
+    for source in old["sources"]:
+        source.pop("reference", None)
+    for asset in old["catalog"]:
+        if asset.get("generation"):
+            asset["generation"].pop("reference", None)
     for source in old["sources"]:
         del source["drawing"]
     for asset in old["catalog"]:
@@ -306,6 +312,9 @@ def test_0_6_0_documents_gain_a_null_revision_and_an_unstated_size_basis(
         "schema_version 0.14.0 -> 0.15.0 (adds 'upload: null' to 4 catalog assets and "
         "'correction: null' to 1 glTF visual: no model was uploaded; no values or evidence "
         "changed)",
+        "schema_version 0.15.0 -> 0.16.0 (adds 'reference: null' to 2 sources and 1 "
+        "generated asset: no reference photo was kept; earlier changes of look stay recorded "
+        "as drawing review corrections; no values or evidence changed)",
     ]
     assert "revision" not in old["catalog"][-1]["generation"]  # input untouched
     Project.model_validate(upgrade.document)

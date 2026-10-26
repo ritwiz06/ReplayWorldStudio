@@ -92,3 +92,48 @@ test("no key: an imported object's look is chosen by hand from the catalog, prev
   await expect(chat.locator('[data-kind="done"]').last()).toContainText(`Opened ${download.suggestedFilename()}: 12 objects.`);
   await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^1\/1 ready/, { timeout: 30_000 });
 });
+
+test("no key: a reference photo is kept with the object, and its look is built by hand beside it, applied, undone and reopened", { tag: "@local" }, async ({ page }) => {
+  test.setTimeout(150_000);
+  const RENDER = new URL("../../../../fixtures/photos/factory-walk.png", import.meta.url).pathname;
+  await page.goto("/");
+  const chat = page.getByTestId("chat");
+  await chat.getByTestId("chat-suggest-example").click();
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+  await page.getByTestId("view-toggle").click();
+  await page.getByRole("button", { name: "Show the object list and details" }).click();
+  await page.getByRole("navigation", { name: "Scene objects" }).getByRole("button", { name: /^Machine B/ }).click();
+  await page.getByTestId("view-toggle").click();
+  await chat.getByTestId("chat-file-input").setInputFiles(RENDER);
+  await chat.locator('[data-kind="question"]').last().getByTestId("photo-for-obj-dxf-111").click();
+  const dialog = page.getByTestId("photo-look");
+  // No AI proposal is offered or imitated: this is manual work, and it says so.
+  await expect(dialog.getByTestId("photo-look-manual-note")).toContainText("This is manual work");
+  await expect(dialog.getByTestId("photo-look-suggest")).toHaveCount(0);
+  await dialog.getByTestId("photo-look-manual").click();
+  await expect(dialog.getByTestId("photo-look-summary")).toContainText("Manual work");
+  await expect(dialog.getByTestId("photo-look-proposed")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+  await expect(dialog.getByTestId("photo-look-apply")).toBeDisabled(); // nothing changed yet
+  await dialog.getByTestId("photo-look-edit").locator("summary").first().click();
+  await dialog.getByTestId("photo-look-colour-paint_light_grey").selectOption("safety_yellow");
+  await expect(dialog.getByTestId("photo-look-apply")).toBeEnabled({ timeout: 30_000 });
+  await dialog.getByTestId("photo-look-apply").click();
+  await expect(chat.locator('[data-kind="photo-look-applied"]').last()).toBeVisible();
+  const save = async () => {
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("save").click()]);
+    return { name: download.suggestedFilename(), text: readFileSync((await download.path())!, "utf8") };
+  };
+  const saved = await save();
+  const project = JSON.parse(saved.text) as { catalog: { id: string; generation: { method: string; language_model: unknown } | null }[]; scene: { objects: { id: string; asset_id: string | null; dimensions: unknown }[] } };
+  const machine = project.scene.objects.find((o) => o.id === "obj-dxf-111")!;
+  const original = (SAMPLE.scene.objects as unknown as { id: string; dimensions: unknown }[]).find((o) => o.id === "obj-dxf-111")!;
+  expect(machine.dimensions).toEqual(original.dimensions);
+  const asset = project.catalog.find((a) => a.id === machine.asset_id)!;
+  expect(asset.generation).toMatchObject({ method: "reference_photo", language_model: null });
+  await page.getByTestId("undo").click();
+  await page.getByTestId("redo").click();
+  await page.goto("/");
+  await chat.getByTestId("chat-file-input").setInputFiles({ name: saved.name, mimeType: "application/json", buffer: Buffer.from(saved.text) });
+  await expect(chat.locator('[data-kind="done"]').last()).toContainText(`Opened ${saved.name}: 12 objects.`);
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^1\/1 ready/, { timeout: 30_000 });
+});

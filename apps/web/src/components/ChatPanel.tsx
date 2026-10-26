@@ -41,7 +41,7 @@ interface Props {
   /** The controller's plan actions (choices, forms, Apply, Cancel). */
   plans: Pick<ChatController, "planTarget" | "planMove" | "planRotate" | "planAsset" | "planNear" | "planSide" | "planClarify">;
   /** The appearance card's actions (UX-05). */
-  looks: Pick<ChatController, "lookUse" | "lookKeep" | "lookBrowse" | "lookHover" | "lookCreate" | "lookUpload">;
+  looks: Pick<ChatController, "lookUse" | "lookKeep" | "lookBrowse" | "lookHover" | "lookCreate" | "lookUpload" | "lookPhoto">;
   /** The attached-model review's actions (ENR-01). */
   models: Pick<ChatController, "modelChoose" | "modelShow">;
 }
@@ -410,6 +410,9 @@ function LookRowView({ look, row, actions }: { look: LookView; row: LookRow; act
           )}
           <button type="button" className="button button-small" data-testid={`look-upload-${id}`} onClick={() => actions.lookUpload(id)}>
             Upload a 3D model…
+          </button>
+          <button type="button" className="button button-small" data-testid={`look-photo-${id}`} onClick={() => actions.lookPhoto(id)}>
+            Improve from photo…
           </button>
           {row.status !== "kept" && (
             <button type="button" className="button button-small" data-testid={`look-keep-${id}`} onClick={() => actions.lookKeep(look.id, id)}>

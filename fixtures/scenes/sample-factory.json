@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.15.0",
+  "schema_version": "0.16.0",
   "id": "proj-sample-factory-hall",
   "name": "Sample factory hall (synthetic)",
   "units": {
@@ -1379,7 +1379,8 @@
           "omissions": "accepted",
           "symbol_layers": []
         }
-      }
+      },
+      "reference": null
     }
   ],
   "catalog": [],

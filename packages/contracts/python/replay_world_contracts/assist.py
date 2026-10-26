@@ -18,6 +18,7 @@ from pydantic import Field, StringConstraints, model_validator
 from .models import (
     MAX_REVISION_CHANGES,
     REVISION_INSTRUCTION_MAX_CHARS,
+    AppearanceReference,
     CatalogAsset,
     ContractModel,
     DrawingImport,
@@ -556,7 +557,10 @@ class RevisionProblem(ContractModel):
 class RevisionAdjustment(ContractModel):
     """A visual choice the API made without asking, shown as such: never a measurement."""
 
-    kind: Literal["enlarged", "coloured_as_asked", "contrast", "scaled", "recentred", "part_action"]
+    # placed (ENR-01): a part buried in another, or floating, was put where it can be seen.
+    kind: Literal[
+        "enlarged", "coloured_as_asked", "contrast", "scaled", "recentred", "part_action", "placed"
+    ]
     part_ids: list[PartId] = Field(min_length=1)
     text: NonEmptyText
 
@@ -707,6 +711,89 @@ class ImageProposalResult(ContractModel):
         ) != (self.message is not None):
             raise ValueError(f"an '{self.outcome}' result must carry exactly its own content")
         return self
+
+
+# --- A new look for an existing object, from a reference photo (ENR-01) -----------------------
+
+
+class AppearanceProposalRequest(ContractModel):
+    """The reviewed crop of a reference photo and what the vision model needs about ONE object:
+    its name, its recorded size (the envelope the appearance must keep) and, when it is drawn
+    with a generated model, that model's specification to start from. Nothing else of the
+    project is sent. ``data_base64`` is a metadata-free JPEG of the crop made by the browser
+    (orientation applied, at most 2048 px). ``photo_sha256`` and ``crop`` identify the original
+    file and the chosen part of it (they select recorded answers in offline tests); neither the
+    hash nor the original file is sent to the model.
+    """
+
+    name: ShortText
+    envelope_m: Extent3
+    # The current generated specification to start from; null starts from the recorded
+    # envelope as one block. (No Field description beside a $ref.)
+    spec: GeometrySpec | None
+    instruction: RevisionText | None
+    media_type: Literal["image/jpeg"]
+    data_base64: Annotated[str, StringConstraints(min_length=16, max_length=6_000_000)]
+    width_px: int = Field(ge=16, le=MAX_ANALYSIS_SIDE_PX)
+    height_px: int = Field(ge=16, le=MAX_ANALYSIS_SIDE_PX)
+    photo_sha256: Sha256Hex
+    crop: ImageBox
+
+
+class AppearanceProposalResult(ContractModel):
+    """A proposed appearance for one object from its reference photo, checked and fitted to the
+    object's recorded size; nothing is built or stored.
+
+    ``base`` is what the proposal started from. ``visible`` lists what the model says the photo
+    shows and the proposal draws; ``estimated`` the proportions and hidden structure it guessed;
+    ``not_represented`` what the photo shows but the generator cannot draw. ``problems`` and
+    ``adjustments`` are the API's own visibility checks and visual choices, as for a revision.
+    The size never changes: a photo is not a measurement.
+    """
+
+    outcome: Literal["proposal", "unsupported", "already_satisfied"]
+    message: NonEmptyText | None
+    base: GeometrySpec
+    spec: GeometrySpec | None
+    summary: NonEmptyText | None
+    visible: list[NonEmptyText] = Field(max_length=20)
+    estimated: list[NonEmptyText] = Field(max_length=20)
+    not_represented: list[NonEmptyText] = Field(max_length=20)
+    checks: list[NonEmptyText]
+    problems: list[RevisionProblem]
+    adjustments: list[RevisionAdjustment]
+    view: RevisionView
+    crop_sha256: Sha256Hex
+    prompt: Literal["rws-appearance-prompt/3"]
+    provider: ProviderRun
+
+    @model_validator(mode="after")
+    def _consistent(self) -> AppearanceProposalResult:
+        if (self.outcome == "proposal") != (self.spec is not None):
+            raise ValueError("a proposal (and only a proposal) carries a specification")
+        if self.outcome != "proposal" and self.message is None:
+            raise ValueError(f"an '{self.outcome}' outcome explains itself in 'message'")
+        if (self.problems or self.adjustments) and self.outcome != "proposal":
+            raise ValueError("only a proposal can carry 'problems' or 'adjustments'")
+        if self.spec is not None and self.spec.envelope_m != self.base.envelope_m:
+            raise ValueError("a proposed appearance keeps the object's recorded size")
+        return self
+
+
+class ReferenceAssetRequest(ContractModel):
+    """Build a reviewed appearance from a reference photo as a new generated asset (its model
+    stored by hash). The specification's envelope is the object's recorded size; the asset's
+    nominal sizes say so, and never become evidence from the photo."""
+
+    name: ShortText
+    kind: Literal["equipment", "structure", "reference"]
+    object_name: NonEmptyText
+    spec: GeometryDraft
+    summary: NonEmptyText
+    language_model: LanguageModelRef | None
+    reference: AppearanceReference
+    changes: list[NonEmptyText] = Field(max_length=MAX_REVISION_CHANGES)
+    not_represented: list[NonEmptyText] = Field(max_length=20)
 
 
 class StoredPhoto(ContractModel):

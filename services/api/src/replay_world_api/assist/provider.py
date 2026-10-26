@@ -26,7 +26,7 @@ from typing import Any, Final, Literal, Protocol
 
 from ..settings import AssistSettings
 
-Task = Literal["object", "edit", "image", "revision", "plan", "setup", "chat"]
+Task = Literal["object", "edit", "image", "revision", "plan", "setup", "chat", "appearance"]
 
 MAX_OUTPUT_TOKENS: Final = 4096
 
@@ -283,7 +283,7 @@ def vision_provider_from_settings(settings: AssistSettings) -> Provider | None:
     if settings.provider == "voyager" and settings.api_key:
         return OpenAICompatibleProvider(settings, model=settings.vision_model)
     if settings.provider == "recorded":
-        return RecordedProvider(settings, tasks=("image", "plan"))
+        return RecordedProvider(settings, tasks=("image", "plan", "appearance"))
     return None
 
 

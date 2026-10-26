@@ -698,6 +698,7 @@ def photo_source(stored: StoredPhoto, source_id: str = "src-photo-office") -> di
             "visible_text": [],
         },
         "drawing": None,
+        "reference": None,
     }
 
 

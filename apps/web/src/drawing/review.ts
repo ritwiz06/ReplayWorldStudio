@@ -134,7 +134,7 @@ function usedIds(project: Project): Set<string> {
   const ids = new Set(project.scene.objects.map((o) => o.id));
   for (const record of project.scene.edit_log) {
     if (record.type === "object_removed") ids.add(record.object.id);
-    else if (record.type === "asset_revised" || record.type === "drawing_reviewed") for (const o of record.objects) ids.add(o.object_id);
+    else if (record.type === "asset_revised" || record.type === "drawing_reviewed" || record.type === "appearance_changed") for (const o of record.objects) ids.add(o.object_id);
     else if (record.type !== "source_attached" && record.type !== "process_set") ids.add(record.object_id);
   }
   return ids;

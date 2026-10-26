@@ -14,7 +14,7 @@ import type { ApiClient } from "../api/client";
 import { type RouteAsk, runChecks, type SceneChecks, sceneChecks } from "../checks/results";
 import { precheck, prepareDraft, readDrawing, settledUnit } from "../drawing/orchestrator";
 import { type DrawingSource, type DrawingUnit, drawingSource, formatSize } from "../drawing/world";
-import type { CommandRequest } from "../editing/commands";
+import { type CommandRequest, canChangeLook } from "../editing/commands";
 import type { Outcome } from "../editing/history";
 import { compareDays, type DayComparison, type DayRun, plural, runDay, valueCounts } from "../run/day";
 import { clockText } from "../run/replay";
@@ -143,6 +143,9 @@ export interface ChatHost {
   openCreate(kind: "describe" | "builder", description: string): void;
   /** Choose a .glb from this computer for one object (ENR-01). */
   pickModelFile(objectId: string): void;
+  /** Improve one object's look from a photo of it (ENR-01): the review window, with the photo
+   * already chosen when it was attached here. */
+  openPhotoLook(objectId: string, file: File | null): void;
   /** Select an object and bring it into view (for reviewing its look closely). */
   focusObject(objectId: string): void;
   /** Draw one object with a candidate model while it is reviewed (display only; UX-05). */
@@ -686,7 +689,9 @@ export class ChatController {
     this.renderModel(state);
     const r = state.report;
     const name = r.filename.replace(/\.glb$/i, "") || "Attached model";
-    const result = await this.host.client.uploadedAsset({ sha256: r.sha256, filename: r.filename, name, up_axis: state.up, turns: state.turns, unit: state.unit, fit: state.fit, note: null }).catch(() => null);
+    const kind = this.host.project?.scene.objects.find((o) => o.id === state.objectId)?.kind;
+    const assetKind = kind === "structure" || kind === "reference" ? kind : "equipment";
+    const result = await this.host.client.uploadedAsset({ sha256: r.sha256, filename: r.filename, name, kind: assetKind, up_axis: state.up, turns: state.turns, unit: state.unit, fit: state.fit, note: null }).catch(() => null);
     if (ask !== state.ask || state.phase !== "review") return; // a newer choice, or no longer open
     state.busy = false;
     if (!result || !result.ok) {
@@ -863,7 +868,7 @@ export class ChatController {
     const project = h.project;
     if (!project) return void this.needWorld();
     const objects = equipmentToImprove(project).filter((o) => !only || only.includes(o.id));
-    const picked = only ? project.scene.objects.filter((o) => only.includes(o.id) && o.kind === "equipment") : objects;
+    const picked = only ? project.scene.objects.filter((o) => only.includes(o.id) && canChangeLook(o)) : objects;
     if (!picked.length) {
       this.say("done", h.facts.hasDrawing ? "All the imported equipment already has a model, or there is none." : "Matching models is for equipment of an imported plan; open or attach one first.", { tone: "info" });
       return;
@@ -969,6 +974,81 @@ export class ChatController {
 
   /** Upload a 3D model for this object instead (ENR-01): its own review follows. */
   lookUpload = (objectId: string) => this.host.pickModelFile(objectId);
+
+  /** Improve this object's look from a photo of it (ENR-01): its own review window follows. */
+  lookPhoto = (objectId: string) => this.host.openPhotoLook(objectId, null);
+
+  /** A look from a photo was applied in its window: said here, with Undo, like every step. */
+  notePhotoLook = (request: CommandRequest) => {
+    const command = request.command;
+    if (command.type !== "set_appearance") return;
+    const project = this.host.project;
+    const objectId = command.changes[0]?.objectId;
+    if (!project || !objectId) return;
+    // An open look card for this object is past: its choices were made for the old look.
+    for (const look of this.looks.values()) {
+      if (look.phase === "review" && look.rows.some((r) => r.match.object.id === objectId)) {
+        look.phase = "stale";
+        this.renderLook(look);
+      }
+    }
+    const revision = project.scene.revision;
+    let entryId = 0;
+    entryId = this.say("done", `${nameOf(project, objectId)} now looks more like its photo.`, {
+      tone: "done",
+      kind: "photo-look-applied",
+      lines: ["Only its look changed: its id, name, position, recorded size and evidence, process and source links, routes and the run are as they were. The photo is kept with the world as its reference."],
+      buttons: [
+        {
+          label: "Undo",
+          testId: "photo-look-undo",
+          run: () => {
+            if (this.host.project?.scene.revision !== revision) return this.update(entryId, { buttons: [], lines: ["Something changed since; use Undo at the top."] });
+            if (this.host.undo()?.ok) this.update(entryId, { kind: "photo-look-undone", text: "Undone: it looks as it did before.", tone: "info", buttons: [], lines: [] });
+          },
+        },
+      ],
+    });
+  };
+
+  /** A picture attached while a world is open: a reference for one of its objects, or (as
+   * before) a new world from the picture. Nothing is read or sent until the person chooses. */
+  private offerReference(file: File) {
+    const h = this.host;
+    const project = h.project!;
+    const objects = project.scene.objects.filter(canChangeLook);
+    const selected = h.selectedId && objects.some((o) => o.id === h.selectedId) ? h.selectedId : null;
+    let asked = 0;
+    const close = (line: string) => this.update(asked, { closed: true, choices: [], lines: [line] });
+    const forObject = (id: string) => {
+      close(`A reference for ${nameOf(project, id)}.`);
+      h.openPhotoLook(id, file);
+    };
+    const choices: CardChoice[] = [
+      ...(selected ? [{ label: `Use as a reference for ${nameOf(project, selected)}`, testId: `photo-for-${selected}`, objectId: selected, run: () => forObject(selected) }] : []),
+      ...objects.filter((o) => o.id !== selected).map((o) => ({ label: nameOf(project, o.id), testId: `photo-for-${o.id}`, objectId: o.id, run: () => forObject(o.id) })),
+      {
+        label: "Create a world from this picture instead",
+        testId: "photo-new-world",
+        objectId: null,
+        run: () => {
+          close("A new world from the picture.");
+          if (/\.(png|jpe?g)$/i.test(file.name)) {
+            this.awaiting = { kind: "world", since: h.loadId, name: file.name };
+            h.pictureImport(file);
+            this.say("question", "A picture or PDF page has no scale. In the window that opened, mark one length you know; then I'll show the draft here.", { tone: "question" });
+          } else this.say("cannot", "A plan picture must be PNG or JPEG.", { tone: "error" });
+        },
+      },
+    ];
+    asked = this.say(
+      "question",
+      selected
+        ? `Is ${file.name} a photo of ${nameOf(project, selected)}? It can make that object look more like it, or start a new world.`
+        : `Which object is ${file.name} a photo of? It can make that object look more like it, or start a new world.`,
+      { tone: "question", choices },
+    );
+  }
 
   lookKeep = (id: number, objectId: string) => {
     const look = this.lookOf(id);
@@ -1666,6 +1746,10 @@ export class ChatController {
       h.openFile(file);
       const entryId = this.say("progress", `Opening ${file.name}…`, { tone: "progress" });
       this.awaiting = { kind: "file", since: h.loadId, name: file.name, entryId };
+      return;
+    }
+    if (/\.(png|jpe?g|webp)$/i.test(file.name) && h.project?.scene.objects.some(canChangeLook)) {
+      this.offerReference(file);
       return;
     }
     if (/\.(pdf|png|jpe?g)$/i.test(file.name)) {

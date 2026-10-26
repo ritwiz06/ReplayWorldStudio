@@ -1,6 +1,8 @@
 """Replay World Studio contracts. Pydantic models here are the single schema source of truth."""
 
 from .assist import (
+    AppearanceProposalRequest,
+    AppearanceProposalResult,
     AssistStatus,
     ChatRequest,
     ChatResult,
@@ -41,6 +43,7 @@ from .assist import (
     ProposedPlanText,
     ProposedWall,
     ProviderRun,
+    ReferenceAssetRequest,
     RestoredModel,
     ReviewedDimensions,
     ReviewedLength,
@@ -62,6 +65,7 @@ from .evidence import (
     EvidenceManifest,
 )
 from .models import (
+    APPEARANCE_PROMPT_VERSION,
     DESIGN_ORIGINS,
     DRAWING_PATH_PATTERN,
     GENERATED_MODEL_PREFIX,
@@ -75,6 +79,9 @@ from .models import (
     UNKNOWN_PROPERTIES,
     UPLOADED_MODEL_PREFIX,
     VERIFIED_ORIGINS,
+    AppearanceChanged,
+    AppearanceObjectChange,
+    AppearanceReference,
     AssetGeneration,
     AssetRevised,
     AssetRevision,
@@ -111,6 +118,7 @@ from .models import (
     ModelBounds,
     ObjectAdded,
     ObjectEdited,
+    ObjectReference,
     ObjectRemoved,
     ObjectReview,
     OmittedShape,
@@ -165,6 +173,7 @@ from .models import (
 from .uploads import MODEL_UNITS, UploadedAssetRequest, UploadedModelReport
 
 __all__ = [
+    "APPEARANCE_PROMPT_VERSION",
     "DESIGN_ORIGINS",
     "DRAWING_PATH_PATTERN",
     "GENERATED_MODEL_PREFIX",
@@ -179,6 +188,11 @@ __all__ = [
     "UNKNOWN_PROPERTIES",
     "UPLOADED_MODEL_PREFIX",
     "VERIFIED_ORIGINS",
+    "AppearanceChanged",
+    "AppearanceObjectChange",
+    "AppearanceProposalRequest",
+    "AppearanceProposalResult",
+    "AppearanceReference",
     "AssetGeneration",
     "AssetRevised",
     "AssetRevision",
@@ -246,6 +260,7 @@ __all__ = [
     "ObjectProposal",
     "ObjectProposalRequest",
     "ObjectProposalResult",
+    "ObjectReference",
     "ObjectRemoved",
     "ObjectReview",
     "OmittedShape",
@@ -281,6 +296,7 @@ __all__ = [
     "ProposedWall",
     "ProviderRun",
     "RandomStops",
+    "ReferenceAssetRequest",
     "ReferenceLength",
     "RestoredModel",
     "ReviewedDimensions",

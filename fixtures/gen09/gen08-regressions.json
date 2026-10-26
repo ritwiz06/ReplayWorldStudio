@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.15.0",
+  "schema_version": "0.16.0",
   "id": "proj-gen09-regressions",
   "name": "GEN-09 regressions (GEN-08 t2 and p3 targets)",
   "units": {
@@ -37,7 +37,8 @@
       "import_warnings": [],
       "image": null,
       "photo_import": null,
-      "drawing": null
+      "drawing": null,
+      "reference": null
     }
   ],
   "catalog": [
@@ -353,7 +354,8 @@
             "reason": "Not established. Speeds, cycle times and motion are not modelled."
           }
         ],
-        "revision": null
+        "revision": null,
+        "reference": null
       },
       "upload": null
     },
@@ -537,7 +539,8 @@
             "reason": "Not established. Speeds, cycle times and motion are not modelled."
           }
         ],
-        "revision": null
+        "revision": null,
+        "reference": null
       },
       "upload": null
     }

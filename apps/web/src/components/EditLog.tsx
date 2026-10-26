@@ -45,8 +45,10 @@ function recordTitle(record: EditRecord, project: Project): string {
     }
     case "drawing_reviewed":
       return `Review: ${record.correction}`;
+    case "appearance_changed":
+      return record.summary;
     case "source_attached":
-      return `Kept ${record.filename} with this world (not aligned with the plan)`;
+      return record.filename.includes("(reference photo of ") ? `Kept ${record.filename}` : `Kept ${record.filename} with this world (not aligned with the plan)`;
     case "process_set":
       return `Run a day: ${record.summary}`;
   }
@@ -56,7 +58,7 @@ function recordTitle(record: EditRecord, project: Project): string {
 export function ObjectEditLog({ project, objectId }: { project: Project; objectId: string }) {
   const records = project.scene.edit_log
     .filter((r) =>
-      r.type === "asset_revised" || r.type === "drawing_reviewed" ? r.objects.some((o) => o.object_id === objectId) : r.type !== "object_removed" && r.type !== "source_attached" && r.type !== "process_set" && r.object_id === objectId,
+      r.type === "asset_revised" || r.type === "drawing_reviewed" || r.type === "appearance_changed" ? r.objects.some((o) => o.object_id === objectId) : r.type !== "object_removed" && r.type !== "source_attached" && r.type !== "process_set" && r.object_id === objectId,
     )
     .reverse();
   if (records.length === 0) return <p className="muted">No edits recorded for this object.</p>;
@@ -79,6 +81,11 @@ export function ObjectEditLog({ project, objectId }: { project: Project; objectI
             </ul>
           ) : record.type === "drawing_reviewed" ? (
             <span>Review: {record.correction}</span>
+          ) : record.type === "appearance_changed" ? (
+            <span>
+              Look (display only): {record.objects.find((o) => o.object_id === objectId)?.asset_before ?? "stand-in"} → {record.objects.find((o) => o.object_id === objectId)?.asset_after ?? "stand-in"}
+              {record.objects.find((o) => o.object_id === objectId)?.reason ? ` (${record.objects.find((o) => o.object_id === objectId)!.reason})` : ""}
+            </span>
           ) : record.type === "asset_revised" ? (
             <ul>
               <li>

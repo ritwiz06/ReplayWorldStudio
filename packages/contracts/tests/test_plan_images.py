@@ -70,6 +70,7 @@ def plan_source(kind: str = "pdf", **raster: Any) -> dict[str, Any]:
         "import_warnings": [],
         "image": None,
         "photo_import": None,
+        "reference": None,
         "drawing": {
             "reader": "rws-plan-image/1",
             "file": {"uri": f"drawings/{SHA}.{extension}", "bytes": 5000},
@@ -203,6 +204,7 @@ def test_a_later_plan_is_kept_with_the_world_without_replacing_it(
         "image": None,
         "photo_import": None,
         "drawing": None,
+        "reference": None,
     }
     project["sources"].append(attached)
     project["scene"]["revision"] += 1

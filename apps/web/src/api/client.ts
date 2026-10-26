@@ -1,6 +1,7 @@
 // Typed access to the local API. Every response is checked against the generated contract
 // schema before the UI sees it, and every failure is classified so it can be explained.
 import {
+  validateAppearanceProposalResult,
   SCHEMA_VERSION,
   validateAssistStatus,
   validateCatalogAsset,
@@ -24,7 +25,9 @@ import {
   validateUpgradeReport,
   validateValidationErrorResponse,
   validateValidationReport,
+  type AppearanceProposalRequest,
   type ContractIssue,
+  type ReferenceAssetRequest,
   type ChatRequest,
   type EditProposalRequest,
   type EvidenceBundleRequest,
@@ -201,6 +204,24 @@ export function createApiClient(
     /** Build a revision of a generated asset as a new catalog asset; the previous one is unchanged. */
     reviseGeneratedAsset: (body: GeneratedAssetRevisionRequest, signal?: AbortSignal) =>
       request("/api/v1/catalog/generated-assets/revisions", validateCatalogAsset, {
+        method: "POST",
+        body: JSON.stringify(body),
+        signal,
+        timeoutMs: GENERATE_TIMEOUT_MS,
+      }),
+    /** Propose a new look for one object from the reviewed crop of a reference photo (ENR-01):
+     * the crop, the object's name, recorded size and current generated specification are sent
+     * to the configured vision model; nothing is built or stored. */
+    proposeAppearance: (body: AppearanceProposalRequest, signal?: AbortSignal) =>
+      request("/api/v1/assist/appearance-proposals", validateAppearanceProposalResult, {
+        method: "POST",
+        body: JSON.stringify(body),
+        signal,
+        timeoutMs: ASSIST_TIMEOUT_MS,
+      }),
+    /** Build a reviewed appearance from a reference photo as a new catalog asset (stored by hash). */
+    referenceAsset: (body: ReferenceAssetRequest, signal?: AbortSignal) =>
+      request("/api/v1/catalog/reference-assets", validateCatalogAsset, {
         method: "POST",
         body: JSON.stringify(body),
         signal,

@@ -4,7 +4,7 @@
 //
 // One canvas lives for the whole review: while a corrected model is being built, the previous
 // one stays on screen (marked as building), and the camera re-frames when the size changes.
-import type { GeneratedModel } from "@replay-world/contracts";
+import type { GltfVisual } from "@replay-world/contracts";
 import { Grid, OrbitControls } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useState } from "react";
@@ -131,6 +131,14 @@ function Highlights({ boxes }: { boxes: readonly Highlight[] }) {
   );
 }
 
+/** A model to preview: a generated model's preview build (its bytes in base64), or a stored
+ * model's bytes as fetched; either is checked against `visual` before it is drawn. */
+export interface PreviewModel {
+  visual: GltfVisual;
+  glb_base64: string | null;
+  data?: ArrayBuffer;
+}
+
 export function ModelPreview({
   model,
   busy,
@@ -140,7 +148,7 @@ export function ModelPreview({
   pickable = [],
   onPick,
 }: {
-  model: GeneratedModel | null;
+  model: PreviewModel | null;
   busy: boolean;
   testId?: string;
   view?: RevisionView;
@@ -153,9 +161,10 @@ export function ModelPreview({
   const key = model?.visual.sha256 ?? "";
 
   useEffect(() => {
-    if (!model?.glb_base64) return;
+    const data = model?.data ?? (model?.glb_base64 ? decode(model.glb_base64) : null);
+    if (!model || !data) return;
     let cancelled = false;
-    void parseCatalogModel(decode(model.glb_base64), model.visual).then((result) => {
+    void parseCatalogModel(data, model.visual).then((result) => {
       if (cancelled) return;
       if (result.ok) setShown({ key, template: result.scene, extents: modelExtents(model.visual) });
       else setFailure({ key, message: result.failure.message });

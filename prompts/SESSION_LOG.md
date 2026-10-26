@@ -1466,6 +1466,56 @@ Append entries in chronological order. If a live repository session log already 
 - Actual effort: about 1 h 30 min of active work (2026-10-25 14:22 to 15:53 America/Phoenix, the commit), then CI waiting and the rerun (green at 19:02).
 - Next concrete task: on the user's priority, UX-02 with consenting newcomers, ENR-01's photo or STEP part, ENR-02 (adopting documented dimensions), or QA-01.
 
+### 2026-10-25/26 - ENR-01 (photo part, and looks for any world): a reference photo improves one object (ADR-066, contract 0.16.0)
+
+- Active milestone / issue IDs: ENR-01 (photo and source-independent parts), UX-02 (open).
+- Starting commit: `6876453`.
+- Goal: "Here is a photo of this machine. Make this object look more like it." Enrichment that works however the world was made, and a reviewed, photo-assisted proposal. Keep the GLB path, chat, engine, checks and local-only operation.
+- Work completed (details in [docs/enr-01/photo.md](../docs/enr-01/photo.md)):
+  - **Contract 0.16.0:**
+    - `appearance_changed` (the general change of look);
+    - the `reference_photo` source kind with `reference` (object ids, note);
+    - `generation.method: reference_photo` with `generation.reference` (photo hash, crop, orientation, crop hash and size, model and prompt, instruction, start, seen and estimated, hand changes);
+    - `AppearanceProposalRequest`/`Result`, `ReferenceAssetRequest`, `kind` on `UploadedAssetRequest`, the `placed` adjustment;
+    - the 0.15.0 → 0.16.0 migration (nulls only; `drawing_reviewed` looks kept), tested;
+    - evidence manifests accept 0.14.0–0.16.0.
+  - **API:**
+    - `POST /api/v1/assist/appearance-proposals` (one multimodal request; 150 s for both answers; cancellable between stages; refused without a vision model);
+    - `assist/appearance.py`, which reuses GEN-02's part changes, overlap separation, fitting and visibility checks, keeps the recorded size, drops property claims, and places buried or floating parts;
+    - `POST /api/v1/catalog/reference-assets`;
+    - reference photos in source checks (a missing one never blocks) and in bundles (labelled, left out unless chosen).
+  - **Browser:**
+    - `set_appearance` without a drawing, plus `attach_reference`;
+    - the PhotoLook dialog (crop, what is sent, Suggest, review of photo/current/proposed, hand edits, Details, Apply, Keep the current look, manual path);
+    - chat: "Use as a reference for …" versus a new world;
+    - Change look… for any non-area object, with Improve from photo…;
+    - the reference photo in the selection chip;
+    - a missing-reference notice (same photo by hash);
+    - the run's staleness ignores reference photos;
+    - fixed: a dismissed file chooser closed the dialog (its `cancel` event bubbled).
+- Live AI (ASU Voyager, `qwen3-vl-32b-instruct`, images only of permitted repository files; the user was told before sending): **6 calls, 475.9 s** of waiting (limits 6 and 480 s). Every call is in docs/enr-01/live-calls.jsonl.
+  - **Machine B, prompt 1:** 118.4 s; most parts at one centre (weak; kept in attempts/).
+  - **Machine B, prompt 2:** 141.1 s; a repetition loop to the token limit (unusable; kept). Answer lists are now bounded.
+  - **Machine B, prompt 3:** 67.5 + 73.8 s.
+  - **Control cabinet, prompt 3:** 36.0 + 39.1 s.
+  - **Results:** weak (Machine B) and weak to moderate (drawer unit), reported as such.
+- Commands run and outcomes:
+  - `pnpm check`: exit 0 (pytest 937, Vitest 287, contracts 10);
+  - `pnpm test:e2e`: 83 passed, 24 skipped;
+  - local: 6 passed (the committed REL-01 bundle reproduces; the no-key photo path);
+  - public: 7 passed, 2 skipped;
+  - external: 10 passed;
+  - screens: 20 in docs/enr-01/photo-screens/ (both sizes, with and without a key);
+  - demo: `docs/demo/enr01-photo-look.mp4` (30 s).
+- Known limitations:
+  - live proposals are weak on a busy machine;
+  - no dark wood in the generator's palette;
+  - no accepted geometry or supplier dimensions (ENR-02);
+  - no STEP;
+  - UX-02 open.
+- Actual effort: about 1 h 40 min of active work (2026-10-25 20:58–21:58 and 2026-10-26 08:23–09:05 America/Phoenix), then commit and CI.
+- Next concrete task: on the user's priority, UX-02 with consenting newcomers, ENR-02, or ENR-01's STEP part.
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

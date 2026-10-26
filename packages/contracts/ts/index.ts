@@ -3,6 +3,7 @@
 import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
 import bundle from "../schema/contracts.schema.json";
 import type {
+  AppearanceProposalResult,
   AssistStatus,
   CatalogAsset,
   ChatResult,
@@ -31,7 +32,7 @@ import type {
 
 export type * from "./generated/contracts";
 
-export const SCHEMA_VERSION: Project["schema_version"] = "0.15.0";
+export const SCHEMA_VERSION: Project["schema_version"] = "0.16.0";
 
 /** One structural problem, located by a JSON Pointer such as `/scene/objects/2/dimensions`. */
 export interface ContractIssue {
@@ -94,3 +95,4 @@ export const validateEvidenceBundleOpened = validatorFor<EvidenceBundleOpened>("
 export const validateEvidenceManifest = validatorFor<EvidenceManifest>("EvidenceManifest");
 export const validateChatResult = validatorFor<ChatResult>("ChatResult");
 export const validateUploadedModelReport = validatorFor<UploadedModelReport>("UploadedModelReport");
+export const validateAppearanceProposalResult = validatorFor<AppearanceProposalResult>("AppearanceProposalResult");

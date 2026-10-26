@@ -144,7 +144,7 @@ test("a DXF floor plan becomes a walkable draft that is moved, compared, saved a
 
   // Save: the drawing, its unit basis, every source reference and the move are in the file.
   const saved = await save(page);
-  expect(saved.json.schema_version).toBe("0.15.0");
+  expect(saved.json.schema_version).toBe("0.16.0");
   const [source] = saved.json.sources;
   expect([source?.kind, source?.filename, source?.drawing.units.basis]).toEqual(["dxf", "hall-mm.dxf", "drawing_header"]);
   expect(source?.drawing.objects.find((o) => o.object_id === "obj-dxf-104")?.refs[0]).toMatchObject({ handle: "104", layer: "EQUIPMENT" });

@@ -73,7 +73,7 @@ def test_awkward_floats_and_ids_survive_a_round_trip(fixture_data: dict[str, Any
 
 def test_fixture_declares_si_units_frame_and_label(fixture_text: str) -> None:
     project = Project.model_validate_json(fixture_text)
-    assert project.schema_version == SCHEMA_VERSION == "0.15.0"
+    assert project.schema_version == SCHEMA_VERSION == "0.16.0"
     assert project.units.model_dump() == {"length": "m", "time": "s", "mass": "kg", "angle": "rad"}
     assert project.world_frame.up_axis == "+Y"
     assert project.fixture is not None and project.fixture.kind == "foundation"
@@ -167,7 +167,7 @@ def test_rejects_unexpected_fields_and_versions(fixture_data: dict[str, Any]) ->
     fixture_data["schema_version"] = "0.1.0"
     messages = {loc: msg for loc, msg in _errors(fixture_data)}
     assert "Extra inputs are not permitted" in messages[("scale",)]
-    assert "Input should be '0.15.0'" in messages[("schema_version",)]
+    assert "Input should be '0.16.0'" in messages[("schema_version",)]
 
 
 # --- parameters (unchanged rules) -----------------------------------------------------------

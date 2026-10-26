@@ -63,7 +63,7 @@ from pydantic import (
     model_validator,
 )
 
-SchemaVersion = Literal["0.15.0"]
+SchemaVersion = Literal["0.16.0"]
 SCHEMA_VERSION: Final[SchemaVersion] = get_args(SchemaVersion)[0]
 
 StableId = Annotated[
@@ -620,6 +620,29 @@ class GeometrySpec(GeometryDraft):
         return self
 
 
+class ImagePoint(ContractModel):
+    """A point on an image as fractions of its displayed width (``u``, from the left) and height
+    (``v``, from the top). Independent of the image's resolution."""
+
+    u: float = Field(ge=0, le=1)
+    v: float = Field(ge=0, le=1)
+
+
+class ImageBox(ContractModel):
+    """An axis-aligned box on an image, in the same fractions as :class:`ImagePoint`."""
+
+    left: float = Field(ge=0, le=1)
+    top: float = Field(ge=0, le=1)
+    right: float = Field(ge=0, le=1)
+    bottom: float = Field(ge=0, le=1)
+
+    @model_validator(mode="after")
+    def _ordered(self) -> ImageBox:
+        if not (self.left < self.right and self.top < self.bottom):
+            raise ValueError("an image box needs left < right and top < bottom")
+        return self
+
+
 class LanguageModelRef(ContractModel):
     """The language model that drafted a proposal: service, endpoint and exact model ID."""
 
@@ -676,6 +699,62 @@ class AssetRevision(ContractModel):
         return self
 
 
+APPEARANCE_PROMPT_VERSION: Final = "rws-appearance-prompt/3"
+"""The prompt and answer format that turn a reference photo into a proposed appearance."""
+
+
+class AppearanceReference(ContractModel):
+    """How a reference photo of one object became this appearance (0.16.0, ENR-01).
+
+    The photo is a source of the project (kind ``reference_photo``), kept unchanged and named by
+    its hash. ``crop`` is the part of it the person chose, in fractions of the photo as displayed
+    (its EXIF orientation applied, as every photo here is). When a vision model was asked,
+    ``crop_sha256`` identifies the derived copy it was sent (a metadata-free JPEG of the crop,
+    never stored), and ``prompt`` the prompt and answer format; both are null when the person
+    built the appearance by hand while looking at the photo.
+
+    The appearance never establishes a size: the object's recorded dimensions are the envelope,
+    and its evidence stays as it was. ``visible`` lists what was suggested from the photo,
+    ``estimated`` the proportions and hidden structure that were guessed; what the generator
+    cannot show is in the generation's ``not_modelled``.
+    """
+
+    source_id: StableId
+    photo_sha256: Sha256Hex
+    crop: ImageBox
+    orientation: Literal["exif_applied"]
+    crop_sha256: Sha256Hex | None
+    crop_width_px: int | None = Field(ge=16, le=4096)
+    crop_height_px: int | None = Field(ge=16, le=4096)
+    object_id: StableId
+    instruction: (
+        Annotated[str, StringConstraints(min_length=1, max_length=REVISION_INSTRUCTION_MAX_CHARS)]
+        | None
+    )
+    prompt: Literal["rws-appearance-prompt/3"] | None
+    based_on: StableId | None = Field(
+        description="The generated asset whose specification the proposal started from; null "
+        "when it started from the object's recorded envelope."
+    )
+    visible: list[NonEmptyText] = Field(max_length=20)
+    estimated: list[NonEmptyText] = Field(max_length=20)
+    adjusted_by_user: bool
+
+    @model_validator(mode="after")
+    def _consistent(self) -> AppearanceReference:
+        sent = self.crop_sha256 is not None
+        if (
+            sent != (self.prompt is not None)
+            or sent != (self.crop_width_px is not None)
+            or (sent != (self.crop_height_px is not None))
+        ):
+            raise ValueError(
+                "a reference sent to a vision model records its crop's hash, size and the prompt; "
+                "one built by hand records none of them"
+            )
+        return self
+
+
 class AssetGeneration(ContractModel):
     """How a generated asset was made, so it can be reviewed, rebuilt and never mistaken for
     a measured or vendor model.
@@ -685,9 +764,13 @@ class AssetGeneration(ContractModel):
     ``photo``: a bounded shape for an object seen in a photo source; ``description`` names what
     was seen, and ``language_model`` is the vision model that found it (null when the person
     marked the object themselves).
+    ``reference_photo`` (0.16.0): a new appearance for an existing object, made from a reference
+    photo of it within the object's recorded size; ``reference`` records the photo, the crop and
+    what was seen, and ``language_model`` is the vision model that proposed it (null when the
+    person built it by hand while looking at the photo).
     """
 
-    method: Literal["described", "builder", "photo"]
+    method: Literal["described", "builder", "photo", "reference_photo"]
     description: NonEmptyText | None
     language_model: LanguageModelRef | None
     generator: Literal["rws-object-generator/1"]
@@ -701,6 +784,8 @@ class AssetGeneration(ContractModel):
     # The correction this asset makes to an earlier generated asset; null for an original.
     # (No Field description beside a $ref; see CatalogAsset.generation.)
     revision: AssetRevision | None
+    # The reference photo it was made from (0.16.0); set exactly for 'reference_photo'.
+    reference: AppearanceReference | None
 
     @model_validator(mode="after")
     def _consistent(self) -> AssetGeneration:
@@ -711,6 +796,20 @@ class AssetGeneration(ContractModel):
             raise ValueError("a builder asset was not drafted by a language model")
         if self.method == "photo" and self.description is None:
             raise ValueError("a photo asset records what was seen in its description")
+        by_reference = self.method == "reference_photo"
+        if by_reference != (self.reference is not None):
+            raise ValueError(
+                "a reference record belongs to, and only to, an appearance made from a "
+                "reference photo"
+            )
+        if self.reference is not None:
+            if self.description is None:
+                raise ValueError("an appearance from a reference photo says what it shows")
+            if (self.language_model is None) != (self.reference.prompt is None):
+                raise ValueError(
+                    "an appearance proposed by a vision model records the model and its prompt; "
+                    "one built by hand records neither"
+                )
         named = [u.property for u in self.unknown_properties]
         if sorted(named) != sorted(UNKNOWN_PROPERTIES):
             raise ValueError(
@@ -989,6 +1088,45 @@ class DrawingReviewed(ContractModel):
         return self
 
 
+class AppearanceObjectChange(ContractModel):
+    """One object's look: the asset it was drawn with and the one it is drawn with now (null:
+    its stand-in), and why, in words (never a confidence figure)."""
+
+    object_id: StableId
+    asset_before: StableId | None
+    asset_after: StableId | None
+    reason: NonEmptyText | None
+
+
+class AppearanceChanged(ContractModel):
+    """Objects drawn with another model, or with their stand-in again, as one step (0.16.0).
+
+    Display only: each object's id, name, placement, dimensions with their evidence, parameters,
+    process and source links are unchanged; only ``asset_id`` changes. It applies to an object
+    however the world was made (a drawing, a photo, the catalog or a description). Earlier
+    projects recorded the same change for imported equipment as a ``drawing_reviewed``
+    correction; those records stay as written. ``reference_source_id`` names a reference photo
+    kept with the world in the same step, if any.
+    """
+
+    type: Literal["appearance_changed"]
+    revision: int = Field(ge=1, description="Scene revision this edit produced.")
+    summary: NonEmptyText
+    objects: list[AppearanceObjectChange] = Field(min_length=1, max_length=800)
+    reference_source_id: StableId | None
+
+    @model_validator(mode="after")
+    def _records_a_real_change(self) -> AppearanceChanged:
+        _require_unique((o.object_id for o in self.objects), f"object in edit {self.revision}")
+        for item in self.objects:
+            if item.asset_before == item.asset_after:
+                raise ValueError(
+                    f"edit at revision {self.revision} records an unchanged look for "
+                    f"'{item.object_id}'"
+                )
+        return self
+
+
 class SourceAttached(ContractModel):
     """A file kept with the world (IMP-03, 0.12.0): a later plan or drawing, stored by its
     hash and listed with the world without replacing it. It is not aligned with the world's
@@ -1014,6 +1152,7 @@ EditRecord = Annotated[
     | ObjectRemoved
     | AssetRevised
     | DrawingReviewed
+    | AppearanceChanged
     | SourceAttached
     | ProcessSet,
     Field(discriminator="type"),
@@ -1080,7 +1219,7 @@ class Scene(ContractModel):
                 continue
             object_ids = (
                 [o.object_id for o in record.objects]
-                if isinstance(record, AssetRevised | DrawingReviewed)
+                if isinstance(record, AssetRevised | DrawingReviewed | AppearanceChanged)
                 else [record.object_id]
             )
             for object_id in object_ids:
@@ -1106,6 +1245,17 @@ class Scene(ContractModel):
                             record.revision,
                             getattr(reviewed.after.dimensions, axis),
                         )
+                continue
+            if isinstance(record, AppearanceChanged):
+                for look in record.objects:
+                    known = asset_ref.get(look.object_id)
+                    if known is not None and known[1] != look.asset_before:
+                        raise ValueError(
+                            f"edit_log revision {record.revision} changes the look of object "
+                            f"'{look.object_id}' from {look.asset_before!r}, but it then "
+                            f"referenced {known[1]!r}"
+                        )
+                    asset_ref[look.object_id] = (record.revision, look.asset_after)
                 continue
             if isinstance(record, AssetRevised):
                 for item in record.objects:
@@ -1175,29 +1325,6 @@ PHOTO_EXTENSION: Final[dict[str, str]] = {
     "image/webp": "webp",
 }
 MAX_PHOTO_OBSERVATIONS: Final = 80
-
-
-class ImagePoint(ContractModel):
-    """A point on an image as fractions of its displayed width (``u``, from the left) and height
-    (``v``, from the top). Independent of the image's resolution."""
-
-    u: float = Field(ge=0, le=1)
-    v: float = Field(ge=0, le=1)
-
-
-class ImageBox(ContractModel):
-    """An axis-aligned box on an image, in the same fractions as :class:`ImagePoint`."""
-
-    left: float = Field(ge=0, le=1)
-    top: float = Field(ge=0, le=1)
-    right: float = Field(ge=0, le=1)
-    bottom: float = Field(ge=0, le=1)
-
-    @model_validator(mode="after")
-    def _ordered(self) -> ImageBox:
-        if not (self.left < self.right and self.top < self.bottom):
-            raise ValueError("an image box needs left < right and top < bottom")
-        return self
 
 
 class SourceImage(ContractModel):
@@ -1786,17 +1913,35 @@ class DrawingImport(ContractModel):
         return self
 
 
+class ObjectReference(ContractModel):
+    """What a reference photo shows (0.16.0, ENR-01): the objects it is a picture of, kept so
+    their look can be compared with it or made from it. It places nothing, sets no scale and is
+    not a measurement: no floor, camera or size is derived from it."""
+
+    object_ids: list[StableId] = Field(min_length=1, max_length=50)
+    # What the person said about the photo (where it is from, what it shows); null when nothing
+    # was said. Never filled in for them.
+    note: NonEmptyText | None
+
+    @model_validator(mode="after")
+    def _unique(self) -> ObjectReference:
+        _require_unique(self.object_ids, "object of one reference photo")
+        return self
+
+
 class SourceDocument(ContractModel):
     """Where scene content came from.
 
     A drawing or plan has a single ``source_to_world`` transform. A ``photo`` has none - a
     perspective photo maps to the floor only through its calibration - and instead carries its
     stored ``image`` and the reviewed ``photo_import``. An imported DXF drawing also carries its
-    ``drawing`` reading (0.9.0); its transform uses the unit that reading settled.
+    ``drawing`` reading (0.9.0); its transform uses the unit that reading settled. A
+    ``reference_photo`` (0.16.0) is a picture of objects already in the world, kept with its
+    ``image`` and the ``reference`` it gives: it places and measures nothing.
     """
 
     id: StableId
-    kind: Literal["synthetic", "dxf", "pdf", "png", "jpeg", "photo"]
+    kind: Literal["synthetic", "dxf", "pdf", "png", "jpeg", "photo", "reference_photo"]
     filename: NonEmptyText | None
     sha256: Sha256Hex | None
     source_to_world: SourceToWorldTransform | None
@@ -1804,6 +1949,8 @@ class SourceDocument(ContractModel):
     image: SourceImage | None
     photo_import: PhotoImport | None
     drawing: DrawingImport | None
+    # The objects a reference photo shows (0.16.0); set exactly for 'reference_photo'.
+    reference: ObjectReference | None
 
     @model_validator(mode="after")
     def _drawing_shape(self) -> SourceDocument:
@@ -1872,6 +2019,29 @@ class SourceDocument(ContractModel):
     @model_validator(mode="after")
     def _photo_shape(self) -> SourceDocument:
         photo = self.kind == "photo"
+        if (self.kind == "reference_photo") != (self.reference is not None):
+            raise ValueError(
+                f"source '{self.id}': an object reference belongs to, and only to, a reference "
+                "photo"
+            )
+        if self.kind == "reference_photo":
+            if self.filename is None or self.sha256 is None or self.image is None:
+                raise ValueError(f"reference photo '{self.id}' needs filename, sha256 and image")
+            if (
+                self.source_to_world is not None
+                or self.photo_import is not None
+                or self.drawing is not None
+            ):
+                raise ValueError(
+                    f"reference photo '{self.id}' places nothing: it has no source-to-world "
+                    "transform, photo import or drawing reading"
+                )
+            if not self.image.uri.startswith(f"photos/{self.sha256}."):
+                raise ValueError(
+                    f"reference photo '{self.id}': the stored file name must be its sha256 "
+                    f"({self.sha256})"
+                )
+            return self
         if photo:
             missing = [
                 name
@@ -2187,6 +2357,45 @@ class Project(ContractModel):
                 raise ValueError(
                     f"edit_log revision {record.revision} attaches source '{record.source_id}', "
                     "which is not in the project"
+                )
+            if isinstance(record, AppearanceChanged):
+                if (
+                    record.reference_source_id is not None
+                    and record.reference_source_id not in source_ids
+                ):
+                    raise ValueError(
+                        f"edit_log revision {record.revision} keeps reference photo "
+                        f"'{record.reference_source_id}', which is not in the project"
+                    )
+                for look in record.objects:
+                    for asset_id in (look.asset_before, look.asset_after):
+                        if asset_id is not None and asset_id not in assets:
+                            raise ValueError(
+                                f"edit_log revision {record.revision} names asset '{asset_id}', "
+                                "which is not in the catalog"
+                            )
+        by_source = {source.id: source for source in self.sources}
+        for source in self.sources:
+            for shown in source.reference.object_ids if source.reference else []:
+                if shown not in live and shown not in removed:
+                    raise ValueError(
+                        f"reference photo '{source.id}' shows object '{shown}', which is not "
+                        "in the scene and was not removed"
+                    )
+        for asset in self.catalog:
+            reference = asset.generation.reference if asset.generation else None
+            if reference is None:
+                continue
+            kept = by_source.get(reference.source_id)
+            if (
+                kept is None
+                or kept.kind != "reference_photo"
+                or kept.sha256 != (reference.photo_sha256)
+            ):
+                raise ValueError(
+                    f"asset '{asset.id}' was made from reference photo '{reference.source_id}' "
+                    f"(sha256 {reference.photo_sha256[:12]}…), which is not a reference photo of "
+                    "this project"
                 )
         for source in self.sources:
             drawing = source.drawing

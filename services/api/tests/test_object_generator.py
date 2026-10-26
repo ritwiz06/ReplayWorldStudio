@@ -526,6 +526,7 @@ def test_visual_passes_the_catalog_asset_checks(example: str) -> None:
                     for p in UNKNOWN_PROPERTIES
                 ],
                 "revision": None,
+                "reference": None,
             },
         }
     )

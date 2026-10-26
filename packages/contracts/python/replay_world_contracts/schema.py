@@ -14,6 +14,8 @@ from pydantic.json_schema import GenerateJsonSchema, models_json_schema
 from pydantic_core import CoreSchema
 
 from .assist import (
+    AppearanceProposalRequest,
+    AppearanceProposalResult,
     AssistStatus,
     ChatRequest,
     ChatResult,
@@ -35,6 +37,7 @@ from .assist import (
     PlanUpload,
     ProcessSuggestionRequest,
     ProcessSuggestionResult,
+    ReferenceAssetRequest,
     StoredPhoto,
 )
 from .evidence import (
@@ -87,6 +90,9 @@ ROOT_MODELS: Final[tuple[type[BaseModel], ...]] = (
     EvidenceInventory,
     UploadedModelReport,
     UploadedAssetRequest,
+    AppearanceProposalRequest,
+    AppearanceProposalResult,
+    ReferenceAssetRequest,
 )
 BUNDLE_ID: Final = f"urn:replay-world:contracts:{SCHEMA_VERSION}"
 

@@ -6,7 +6,7 @@
  */
 
 /**
- * Replay World Studio contracts, schema version 0.15.0. Generated from packages/contracts/python - do not edit by hand.
+ * Replay World Studio contracts, schema version 0.16.0. Generated from packages/contracts/python - do not edit by hand.
  */
 export interface ReplayWorldContracts {
   Project: Project;
@@ -42,9 +42,12 @@ export interface ReplayWorldContracts {
   EvidenceInventory: EvidenceInventory;
   UploadedModelReport: UploadedModelReport;
   UploadedAssetRequest: UploadedAssetRequest;
+  AppearanceProposalRequest: AppearanceProposalRequest;
+  AppearanceProposalResult: AppearanceProposalResult;
+  ReferenceAssetRequest: ReferenceAssetRequest;
 }
 export interface Project {
-  schema_version: "0.15.0";
+  schema_version: "0.16.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -85,14 +88,16 @@ export interface FixtureLabel {
  * A drawing or plan has a single ``source_to_world`` transform. A ``photo`` has none - a
  * perspective photo maps to the floor only through its calibration - and instead carries its
  * stored ``image`` and the reviewed ``photo_import``. An imported DXF drawing also carries its
- * ``drawing`` reading (0.9.0); its transform uses the unit that reading settled.
+ * ``drawing`` reading (0.9.0); its transform uses the unit that reading settled. A
+ * ``reference_photo`` (0.16.0) is a picture of objects already in the world, kept with its
+ * ``image`` and the ``reference`` it gives: it places and measures nothing.
  */
 export interface SourceDocument {
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
   id: string;
-  kind: "synthetic" | "dxf" | "pdf" | "png" | "jpeg" | "photo";
+  kind: "synthetic" | "dxf" | "pdf" | "png" | "jpeg" | "photo" | "reference_photo";
   filename: string | null;
   sha256: string | null;
   source_to_world: SourceToWorldTransform | null;
@@ -100,6 +105,7 @@ export interface SourceDocument {
   image: SourceImage | null;
   photo_import: PhotoImport | null;
   drawing: DrawingImport | null;
+  reference: ObjectReference | null;
 }
 /**
  * Maps a 2D source plan (drawing) point to world metres.
@@ -846,6 +852,21 @@ export interface ObjectReview {
   status: "proposed" | "accepted" | "corrected" | "not_an_object" | "used_as_floor" | "added";
 }
 /**
+ * What a reference photo shows (0.16.0, ENR-01): the objects it is a picture of, kept so
+ * their look can be compared with it or made from it. It places nothing, sets no scale and is
+ * not a measurement: no floor, camera or size is derived from it.
+ */
+export interface ObjectReference {
+  /**
+   * @minItems 1
+   * @maxItems 50
+   *
+   * Items: Stable, lowercase identifier. Never reused for a different entity.
+   */
+  object_ids: [string, ...string[]];
+  note: string | null;
+}
+/**
  * A reusable definition that scene objects instantiate by referencing its ``id``.
  *
  * ``nominal_dimensions`` describe the catalogued item. Each scene object keeps its own
@@ -982,9 +1003,13 @@ export interface UsageRights {
  * ``photo``: a bounded shape for an object seen in a photo source; ``description`` names what
  * was seen, and ``language_model`` is the vision model that found it (null when the person
  * marked the object themselves).
+ * ``reference_photo`` (0.16.0): a new appearance for an existing object, made from a reference
+ * photo of it within the object's recorded size; ``reference`` records the photo, the crop and
+ * what was seen, and ``language_model`` is the vision model that proposed it (null when the
+ * person built it by hand while looking at the photo).
  */
 export interface AssetGeneration {
-  method: "described" | "builder" | "photo";
+  method: "described" | "builder" | "photo" | "reference_photo";
   description: string | null;
   language_model: LanguageModelRef | null;
   generator: "rws-object-generator/1";
@@ -997,6 +1022,7 @@ export interface AssetGeneration {
   not_modelled: string[];
   unknown_properties: UnknownProperty[];
   revision: AssetRevision | null;
+  reference: AppearanceReference | null;
 }
 /**
  * A bounded, data-only description of a generated model.
@@ -1253,6 +1279,316 @@ export interface AssetRevision {
       ];
 }
 /**
+ * How a reference photo of one object became this appearance (0.16.0, ENR-01).
+ *
+ * The photo is a source of the project (kind ``reference_photo``), kept unchanged and named by
+ * its hash. ``crop`` is the part of it the person chose, in fractions of the photo as displayed
+ * (its EXIF orientation applied, as every photo here is). When a vision model was asked,
+ * ``crop_sha256`` identifies the derived copy it was sent (a metadata-free JPEG of the crop,
+ * never stored), and ``prompt`` the prompt and answer format; both are null when the person
+ * built the appearance by hand while looking at the photo.
+ *
+ * The appearance never establishes a size: the object's recorded dimensions are the envelope,
+ * and its evidence stays as it was. ``visible`` lists what was suggested from the photo,
+ * ``estimated`` the proportions and hidden structure that were guessed; what the generator
+ * cannot show is in the generation's ``not_modelled``.
+ */
+export interface AppearanceReference {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  source_id: string;
+  photo_sha256: string;
+  crop: ImageBox;
+  orientation: "exif_applied";
+  crop_sha256: string | null;
+  crop_width_px: number | null;
+  crop_height_px: number | null;
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  object_id: string;
+  instruction: string | null;
+  prompt: "rws-appearance-prompt/3" | null;
+  /**
+   * The generated asset whose specification the proposal started from; null when it started from the object's recorded envelope.
+   */
+  based_on: string | null;
+  /**
+   * @maxItems 20
+   */
+  visible:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ];
+  /**
+   * @maxItems 20
+   */
+  estimated:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ];
+  adjusted_by_user: boolean;
+}
+/**
  * A model file the person attached (0.15.0, ENR-01). The file is the visual itself, kept
  * byte for byte (``visual.uri`` and ``visual.sha256``); this records what came with it. Its
  * geometry is not evidence of a machine's size: objects keep their own recorded dimensions.
@@ -1283,7 +1619,14 @@ export interface Scene {
   revision: number;
   objects: SceneObject[];
   edit_log: (
-    ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed | SourceAttached | ProcessSet
+    | ObjectEdited
+    | ObjectAdded
+    | ObjectRemoved
+    | AssetRevised
+    | DrawingReviewed
+    | AppearanceChanged
+    | SourceAttached
+    | ProcessSet
   )[];
 }
 export interface SceneObject {
@@ -1478,6 +1821,43 @@ export interface ReviewedObjectChange {
   object_id: string;
   before: SceneObject | null;
   after: SceneObject | null;
+}
+/**
+ * Objects drawn with another model, or with their stand-in again, as one step (0.16.0).
+ *
+ * Display only: each object's id, name, placement, dimensions with their evidence, parameters,
+ * process and source links are unchanged; only ``asset_id`` changes. It applies to an object
+ * however the world was made (a drawing, a photo, the catalog or a description). Earlier
+ * projects recorded the same change for imported equipment as a ``drawing_reviewed``
+ * correction; those records stay as written. ``reference_source_id`` names a reference photo
+ * kept with the world in the same step, if any.
+ */
+export interface AppearanceChanged {
+  type: "appearance_changed";
+  /**
+   * Scene revision this edit produced.
+   */
+  revision: number;
+  summary: string;
+  /**
+   * @minItems 1
+   * @maxItems 800
+   */
+  objects: [AppearanceObjectChange, ...AppearanceObjectChange[]];
+  reference_source_id: string | null;
+}
+/**
+ * One object's look: the asset it was drawn with and the one it is drawn with now (null:
+ * its stand-in), and why, in words (never a confidence figure).
+ */
+export interface AppearanceObjectChange {
+  /**
+   * Stable, lowercase identifier. Never reused for a different entity.
+   */
+  object_id: string;
+  asset_before: string | null;
+  asset_after: string | null;
+  reason: string | null;
 }
 /**
  * A file kept with the world (IMP-03, 0.12.0): a later plan or drawing, stored by its
@@ -2039,14 +2419,14 @@ export interface HealthResponse {
   status: "ok";
   service: "replay-world-api";
   api_version: string;
-  schema_version: "0.15.0";
+  schema_version: "0.16.0";
 }
 /**
  * Summary returned when the API accepts a project document.
  */
 export interface ValidationReport {
   valid: true;
-  schema_version: "0.15.0";
+  schema_version: "0.16.0";
   /**
    * Stable, lowercase identifier. Never reused for a different entity.
    */
@@ -2083,7 +2463,7 @@ export interface UpgradeReport {
    * Schema version of the submitted document.
    */
   from_version: string;
-  to_version: "0.15.0";
+  to_version: "0.16.0";
   notes: string[];
   project: Project;
   validation: ValidationReport;
@@ -3011,7 +3391,7 @@ export interface RevisionProblem {
  * A visual choice the API made without asking, shown as such: never a measurement.
  */
 export interface RevisionAdjustment {
-  kind: "enlarged" | "coloured_as_asked" | "contrast" | "scaled" | "recentred" | "part_action";
+  kind: "enlarged" | "coloured_as_asked" | "contrast" | "scaled" | "recentred" | "part_action" | "placed";
   /**
    * @minItems 1
    */
@@ -3697,7 +4077,7 @@ export interface EvidenceBundleRequest {
 export interface EvidenceManifest {
   format: "rws-evidence/1";
   created_utc: string;
-  schema_version: "0.14.0" | "0.15.0";
+  schema_version: "0.14.0" | "0.15.0" | "0.16.0";
   engine: string;
   project: EvidenceProject;
   process: EvidenceProcess;
@@ -3889,9 +4269,617 @@ export interface UploadedAssetRequest {
   sha256: string;
   filename: string;
   name: string;
+  kind: "equipment" | "structure" | "reference";
   up_axis: "+Y" | "-Y" | "+Z" | "-Z" | "+X" | "-X";
   turns: number;
   unit: "m" | "cm" | "mm" | "in" | "ft";
   fit: "contain" | "scale_to_dimensions";
   note: string | null;
+}
+/**
+ * The reviewed crop of a reference photo and what the vision model needs about ONE object:
+ * its name, its recorded size (the envelope the appearance must keep) and, when it is drawn
+ * with a generated model, that model's specification to start from. Nothing else of the
+ * project is sent. ``data_base64`` is a metadata-free JPEG of the crop made by the browser
+ * (orientation applied, at most 2048 px). ``photo_sha256`` and ``crop`` identify the original
+ * file and the chosen part of it (they select recorded answers in offline tests); neither the
+ * hash nor the original file is sent to the model.
+ */
+export interface AppearanceProposalRequest {
+  name: string;
+  envelope_m: Extent3;
+  spec: GeometrySpec | null;
+  instruction: string | null;
+  media_type: "image/jpeg";
+  data_base64: string;
+  width_px: number;
+  height_px: number;
+  photo_sha256: string;
+  crop: ImageBox;
+}
+/**
+ * A proposed appearance for one object from its reference photo, checked and fitted to the
+ * object's recorded size; nothing is built or stored.
+ *
+ * ``base`` is what the proposal started from. ``visible`` lists what the model says the photo
+ * shows and the proposal draws; ``estimated`` the proportions and hidden structure it guessed;
+ * ``not_represented`` what the photo shows but the generator cannot draw. ``problems`` and
+ * ``adjustments`` are the API's own visibility checks and visual choices, as for a revision.
+ * The size never changes: a photo is not a measurement.
+ */
+export interface AppearanceProposalResult {
+  outcome: "proposal" | "unsupported" | "already_satisfied";
+  message: string | null;
+  base: GeometrySpec;
+  spec: GeometrySpec | null;
+  summary: string | null;
+  /**
+   * @maxItems 20
+   */
+  visible:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ];
+  /**
+   * @maxItems 20
+   */
+  estimated:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ];
+  /**
+   * @maxItems 20
+   */
+  not_represented:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ];
+  checks: string[];
+  problems: RevisionProblem[];
+  adjustments: RevisionAdjustment[];
+  view: "front-right" | "rear-left" | "low-front";
+  crop_sha256: string;
+  prompt: "rws-appearance-prompt/3";
+  provider: ProviderRun;
+}
+/**
+ * Build a reviewed appearance from a reference photo as a new generated asset (its model
+ * stored by hash). The specification's envelope is the object's recorded size; the asset's
+ * nominal sizes say so, and never become evidence from the photo.
+ */
+export interface ReferenceAssetRequest {
+  name: string;
+  kind: "equipment" | "structure" | "reference";
+  object_name: string;
+  spec: GeometryDraft;
+  summary: string;
+  language_model: LanguageModelRef | null;
+  reference: AppearanceReference;
+  /**
+   * @maxItems 40
+   */
+  changes: string[];
+  /**
+   * @maxItems 20
+   */
+  not_represented:
+    | []
+    | [string]
+    | [string, string]
+    | [string, string, string]
+    | [string, string, string, string]
+    | [string, string, string, string, string]
+    | [string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ]
+    | [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ];
 }

@@ -188,7 +188,7 @@ test("edits, undoes and redoes, saves and reopens the demo with every value inta
   expect(first.download.suggestedFilename()).toBe("proj-industrial-demo-r14.json");
   await expect(page.getByTestId("save-state")).toHaveText("No unsaved changes");
   const saved = JSON.parse(first.text) as SavedProject;
-  expect(saved.schema_version).toBe("0.15.0");
+  expect(saved.schema_version).toBe("0.16.0");
   expect(saved.fixture?.kind).toBe("demonstration"); // still labelled synthetic
   expect(saved.scene.revision).toBe(14);
   expect(saved.scene.objects).toHaveLength(17);
@@ -276,28 +276,29 @@ test("reviews older project files before upgrading and keeps the scene for unkno
 
   // 0.1.0: the notes are shown and nothing changes until the user decides.
   await input.setInputFiles(repo("fixtures/legacy/foundation-scene-0.1.0.json").pathname);
-  await expect(review).toContainText("This file uses contract 0.1.0. The API upgraded a copy to 0.15.0");
+  await expect(review).toContainText("This file uses contract 0.1.0. The API upgraded a copy to 0.16.0");
   const notes = review.getByTestId("upgrade-notes");
   await expect(notes.locator("li").first()).toHaveText("schema_version 0.1.0 -> 0.2.0");
   await expect(notes).toContainText("obj-packing-station: box origin 'inferred' applied to width, height and depth");
-  await expect(notes.locator("li").nth(-12)).toHaveText("schema_version 0.3.0 -> 0.4.0 (adds an empty scene edit log; no values or evidence changed)");
-  await expect(notes.locator("li").nth(-11)).toHaveText("schema_version 0.4.0 -> 0.5.0 (adds 'generation: null' to 0 catalog assets; no values or evidence changed)");
-  await expect(notes.locator("li").nth(-10)).toHaveText("schema_version 0.5.0 -> 0.6.0 (adds 'image: null' and 'photo_import: null' to 1 source; no values or evidence changed)");
-  await expect(notes.locator("li").nth(-9)).toHaveText("schema_version 0.6.0 -> 0.7.0 (adds 'revision: null' to 0 generated assets and 'size_basis: not_stated' to 0 photo scale references; no values or evidence changed)");
-  await expect(notes.locator("li").nth(-8)).toHaveText("schema_version 0.7.0 -> 0.8.0 (adds 'visibility: not_recorded' and empty corrections to 0 photo observations; no values or evidence changed)");
-  await expect(notes.locator("li").nth(-7)).toHaveText("schema_version 0.8.0 -> 0.9.0 (adds 'drawing: null' to 1 source; no values or evidence changed)");
-  await expect(notes.locator("li").nth(-6)).toHaveText("schema_version 0.9.0 -> 0.10.0 (adds an unchecked review to 0 drawing sources and footprint_fit to 0 drawn objects; 0 drawn footprint values recorded as measured become drawn (a design drawing, not a site measurement); nothing is strengthened)");
-  await expect(notes.locator("li").nth(-5)).toHaveText("schema_version 0.10.0 -> 0.11.0 (adds 'omitted: null' to 0 drawing readings: where their left-out shapes lie was not recorded, so checks treat them as possibly anywhere)");
-  await expect(notes.locator("li").nth(-4)).toHaveText("schema_version 0.11.0 -> 0.12.0 (adds 'raster: null' to 0 drawing readings and 'tolerance: null' to 0 drawn outlines: DXF geometry is exact as drawn; no values or evidence changed)");
-  await expect(notes.locator("li").nth(-3)).toHaveText("schema_version 0.12.0 -> 0.13.0 (adds 'process: null': no process for Run a day was set up; no values or evidence changed)");
-  await expect(notes.locator("li").nth(-2)).toHaveText("schema_version 0.13.0 -> 0.14.0 (adds 'symbol_layers: []' to 0 drawing reviews: no layer is treated as drawing symbols; no values or evidence changed)");
-  await expect(notes.locator("li").last()).toHaveText("schema_version 0.14.0 -> 0.15.0 (adds 'upload: null' to 0 catalog assets and 'correction: null' to 0 glTF visuals: no model was uploaded; no values or evidence changed)");
+  await expect(notes.locator("li").nth(-13)).toHaveText("schema_version 0.3.0 -> 0.4.0 (adds an empty scene edit log; no values or evidence changed)");
+  await expect(notes.locator("li").nth(-12)).toHaveText("schema_version 0.4.0 -> 0.5.0 (adds 'generation: null' to 0 catalog assets; no values or evidence changed)");
+  await expect(notes.locator("li").nth(-11)).toHaveText("schema_version 0.5.0 -> 0.6.0 (adds 'image: null' and 'photo_import: null' to 1 source; no values or evidence changed)");
+  await expect(notes.locator("li").nth(-10)).toHaveText("schema_version 0.6.0 -> 0.7.0 (adds 'revision: null' to 0 generated assets and 'size_basis: not_stated' to 0 photo scale references; no values or evidence changed)");
+  await expect(notes.locator("li").nth(-9)).toHaveText("schema_version 0.7.0 -> 0.8.0 (adds 'visibility: not_recorded' and empty corrections to 0 photo observations; no values or evidence changed)");
+  await expect(notes.locator("li").nth(-8)).toHaveText("schema_version 0.8.0 -> 0.9.0 (adds 'drawing: null' to 1 source; no values or evidence changed)");
+  await expect(notes.locator("li").nth(-7)).toHaveText("schema_version 0.9.0 -> 0.10.0 (adds an unchecked review to 0 drawing sources and footprint_fit to 0 drawn objects; 0 drawn footprint values recorded as measured become drawn (a design drawing, not a site measurement); nothing is strengthened)");
+  await expect(notes.locator("li").nth(-6)).toHaveText("schema_version 0.10.0 -> 0.11.0 (adds 'omitted: null' to 0 drawing readings: where their left-out shapes lie was not recorded, so checks treat them as possibly anywhere)");
+  await expect(notes.locator("li").nth(-5)).toHaveText("schema_version 0.11.0 -> 0.12.0 (adds 'raster: null' to 0 drawing readings and 'tolerance: null' to 0 drawn outlines: DXF geometry is exact as drawn; no values or evidence changed)");
+  await expect(notes.locator("li").nth(-4)).toHaveText("schema_version 0.12.0 -> 0.13.0 (adds 'process: null': no process for Run a day was set up; no values or evidence changed)");
+  await expect(notes.locator("li").nth(-3)).toHaveText("schema_version 0.13.0 -> 0.14.0 (adds 'symbol_layers: []' to 0 drawing reviews: no layer is treated as drawing symbols; no values or evidence changed)");
+  await expect(notes.locator("li").nth(-2)).toHaveText("schema_version 0.14.0 -> 0.15.0 (adds 'upload: null' to 0 catalog assets and 'correction: null' to 0 glTF visuals: no model was uploaded; no values or evidence changed)");
+  await expect(notes.locator("li").last()).toHaveText("schema_version 0.15.0 -> 0.16.0 (adds 'reference: null' to 1 source and 0 generated assets: no reference photo was kept; earlier changes of look stay recorded as drawing review corrections; no values or evidence changed)");
   await expect(source).toHaveText("API industrial demo");
   const [download] = await Promise.all([page.waitForEvent("download"), review.getByRole("button", { name: "Download upgraded file" }).click()]);
-  expect(download.suggestedFilename()).toBe("foundation-scene-0.1.0-0.15.0.json");
+  expect(download.suggestedFilename()).toBe("foundation-scene-0.1.0-0.16.0.json");
   const upgraded = JSON.parse(readFileSync((await download.path())!, "utf8")) as SavedProject;
-  expect([upgraded.schema_version, upgraded.scene.edit_log]).toEqual(["0.15.0", []]);
-  await expect(review).toContainText("Upgraded copy downloaded as foundation-scene-0.1.0-0.15.0.json");
+  expect([upgraded.schema_version, upgraded.scene.edit_log]).toEqual(["0.16.0", []]);
+  await expect(review).toContainText("Upgraded copy downloaded as foundation-scene-0.1.0-0.16.0.json");
   await review.getByRole("button", { name: "Cancel" }).click();
   await expect(source).toHaveText("API industrial demo");
 
@@ -307,7 +308,7 @@ test("reviews older project files before upgrading and keeps the scene for unkno
   const { process: _process, ...current } = JSON.parse(read("fixtures/scenes/foundation-scene.json")) as { scene: Record<string, unknown>; catalog: Record<string, unknown>[]; sources: Record<string, unknown>[]; process: null };
   const { edit_log: _, ...legacyScene } = current.scene;
   const legacyCatalog = current.catalog.map(({ generation: _g, upload: _u, ...asset }) => asset);
-  const legacySources = current.sources.map(({ image: _i, photo_import: _p, drawing: _d, ...source }) => source);
+  const legacySources = current.sources.map(({ image: _i, photo_import: _p, drawing: _d, reference: _r, ...source }) => source);
   await upload("plan-0.2.0.json", { ...current, schema_version: "0.2.0", catalog: legacyCatalog, scene: legacyScene, sources: legacySources });
   await expect(review).toContainText("This file uses contract 0.2.0");
   await review.getByRole("button", { name: "Open upgraded project" }).click();

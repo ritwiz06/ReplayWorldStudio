@@ -40,10 +40,12 @@ export function runDay(project: Project, process: ProcessModel, layout: DayRun["
   };
 }
 
-/** The inputs a run reads, as one fingerprint: everything but which model draws an object. */
+/** The inputs a run reads, as one fingerprint: everything but which model draws an object and
+ * the reference photos kept for looks (ENR-01), which place and measure nothing. */
 export function operatingKey(project: Project, process: ProcessModel | null): string {
   const objects = project.scene.objects.map((o) => (o.asset_id === null ? o : { ...o, asset_id: null }));
-  return fingerprint(JSON.stringify({ objects, sources: project.sources, process }));
+  const sources = project.sources.filter((s) => s.kind !== "reference_photo");
+  return fingerprint(JSON.stringify({ objects, sources, process }));
 }
 
 /** The same process on the drawing's own arrangement, or null without a reviewed drawing. */

@@ -70,7 +70,7 @@ describe("applying a model", () => {
     expect(after.catalog.map((a) => a.id)).toEqual([cabinet.id, cell.id]);
     expect(after.process).toBe(sample.process); // station references untouched
     expect(after.sources).toBe(sample.sources); // drawing links untouched
-    expect(after.scene.edit_log.at(-1)).toMatchObject({ type: "drawing_reviewed", correction: expect.stringContaining("display only") });
+    expect(after.scene.edit_log.at(-1)).toMatchObject({ type: "appearance_changed", summary: expect.stringContaining("display only"), reference_source_id: null });
     // The run reads the same layout: identical events and metrics.
     const a = runDay(sample, sample.process!, "edited");
     const b = runDay(after, after.process!, "edited");
@@ -84,7 +84,7 @@ describe("applying a model", () => {
     expect(again?.ok && again.state.project.catalog.map((a) => a.id)).toEqual([cabinet.id, cell.id]);
   });
 
-  it("refuses a stale review, a listed-twice object and a non-equipment object; a late revision too", () => {
+  it("refuses a stale review, a listed-twice object and a model of another kind; a late revision too", () => {
     const stale = applyCommand(sample, request(sample, [{ objectId: electrical.id, assetId: cabinet.id, expected: "asset-something-else" }]));
     expect(!stale.ok && stale.rejection.kind).toBe("conflict");
     const twice = applyCommand(sample, request(sample, [
@@ -94,7 +94,7 @@ describe("applying a model", () => {
     expect(!twice.ok && twice.rejection.message).toMatch(/listed twice/);
     const wall = sample.scene.objects.find((o) => o.kind === "structure" && o.name !== "Floor")!;
     const structure = applyCommand(sample, request(sample, [{ objectId: wall.id, assetId: cabinet.id, expected: null }]));
-    expect(!structure.ok && structure.rejection.message).toMatch(/not equipment/);
+    expect(!structure.ok && structure.rejection.message).toMatch(/is a model for equipment, not for/);
     const late = applyCommand(sample, { ...request(sample, [{ objectId: electrical.id, assetId: cabinet.id, expected: null }]), baseRevision: sample.scene.revision - 1 });
     expect(!late.ok && late.rejection.kind).toBe("conflict");
   });

@@ -1,4 +1,4 @@
-import type { CatalogAsset, FixtureLabel } from "@replay-world/contracts";
+import type { CatalogAsset, FixtureLabel, Project, SourceDocument } from "@replay-world/contracts";
 import { useState } from "react";
 import type { ModelStates } from "../hooks/useCatalogModels";
 import { scaleBar } from "../scene/cameras";
@@ -175,6 +175,36 @@ export function ModelNotice({ catalog, models, onRetry, onRebuild, rebuild, onAt
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Reference photos a file names but this computer lacks (ENR-01). They place and measure
+ * nothing, so every look stays as it is; the same photo (checked by its hash) can be attached
+ * again. A different photo is never used in its place. */
+export function ReferenceNotice({ sources, project, message, onAttach }: { sources: readonly SourceDocument[]; project: Project; message: string | null; onAttach: (source: SourceDocument) => void }) {
+  const name = (id: string) => project.scene.objects.find((o) => o.id === id)?.name ?? id;
+  return (
+    <div className="notice" role="status" data-testid="reference-notice">
+      <h2>
+        {sources.length === 1 ? "A reference photo is not on this computer" : `${sources.length} reference photos are not on this computer`}
+      </h2>
+      <ul className="issues">
+        {sources.map((s) => (
+          <li key={s.id}>
+            <strong>{s.filename}</strong> (sha256 {s.sha256?.slice(0, 12)}…), the reference for {s.reference?.object_ids.map(name).join(", ")}. Every look stays as it is; only the
+            photo cannot be shown.{" "}
+            <button type="button" className="button button-small" data-testid={`reference-attach-${s.id}`} onClick={() => onAttach(s)}>
+              Attach the same photo…
+            </button>
+          </li>
+        ))}
+      </ul>
+      {message && (
+        <p className="status-error small" role="alert" data-testid="reference-notice-message">
+          {message}
+        </p>
+      )}
     </div>
   );
 }

@@ -73,6 +73,13 @@ each change, and the result is then validated like any other document.
       model had been uploaded (ENR-01 adds uploaded models, the 'uploaded' source kind and the
       ``contain`` fit).
 
+0.15.0 -> 0.16.0
+    * every source document and every generated asset's ``generation`` gains ``reference: null``:
+      no reference photo had been kept and no appearance had been made from one (ENR-01 adds the
+      ``reference_photo`` source kind, the ``reference_photo`` generation method and the general
+      ``appearance_changed`` edit). Earlier changes of look were recorded as
+      ``drawing_reviewed`` corrections; they stay exactly as written.
+
 Steps run in sequence, so a 0.1.0 document passes through 0.2.0 on its way to the current
 version and its notes describe every step.
 """
@@ -484,6 +491,41 @@ def _from_0_14_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
     ]
 
 
+def _from_0_15_0(old: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    upgraded = copy.deepcopy(dict(old))
+    sources = generated = 0
+    for source in upgraded["sources"]:
+        if "reference" in source or source.get("kind") == "reference_photo":
+            raise MigrationError(
+                "malformed 0.15.0 document: reference photos only exist from 0.16.0"
+            )
+        source["reference"] = None
+        sources += 1
+    for asset in upgraded["catalog"]:
+        generation = asset.get("generation")
+        if generation is None:
+            continue
+        if "reference" in generation or generation.get("method") == "reference_photo":
+            raise MigrationError(
+                "malformed 0.15.0 document: appearances from reference photos only exist from "
+                "0.16.0"
+            )
+        generation["reference"] = None
+        generated += 1
+    for record in upgraded["scene"]["edit_log"]:
+        if record.get("type") == "appearance_changed":
+            raise MigrationError(
+                "malformed 0.15.0 document: 'appearance_changed' edits only exist from 0.16.0"
+            )
+    upgraded["schema_version"] = "0.16.0"
+    return upgraded, [
+        f"schema_version 0.15.0 -> 0.16.0 (adds 'reference: null' to {sources} source"
+        f"{'' if sources == 1 else 's'} and {generated} generated asset"
+        f"{'' if generated == 1 else 's'}: no reference photo was kept; earlier changes of look "
+        "stay recorded as drawing review corrections; no values or evidence changed)"
+    ]
+
+
 _STEPS: Final[dict[str, Step]] = {
     "0.1.0": _from_0_1_0,
     "0.2.0": _from_0_2_0,
@@ -499,5 +541,6 @@ _STEPS: Final[dict[str, Step]] = {
     "0.12.0": _from_0_12_0,
     "0.13.0": _from_0_13_0,
     "0.14.0": _from_0_14_0,
+    "0.15.0": _from_0_15_0,
 }
 LEGACY_SCHEMA_VERSIONS: Final = tuple(_STEPS)

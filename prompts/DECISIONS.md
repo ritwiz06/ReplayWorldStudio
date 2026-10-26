@@ -1420,3 +1420,23 @@ For a new decision, append: ID, date, status, context, options considered, decis
     - REL-01's layout fingerprint does change, because it hashes the object records;
     - repeated previews free their GPU resources (tested).
   - **ENR-01 stays open:** photos, STEP, accepting geometry as checked, and worlds without a drawing source.
+
+### ADR-066 - A reference photo improves one object's look, in any world (ENR-01, contract 0.16.0)
+
+- Date: 2026-10-26 (America/Phoenix). Status: adopted. Builds on ADR-064 and ADR-065 (`set_appearance`), GEN-02 (revisions and their checks) and IMG-01 (photo handling).
+- **Context.**
+  - Changing a look was recorded as a drawing review correction, so it needed a drawing source: catalog, photo-made and described worlds could not be enriched.
+  - ENR-01 asks that a photo of a machine improve its object without resetting the world or turning the photo into size evidence.
+- **Decision.**
+  1. **One general edit,** `appearance_changed` (object, asset before and after, reason, and a reference photo kept in the same step). `set_appearance` uses it for every world and every non-area object, and every look path shares it. Records written before 0.16.0 stay `drawing_reviewed`; the migration adds only `reference: null` to sources and generations.
+  2. **A reference photo is its own source kind** (`reference_photo`): the original, stored by hash, and the objects it shows. It places, scales and measures nothing, so no floor rectangle is asked for. It is distinct from an IMG-01 room photo, whose links are untouched. A missing one never blocks opening; only the same file is accepted back.
+  3. **One bounded multimodal proposal, through GEN-02's pipeline.** The crop, the object's name, its recorded size and its current generated specification (only when it has that size) are sent, after an explicit Suggest. The answer is changes to the parts, repaired, separated and fitted by the deterministic generator inside the recorded size; the visibility checks read the features said to be drawn. One 150 s budget covers the one corrected answer. Answer lists are bounded, so a repeating answer stops at a limit rather than the token limit.
+  4. **The app may place, never measure.** A small part buried in its holder goes onto the holder's face; a floating part settles onto what is under it. Both are listed as adjustments and never change the overall size. Property claims (mass, grade, cycle time) are dropped and said so.
+  5. **The accepted look is a new generated asset** (`method: reference_photo`). Its reference records the photo hash, crop, orientation, crop hash and size when sent, the model and prompt version (`rws-appearance-prompt/3`), the instruction, the start, the seen and estimated features, and hand changes. Its nominal sizes are the recorded size, `inferred`, "not measured from the photo".
+  6. **Without a key it is manual work,** labelled as such: keep the photo as a reference, build the look by hand beside it, or choose a catalog model.
+- **Consequences.**
+  - **Any world can be enriched;** run readiness is unchanged.
+  - **Appearance alone** keeps events, metrics and run currency (reference photos are not run inputs); the layout fingerprint follows `asset_id` as before.
+  - **Live proposals were weak** on a busy machine: the review shows that rather than hiding it. Two prompt revisions were needed (both earlier attempts are kept); 6 calls in all.
+  - **ENR-01 stays open** for STEP and accepting checked geometry; ENR-02 covers supplier dimensions.
+

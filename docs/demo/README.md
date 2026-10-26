@@ -93,6 +93,21 @@ pnpm --filter @replay-world/web exec playwright test -c playwright.demo.config.t
 swift scripts/demo/frames-to-mp4.swift apps/web/test-results/demo-frames-enr01 docs/demo/enr01-better-model.mp4 25 1000000
 ```
 
+## ENR-01: a photo of one machine
+
+[`enr01-photo-look.mp4`](enr01-photo-look.mp4), 30 s, 1440 × 900, recorded answers (labelled in the app):
+1. Machine B, in the world drawn from its plan, is a stand-in at its recorded size.
+2. A picture is attached for it (`fixtures/photos/factory-walk.png`, a render made by this repository) and cropped to one cell. Nothing is sent before **Suggest appearance**.
+3. The review shows the crop, the current look and the proposal, with what is still wrong. The proposal is a recorded live answer, and a weak one (see [../enr-01/photo.md](../enr-01/photo.md)).
+4. **Apply** changes the same object's look, and the shift runs on the unchanged layout.
+
+Made with:
+
+```bash
+DEMO_ASSIST=recorded pnpm --filter @replay-world/web exec playwright test -c playwright.demo.config.ts e2e/demo/record-demo.spec.ts -g "photo-look journey"
+swift scripts/demo/frames-to-mp4.swift apps/web/test-results/demo-frames-photo docs/demo/enr01-photo-look.mp4 25 1000000
+```
+
 ## Reproducing the bundle on another computer
 
 You need:

@@ -13,6 +13,7 @@
 | `runs/original/events.json`, `runs/edited/events.json` | Each run's event log, as the engine (`rws-run/1`) produced it. |
 | `runs/original/metrics.json`, `runs/edited/metrics.json` | Each run's plan (outcome, reasons, every route with its corridor, length and result) and whole-shift metrics. |
 | `files/drawings/<sha256>.<ext>` | A source drawing or plan picture, if included. |
+| `files/photos/<sha256>.<ext>` | A source photo, if included: a room photo the world was made from (IMG-01), or a reference photo of an object (ENR-01, listed as "… (reference photo)"). |
 | `models/<uri>` | A model file, if included. |
 
 There is an `edited` run only when the layout differs from the drawing. Otherwise the bundle holds the original layout's run alone.
@@ -24,7 +25,7 @@ Every field is checked by the contract (`EvidenceManifest` in `packages/contract
 - **Identity:**
   - `format: "rws-evidence/1"`;
   - `created_utc`;
-  - `schema_version` (the contract the bundle was written with; a new bundle is always the current one), `engine` (`rws-run/1`). A bundle written at an older contract (0.14.0 or later, when bundles began) opens as written, and its project file is upgraded on opening, as a saved project is; the bundle check says so. The committed REL-01 bundle is 0.14.0.
+  - `schema_version` (the contract the bundle was written with; a new bundle is always the current one), `engine` (`rws-run/1`). A bundle written at an older contract (0.14.0 or 0.15.0; bundles began at 0.14.0) opens as written, and its project file is upgraded on opening, as a saved project is; the bundle check says so. The committed REL-01 bundle is 0.14.0.
 - **`project`:**
   - `file` (`project.json`, or null in a summary-only bundle);
   - `id`, `name`;
@@ -105,11 +106,11 @@ Every field is checked by the contract (`EvidenceManifest` in `packages/contract
 - the event log, event by event;
 - the explanation.
 
-## What is never in a bundle
+## What is left out
 
-- **Never read:** the Voyager key, `.env`, settings, other projects' files and anything not listed in the export review.
-- **Not selected unless you tick them:** a person's own drawings, plan pictures, photos, generated models and attached models (`uploaded/`, ENR-01). An included attached model is hash-checked on opening and stored by its hash; a left-out one is named as missing, and the runs still replay from the project file.
-- **Not bundled:** third-party files (for example the drawings in `data/external/`). They are the person's own library files, so they are never selected by default; their licences may forbid sharing.
+- **Never read or bundled:** the Voyager key, `.env`, settings, other projects' files and anything not listed in the export review.
+- **Left out unless you tick them in the export review:** a person's own drawings, plan pictures, photos (room photos and reference photos), generated models (looks made from a photo included) and attached models (`uploaded/`). The review names each file and its state. An included file is checked against its hash when the bundle is opened and stored by that hash; a left-out one is named as missing (`excluded[]` in the manifest, and a problem when opened), and nothing is put in its place. The runs still replay from the project file, and a generated model left out can be rebuilt from its recorded specification.
+- **Third-party files** (for example the drawings in `data/external/`) are the person's own library files, so they are left out by default; their licences may forbid sharing.
 
 ## Checking a bundle by hand
 

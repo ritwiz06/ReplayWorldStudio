@@ -143,7 +143,7 @@ test("a draft that fooled the first reading is corrected, moved, compared, saved
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("save").click()]);
   const text = readFileSync((await download.path())!, "utf8");
   const saved = JSON.parse(text) as Saved;
-  expect(saved.schema_version).toBe("0.15.0");
+  expect(saved.schema_version).toBe("0.16.0");
   const drawing = saved.sources[0]!.drawing;
   expect(drawing.units.declared).toBe("mm");
   expect(drawing.review.floor).toMatchObject({ choice: "outline", drawn_id: "dxf-102", status: "corrected" });

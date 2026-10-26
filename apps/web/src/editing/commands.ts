@@ -8,6 +8,7 @@
 // edit prepared before an undo (or any other change) can never be applied to a newer state.
 import {
   validateProject,
+  type AppearanceChanged,
   type AssetRevised,
   type CatalogAsset,
   type Dimensions,
@@ -25,7 +26,6 @@ import {
   type Transform,
 } from "@replay-world/contracts";
 import { prepareReview, type ReviewCommand } from "../drawing/review";
-import { drawingSource } from "../drawing/world";
 
 export type Axis = keyof Dimensions;
 export const AXIS_ORDER: readonly Axis[] = ["width", "height", "depth"];
@@ -52,12 +52,16 @@ export type EditCommand =
    * every object changes or none does; undo restores the exact previous references and sizes. */
   | { type: "revise_asset"; asset: CatalogAsset; previousAssetId: string; objects: RevisedObjectRequest[] }
   | { type: "remove_object"; objectId: string }
-  /** Change how imported equipment looks (UX-05, IMP-02's equipment mapping): each listed
-   * object references a catalog model, or none (its stand-in again). Display only: ids, names,
-   * placements, dimensions with their evidence, process and source links are untouched. Each
+  /** Change how objects look (UX-05, ENR-01), however the world was made: each listed object
+   * references a model, or none (its stand-in again). Display only: ids, names, placements,
+   * dimensions with their evidence, parameters, process and source links are untouched. Each
    * object must still reference `expected`, so a stale review changes nothing. Models not yet in
-   * the project's catalog are added with it; the whole batch is one step. */
-  | { type: "set_appearance"; changes: AppearanceChange[]; assets: CatalogAsset[] }
+   * the project's catalog are added with it, and `reference` (a reference photo, new or showing
+   * one more object) is kept with the world in the same step; the whole batch is one step. */
+  | { type: "set_appearance"; changes: AppearanceChange[]; assets: CatalogAsset[]; reference?: SourceDocument | null }
+  /** Keep a photo of objects with the world as their reference (ENR-01): a new reference photo,
+   * or an existing one that now also shows another object. Nothing about any object changes. */
+  | { type: "attach_reference"; source: SourceDocument }
   /** A correction made while reviewing a draft from a drawing (IMP-02): the floor, the scale,
    * an object's name or kind, or "not an object". It may change many objects and the drawing
    * source's review in one step. */
@@ -99,7 +103,7 @@ export interface Rejection {
   field?: string;
 }
 
-export type EditRecord = ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed | SourceAttached | ProcessSet;
+export type EditRecord = ObjectEdited | ObjectAdded | ObjectRemoved | AssetRevised | DrawingReviewed | AppearanceChanged | SourceAttached | ProcessSet;
 type DraftOf<T> = T extends unknown ? Omit<T, "revision"> : never;
 export type EditRecordDraft = DraftOf<EditRecord>;
 
@@ -217,11 +221,30 @@ export function usedObjectIds(project: Project): Set<string> {
   const ids = new Set(project.scene.objects.map((o) => o.id));
   for (const record of project.scene.edit_log) {
     if (record.type === "object_removed") ids.add(record.object.id);
-    else if (record.type === "asset_revised" || record.type === "drawing_reviewed") for (const o of record.objects) ids.add(o.object_id);
+    else if (record.type === "asset_revised" || record.type === "drawing_reviewed" || record.type === "appearance_changed") for (const o of record.objects) ids.add(o.object_id);
     else if (record.type !== "source_attached" && record.type !== "process_set") ids.add(record.object_id);
     if (record.type === "object_added" && record.duplicate_of) ids.add(record.duplicate_of);
   }
   return ids;
+}
+
+/** Areas are drawn as areas, never with a model. */
+const LOOKLESS: ReadonlySet<SceneObject["kind"]> = new Set(["walkway", "keep_clear"]);
+export const canChangeLook = (object: SceneObject): boolean => !LOOKLESS.has(object.kind);
+
+/** Where a reference photo goes: a new source, or the same photo's source replaced. */
+function referencePatch(project: Project, source: SourceDocument): SourcePatch | Rejection {
+  if (source.kind !== "reference_photo" || !source.reference || !source.sha256) return { kind: "invalid", message: "Only a reference photo can be kept as a reference." };
+  for (const id of source.reference.object_ids) {
+    if (!project.scene.objects.some((o) => o.id === id)) return { kind: "not_found", message: `No object '${id}' in the scene.` };
+  }
+  const index = project.sources.findIndex((s) => s.id === source.id);
+  const before = project.sources[index];
+  if (!before) return { index: project.sources.length, before: null, after: source };
+  if (before.kind !== "reference_photo" || before.sha256 !== source.sha256) return { kind: "invalid", message: `The world already has a different source '${source.id}'.` };
+  // The same photo now shows more objects: none it showed before is dropped.
+  if (before.reference!.object_ids.some((id) => !source.reference!.object_ids.includes(id))) return { kind: "invalid", message: "A reference photo keeps every object it already shows." };
+  return { index, before, after: source };
 }
 
 function checkNewObject(project: Project, objectId: string, name: string): Rejection | null {
@@ -481,8 +504,6 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
     }
 
     case "set_appearance": {
-      const source = drawingSource(project);
-      if (!source) return reject("invalid", "Only equipment from an imported plan can be matched to models here.");
       if (command.changes.length === 0) return reject("invalid", "Choose at least one object.");
       if (new Set(command.changes.map((c) => c.objectId)).size !== command.changes.length) return reject("invalid", "An object is listed twice.");
       const known = new Map(project.catalog.map((a) => [a.id, a]));
@@ -497,25 +518,27 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
         additions.push(structuredClone(asset));
       }
       const patches: ObjectPatch[] = [];
-      const changed: DrawingReviewed["objects"] = [];
+      const changed: AppearanceChanged["objects"][number][] = [];
       const names: string[] = [];
       for (const change of command.changes) {
         const index = indexOf(change.objectId);
         const before = objects[index];
         if (!before) return reject("not_found", `No object '${change.objectId}' in the scene.`);
-        if (before.asset_id !== change.expected) return reject("conflict", `${before.name} changed since these models were suggested; nothing was changed.`);
-        if (before.kind !== "equipment") return reject("invalid", `${before.name} is not equipment, so it keeps its own look.`);
+        if (before.asset_id !== change.expected) return reject("conflict", `${before.name} changed since this look was proposed; nothing was changed.`);
+        if (!canChangeLook(before)) return reject("invalid", `${before.name} is an area, so it keeps its own look.`);
         const asset = change.assetId === null ? null : known.get(change.assetId);
         if (asset === undefined) return reject("not_found", `No catalog model '${change.assetId}'.`);
-        if (asset && asset.kind !== before.kind) return reject("invalid", `${asset.name} is not equipment.`);
+        if (asset && asset.kind !== before.kind) return reject("invalid", `${asset.name} is a model for ${asset.kind.replace("_", " ")}, not for ${before.name}.`);
         if (before.asset_id === change.assetId) continue;
         // Only the reference changes: dimensions, evidence, placement and links stay exactly.
         const after: SceneObject = { ...before, asset_id: change.assetId };
         patches.push({ index, before, after });
-        changed.push({ object_id: before.id, before: structuredClone(before), after: structuredClone(after) });
+        changed.push({ object_id: before.id, asset_before: before.asset_id, asset_after: change.assetId, reason: change.reason ? change.reason.slice(0, 500) : null });
         names.push(`${before.name} → ${asset ? asset.name : "its stand-in"}${change.reason ? ` (${change.reason})` : ""}`);
       }
       if (!patches.length) return reject("no_change", "Those objects already look that way.");
+      const reference = command.reference ? referencePatch(project, command.reference) : null;
+      if (reference && "kind" in reference) return { ok: false, rejection: reference };
       const used = new Set(patches.map((p) => p.after!.asset_id));
       const added = additions.filter((a) => used.has(a.id));
       const first = patches[0]!.before!;
@@ -526,7 +549,30 @@ function prepare(project: Project, command: EditCommand): Result<{ change: Chang
           objectId: first.id,
           patches,
           ...(added.length ? { catalogAdditions: added } : {}),
-          record: { type: "drawing_reviewed", source_id: source.id, correction: `Equipment appearance (display only): ${names.join("; ")}`.slice(0, 500), objects: changed },
+          ...(reference ? { sourcePatch: reference } : {}),
+          record: {
+            type: "appearance_changed",
+            summary: `Appearance (display only): ${names.join("; ")}`.slice(0, 500),
+            objects: changed as AppearanceChanged["objects"],
+            reference_source_id: reference ? command.reference!.id : null,
+          },
+        },
+      };
+    }
+
+    case "attach_reference": {
+      const patch = referencePatch(project, command.source);
+      if ("kind" in patch) return { ok: false, rejection: patch };
+      if (patch.before && JSON.stringify(patch.before) === JSON.stringify(patch.after)) return reject("no_change", "This photo is already kept as the reference for that object.");
+      const shown = command.source.reference!.object_ids.map((id) => objects[indexOf(id)]?.name ?? id);
+      return {
+        ok: true,
+        change: {
+          label: `Keep ${command.source.filename ?? "the photo"} as a reference`,
+          objectId: command.source.reference!.object_ids.at(-1) ?? "",
+          patches: [],
+          sourcePatch: patch,
+          record: { type: "source_attached", source_id: command.source.id, filename: `${command.source.filename ?? command.source.id} (reference photo of ${shown.join(", ")})`.slice(0, 500) },
         },
       };
     }

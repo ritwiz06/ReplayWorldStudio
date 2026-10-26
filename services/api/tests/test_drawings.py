@@ -384,6 +384,7 @@ def drawing_project(analysis: DrawingAnalysis) -> str:
             "import_warnings": analysis.warnings,
             "image": None,
             "photo_import": None,
+            "reference": None,
             "drawing": drawing,
         }
     )

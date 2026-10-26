@@ -474,6 +474,7 @@ export function buildPhotoProject(input: WorldInput): Project {
           visible_text: input.visibleText.filter((t) => t.trim()).slice(0, 20),
         },
         drawing: null,
+        reference: null,
       },
     ],
     catalog,

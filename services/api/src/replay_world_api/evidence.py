@@ -85,9 +85,14 @@ def project_assets(project: Project) -> list[_Asset]:
                 assets.append(
                     _Asset(raster.uri, "plan", f"{name} (page picture)", raster.sha256, None)
                 )
-        elif source.kind == "photo" and source.image is not None and source.sha256 is not None:
+        elif (
+            source.kind in ("photo", "reference_photo")
+            and source.image is not None
+            and source.sha256 is not None
+        ):
+            label = f"{name} (reference photo)" if source.kind == "reference_photo" else name
             assets.append(
-                _Asset(source.image.uri, "photo", name, source.sha256, source.image.bytes)
+                _Asset(source.image.uri, "photo", label, source.sha256, source.image.bytes)
             )
     for asset in project.catalog:
         if isinstance(asset.visual, GltfVisual):

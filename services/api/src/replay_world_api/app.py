@@ -23,6 +23,8 @@ from pydantic import ValidationError
 from replay_world_contracts import (
     MAX_DRAWING_BYTES,
     SCHEMA_VERSION,
+    AppearanceProposalRequest,
+    AppearanceProposalResult,
     AssistStatus,
     CatalogAsset,
     ChatRequest,
@@ -51,6 +53,7 @@ from replay_world_contracts import (
     ProcessSuggestionRequest,
     ProcessSuggestionResult,
     Project,
+    ReferenceAssetRequest,
     StoredPhoto,
     UpgradeReport,
     UploadedAssetRequest,
@@ -66,6 +69,7 @@ from replay_world_contracts.migrations import (
 )
 
 from . import __version__
+from .assist.appearance import propose_appearance
 from .assist.chat import interpret_chat
 from .assist.edits import propose_edit
 from .assist.images import propose_image
@@ -92,6 +96,7 @@ from .evidence import (
 from .generated_assets import (
     create_asset_revision,
     create_generated_asset,
+    create_reference_asset,
     restore_generated_models,
 )
 from .objects import GeneratorError, build_model, fit_to_envelope, gltf_visual, store_model
@@ -470,6 +475,56 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except (ProviderError, AssistError) as exc:
             _assist_failure(exc)
 
+    @app.post("/api/v1/assist/appearance-proposals")
+    async def appearance_proposals(
+        body: AppearanceProposalRequest, request: Request
+    ) -> AppearanceProposalResult:
+        """Propose a new look for ONE existing object from the reviewed crop of a reference photo
+        (ENR-01). Only the crop, the object's name, its recorded size and its current generated
+        specification (if any) are sent to the vision model; nothing is built or stored.
+
+        One budget covers the whole request, retry included. If the client goes away (Cancel, a
+        closed page), no further call is made and a late answer is discarded; a call already in
+        flight is not interrupted and ends within the budget.
+        """
+        if vision is None:
+            raise HTTPException(
+                status_code=503,
+                detail=OFF_IN_PREVIEW
+                if settings.public
+                else "Photo proposals are off (no provider configured). Keep the photo as a "
+                "reference and build the look by hand, or set VOYAGER_API_KEY in .env and "
+                "restart the API.",
+            )
+        chosen = vision
+        cancelled = threading.Event()
+
+        async def watch() -> None:
+            while not cancelled.is_set():
+                if await request.is_disconnected():
+                    cancelled.set()
+                    return
+                await anyio.sleep(0.25)
+
+        def run() -> AppearanceProposalResult:
+            return propose_appearance(
+                chosen, body, budget_s=settings.assist.timeout_s, cancelled=cancelled
+            )
+
+        failure: ProviderError | AssistError | None = None
+        result: AppearanceProposalResult | None = None
+        async with anyio.create_task_group() as group:
+            group.start_soon(watch)
+            try:
+                result = await anyio.to_thread.run_sync(run)
+            except (ProviderError, AssistError) as exc:
+                failure = exc
+            finally:
+                group.cancel_scope.cancel()
+        if failure is not None or result is None:
+            _assist_failure(failure or AssistError(502, "No appearance was proposed."))
+        return result
+
     @app.post("/api/v1/assist/plan-proposals")
     def plan_proposals(body: ImageAnalysisRequest) -> PlanProposalResult:
         """Draft the floor, walls and objects of a plan image. Nothing is stored or logged."""
@@ -743,6 +798,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         """Store a revision of a generated asset as a new asset; the previous one is unchanged."""
         try:
             return create_asset_revision(body, catalog_dir())
+        except AssistError as exc:
+            _assist_failure(exc)
+        except GeneratorError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from None
+
+    @app.post("/api/v1/catalog/reference-assets")
+    def reference_asset(body: ReferenceAssetRequest) -> CatalogAsset:
+        """Build a reviewed appearance from a reference photo as a new asset (ENR-01): the model
+        is stored by its hash; the object's recorded size is its envelope, never a measurement."""
+        try:
+            return create_reference_asset(body, catalog_dir())
         except AssistError as exc:
             _assist_failure(exc)
         except GeneratorError as exc:

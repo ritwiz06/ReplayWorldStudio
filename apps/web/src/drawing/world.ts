@@ -450,6 +450,7 @@ function buildDraft(analysis: DrawingAnalysis, scale: ScaleReview, basis: UnitBa
         image: null,
         photo_import: null,
         drawing: { ...drawing, units: { ...drawing.units, basis }, review },
+        reference: null,
       },
     ],
     catalog: [],

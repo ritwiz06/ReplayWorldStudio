@@ -87,6 +87,7 @@ function world(options: { refuse?: string; client?: Partial<ChatHost["client"]> 
     pickModelFile: () => undefined,
     focusObject: () => undefined,
     openLookCreate: () => undefined,
+    openPhotoLook: () => undefined,
   });
   const chat = new ChatController();
   const sync = () => chat.setHost(host());

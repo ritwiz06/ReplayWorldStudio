@@ -630,8 +630,10 @@ def uploaded_asset(request: UploadedAssetRequest, catalog_dir: Path) -> CatalogA
     unit = MODEL_UNITS[request.unit]
     bounds_min = [(low[i] + offset[i]) * unit for i in range(3)]
     bounds_max = [(high[i] + offset[i]) * unit for i in range(3)]
+    # The kind joins the choices only when it is not equipment, so earlier ids stay the same.
+    kind = "" if request.kind == "equipment" else f"|{request.kind}"
     choice = hashlib.sha256(
-        f"{request.up_axis}|{request.turns}|{request.unit}|{request.fit}".encode()
+        f"{request.up_axis}|{request.turns}|{request.unit}|{request.fit}{kind}".encode()
     ).hexdigest()
     source_ref = (
         f"Geometric extent of the attached model '{report.filename}' as turned here; the "
@@ -654,7 +656,7 @@ def uploaded_asset(request: UploadedAssetRequest, catalog_dir: Path) -> CatalogA
         {
             "id": f"asset-upload-{request.sha256[:12]}-{choice[:6]}",
             "name": request.name[:200],
-            "kind": "equipment",
+            "kind": request.kind,
             "visual": {
                 "type": "gltf",
                 "uri": report.uri,

@@ -1,5 +1,7 @@
 # ENR-01, the GLB part: "Here is a better 3D model of this machine. Use it here."
 
+The photo part, and appearance for any world, is in [photo.md](photo.md).
+
 The plan still starts the world. A later file improves one object in it: the same object, with its layout, edits, process and run intact. Everything here works without a Voyager key, and the file never goes to a language model.
 
 Screens at 1440 × 900 and 1280 × 800 (Chrome, GPU, no key) are in [screens/](screens/):
@@ -104,11 +106,10 @@ From the browser journey (`e2e/enrich.spec.ts`, on the sample factory, imported 
   - The app reads it, says it is implausibly small, and fits it inside the water tank's recorded space with its textures. The run is unchanged (`e2e/external/khronos-model.spec.ts`).
 - **The demonstration** uses the repository's own `guarded-machine-cell.glb`, an in-house generic illustration, for Machine B.
 
-## Remaining enrichment gaps (ENR-01 stays open)
+## Remaining enrichment gaps
 
-- Enrichment from a machine **photo**.
+Photos and worlds without a drawing source are done ([photo.md](photo.md)). Still open:
 - **STEP** files: the licence and units are to be decided first (the "Filling-Cell.step" journey).
 - **Accepting geometry as checked** where a file supports it. Sizes are only compared now; adopting a supplier's documented dimensions is ENR-02, a separate reviewed step.
-- **Worlds without a drawing source:** objects in such a world (for example, placed only from the catalog) cannot be enriched yet, because `set_appearance` records the change as a drawing review correction.
 - **Orientation in quarter turns only**, and no gizmo to align a model to a face.
 - **Whether newcomers find this easy is UX-02.**

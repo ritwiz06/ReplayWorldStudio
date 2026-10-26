@@ -283,6 +283,7 @@ def plan_project(digest: str, raster_sha: str) -> Project:
             "import_warnings": [],
             "image": None,
             "photo_import": None,
+            "reference": None,
             "drawing": {
                 "reader": "rws-plan-image/1",
                 "file": {"uri": f"drawings/{digest}.pdf", "bytes": len(HALL)},

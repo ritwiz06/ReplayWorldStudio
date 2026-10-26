@@ -60,6 +60,8 @@ class UploadedAssetRequest(ContractModel):
     sha256: Sha256Hex
     filename: NonEmptyText
     name: NonEmptyText
+    # The kind of the object it is for (0.16.0): an asset is drawn only for objects of its kind.
+    kind: Literal["equipment", "structure", "reference"]
     up_axis: UpAxis
     turns: int = Field(ge=0, le=3)
     unit: Literal["m", "cm", "mm", "in", "ft"]

@@ -393,3 +393,81 @@ test("record the ENR-01 journey", async ({ page }) => {
   writeFileSync(`${dir}/frames.json`, JSON.stringify({ frames }, null, 1));
   console.log(JSON.stringify({ frames: frames.length }));
 });
+
+// ENR-01, the photo part: an existing object (Machine B, in the world drawn from its DXF) → a
+// reference photo (a render made by this repository, cropped to one cell) → the reviewed look,
+// proposed from a recorded live answer (DEMO_ASSIST=recorded; the app labels it) → the same
+// object in the same world, and the shift. Run with -g "photo-look journey"; frames go to
+// test-results/demo-frames-photo.
+test("record the photo-look journey", async ({ page }) => {
+  test.setTimeout(240_000);
+  const dir = `${ROOT}apps/web/test-results/demo-frames-photo`;
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  const frames: { file: string; t: number }[] = [];
+  const chat = page.getByTestId("chat");
+  const hold = (ms: number) => page.waitForTimeout(ms);
+  await page.goto("/");
+  await page.evaluate(() => localStorage.setItem("rws.view", "chat"));
+  await page.goto("/");
+  await page.evaluate(() => {
+    const style = document.createElement("style");
+    style.textContent = `#demo-caption { position: fixed; bottom: 150px; left: 530px; transform: translateX(-50%); z-index: 99999; pointer-events: none;
+      width: 700px; box-sizing: border-box; background: rgba(13,17,23,.92); color: #fff; font: 500 18px/1.35 system-ui, sans-serif;
+      padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); text-align: center; }
+      #demo-caption:empty { display: none; }`;
+    document.head.append(style);
+    const el = document.createElement("div");
+    el.id = "demo-caption";
+    document.body.append(el);
+  });
+  const session = await page.context().newCDPSession(page);
+  session.on("Page.screencastFrame", async ({ data, metadata, sessionId }) => {
+    const file = `${String(frames.length).padStart(5, "0")}.jpg`;
+    writeFileSync(`${dir}/${file}`, Buffer.from(data, "base64"));
+    frames.push({ file, t: metadata.timestamp ?? Date.now() / 1000 });
+    await session.send("Page.screencastFrameAck", { sessionId }).catch(() => undefined);
+  });
+  await session.send("Page.startScreencast", { format: "jpeg", quality: 90, maxWidth: 1440, maxHeight: 900, everyNthFrame: 1 });
+
+  await page.getByTestId("empty-example").click();
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+  await page.getByTestId("view-toggle").click();
+  await page.getByRole("button", { name: "Show the object list and details" }).click();
+  await page.getByRole("navigation", { name: "Scene objects" }).getByRole("button", { name: /^Machine B/ }).click();
+  await page.getByTestId("view-toggle").click();
+  await page.keyboard.press("f");
+  await say(page, "Machine B, in a world made from its plan, is a plain stand-in at its recorded size.");
+  await hold(4000);
+  await chat.getByTestId("chat-file-input").setInputFiles(`${ROOT}fixtures/photos/factory-walk.png`);
+  await hold(1500);
+  await chat.locator('[data-kind="question"]').last().getByTestId("photo-for-obj-dxf-111").click();
+  const dialog = page.getByTestId("photo-look");
+  await say(page, "A reference picture (a render made by this project). Only the chosen part is used.");
+  const r = (await page.getByTestId("photo-look-crop").boundingBox())!;
+  await page.mouse.move(r.x + 0.4 * r.width, r.y + 0.36 * r.height);
+  await page.mouse.down();
+  await page.mouse.move(r.x + 0.57 * r.width, r.y + 0.62 * r.height, { steps: 20 });
+  await page.mouse.up();
+  await hold(3000);
+  await dialog.getByTestId("photo-look-suggest").click();
+  await expect(dialog).toHaveAttribute("data-stage", "review", { timeout: 30_000 });
+  await expect(dialog.getByTestId("photo-look-proposed")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+  await say(page, "A proposed look from a recorded answer: the photo, the current look and the proposal, with what is still wrong.");
+  await hold(6000);
+  await dialog.getByTestId("photo-look-apply").click();
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^1\/1 ready/, { timeout: 30_000 });
+  await page.keyboard.press("f");
+  await say(page, "The same object in the same world: its id, size, evidence and links are unchanged.");
+  await hold(5000);
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press("Escape");
+  await chat.getByTestId("chat-suggest-run_example").click();
+  await expect(chat.locator('[data-kind="run"]').last()).toBeVisible();
+  await page.getByTestId("run-speed").selectOption("120");
+  await say(page, "The shift runs on the same layout: the look changed only how Machine B is drawn.");
+  await hold(6000);
+  await session.send("Page.stopScreencast");
+  writeFileSync(`${dir}/frames.json`, JSON.stringify({ frames }, null, 1));
+  console.log(JSON.stringify({ frames: frames.length }));
+});

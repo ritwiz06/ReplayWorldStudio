@@ -39,6 +39,7 @@ function attachedSource(analysis: DrawingAnalysis): SourceDocument {
     image: null,
     photo_import: null,
     drawing: null,
+    reference: null,
   };
 }
 

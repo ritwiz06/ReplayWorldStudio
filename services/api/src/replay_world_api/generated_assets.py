@@ -30,6 +30,7 @@ from replay_world_contracts import (
     GeneratedModelRestoreReport,
     Length,
     Project,
+    ReferenceAssetRequest,
     RestoredModel,
     ReviewedLength,
     RevisedLength,
@@ -138,6 +139,7 @@ def create_generated_asset(request: GeneratedAssetRequest, catalog_dir: Path) ->
             "not_modelled": request.not_modelled,
             "unknown_properties": [u.model_dump() for u in unknown_properties()],
             "revision": None,
+            "reference": None,
         }
     )
     return CatalogAsset.model_validate(
@@ -170,6 +172,86 @@ def create_generated_asset(request: GeneratedAssetRequest, catalog_dir: Path) ->
             "upload": None,
         }
     )
+
+
+def create_reference_asset(request: ReferenceAssetRequest, catalog_dir: Path) -> CatalogAsset:
+    """Build and store a reviewed appearance made from a reference photo (ENR-01) as a new
+    generated asset. Raises AssistError on refusal; nothing is written then.
+
+    The specification's envelope is the object's recorded size: the asset's nominal sizes are
+    that envelope, recorded as ``inferred`` with where it came from, so a photo never becomes
+    evidence of a size. The object keeps its own dimensions and evidence.
+    """
+    reference = request.reference
+    if (request.language_model is None) != (reference.prompt is None):
+        raise AssistError(
+            422,
+            "An appearance proposed by a vision model records the model and its prompt; one "
+            "built by hand records neither.",
+        )
+    spec, _scale, _notes = fit_to_envelope(request.spec)
+    if spec.envelope_m != request.spec.envelope_m:
+        raise AssistError(422, "An appearance from a photo keeps the object's recorded size.")
+    model = build_model(spec)
+    lm = request.language_model
+    by = f"proposed by {lm.service} {lm.model}" if lm else "built by the user"
+    size_ref = (
+        f"The recorded size of {request.object_name} when this appearance was made (its "
+        "envelope); not measured from the photo"
+    )[:500]
+    envelope = spec.envelope_m
+    nominal = {
+        axis: {
+            "value_m": value,
+            "origin": "inferred",
+            "source_ref": size_ref,
+            "review_status": "unreviewed",
+            "uncertainty_m": None,
+        }
+        for axis, value in (("width", envelope.x), ("height", envelope.y), ("depth", envelope.z))
+    }
+    generation = AssetGeneration.model_validate(
+        {
+            "method": "reference_photo",
+            "description": request.summary,
+            "language_model": lm.model_dump() if lm else None,
+            "generator": GENERATOR_VERSION,
+            "spec": spec.model_dump(),
+            "stated_facts": [],
+            "inferred_facts": list(dict.fromkeys([*reference.estimated, *request.changes]))[:40],
+            "not_modelled": request.not_represented,
+            "unknown_properties": [u.model_dump() for u in unknown_properties()],
+            "revision": None,
+            "reference": reference.model_dump(),
+        }
+    )
+    asset = CatalogAsset.model_validate(
+        {
+            "id": f"asset-ref-{_slug(request.name)}-{model.sha256[:8]}",
+            "name": request.name,
+            "kind": request.kind,
+            "visual": gltf_visual(model).model_dump(),
+            "nominal_dimensions": nominal,
+            "source": {
+                "kind": "generated",
+                "author": GENERATED_AUTHOR,
+                "reference": (
+                    f"Appearance from a reference photo of {request.object_name} (sha256 "
+                    f"{reference.photo_sha256[:12]}…), {by}; a simplified, provisional shape"
+                )[:500],
+            },
+            "rights": {
+                "license": "NOASSERTION",
+                "redistribution": "unknown",
+                "attribution": None,
+                "terms_ref": GENERATED_TERMS,
+            },
+            "generation": generation.model_dump(),
+            "upload": None,
+        }
+    )
+    store_model(model, catalog_dir)  # never replaces an existing file
+    return asset
 
 
 def _revised_length(

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:replay-world:contracts:0.15.0",
+  "$id": "urn:replay-world:contracts:0.16.0",
   "title": "ReplayWorldContracts",
-  "description": "Replay World Studio contracts, schema version 0.15.0. Generated from packages/contracts/python - do not edit by hand.",
+  "description": "Replay World Studio contracts, schema version 0.16.0. Generated from packages/contracts/python - do not edit by hand.",
   "type": "object",
   "properties": {
     "Project": {
@@ -103,6 +103,15 @@
     },
     "UploadedAssetRequest": {
       "$ref": "#/$defs/UploadedAssetRequest"
+    },
+    "AppearanceProposalRequest": {
+      "$ref": "#/$defs/AppearanceProposalRequest"
+    },
+    "AppearanceProposalResult": {
+      "$ref": "#/$defs/AppearanceProposalResult"
+    },
+    "ReferenceAssetRequest": {
+      "$ref": "#/$defs/ReferenceAssetRequest"
     }
   },
   "required": [
@@ -138,19 +147,476 @@
     "EvidenceBundleOpened",
     "EvidenceInventory",
     "UploadedModelReport",
-    "UploadedAssetRequest"
+    "UploadedAssetRequest",
+    "AppearanceProposalRequest",
+    "AppearanceProposalResult",
+    "ReferenceAssetRequest"
   ],
   "additionalProperties": false,
   "$defs": {
+    "AppearanceChanged": {
+      "additionalProperties": false,
+      "description": "Objects drawn with another model, or with their stand-in again, as one step (0.16.0).\n\nDisplay only: each object's id, name, placement, dimensions with their evidence, parameters,\nprocess and source links are unchanged; only ``asset_id`` changes. It applies to an object\nhowever the world was made (a drawing, a photo, the catalog or a description). Earlier\nprojects recorded the same change for imported equipment as a ``drawing_reviewed``\ncorrection; those records stay as written. ``reference_source_id`` names a reference photo\nkept with the world in the same step, if any.",
+      "properties": {
+        "type": {
+          "const": "appearance_changed",
+          "type": "string"
+        },
+        "revision": {
+          "description": "Scene revision this edit produced.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "summary": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/AppearanceObjectChange"
+          },
+          "maxItems": 800,
+          "minItems": 1,
+          "type": "array"
+        },
+        "reference_source_id": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "revision",
+        "summary",
+        "objects",
+        "reference_source_id"
+      ],
+      "title": "AppearanceChanged",
+      "type": "object"
+    },
+    "AppearanceObjectChange": {
+      "additionalProperties": false,
+      "description": "One object's look: the asset it was drawn with and the one it is drawn with now (null:\nits stand-in), and why, in words (never a confidence figure).",
+      "properties": {
+        "object_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "asset_before": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "asset_after": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "object_id",
+        "asset_before",
+        "asset_after",
+        "reason"
+      ],
+      "title": "AppearanceObjectChange",
+      "type": "object"
+    },
+    "AppearanceProposalRequest": {
+      "additionalProperties": false,
+      "description": "The reviewed crop of a reference photo and what the vision model needs about ONE object:\nits name, its recorded size (the envelope the appearance must keep) and, when it is drawn\nwith a generated model, that model's specification to start from. Nothing else of the\nproject is sent. ``data_base64`` is a metadata-free JPEG of the crop made by the browser\n(orientation applied, at most 2048 px). ``photo_sha256`` and ``crop`` identify the original\nfile and the chosen part of it (they select recorded answers in offline tests); neither the\nhash nor the original file is sent to the model.",
+      "properties": {
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "envelope_m": {
+          "$ref": "#/$defs/Extent3"
+        },
+        "spec": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GeometrySpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "instruction": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "minLength": 3,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "media_type": {
+          "const": "image/jpeg",
+          "type": "string"
+        },
+        "data_base64": {
+          "maxLength": 6000000,
+          "minLength": 16,
+          "type": "string"
+        },
+        "width_px": {
+          "maximum": 2048,
+          "minimum": 16,
+          "type": "integer"
+        },
+        "height_px": {
+          "maximum": 2048,
+          "minimum": 16,
+          "type": "integer"
+        },
+        "photo_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "crop": {
+          "$ref": "#/$defs/ImageBox"
+        }
+      },
+      "required": [
+        "name",
+        "envelope_m",
+        "spec",
+        "instruction",
+        "media_type",
+        "data_base64",
+        "width_px",
+        "height_px",
+        "photo_sha256",
+        "crop"
+      ],
+      "title": "AppearanceProposalRequest",
+      "type": "object"
+    },
+    "AppearanceProposalResult": {
+      "additionalProperties": false,
+      "description": "A proposed appearance for one object from its reference photo, checked and fitted to the\nobject's recorded size; nothing is built or stored.\n\n``base`` is what the proposal started from. ``visible`` lists what the model says the photo\nshows and the proposal draws; ``estimated`` the proportions and hidden structure it guessed;\n``not_represented`` what the photo shows but the generator cannot draw. ``problems`` and\n``adjustments`` are the API's own visibility checks and visual choices, as for a revision.\nThe size never changes: a photo is not a measurement.",
+      "properties": {
+        "outcome": {
+          "enum": [
+            "proposal",
+            "unsupported",
+            "already_satisfied"
+          ],
+          "type": "string"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "base": {
+          "$ref": "#/$defs/GeometrySpec"
+        },
+        "spec": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GeometrySpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "visible": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "estimated": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "not_represented": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "checks": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "problems": {
+          "items": {
+            "$ref": "#/$defs/RevisionProblem"
+          },
+          "type": "array"
+        },
+        "adjustments": {
+          "items": {
+            "$ref": "#/$defs/RevisionAdjustment"
+          },
+          "type": "array"
+        },
+        "view": {
+          "enum": [
+            "front-right",
+            "rear-left",
+            "low-front"
+          ],
+          "type": "string"
+        },
+        "crop_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "prompt": {
+          "const": "rws-appearance-prompt/3",
+          "type": "string"
+        },
+        "provider": {
+          "$ref": "#/$defs/ProviderRun"
+        }
+      },
+      "required": [
+        "outcome",
+        "message",
+        "base",
+        "spec",
+        "summary",
+        "visible",
+        "estimated",
+        "not_represented",
+        "checks",
+        "problems",
+        "adjustments",
+        "view",
+        "crop_sha256",
+        "prompt",
+        "provider"
+      ],
+      "title": "AppearanceProposalResult",
+      "type": "object"
+    },
+    "AppearanceReference": {
+      "additionalProperties": false,
+      "description": "How a reference photo of one object became this appearance (0.16.0, ENR-01).\n\nThe photo is a source of the project (kind ``reference_photo``), kept unchanged and named by\nits hash. ``crop`` is the part of it the person chose, in fractions of the photo as displayed\n(its EXIF orientation applied, as every photo here is). When a vision model was asked,\n``crop_sha256`` identifies the derived copy it was sent (a metadata-free JPEG of the crop,\nnever stored), and ``prompt`` the prompt and answer format; both are null when the person\nbuilt the appearance by hand while looking at the photo.\n\nThe appearance never establishes a size: the object's recorded dimensions are the envelope,\nand its evidence stays as it was. ``visible`` lists what was suggested from the photo,\n``estimated`` the proportions and hidden structure that were guessed; what the generator\ncannot show is in the generation's ``not_modelled``.",
+      "properties": {
+        "source_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "photo_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "crop": {
+          "$ref": "#/$defs/ImageBox"
+        },
+        "orientation": {
+          "const": "exif_applied",
+          "type": "string"
+        },
+        "crop_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "crop_width_px": {
+          "anyOf": [
+            {
+              "maximum": 4096,
+              "minimum": 16,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "crop_height_px": {
+          "anyOf": [
+            {
+              "maximum": 4096,
+              "minimum": 16,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "object_id": {
+          "description": "Stable, lowercase identifier. Never reused for a different entity.",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        "instruction": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "const": "rws-appearance-prompt/3",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "based_on": {
+          "anyOf": [
+            {
+              "description": "Stable, lowercase identifier. Never reused for a different entity.",
+              "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The generated asset whose specification the proposal started from; null when it started from the object's recorded envelope."
+        },
+        "visible": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "estimated": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "adjusted_by_user": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "source_id",
+        "photo_sha256",
+        "crop",
+        "orientation",
+        "crop_sha256",
+        "crop_width_px",
+        "crop_height_px",
+        "object_id",
+        "instruction",
+        "prompt",
+        "based_on",
+        "visible",
+        "estimated",
+        "adjusted_by_user"
+      ],
+      "title": "AppearanceReference",
+      "type": "object"
+    },
     "AssetGeneration": {
       "additionalProperties": false,
-      "description": "How a generated asset was made, so it can be reviewed, rebuilt and never mistaken for\na measured or vendor model.\n\n``described``: drafted by ``language_model`` from ``description`` and reviewed by a person.\n``builder``: assembled by a person in the object builder; no language model was involved.\n``photo``: a bounded shape for an object seen in a photo source; ``description`` names what\nwas seen, and ``language_model`` is the vision model that found it (null when the person\nmarked the object themselves).",
+      "description": "How a generated asset was made, so it can be reviewed, rebuilt and never mistaken for\na measured or vendor model.\n\n``described``: drafted by ``language_model`` from ``description`` and reviewed by a person.\n``builder``: assembled by a person in the object builder; no language model was involved.\n``photo``: a bounded shape for an object seen in a photo source; ``description`` names what\nwas seen, and ``language_model`` is the vision model that found it (null when the person\nmarked the object themselves).\n``reference_photo`` (0.16.0): a new appearance for an existing object, made from a reference\nphoto of it within the object's recorded size; ``reference`` records the photo, the crop and\nwhat was seen, and ``language_model`` is the vision model that proposed it (null when the\nperson built it by hand while looking at the photo).",
       "properties": {
         "method": {
           "enum": [
             "described",
             "builder",
-            "photo"
+            "photo",
+            "reference_photo"
           ],
           "type": "string"
         },
@@ -223,6 +689,16 @@
               "type": "null"
             }
           ]
+        },
+        "reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AppearanceReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -235,7 +711,8 @@
         "inferred_facts",
         "not_modelled",
         "unknown_properties",
-        "revision"
+        "revision",
+        "reference"
       ],
       "title": "AssetGeneration",
       "type": "object"
@@ -2400,7 +2877,8 @@
         "schema_version": {
           "enum": [
             "0.14.0",
-            "0.15.0"
+            "0.15.0",
+            "0.16.0"
           ],
           "type": "string"
         },
@@ -3485,7 +3963,7 @@
           "type": "string"
         },
         "schema_version": {
-          "const": "0.15.0",
+          "const": "0.16.0",
           "type": "string"
         }
       },
@@ -4333,6 +4811,40 @@
         "provider"
       ],
       "title": "ObjectProposalResult",
+      "type": "object"
+    },
+    "ObjectReference": {
+      "additionalProperties": false,
+      "description": "What a reference photo shows (0.16.0, ENR-01): the objects it is a picture of, kept so\ntheir look can be compared with it or made from it. It places nothing, sets no scale and is\nnot a measurement: no floor, camera or size is derived from it.",
+      "properties": {
+        "object_ids": {
+          "items": {
+            "description": "Stable, lowercase identifier. Never reused for a different entity.",
+            "pattern": "^[a-z0-9][a-z0-9._:-]{0,127}$",
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "type": "array"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "object_ids",
+        "note"
+      ],
+      "title": "ObjectReference",
       "type": "object"
     },
     "ObjectRemoved": {
@@ -5507,7 +6019,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "const": "0.15.0",
+          "const": "0.16.0",
           "type": "string"
         },
         "id": {
@@ -5958,6 +6470,82 @@
       "title": "RandomStops",
       "type": "object"
     },
+    "ReferenceAssetRequest": {
+      "additionalProperties": false,
+      "description": "Build a reviewed appearance from a reference photo as a new generated asset (its model\nstored by hash). The specification's envelope is the object's recorded size; the asset's\nnominal sizes say so, and never become evidence from the photo.",
+      "properties": {
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "equipment",
+            "structure",
+            "reference"
+          ],
+          "type": "string"
+        },
+        "object_name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/$defs/GeometryDraft"
+        },
+        "summary": {
+          "maxLength": 500,
+          "minLength": 1,
+          "type": "string"
+        },
+        "language_model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LanguageModelRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reference": {
+          "$ref": "#/$defs/AppearanceReference"
+        },
+        "changes": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 40,
+          "type": "array"
+        },
+        "not_represented": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "object_name",
+        "spec",
+        "summary",
+        "language_model",
+        "reference",
+        "changes",
+        "not_represented"
+      ],
+      "title": "ReferenceAssetRequest",
+      "type": "object"
+    },
     "ReferenceLength": {
       "additionalProperties": false,
       "description": "A length the person knows, marked on the drawing with two points (IMP-02).",
@@ -6258,7 +6846,8 @@
             "contrast",
             "scaled",
             "recentred",
-            "part_action"
+            "part_action",
+            "placed"
           ],
           "type": "string"
         },
@@ -6459,6 +7048,9 @@
               },
               {
                 "$ref": "#/$defs/DrawingReviewed"
+              },
+              {
+                "$ref": "#/$defs/AppearanceChanged"
               },
               {
                 "$ref": "#/$defs/SourceAttached"
@@ -6739,7 +7331,7 @@
     },
     "SourceDocument": {
       "additionalProperties": false,
-      "description": "Where scene content came from.\n\nA drawing or plan has a single ``source_to_world`` transform. A ``photo`` has none - a\nperspective photo maps to the floor only through its calibration - and instead carries its\nstored ``image`` and the reviewed ``photo_import``. An imported DXF drawing also carries its\n``drawing`` reading (0.9.0); its transform uses the unit that reading settled.",
+      "description": "Where scene content came from.\n\nA drawing or plan has a single ``source_to_world`` transform. A ``photo`` has none - a\nperspective photo maps to the floor only through its calibration - and instead carries its\nstored ``image`` and the reviewed ``photo_import``. An imported DXF drawing also carries its\n``drawing`` reading (0.9.0); its transform uses the unit that reading settled. A\n``reference_photo`` (0.16.0) is a picture of objects already in the world, kept with its\n``image`` and the ``reference`` it gives: it places and measures nothing.",
       "properties": {
         "id": {
           "description": "Stable, lowercase identifier. Never reused for a different entity.",
@@ -6753,7 +7345,8 @@
             "pdf",
             "png",
             "jpeg",
-            "photo"
+            "photo",
+            "reference_photo"
           ],
           "type": "string"
         },
@@ -6827,6 +7420,16 @@
               "type": "null"
             }
           ]
+        },
+        "reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ObjectReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -6838,7 +7441,8 @@
         "import_warnings",
         "image",
         "photo_import",
-        "drawing"
+        "drawing",
+        "reference"
       ],
       "title": "SourceDocument",
       "type": "object"
@@ -7153,7 +7757,7 @@
           "type": "string"
         },
         "to_version": {
-          "const": "0.15.0",
+          "const": "0.16.0",
           "type": "string"
         },
         "notes": {
@@ -7197,6 +7801,14 @@
         "name": {
           "maxLength": 500,
           "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "equipment",
+            "structure",
+            "reference"
+          ],
           "type": "string"
         },
         "up_axis": {
@@ -7249,6 +7861,7 @@
         "sha256",
         "filename",
         "name",
+        "kind",
         "up_axis",
         "turns",
         "unit",
@@ -7478,7 +8091,7 @@
           "type": "boolean"
         },
         "schema_version": {
-          "const": "0.15.0",
+          "const": "0.16.0",
           "type": "string"
         },
         "project_id": {

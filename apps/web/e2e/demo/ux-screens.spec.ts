@@ -5,11 +5,13 @@
 // start screen, an imported world, a plan, a running shift at two times and from two angles, a
 // blocked result and an object placement. Repository-owned sample files only.
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
 
 const ROOT = new URL("../../../../", import.meta.url).pathname;
 const SET = process.env.UX_SET ?? "after";
-const OUT = SET === "enr01" ? `${ROOT}docs/enr-01/screens` : SET.startsWith("ux05") ? `${ROOT}docs/ux-05/screens` : SET.startsWith("ux04") ? `${ROOT}docs/ux-04/screens` : `${ROOT}docs/ux-03/${SET}`;
+const OUT = SET.startsWith("enr01-photo") ? `${ROOT}docs/enr-01/photo-screens` : SET === "enr01" ? `${ROOT}docs/enr-01/screens` : SET.startsWith("ux05") ? `${ROOT}docs/ux-05/screens` : SET.startsWith("ux04") ? `${ROOT}docs/ux-04/screens` : `${ROOT}docs/ux-03/${SET}`;
 const DXF = `${ROOT}fixtures/drawings/hall-mm.dxf`;
 
 async function shot(page: Page, name: string) {
@@ -38,6 +40,7 @@ for (const [width, height] of [[1440, 900], [1280, 800]] as const) {
     if (SET === "ux04" || SET === "ux04-nokey") return ux04(page);
     if (SET === "ux05" || SET === "ux05-nokey") return ux05(page);
     if (SET === "enr01") return enr01(page);
+    if (SET === "enr01-photo" || SET === "enr01-photo-nokey") return enr01Photo(page);
     await shot(page, "1-first-visit");
     if (SET === "before") {
       await page.evaluate(() => localStorage.setItem("rws.start.seen", "1"));
@@ -289,4 +292,106 @@ async function enr01(page: Page) {
   await expect(page.getByTestId("model-notice")).toBeVisible({ timeout: 30_000 });
   await page.waitForTimeout(800);
   await shot(page, "6-missing-model-recovery");
+}
+
+/** ENR-01, the photo part: a reference photo for Machine B (the drawn sample; recorded answers),
+ * a world without a drawing (the industrial demo) and, without a key, the manual path. */
+async function enr01Photo(page: Page) {
+  const chat = page.getByTestId("chat");
+  const dialog = page.getByTestId("photo-look");
+  const render = `${ROOT}fixtures/photos/factory-walk.png`;
+  const office = `${ROOT}fixtures/photos/office.jpg`;
+  const nokey = SET.endsWith("-nokey");
+  const cropTo = async (box: [number, number, number, number]) => {
+    const r = (await page.getByTestId("photo-look-crop").boundingBox())!;
+    await page.mouse.move(r.x + box[0] * r.width, r.y + box[1] * r.height);
+    await page.mouse.down();
+    await page.mouse.move(r.x + box[2] * r.width, r.y + box[3] * r.height, { steps: 6 });
+    await page.mouse.up();
+  };
+  const select = async (name: RegExp) => {
+    await page.getByTestId("view-toggle").click();
+    const list = page.getByRole("button", { name: "Show the object list and details" });
+    if (await list.isVisible()) await list.click();
+    await page.getByRole("navigation", { name: "Scene objects" }).getByRole("button", { name }).click();
+    await page.getByTestId("view-toggle").click();
+  };
+  const reviewed = async () => {
+    await expect(dialog).toHaveAttribute("data-stage", "review", { timeout: 30_000 });
+    await expect(dialog.getByTestId("photo-look-proposed")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+    await expect(dialog.getByTestId("photo-look-current")).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+    await page.waitForTimeout(1200);
+  };
+  await page.evaluate(() => localStorage.setItem("rws.start.seen", "1"));
+  await page.goto("/");
+  await page.getByTestId("empty-example").click();
+  await expect(page.getByTestId("scene-status")).toHaveText("Scene loaded · 12 objects");
+  await select(/^Machine B/);
+  await page.keyboard.press("f");
+  await page.waitForTimeout(1200);
+  await chat.getByTestId("chat-file-input").setInputFiles(render);
+  await card(page, "question").getByTestId("photo-for-obj-dxf-111").click();
+  await cropTo([0.4, 0.36, 0.57, 0.62]);
+  await shot(page, "1-photo-and-crop");
+  if (nokey) {
+    await dialog.getByTestId("photo-look-manual").click();
+    await reviewed();
+    await dialog.getByTestId("photo-look-edit").locator("summary").first().click();
+    await dialog.getByTestId("photo-look-colour-paint_light_grey").selectOption("safety_yellow");
+    await page.waitForTimeout(1500);
+    await shot(page, "2-manual");
+    await dialog.getByTestId("photo-look-apply").click();
+    await page.keyboard.press("f");
+    await page.waitForTimeout(1500);
+    await shot(page, "3-after");
+    return;
+  }
+  await dialog.getByTestId("photo-look-suggest").click();
+  await reviewed();
+  await shot(page, "2-review");
+  await dialog.getByTestId("photo-look-apply").click();
+  await expect(card(page, "photo-look-applied")).toBeVisible();
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^1\/1 ready/, { timeout: 30_000 });
+  await page.keyboard.press("f");
+  await page.waitForTimeout(1500);
+  await shot(page, "3-after");
+  await page.keyboard.press("Escape");
+  await chat.getByTestId("chat-suggest-run_example").click();
+  await expect(card(page, "run")).toBeVisible();
+  await page.getByTestId("run-speed").selectOption("120");
+  await page.waitForTimeout(3000);
+  await shot(page, "4-running-shift");
+  // The photo goes missing: the world opens, its look is drawn, and the photo can come back.
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("save").click()]);
+  const text = readFileSync((await download.path())!, "utf8");
+  const sources = (JSON.parse(text) as { sources: { kind: string; image: { uri: string } | null }[] }).sources;
+  const uri = sources.find((s) => s.kind === "reference_photo")!.image!.uri;
+  const library = join(tmpdir(), "rws-demo-sources-8050"); // playwright.demo.config.ts
+  if (existsSync(join(library, uri))) unlinkSync(join(library, uri));
+  await page.goto("/");
+  await chat.getByTestId("chat-file-input").setInputFiles({ name: download.suggestedFilename(), mimeType: "application/json", buffer: Buffer.from(text) });
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^1\/1 ready/, { timeout: 30_000 });
+  await expect(page.getByTestId("reference-notice")).toBeVisible({ timeout: 30_000 });
+  await shot(page, "5-missing-photo");
+  // A world without a drawing: the industrial demo's control cabinet, from a real photo.
+  await page.goto("/");
+  await chat.getByTestId("chat-file-input").setInputFiles(`${ROOT}fixtures/scenes/industrial-demo.json`);
+  await expect(card(page, "done")).toContainText("15 objects");
+  await select(/^Control cabinet 1/);
+  await page.keyboard.press("f");
+  await page.getByTestId("selection-look").click();
+  await card(page, "appearance").getByTestId("look-photo-obj-cabinet-1").click();
+  const [chooser] = await Promise.all([page.waitForEvent("filechooser"), dialog.getByTestId("photo-look-pick").click()]);
+  await chooser.setFiles(office);
+  await cropTo([0.88, 0.68, 1, 1]);
+  await dialog.getByTestId("photo-look-suggest").click();
+  await reviewed();
+  await dialog.getByTestId("photo-look-edit").locator("summary").first().click();
+  await dialog.getByTestId("photo-look-colour-wood").selectOption("paint_anthracite");
+  await reviewed();
+  await shot(page, "6-no-drawing-review");
+  await dialog.getByTestId("photo-look-apply").click();
+  await page.keyboard.press("f");
+  await page.waitForTimeout(2000);
+  await shot(page, "7-no-drawing-after");
 }

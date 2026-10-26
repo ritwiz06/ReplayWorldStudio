@@ -67,6 +67,7 @@ LIVE_MODELS = {
     "plan": "qwen3-vl-32b-instruct",
     "setup": "qwen3-235b-a22b-instruct-2507",
     "chat": "qwen3-235b-a22b-instruct-2507",
+    "appearance": "qwen3-vl-32b-instruct",
 }
 
 
@@ -86,6 +87,10 @@ def test_recordings_name_the_live_model_and_hold_no_secrets() -> None:
             # Keyed by the original photo's bytes, which are committed beside the recording.
             photo = (ROOT / "fixtures" / "photos" / data["photo"]).read_bytes()
             assert data["key"] == hashlib.sha256(photo).hexdigest()
+        if data["task"] == "appearance":
+            # Keyed by the original photo's hash (committed in fixtures/photos/) and the crop.
+            photo = (ROOT / data["photo"]).read_bytes()
+            assert data["key"].startswith(hashlib.sha256(photo).hexdigest() + "|")
         if data["task"] == "plan":
             # Keyed by the synthetic plan's bytes, committed in fixtures/plans/.
             plan = (ROOT / "fixtures" / "plans" / data["plan"]).read_bytes()
@@ -388,3 +393,61 @@ def test_the_recorded_sketch_draft_proposes_the_dashed_idea_as_an_object() -> No
     result = propose_plan(PLAN_PROVIDER, plan_request("rough-cell.png"))
     assert result.proposal is not None
     assert "future cart?" in [o.label for o in result.proposal.objects]  # for the person to remove
+
+
+# --- ENR-01: looks from reference photos (recorded live answers, prompt 3) ----------------------
+
+
+@pytest.mark.parametrize(
+    ("case", "name", "features"),
+    [
+        ("machine-b", "Machine B", ["yellow frame", "HMI screen"]),
+        ("control-cabinet", "Control cabinet 1", ["three drawers", "aluminium handles"]),
+    ],
+)
+def test_recorded_photo_looks_keep_the_size_and_say_what_is_left(
+    case: str, name: str, features: list[str]
+) -> None:
+    """The two live answers, replayed: each gives a proposal at the object's recorded size whose
+    seen features include the two named here, and whatever still looks wrong is listed."""
+    import base64
+
+    from replay_world_api.assist.appearance import propose_appearance
+    from replay_world_contracts import AppearanceProposalRequest
+
+    recording = json.loads((RECORDINGS / f"appearance-{case}.json").read_text())
+    photo_sha, box, size, start, note = recording["key"].split("|")
+    x, y, z = (float(v) for v in size.split("x"))
+    left, top, right, bottom = (float(v) for v in box.split(","))
+    vision = RecordedProvider(
+        AssistSettings(provider="recorded", recordings_dir=RECORDINGS), tasks=("appearance",)
+    )
+    photo = (ROOT / recording["photo"]).read_bytes()
+    jpeg = (
+        photo
+        if recording["photo"].endswith(".jpg")
+        else (ROOT / "fixtures/photos/office.jpg").read_bytes()
+    )
+    request = AppearanceProposalRequest.model_validate(
+        {
+            "name": name,
+            "envelope_m": {"x": x, "y": y, "z": z},
+            "spec": None,
+            "instruction": note or None,
+            "media_type": "image/jpeg",
+            "data_base64": base64.b64encode(jpeg).decode("ascii"),
+            "width_px": 1024,
+            "height_px": 678,
+            "photo_sha256": photo_sha,
+            "crop": {"left": left, "top": top, "right": right, "bottom": bottom},
+        }
+    )
+    assert start == "block" and hashlib.sha256(photo).hexdigest() == photo_sha
+    result = propose_appearance(vision, request)
+    assert result.outcome == "proposal" and result.spec is not None
+    e = result.spec.envelope_m
+    assert (e.x, e.y, e.z) == (x, y, z)
+    seen = " ".join(result.visible)
+    assert all(f in seen for f in features)
+    assert result.provider.attempts == 2  # the checks asked once for a corrected answer
+    assert result.problems  # weak answers are reported as such, never hidden

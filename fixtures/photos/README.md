@@ -11,3 +11,5 @@ Real photographs in the public domain (CC0 or the Public Domain Mark) and render
 | `factory-walk-sign.jpg` | The same render with a printed sign telling an AI to ignore its instructions; it tests that text in an image is treated as content | Rendered by this project. |
 
 The files were checked visually before being added. Their sha256 values are pinned by the tests that use them.
+
+ENR-01 also uses two of them as **reference photos** of an object (no new files). `factory-walk.png` is cropped to one guarded cell (a render, not a photograph). `office.jpg` is cropped to its drawer unit, a look reference for the demo's control cabinet, not a photo of that equipment. See [docs/enr-01/photo.md](../../docs/enr-01/photo.md).

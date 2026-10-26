@@ -45,6 +45,12 @@ def _as_version(current: dict[str, Any], version: str) -> dict[str, Any]:
     visibility or corrections before 0.8.0; no asset revisions or scale size bases before 0.7.0;
     no photo fields on sources before 0.6.0; no generation records before 0.5.0; no edit log
     before 0.4.0)."""
+    current = json.loads(json.dumps(current))
+    for source in current["sources"]:
+        source.pop("reference", None)
+    for asset in current["catalog"]:
+        if asset.get("generation"):
+            asset["generation"].pop("reference", None)
     unread = [{k: v for k, v in s.items() if k != "drawing"} for s in current["sources"]]
     if version in ("0.8.0", "0.9.0", "0.10.0"):
         sources = unread if version == "0.8.0" else current["sources"]
@@ -114,20 +120,21 @@ def test_upgrades_a_0_1_0_file_through_every_step(client: TestClient) -> None:
     status, payload = _upgrade(client, LEGACY.read_text())
     assert status == 200
     report = UpgradeReport.model_validate(payload)
-    assert (report.from_version, report.to_version) == ("0.1.0", "0.15.0")
+    assert (report.from_version, report.to_version) == ("0.1.0", "0.16.0")
     assert report.notes[0] == "schema_version 0.1.0 -> 0.2.0"
-    assert report.notes[-12].startswith("schema_version 0.3.0 -> 0.4.0")
-    assert report.notes[-11].startswith("schema_version 0.4.0 -> 0.5.0")
-    assert report.notes[-10].startswith("schema_version 0.5.0 -> 0.6.0")
-    assert report.notes[-9].startswith("schema_version 0.6.0 -> 0.7.0")
-    assert report.notes[-8].startswith("schema_version 0.7.0 -> 0.8.0")
-    assert report.notes[-7].startswith("schema_version 0.8.0 -> 0.9.0")
-    assert report.notes[-6].startswith("schema_version 0.9.0 -> 0.10.0")
-    assert report.notes[-5].startswith("schema_version 0.10.0 -> 0.11.0")
-    assert report.notes[-4].startswith("schema_version 0.11.0 -> 0.12.0")
-    assert report.notes[-3].startswith("schema_version 0.12.0 -> 0.13.0")
-    assert report.notes[-2].startswith("schema_version 0.13.0 -> 0.14.0")
-    assert report.notes[-1].startswith("schema_version 0.14.0 -> 0.15.0")
+    assert report.notes[-13].startswith("schema_version 0.3.0 -> 0.4.0")
+    assert report.notes[-12].startswith("schema_version 0.4.0 -> 0.5.0")
+    assert report.notes[-11].startswith("schema_version 0.5.0 -> 0.6.0")
+    assert report.notes[-10].startswith("schema_version 0.6.0 -> 0.7.0")
+    assert report.notes[-9].startswith("schema_version 0.7.0 -> 0.8.0")
+    assert report.notes[-8].startswith("schema_version 0.8.0 -> 0.9.0")
+    assert report.notes[-7].startswith("schema_version 0.9.0 -> 0.10.0")
+    assert report.notes[-6].startswith("schema_version 0.10.0 -> 0.11.0")
+    assert report.notes[-5].startswith("schema_version 0.11.0 -> 0.12.0")
+    assert report.notes[-4].startswith("schema_version 0.12.0 -> 0.13.0")
+    assert report.notes[-3].startswith("schema_version 0.13.0 -> 0.14.0")
+    assert report.notes[-2].startswith("schema_version 0.14.0 -> 0.15.0")
+    assert report.notes[-1].startswith("schema_version 0.15.0 -> 0.16.0")
     inferred = "box origin 'inferred' applied to width, height and depth"
     assert any(inferred in note for note in report.notes)
     assert report.project.scene.edit_log == []
@@ -153,7 +160,7 @@ def test_a_current_document_passes_through_with_no_notes(client: TestClient) -> 
     status, payload = _upgrade(client, (FIXTURES / "scenes" / "foundation-scene.json").read_text())
     assert status == 200
     report = UpgradeReport.model_validate(payload)
-    assert (report.from_version, report.notes) == ("0.15.0", [])
+    assert (report.from_version, report.notes) == ("0.16.0", [])
 
 
 @pytest.mark.parametrize("version", ["9.9.9", "0.0.1", None, 3])

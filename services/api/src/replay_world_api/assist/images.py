@@ -26,6 +26,7 @@ from typing import Any, Final, Literal
 
 from pydantic import Field, ValidationError
 from replay_world_contracts import (
+    AppearanceProposalRequest,
     ImageAnalysisRequest,
     ImageProposal,
     ImageProposalResult,
@@ -322,7 +323,7 @@ def _mark_parts(objects: list[dict[str, Any]]) -> None:
                 break
 
 
-def decode_analysis_image(request: ImageAnalysisRequest) -> bytes:
+def decode_analysis_image(request: ImageAnalysisRequest | AppearanceProposalRequest) -> bytes:
     """The analysis copy's bytes, checked: format, size and pixel limits. Raises AssistError."""
     try:
         data = base64.b64decode(request.data_base64, validate=True)

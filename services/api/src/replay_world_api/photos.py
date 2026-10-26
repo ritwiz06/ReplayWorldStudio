@@ -517,14 +517,16 @@ def check_source_files(
     """Check every photo source's file; return (files verified, validation issues, missing).
 
     With ``allow_missing`` an absent file is listed in ``missing`` instead of being an issue,
-    so the project can open without it. An altered file is always an issue: it is never shown.
+    so the project can open without it. A reference photo (0.16.0) places nothing, so its absence
+    never stops a project opening: it is always listed in ``missing``. An altered file is always
+    an issue: it is never shown.
     """
     verified = 0
     issues: list[dict[str, Any]] = []
     missing: list[str] = []
     for index, source in enumerate(project.sources):
         image = source.image
-        if source.kind != "photo" or image is None or source.sha256 is None:
+        if source.kind not in ("photo", "reference_photo") or image is None or not source.sha256:
             continue
         loc = ("body", "sources", index)
         name = source.filename or PurePosixPath(image.uri).name
@@ -545,7 +547,7 @@ def check_source_files(
             path = resolve_source_file(sources_dir, image.uri)
         except PhotoError as exc:
             if exc.kind == "missing":
-                if allow_missing:
+                if allow_missing or source.kind == "reference_photo":
                     missing.append(image.uri)
                     continue
                 message = (

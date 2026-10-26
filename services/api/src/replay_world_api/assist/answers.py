@@ -103,6 +103,42 @@ class RawRevisionAnswer(_Raw):
     )
 
 
+class RawAppearanceAnswer(_Raw):
+    """A new look for one object from a photo of it (ENR-01), as changes to its current parts.
+    The overall size is never part of the answer: the object's recorded size is kept."""
+
+    outcome: Literal["revision", "unsupported", "already_satisfied"]
+    message: str | None = Field(description="For unsupported or already_satisfied: why.")
+    summary: str | None = Field(
+        description="What changed and why, in one short sentence, e.g. 'Added the yellow guard "
+        "and the control panel seen in the photo.'"
+    )
+    visible: list[str] = Field(
+        max_length=12,
+        description="Each feature seen in the photo that these changes draw, in a few words "
+        "(e.g. 'yellow guard frame', 'control panel on the right').",
+    )
+    estimated: list[str] = Field(
+        max_length=12,
+        description="Proportions, positions and hidden sides or structure that were guessed "
+        "rather than seen.",
+    )
+    # Bounded, so a model that starts repeating itself stops at the limit instead of the token
+    # limit (guided decoding enforces it; an unguided answer over it is asked again).
+    remove: list[str] = Field(max_length=20, description="IDs of current parts to remove.")
+    change: list[RawPart] = Field(
+        max_length=12, description="Current parts (same id) with new values."
+    )
+    add: list[RawPart] = Field(max_length=12, description="New parts, with new ids.")
+    repeat: list[RawRepeat] = Field(
+        max_length=4,
+        description="Rows or grids of identical new parts (bars, slats, shelves, posts).",
+    )
+    not_representable: list[str] = Field(
+        max_length=12, description="Features seen in the photo that the generator cannot show."
+    )
+
+
 class RawTarget(_Raw):
     reference: Literal["selected", "named"]
     object_id: str | None

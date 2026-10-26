@@ -724,7 +724,11 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
   - STEP conversion has its licence and units decided first.
   - The previous version is kept.
   - Journey step 3: `Filling-Cell.step` makes the existing cell more detailed without resetting it.
-- Status (2026-10-25, ADR-065, contract 0.15.0): **open; the GLB part is built.**
+- Status (2026-10-26, ADR-066, contract 0.16.0): **open; the GLB, photo and source-independent parts are built. STEP and supplier dimensions remain.**
+  - **Photo part (built, ADR-066):** Change look… → Improve from photo…, or a picture attached in the conversation ("Use as a reference for …"; a new world stays a separate choice). The person crops it and is told what is sent, and nothing is sent before **Suggest appearance**. One bounded multimodal proposal (150 s) goes through GEN-02's typed generator and checks. The review shows the photo, the current look and the proposal, with problems beside Apply, hand edits and Details. Apply is a new immutable asset through the common command, with the reference photo (`reference_photo` source, kept unchanged by hash) in the same undoable step. The recorded size stays the envelope; the evidence records the photo hash, crop, orientation, model, prompt and seen/estimated/undrawable features. Without a key it is manual work. A missing photo does not block rendering; only the same photo comes back.
+  - **Source-independent (built, ADR-066):** `set_appearance` records `appearance_changed` and works without a drawing (drawn, photo-made, catalog, described, built, attached-model objects). Older `drawing_reviewed` looks stay as written. Catalog matching, attached models, the object generator for an object, photo looks and stand-in recovery share it.
+  - **Live results are weak** for a busy machine (Machine B) and weak to moderate for a drawer unit; see docs/enr-01/photo.md. 6 calls, 475.9 s.
+  - Earlier status (2026-10-25, ADR-065, contract 0.15.0): the GLB part built.
   - **Built:** a GLB attached to an existing object (Change look… → Upload a 3D model…, or attached in the conversation) is reviewed for the right object, its facing and its fit, then applied as one undoable `set_appearance` step that keeps its id, name, placement, recorded dimensions and evidence, and its links and run.
     - **The file:** kept unchanged by its sha256; the person's quarter-turn orientation, unit and fit are recorded as the visual's correction. Bounds come from every vertex through every node transform.
     - **What is refused, with the reason:** limits on size, nodes, depth, vertices, triangles and textures; external or text-embedded resources; compression; unreadable required extensions; skins and morph targets.
@@ -733,12 +737,12 @@ Reframed 2026-10-16 (ADR-049): "Upload a plan. Walk through it. Change it. See w
     - **A missing file:** opens, then recovers only with the same file (hash-checked) or the stand-in.
     - **Bundles:** the model is included only when selected, and hash-checked on opening.
   - **Still open:**
-    - photo enrichment;
     - STEP (licence and units first; the "Filling-Cell.step" journey);
-    - accepting geometry as checked where a file supports it (the sizes are only compared now, never adopted);
-    - an enriched object from a world without a drawing source.
+    - accepting geometry as checked where a file supports it (the sizes are only compared now, never adopted; ENR-02 for supplier documents);
+    - the quality of live photo proposals.
 - Evidence:
-  - docs/enr-01/;
+  - docs/enr-01/ (photo.md for the photo part);
+  - e2e `photo-look.spec.ts` (4), `local/chat-nokey.spec.ts` (the manual path); `services/api/tests/test_appearance.py` (20), `test_assist_recorded.py` (the two live recordings), `src/photo/reference.test.ts`, `test_migrations.py` (0.15.0 → 0.16.0);
   - e2e `enrich.spec.ts` (5), `external/khronos-model.spec.ts` (local);
   - `services/api/tests/test_uploads.py`, `src/scene/uploads.test.ts`, `packages/contracts/tests/test_migrations.py` (0.14.0 → 0.15.0).
 

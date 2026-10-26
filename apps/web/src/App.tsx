@@ -1,4 +1,4 @@
-import type { CatalogAsset, DrawingObject, ProcessModel, Project, SceneObject, Transform } from "@replay-world/contracts";
+import type { CatalogAsset, DrawingObject, ProcessModel, Project, SceneObject, SourceDocument, Transform } from "@replay-world/contracts";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createApiClient } from "./api/client";
 import type { ResolvedEdit } from "./assist/editIntent";
@@ -8,6 +8,7 @@ import { CreateObject } from "./components/CreateObject";
 import { UnsavedChangesDialog, UpgradeReviewDialog } from "./components/Dialogs";
 import { DrawingImport } from "./components/DrawingImport";
 import { ImproveModel } from "./components/ImproveModel";
+import { PhotoLook } from "./components/PhotoLook";
 import { Inspector } from "./components/Inspector";
 import { JourneyPanel } from "./components/JourneyPanel";
 import { EditRejectedNotice, FileRejectedPanel, LoadErrorPanel, PlacementBanner } from "./components/Notices";
@@ -22,13 +23,14 @@ import { SampleGuide } from "./components/SampleGuide";
 import { StartPanel } from "./components/StartPanel";
 import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
-import { FixtureBanner, ModelNotice, PlanOverlay, ViewToolbar, WalkHud } from "./components/ViewControls";
+import { FixtureBanner, ModelNotice, PlanOverlay, ReferenceNotice, ViewToolbar, WalkHud } from "./components/ViewControls";
+import { referencesOf } from "./photo/reference";
 import { compareWithDrawing } from "./drawing/compare";
 import { type ReviewCorrection, reviewItems } from "./drawing/review";
 import { SAMPLE_MACHINE, SAMPLE_MOVE_TO, SAMPLE_PROJECT_ID, SAMPLE_ROUTE } from "./drawing/sampleProject";
 import { drawingSource, isPlanImage, toWorld } from "./drawing/world";
 import { PUBLIC_PREVIEW } from "./config";
-import type { Axis, CommandRequest, EditCommand } from "./editing/commands";
+import { type Axis, type CommandRequest, canChangeLook, type EditCommand } from "./editing/commands";
 import type { Outcome } from "./editing/history";
 import { copyId, copyName, instanceId, instanceName } from "./editing/newObjects";
 import { serializeProject } from "./editing/projectFile";
@@ -226,6 +228,13 @@ export function App() {
   /** A .glb chosen for one object (ENR-01): the hidden file input and the object it is for. */
   const modelFile = useRef<HTMLInputElement>(null);
   const modelTarget = useRef<string | null>(null);
+  /** Improve from photo (ENR-01): the object it is for and a photo already chosen, if any. */
+  const [photoLook, setPhotoLook] = useState<{ objectId: string; file: File | null } | null>(null);
+  /** Reference photos this session re-attached (checked by hash) after a file opened without them. */
+  const [restoredRefs, setRestoredRefs] = useState<ReadonlySet<string>>(new Set());
+  const refFile = useRef<HTMLInputElement>(null);
+  const refTarget = useRef<SourceDocument | null>(null);
+  const [refNotice, setRefNotice] = useState<string | null>(null);
   /** The object generator, opened for an existing object's look (UX-05). */
   const [lookCreate, setLookCreate] = useState<{ objectId: string; kind: "describe" | "builder"; initial: { text: string; name: string; size: { width: number; depth: number; height: number } }; done: (outcome: { ok: true; assetName: string } | { ok: false; message: string } | null) => void } | null>(null);
   const { state: assist } = useAssistStatus(client);
@@ -331,6 +340,13 @@ export function App() {
   const selectedId = selection.loadId === loadId ? selection.id : null;
   const focusedDrawn = reviewFocus?.loadId === loadId ? reviewFocus.drawnId : null;
   const selected = project?.scene.objects.find((o) => o.id === selectedId) ?? null;
+  // Reference photos (ENR-01): those a file opened without, and the selected object's own.
+  const missingFiles = source?.kind === "file" ? source.report.missing_source_files : [];
+  const missingRefs = (project?.sources ?? []).filter((s) => s.kind === "reference_photo" && s.image && missingFiles.includes(s.image.uri) && !restoredRefs.has(s.image.uri));
+  const selectedRef = selected ? referencesOf(project!, selected.id).at(-1) : undefined;
+  const selectedReference = selectedRef?.image
+    ? { filename: selectedRef.filename ?? "photo", url: missingRefs.includes(selectedRef) ? null : client.sourceFileUrl(selectedRef.image.uri) }
+    : null;
   const activePlacement = placement?.loadId === loadId ? placement : null;
   const summary = summarise(models);
   const editable = project !== null && mode !== "walk" && prompt === null && !overlayOpen;
@@ -927,6 +943,7 @@ export function App() {
       },
       setLookPreview: (p) => setLookPreview(p && project ? { loadId, revision: project.scene.revision, ...p } : null),
       openLookCreate: (objectId, kind, initial, done) => setLookCreate({ objectId, kind, initial, done }),
+      openPhotoLook: (objectId, file) => setPhotoLook({ objectId, file }),
       openCreate: (kind, description) => {
         const sizes = /(?:,\s*)?([\d.]+) m wide|([\d.]+) m deep|([\d.]+) m high/g;
         let width: number | null = null;
@@ -1172,6 +1189,17 @@ export function App() {
               }}
             />
           )}
+          {project && missingRefs.length > 0 && (
+            <ReferenceNotice
+              sources={missingRefs}
+              project={project}
+              message={refNotice}
+              onAttach={(source) => {
+                refTarget.current = source;
+                refFile.current?.click();
+              }}
+            />
+          )}
           {scene.status === "loading" && <div className="notice">Loading scene from the API…</div>}
           {scene.status === "error" && <LoadErrorPanel error={scene.error} onRetry={session.reloadFixture} />}
           {fileCheck.status === "rejected" && (
@@ -1197,8 +1225,11 @@ export function App() {
                 setDetails(true);
                 setView("editor");
               }}
-              // Imported equipment's look, by hand (UX-05): the same review card, no AI needed.
-              onLook={selected.kind === "equipment" && sourceDrawing?.drawing.objects.some((d) => d.object_id === selected.id) ? () => void chat.controller.startLook([selected.id]) : null}
+              // An object's look, however the world was made (UX-05, ENR-01): the same review
+              // card, no AI needed.
+              onLook={canChangeLook(selected) ? () => void chat.controller.startLook([selected.id]) : null}
+              reference={selectedReference}
+              onReference={() => setPhotoLook({ objectId: selected.id, file: null })}
             />
           )}
           {chatView && project && project.scene.objects.length === 0 && scene.status === "loaded" && (
@@ -1529,6 +1560,55 @@ export function App() {
           if (file && target) void chat.controller.attachModel(file, target);
         }}
       />
+      <input
+        ref={refFile}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        hidden
+        data-testid="reference-same-input"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          const source = refTarget.current;
+          if (!file || !source?.sha256 || !source.image) return;
+          // The same photo, checked by its hash: a different one is refused and nothing changes.
+          void client.uploadPhoto(file, source.filename ?? file.name, source.sha256).then((r) => {
+            if (r.ok) {
+              setRefNotice(null);
+              setRestoredRefs((done) => new Set([...done, source.image!.uri]));
+            } else
+              setRefNotice(
+                r.error.kind === "http" && r.error.status === 409
+                  ? `${file.name} is a different photo (its sha256 differs), so it was not used. Attach the original, or keep working without it.`
+                  : r.error.message,
+              );
+          });
+        }}
+      />
+      {photoLook && project && !prompt && project.scene.objects.some((o) => o.id === photoLook.objectId) && (
+        <PhotoLook
+          key={`${photoLook.objectId}-${loadId}`}
+          client={client}
+          assist={assist}
+          project={project}
+          object={project.scene.objects.find((o) => o.id === photoLook.objectId)!}
+          initialFile={photoLook.file}
+          onClose={() => setPhotoLook(null)}
+          onCatalog={() => {
+            const objectId = photoLook.objectId;
+            setPhotoLook(null);
+            void chat.controller.startLook([objectId]);
+          }}
+          onApply={(request) => {
+            const outcome = run(request);
+            if (!outcome) return "The scene is not editable right now.";
+            if (!outcome.ok) return outcome.rejection.message;
+            chat.controller.notePhotoLook(request);
+            setPhotoLook(null);
+            return null;
+          }}
+        />
+      )}
       {lookCreate && project && !prompt && (
         <CreateObject
           client={client}

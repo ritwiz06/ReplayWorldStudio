@@ -145,6 +145,7 @@ def asset_for(client: TestClient, name: str, **choices: Any) -> dict[str, Any]:
         "sha256": report["sha256"],
         "filename": name,
         "name": "Attached model",
+        "kind": "equipment",
         "up_axis": "+Y",
         "turns": 0,
         "unit": "m",
