@@ -1462,7 +1462,8 @@ Append entries in chronological order. If a live repository session log already 
   - photo and STEP enrichment are not built;
   - REL-01's *layout* fingerprint includes `asset_id`, so it changes with a new look (events and metrics do not);
   - UX-02 open.
-- Actual effort: wall-clock from 2026-10-25 14:22 America/Phoenix to the commit, plus CI (recorded below).
+- CI: https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/40242247859 passed all three jobs on `e5df221`. On the first attempt, the browser job was cancelled at its 15-minute limit: installing Playwright's system libraries took 8 min (usually under a minute), and no test failed. The rerun passed (21 smoke tests in 11.1 min and 5 local tests in 2.1 min; the job took 14.1 min). The job's limit was raised to 20 minutes in the follow-up commit.
+- Actual effort: about 1 h 30 min of active work (2026-10-25 14:22 to 15:53 America/Phoenix, the commit), then CI waiting and the rerun (green at 19:02).
 - Next concrete task: on the user's priority, UX-02 with consenting newcomers, ENR-01's photo or STEP part, ENR-02 (adopting documented dimensions), or QA-01.
 
 ## Copy this template for a coding session
