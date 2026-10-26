@@ -67,9 +67,10 @@ jobs:
     # The full suite runs locally with `pnpm test:e2e`.
     name: Browser smoke test (Playwright, software WebGL)
     runs-on: ubuntu-latest
-    # 21 smoke tests and the local journey take 8-12 min in software WebGL; the browser's
-    # system libraries usually install in under a minute, but once took 8 (ENR-01's first run).
-    timeout-minutes: 20
+    # 22 smoke tests and the local journey take 8-12 min in software WebGL; the browser's
+    # system libraries usually install in under a minute, but apt downloads have stalled for 8
+    # and 11 min (ENR-01's runs), so the job has room for one such stall.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 

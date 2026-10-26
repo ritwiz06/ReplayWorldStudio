@@ -137,12 +137,13 @@ test("photo look A: a reference for Machine B in the drawn factory; the run is u
   const again = await save(page);
   expect(objectOf(again.project, "obj-dxf-111").asset_id).toBe(asset.id);
 
-  // Reopened: the same look, and the photo beside it.
+  // Reopened: the same look, its model verified by its hash. (Whether the photo itself is
+  // present is not checked here: photo.spec.ts removes this shared photo for its own test, and
+  // a missing reference photo has its own test below, with a file only it uses.)
   await page.goto("/");
   await page.getByTestId("chat-file-input").setInputFiles({ name: again.name, mimeType: "application/json", buffer: Buffer.from(again.text) });
   await expect(card(page, "done")).toContainText(`Opened ${again.name}: 12 objects.`);
   await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^1\/1 ready/, { timeout: 30_000 });
-  await expect(page.getByTestId("reference-notice")).toHaveCount(0);
 
 });
 
