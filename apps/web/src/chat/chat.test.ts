@@ -31,7 +31,10 @@ describe("the chat context", () => {
 
 describe("suggestions", () => {
   it("offer the three starting points on an empty project", () => {
-    expect(suggestions(facts({ hasWorld: false, hasDrawing: false, hasProcess: false }), false)).toEqual(["example", "upload", "capabilities"]);
+    expect(suggestions(facts({ hasWorld: false, hasDrawing: false, hasProcess: false }), false)).toEqual(["workshop", "upload", "example"]);
+  });
+  it("leave the workshop task's card as the only next step while it is open", () => {
+    expect(suggestions(facts({ inTask: true, hasRun: true, layoutEdited: true }), true)).toEqual([]);
   });
   it("offer only what can work now", () => {
     expect(suggestions(facts({}), true)).toEqual(["move_any", "route", "run_example"]);

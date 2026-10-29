@@ -25,6 +25,8 @@ export interface RouteUse {
   lengthM: number | null;
   path: Vec[] | null;
   summary: string;
+  /** Where a route that does not fit is narrowest, and the objects on either side. */
+  passage?: { at: Vec; objectIds: string[] } | null;
   /** What needs this route, e.g. "carry Mixer → Machine B" or "Worker 1 walking". */
   uses: string[];
 }
@@ -100,6 +102,7 @@ export function planRun(project: Project, process: ProcessModel): RunPlan {
         lengthM: outcome === "fits" && result?.path ? pathLength(result.path) : null,
         path: result?.path ?? null,
         summary: result?.summary ?? "the route could not be checked",
+        passage: outcome !== "fits" && result?.passage ? { at: result.passage.at, objectIds: result.passage.objectIds } : null,
         uses: [],
       };
       routes.push(found);

@@ -90,7 +90,7 @@ export function ChatPanel(props: Props) {
       <div className="chat-list" ref={list} data-testid="chat-list" aria-live="polite">
         {entries.length === 0 && (
           <div className="chat-welcome" data-testid="chat-welcome">
-            <p className="chat-welcome-title">Upload a plan. Ask what you want to change. See it happen in the world.</p>
+            <p className="chat-welcome-title">Move something in a layout. See whether it still works, and what changes in a shift.</p>
           </div>
         )}
         {entries.map((e) => (e.role === "user" ? <UserLine key={e.id} entry={e} /> : <Card key={e.id} entry={e} project={project} props={props} />))}

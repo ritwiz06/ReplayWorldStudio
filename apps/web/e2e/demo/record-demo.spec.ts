@@ -471,3 +471,84 @@ test("record the photo-look journey", async ({ page }) => {
   writeFileSync(`${dir}/frames.json`, JSON.stringify({ frames }, null, 1));
   console.log(JSON.stringify({ frames: frames.length }));
 });
+
+// "Try rearranging a workshop", recorded as one uninterrupted session of normal interaction on
+// the production build with no key: no captions, nothing injected; every sentence on screen is
+// the app's own. Counts clicks and drags, and how long each action took to show its result
+// (waiting), separately. A scripted recording, not a user study. Run with -g "workshop journey";
+// frames go to test-results/demo-frames-workshop and the measurements to its timing.json.
+test("record the workshop journey", async ({ page }) => {
+  test.setTimeout(300_000);
+  const dir = `${ROOT}apps/web/test-results/demo-frames-workshop`;
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  const frames: { file: string; t: number }[] = [];
+  const tally = { clicks: 0, drags: 0, waits: [] as { action: string; ms: number }[] };
+  const card = page.getByTestId("chat").locator('[data-kind^="task"]').last();
+  const hold = (ms: number) => page.waitForTimeout(ms);
+  /** Click, then wait for the app's answer, and keep how long that answer took. */
+  const act = async (action: string, click: () => Promise<void>, done: () => Promise<void>) => {
+    tally.clicks++;
+    const start = Date.now();
+    await click();
+    await done();
+    tally.waits.push({ action, ms: Date.now() - start });
+  };
+  await page.goto("/");
+  await page.evaluate(() => {
+    localStorage.setItem("rws.start.seen", "1");
+    localStorage.setItem("rws.view", "chat");
+  });
+  await page.goto("/");
+  await expect(page.getByTestId("empty-workshop")).toBeVisible();
+  const session = await page.context().newCDPSession(page);
+  session.on("Page.screencastFrame", async ({ data, metadata, sessionId }) => {
+    const file = `${String(frames.length).padStart(5, "0")}.jpg`;
+    writeFileSync(`${dir}/${file}`, Buffer.from(data, "base64"));
+    frames.push({ file, t: metadata.timestamp ?? Date.now() / 1000 });
+    await session.send("Page.screencastFrameAck", { sessionId }).catch(() => undefined);
+  });
+  await session.send("Page.startScreencast", { format: "jpeg", quality: 90, maxWidth: 1440, maxHeight: 900, everyNthFrame: 1 });
+
+  await hold(3000); // the first screen
+  await act("open the workshop", () => page.getByTestId("empty-workshop").click(), async () => {
+    await expect(card).toContainText("Can the assembly bench go beside the doorway?");
+    await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^6\/6 ready/, { timeout: 30_000 });
+  });
+  await hold(5000);
+  // A real drag of the bench's Move handle toward the outlined spot.
+  let probe: { points: Record<string, [number, number]> } | null = null;
+  await expect.poll(async () => (probe = JSON.parse((await page.getByTestId("viewport").getAttribute("data-handles")) ?? "null")) !== null).toBe(true);
+  const from = probe!.points["move-x"]!;
+  tally.drags++;
+  const dragStart = Date.now();
+  await page.mouse.move(...from, { steps: 10 });
+  await page.mouse.down();
+  for (let i = 1; i <= 30; i++) await page.mouse.move(from[0] + i * 6, from[1] - i * 1.6, { steps: 2 });
+  await page.mouse.up();
+  await expect(card).not.toHaveAttribute("data-kind", "task-as_drawn");
+  tally.waits.push({ action: "drag the bench (including the drag itself)", ms: Date.now() - dragStart });
+  await hold(4500);
+  await act("move it to the outlined spot", () => card.getByTestId("task-move").click(), () => expect(card).toHaveAttribute("data-kind", "task-blocked"));
+  await hold(5000);
+  await act("run before and after (blocked)", () => card.getByTestId("task-compare").click(), () => expect(card).toContainText("With the bench here: 0 frames"));
+  await hold(9000);
+  await act("nudge toward the front", () => card.getByTestId("task-nudge-front").click(), () => expect(card).toHaveAttribute("data-kind", "task-unknown"));
+  await hold(3500);
+  await act("nudge toward the front again", () => card.getByTestId("task-nudge-front").click(), () => expect(card).toHaveAttribute("data-kind", "task-fits"));
+  await hold(4500);
+  await act("run before and after (corrected)", () => card.getByTestId("task-compare").click(), () => expect(card).toContainText("With the bench here: 174 frames (+8)."));
+  await hold(14000);
+  await act("export the comparison", () => card.getByTestId("task-export").click(), () => expect(page.getByTestId("export-run")).toBeVisible());
+  await hold(4000);
+  await act("close the export review", () => page.getByTestId("export-close").click(), () => expect(page.getByTestId("export-run")).toBeHidden());
+  await act("save the project", async () => {
+    await Promise.all([page.waitForEvent("download"), card.getByTestId("task-save").click()]);
+  }, async () => undefined);
+  await hold(3500);
+  await session.send("Page.stopScreencast");
+  const waiting = tally.waits.reduce((sum, w) => sum + w.ms, 0);
+  writeFileSync(`${dir}/frames.json`, JSON.stringify({ frames }, null, 1));
+  writeFileSync(`${dir}/timing.json`, JSON.stringify({ ...tally, waitingMs: waiting, seconds: (frames.at(-1)!.t - frames[0]!.t).toFixed(1) }, null, 1));
+  console.log(JSON.stringify({ frames: frames.length, clicks: tally.clicks, drags: tally.drags, waitingMs: waiting }));
+});

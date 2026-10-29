@@ -65,3 +65,4 @@ customer-data/
 assets/catalog/generated/
 # Models people attach (ENR-01): their own files, never committed.
 assets/catalog/uploaded/
+apps/web/.visit/

@@ -26,9 +26,21 @@ RWS_API_PORT=8001 pnpm start    # if port 8000 is taken (pnpm start tells you wh
   - They stay until you delete them: stop the app, then delete the files or folders.
   - Projects are the `.json` files you download with **Save project**.
 - **No key is needed.** A Voyager key in your git-ignored `.env` turns on the optional AI features in your local app only. The key never leaves the local API process. Pressing an AI button sends that request (for example a plan picture's smaller copy) to ASU Voyager.
+- **Which build am I looking at?** Hover the name at the top left: it shows the build: the commit, "+ local changes" if it was built from uncommitted files, and when it was built. Pushing to `main` does not change your running app; stop it and run `pnpm start` again. If the API is older than the page, the status chip says **Old server: restart it**.
 - Details: [docs/local-v0.1.md](docs/local-v0.1.md).
 
-**The main screen is the world and a conversation beside it** ([docs/ux-03/](docs/ux-03/README.md), [docs/ux-04/](docs/ux-04/README.md)). An empty world shows **Drop your plan here**, **Upload plan** and **Explore example**, with a picture of the example. Then:
+**The main screen is the world and a conversation beside it** ([docs/ux-03/](docs/ux-03/README.md), [docs/ux-04/](docs/ux-04/README.md)). An empty world opens on **Try rearranging a workshop**, with **Upload plan** and **Explore the example factory** beside it.
+
+**Try rearranging a workshop** (no key needed). This is a small synthetic workshop. It was drawn as a DXF, imported and reviewed with the same code as an uploaded plan, and given an example shift. The conversation asks one question: *can the assembly bench go beside the doorway?*
+1. Press **Move it beside the doorway**, or drag the bench's Move handle. The card beside the world reads the move at once from the route check: here, *Blocked: Assembly bench → Packing table narrows to 0.57 m between Partition and Assembly bench; needs 0.70 m.* The two objects are outlined in red.
+2. Press **Run before and after**. The same shift and seed run on both layouts: 166 frames as drawn, 0 with the bench there. The card says why: the route is blocked, so frames wait at the bench. Nothing moves through equipment.
+3. Correct it: press **↓ 0.25 m** twice. Once reads *too close to tell*; twice reads *it fits*, with a walk of 8.5 m → 4.6 m.
+4. Press **Run before and after** again: 174 frames (+8). The card names the shorter carried walk and who sets the pace.
+5. Use **Save the project**, **Export the comparison**, or **Undo the move**. Undo and redo update the card.
+
+Everything on the card is computed on the layout as it is. The drawing supports a decision about the reviewed layout. The shift's times and workers are made-up example assumptions, so the shift is illustrative. Neither tells you how a real workshop performs.
+
+Then, for your own plan:
 - **Drop or attach a plan.** It is read on your computer; the conversation asks one correction at a time (a missing floor outline, the scale, which layers are door swings or notes).
 - **Ask** "Move Machine B 1 metre right, check its routes, and run the shift again": one message becomes a plan of up to four steps. You see the proposed position in the world and what it does to the walks and routes, then **Apply** once; **Undo this request** takes it back.
 - **"Add a packing table, 1.5 metres wide and 0.8 metres deep, beside Machine B"**: a catalog item to accept and a side to choose, at exactly the stated size.

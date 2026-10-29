@@ -17,9 +17,7 @@ test("no key: the conversation works by hand, and says why typing is off", { tag
   await expect(chat.getByTestId("chat-input")).toBeDisabled();
   await expect(chat.getByTestId("chat-input")).toHaveAttribute("placeholder", "Typing needs AI (off: no key)");
   // The three starting points.
-  await expect(chat.getByTestId("chat-suggestions").getByRole("button")).toHaveText(["Show me the example factory", "Upload a drawing and make a world", "What can I check in this layout?"]);
-  await chat.getByTestId("chat-suggest-capabilities").click();
-  await expect(chat.locator('[data-kind="capabilities"]')).toContainText("Here's what works right now");
+  await expect(chat.getByTestId("chat-suggestions").getByRole("button")).toHaveText(["Try rearranging a workshop", "Upload a drawing and make a world", "Show me the example factory"]);
 
   // The example, a manual move with its preview, Apply, the route and the run: no model involved.
   await chat.getByTestId("chat-suggest-example").click();
@@ -136,4 +134,22 @@ test("no key: a reference photo is kept with the object, and its look is built b
   await chat.getByTestId("chat-file-input").setInputFiles({ name: saved.name, mimeType: "application/json", buffer: Buffer.from(saved.text) });
   await expect(chat.locator('[data-kind="done"]').last()).toContainText(`Opened ${saved.name}: 12 objects.`);
   await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^1\/1 ready/, { timeout: 30_000 });
+});
+
+test("no key: the workshop task works by hand, from the first screen to the comparison", { tag: "@local" }, async ({ page }) => {
+  test.setTimeout(150_000);
+  await page.goto("/");
+  await expect(page.getByTestId("chat").getByTestId("chat-ai")).toHaveText("AI off · no key");
+  await page.getByTestId("empty-workshop").click();
+  const card = page.getByTestId("chat").locator('[data-kind^="task"]').last();
+  await expect(card).toContainText("Can the assembly bench go beside the doorway?");
+  await card.getByTestId("task-move").click();
+  await expect(card).toContainText("Blocked: Assembly bench → Packing table narrows to 0.57 m");
+  await card.getByTestId("task-nudge-front").click();
+  await card.getByTestId("task-nudge-front").click();
+  await expect(card).toContainText("It fits");
+  await card.getByTestId("task-compare").click();
+  await expect(card).toContainText("As drawn: 166 frames. With the bench here: 174 frames (+8).");
+  const [download] = await Promise.all([page.waitForEvent("download"), card.getByTestId("task-save").click()]);
+  expect(download.suggestedFilename()).toMatch(/\.json$/);
 });

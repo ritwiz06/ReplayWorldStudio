@@ -52,6 +52,9 @@ export const PALETTE = {
   edge_protector: { color: "#e4e1d8", metalness: 0, roughness: 0.8 },
   pallet_wood: { color: "#c49a62", metalness: 0, roughness: 0.9 },
   label_black: { color: "#141414", metalness: 0, roughness: 0.6 },
+  wood_top: { color: "#b5895a", metalness: 0, roughness: 0.72 }, // beech-like bench tops
+  rack_blue: { color: "#2f5d9e", metalness: 0.3, roughness: 0.45 }, // shelving uprights
+  rack_orange: { color: "#d8641c", metalness: 0.25, roughness: 0.45 }, // shelving beams
 } satisfies Record<string, MaterialSpec>;
 
 export type MaterialKey = keyof typeof PALETTE;

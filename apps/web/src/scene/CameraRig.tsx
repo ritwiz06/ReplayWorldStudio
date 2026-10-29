@@ -29,6 +29,8 @@ export interface ViewCommand {
   nonce: number;
   /** For "fixed-view" only. */
   view?: FixedView;
+  /** For "frame-all": the direction to look from (default: the orbit's south-east). */
+  direction?: Vec3Tuple;
 }
 
 /** Camera state reported to the page (for overlays and tests). */
@@ -119,7 +121,7 @@ function OrbitRig({ sceneBox, selectedBox, command, memory, onProbe }: RigProps)
         : cmd.type === "frame-selection" && selectedBox
           ? frameBox(selectedBox, ORBIT_FOV, aspect, direction, 0.6, 1.2)
           : cmd.type === "frame-all"
-            ? frameBox(sceneBox, ORBIT_FOV, aspect)
+            ? frameBox(sceneBox, ORBIT_FOV, aspect, cmd.direction)
             : null;
     // A fixed view brings its own lens (a photo's); framing goes back to the orbit lens.
     const fov = cmd.type === "fixed-view" && cmd.view ? cmd.view.fovDeg : ORBIT_FOV;

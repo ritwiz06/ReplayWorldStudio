@@ -7,7 +7,7 @@
 // layout checks, the guided setup and the run engine. Suggestions, forms and attachments use the
 // same actions directly, with no model at all. A late answer - after Cancel, or after the scene
 // changed - is never applied; a plan never runs twice; a failed step stops the steps after it.
-import type { CatalogAsset, ChatResult, ChatStep, Project, UploadedModelReport } from "@replay-world/contracts";
+import type { CatalogAsset, ChatResult, ChatStep, Project, SceneObject, Transform, UploadedModelReport } from "@replay-world/contracts";
 import { envelopeFill, fitScale, modelExtents } from "../scene/fit";
 import { useState, useSyncExternalStore } from "react";
 import type { ApiClient } from "../api/client";
@@ -20,6 +20,7 @@ import { compareDays, type DayComparison, type DayRun, plural, runDay, valueCoun
 import { clockText } from "../run/replay";
 import { brief, buildChatContext, capabilityLines, chatState, nameOf, SUGGESTION_TEXT, type SuggestionId, type WorldFacts } from "./context";
 import { editImpact } from "./impact";
+import { atSpot, TASK_VIEW, type BeforeAfter, beforeAfter, benchOf, NUDGE_M, nudged, onSpot, placeKey, readPlacement, spotGhost, WORKSHOP_PROJECT_ID } from "./workshop";
 import { type AddChoice, dryRun, type Ghost, MUTATING, type PlanStep, planStep, type Side, stepCommand, stepLabel, stepNeeds, suggestAssets } from "./plan";
 import { answerAsked, answerProcess, routeBetween } from "./routes";
 import { type Candidate, describeFor, equipmentToImprove, type Match, matchEquipment } from "../matching/appearance";
@@ -120,6 +121,10 @@ export interface ChatHost {
   undoLabel: string | null;
   fileError: string | null;
   loadSample(): void;
+  /** Open one of the app's example worlds ("workshop"). */
+  loadExample(name: "workshop"): void;
+  /** Select an object with the Move handle ready, and frame the whole world from `direction`. */
+  prepareMove(objectId: string, direction?: [number, number, number]): void;
   openFile(file: File): void;
   createWorld(project: Project, filename: string): void;
   pictureImport(file: File): void;
@@ -1714,6 +1719,7 @@ export class ChatController {
   suggest = (id: SuggestionId) => {
     this.push({ role: "user", kind: "user", text: SUGGESTION_TEXT[id], tone: "info" });
     const actions: Record<SuggestionId, () => void> = {
+      workshop: this.startWorkshop,
       example: this.doExample,
       upload: () => {
         this.say("question", "Choose a DXF, PDF, PNG or JPEG of the plan. It stays on this computer; nothing is sent to the AI.", { tone: "question" });
@@ -1799,10 +1805,142 @@ export class ChatController {
     });
   };
 
+  // ── The workshop task ("Try rearranging a workshop") ─────────────────────────────────────
+
+  private task: { loadId: number; entryId: number; drawn: Project; key: string; result: BeforeAfter | null; resultKey: string | null; baseline: number | null } | null = null;
+
+  /** Whether the workshop task's card is open for this load (its card holds the next actions). */
+  hasTask = (loadId: number) => this.task?.loadId === loadId;
+
+  /** Open the workshop example and its one question: can the assembly bench go beside the door? */
+  startWorkshop = () => {
+    const h = this.host;
+    if (h.project?.id === WORKSHOP_PROJECT_ID && this.task?.loadId === h.loadId) {
+      this.renderTask();
+      return;
+    }
+    h.loadExample("workshop");
+    const entryId = this.say("progress", "Opening the workshop…", { tone: "progress" });
+    this.awaiting = { kind: "world", since: h.loadId, name: "the workshop", entryId };
+  };
+
+  private beginTask() {
+    const h = this.host;
+    const project = h.project!;
+    if (this.task) this.update(this.task.entryId, { closed: true, buttons: [] });
+    const entryId = this.push({ role: "assistant", kind: "task", text: "", tone: "question", buttons: [] });
+    this.task = { loadId: h.loadId, entryId, drawn: project, key: placeKey(project), result: null, resultKey: null, baseline: null };
+    const bench = benchOf(project);
+    if (bench) h.prepareMove(bench.id, TASK_VIEW);
+    this.renderTask();
+  }
+
+  /** After every render: a moved bench (dragged, nudged, undone) is a new reading of the task. */
+  private followTask() {
+    const t = this.task;
+    const h = this.host;
+    if (!t) return;
+    if (h.loadId !== t.loadId || h.project?.id !== WORKSHOP_PROJECT_ID) {
+      this.update(t.entryId, { closed: true, buttons: [] });
+      this.task = null;
+      return;
+    }
+    const key = placeKey(h.project);
+    if (key === t.key) return;
+    t.key = key;
+    this.renderTask();
+  }
+
+  private moveBench(transform: (bench: SceneObject) => Transform) {
+    const h = this.host;
+    const project = h.project;
+    const bench = project && benchOf(project);
+    if (!project || !bench) return;
+    const outcome = h.execute({ baseRevision: project.scene.revision, command: { type: "set_transform", objectId: bench.id, transform: transform(bench) } });
+    if (outcome && !outcome.ok) this.say("cannot", outcome.rejection.message, { tone: "warn" });
+  }
+
+  private runTask(compare: boolean) {
+    const t = this.task;
+    const h = this.host;
+    const project = h.project;
+    if (!t || !project?.process) return;
+    if (!compare) {
+      const made = h.runDay(project);
+      t.baseline = made?.result?.metrics.completed ?? null;
+      this.renderTask();
+      return;
+    }
+    const result = beforeAfter(project);
+    if (!result) return;
+    h.runDay(project); // the changed layout's shift plays in the world
+    t.result = result;
+    t.resultKey = t.key;
+    this.renderTask();
+  }
+
+  private renderTask() {
+    const t = this.task;
+    const h = this.host;
+    const project = h.project;
+    const bench = project && benchOf(project);
+    if (!t || !project || !bench) return;
+    const reading = readPlacement(t.drawn, project);
+    const result = t.result && t.resultKey === t.key ? t.result : null;
+    // The spot stays outlined until the bench is on it: the target of a drag.
+    h.setPreview({ ghosts: onSpot(bench) ? [] : [spotGhost(bench)], candidates: [bench.id], route: reading.highlight });
+    const nudge = (label: string, dx: number, dz: number, id: string): CardButton => ({ label, testId: `task-nudge-${id}`, run: () => this.moveBench((b) => nudged(b, dx, dz)) });
+    const item = project.process?.item_name ?? "item";
+    const nudges = [nudge(`↓ ${NUDGE_M} m`, 0, NUDGE_M, "front"), nudge(`↑ ${NUDGE_M} m`, 0, -NUDGE_M, "back"), nudge(`← ${NUDGE_M} m`, -NUDGE_M, 0, "left"), nudge(`→ ${NUDGE_M} m`, NUDGE_M, 0, "right")];
+    const worse = result !== null && (result.after.result?.metrics.completed ?? 0) < (result.before.result?.metrics.completed ?? 0);
+    const buttons: CardButton[] = result
+      ? worse
+        ? [...nudges, { label: "Undo the move", testId: "task-undo", primary: true, run: () => void this.host.undo() }, { label: "Export the comparison", testId: "task-export", run: () => this.doExport() }]
+        : [
+            { label: "Save the project", testId: "task-save", primary: true, run: () => this.doSave() },
+            { label: "Export the comparison", testId: "task-export", run: () => this.doExport() },
+            { label: "Undo the move", testId: "task-undo", run: () => void this.host.undo() },
+          ]
+      : reading.state === "as_drawn"
+        ? [
+            { label: "Move it beside the doorway", testId: "task-move", primary: true, run: () => this.moveBench(atSpot) },
+            { label: "Run the shift as drawn", testId: "task-run-drawn", run: () => this.runTask(false) },
+          ]
+        : [
+            { label: "Run before and after", testId: "task-compare", primary: true, run: () => this.runTask(true) },
+            ...nudges,
+            { label: "Undo", testId: "task-undo", run: () => void this.host.undo() },
+            ...(onSpot(bench) ? [] : [{ label: "Move it to the outlined spot", testId: "task-move", run: () => this.moveBench(atSpot) }]),
+          ];
+    const lines = result
+      ? [...result.lines, worse ? "Move the bench away from the doorway (drag it, or use the arrows), then run before and after again." : "Drag or nudge the bench to try another spot."]
+      : [
+          ...reading.lines,
+          ...(reading.state === "as_drawn"
+            ? [`Drag the bench there with its Move handle (it is selected), or press the button.${t.baseline !== null ? ` As drawn, the example shift makes ${t.baseline} ${plural(item)}.` : ""}`]
+            : ["Arrows move it as seen from the Top view (↓ is toward the front wall)."]),
+        ];
+    this.update(t.entryId, {
+      kind: result ? "task-result" : `task-${reading.state}`,
+      text: result ? result.title : reading.title,
+      tone: result ? (result.after.result && (result.after.result.metrics.completed ?? 0) >= (result.before.result?.metrics.completed ?? 0) ? "done" : "warn") : reading.state === "as_drawn" ? "question" : reading.state === "fits" ? "done" : "warn",
+      lines,
+      buttons,
+      details: result
+        ? result.details
+        : [
+            "Routes: the width-only route check on the reviewed drawing, with the example shift's carried frame (0.60 m + 0.05 m each side) and a 0.80 m wide worker. Turning, heights and the real site are not checked.",
+            assumptionLine(project),
+          ],
+      closed: false,
+    });
+  }
+
   /** Called after every render with the latest host: notice a world arriving, a run made by the
    * guided setup, or a file the API refused, that the conversation was waiting for. */
   setHost = (host: ChatHost) => {
     this.host = host;
+    this.followTask();
     const a = this.awaiting;
     if (!a) return;
     if ((a.kind === "world" || a.kind === "file") && host.loadId !== a.since && host.project) {
@@ -1812,6 +1950,8 @@ export class ChatController {
       if (a.entryId) this.remove(a.entryId);
       if (a.kind === "file") {
         this.say("done", `Opened ${a.name}: ${objects} objects.`, { tone: "done" });
+      } else if (host.project.id === WORKSHOP_PROJECT_ID) {
+        this.beginTask();
       } else if (host.isSample) {
         this.say("done", "Here's the example factory: a made-up hall drawn as a DXF, with an example shift. Every operating value in it is an assumption, not data.", { tone: "done" });
       } else {

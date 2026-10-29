@@ -11,7 +11,7 @@ import { expect, type Page, test } from "@playwright/test";
 
 const ROOT = new URL("../../../../", import.meta.url).pathname;
 const SET = process.env.UX_SET ?? "after";
-const OUT = SET.startsWith("enr01-photo") ? `${ROOT}docs/enr-01/photo-screens` : SET === "enr01" ? `${ROOT}docs/enr-01/screens` : SET.startsWith("ux05") ? `${ROOT}docs/ux-05/screens` : SET.startsWith("ux04") ? `${ROOT}docs/ux-04/screens` : `${ROOT}docs/ux-03/${SET}`;
+const OUT = SET === "workshop" ? `${ROOT}docs/demo/workshop` : SET.startsWith("enr01-photo") ? `${ROOT}docs/enr-01/photo-screens` : SET === "enr01" ? `${ROOT}docs/enr-01/screens` : SET.startsWith("ux05") ? `${ROOT}docs/ux-05/screens` : SET.startsWith("ux04") ? `${ROOT}docs/ux-04/screens` : `${ROOT}docs/ux-03/${SET}`;
 const DXF = `${ROOT}fixtures/drawings/hall-mm.dxf`;
 
 async function shot(page: Page, name: string) {
@@ -40,6 +40,7 @@ for (const [width, height] of [[1440, 900], [1280, 800]] as const) {
     if (SET === "ux04" || SET === "ux04-nokey") return ux04(page);
     if (SET === "ux05" || SET === "ux05-nokey") return ux05(page);
     if (SET === "enr01") return enr01(page);
+    if (SET === "workshop") return workshop(page);
     if (SET === "enr01-photo" || SET === "enr01-photo-nokey") return enr01Photo(page);
     await shot(page, "1-first-visit");
     if (SET === "before") {
@@ -394,4 +395,30 @@ async function enr01Photo(page: Page) {
   await page.keyboard.press("f");
   await page.waitForTimeout(2000);
   await shot(page, "7-no-drawing-after");
+}
+
+/** "Try rearranging a workshop", through the interface (no key): the starting layout, the
+ * problematic change (the bench beside the doorway) and the corrected result after the shift. */
+async function workshop(page: Page) {
+  const card = page.getByTestId("chat").locator('[data-kind^="task"]').last();
+  await page.evaluate(() => localStorage.setItem("rws.start.seen", "1"));
+  await page.goto("/");
+  await shot(page, "0-first-screen");
+  await page.getByTestId("empty-workshop").click();
+  await expect(card).toContainText("Can the assembly bench go beside the doorway?");
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-models", /^6\/6 ready/, { timeout: 30_000 });
+  await page.waitForTimeout(1800);
+  await shot(page, "1-starting-layout");
+  await card.getByTestId("task-move").click();
+  await card.getByTestId("task-compare").click();
+  await expect(card).toContainText("With the bench here: 0 frames");
+  await page.waitForTimeout(3500);
+  await shot(page, "2-problematic-change");
+  await card.getByTestId("task-nudge-front").click();
+  await card.getByTestId("task-nudge-front").click();
+  await expect(card).toContainText("It fits");
+  await card.getByTestId("task-compare").click();
+  await expect(card).toContainText("With the bench here: 174 frames (+8).");
+  await page.waitForTimeout(4000);
+  await shot(page, "3-corrected-result");
 }

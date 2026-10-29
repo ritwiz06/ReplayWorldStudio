@@ -41,6 +41,35 @@ swift scripts/demo/frames-to-mp4.swift apps/web/test-results/demo-frames docs/de
 - **The encoding:** macOS AVFoundation (`scripts/demo/frames-to-mp4.swift`), with no ffmpeg. Each output frame shows the latest captured frame at its time, so the video plays at the speed it was recorded.
 - **The check:** `scripts/demo/stills.swift` decodes stills from the MP4 at chosen seconds. They were checked at 3 s to 74 s for legibility and for captions clear of the toolbar, the playback bar and the side panels.
 
+## Try rearranging a workshop
+
+[`workshop-rearranging.mp4`](workshop-rearranging.mp4) is a 65 s uninterrupted recording of the real app (1440 × 900, 25 fps, about 8 MB). It has no captions, and no state is injected. A script drives the mouse through the interface the way a first-time visitor would: one real drag of the Move handle, and clicks on the buttons the card offers. Everything on screen is the app's own output on the layout as it is.
+
+The visitor:
+1. opens **Try rearranging a workshop**;
+2. drags the assembly bench;
+3. presses **Move it to the outlined spot**: the route to packing is blocked (0.57 m wide, and a frame needs 0.70 m);
+4. presses **Run before and after**: 166 → 0 frames;
+5. nudges the bench twice toward the front wall: "too close to tell", then "it fits";
+6. runs before and after again: 166 → 174 frames;
+7. exports the comparison and saves the project.
+
+The workshop is synthetic. `fixtures/drawings/workshop-mm.dxf` is made by `scripts/build_dxf_fixtures.py`. It is imported with the same code as an upload and reviewed, then drawn with in-house catalog models. `fixtures/scenes/workshop.json` is built by `apps/web/src/examples/workshop.ts`. The shift's times, workers and breaks are made-up example assumptions.
+
+Stills from the app at 1440 × 900 and 1280 × 800 are in [`workshop/`](workshop/):
+- `0-first-screen`
+- `1-starting-layout`
+- `2-problematic-change`
+- `3-corrected-result`
+
+**Clicks and waiting** ([`workshop/recording-timing.json`](workshop/recording-timing.json)): 9 clicks and 1 drag. 8.6 s in all is spent waiting for the app (each wait is from an action until its result shows); the longest is 2.1 s, for the blocked before-and-after run. These numbers come from a scripted run on one Mac. This is not a user study.
+
+```bash
+pnpm --filter @replay-world/web exec playwright test -c playwright.demo.config.ts e2e/demo/record-demo.spec.ts -g "workshop journey"
+swift scripts/demo/frames-to-mp4.swift apps/web/test-results/demo-frames-workshop docs/demo/workshop-rearranging.mp4 25 1000000
+UX_SET=workshop pnpm --filter @replay-world/web exec playwright test -c playwright.demo.config.ts e2e/demo/ux-screens.spec.ts
+```
+
 ## UX-04: one request progressing
 
 [`ux04-one-request.mp4`](ux04-one-request.mp4) is a 30 s recording: H.264, 1440 × 900, 25 fps, 3.5 MB. It uses the synthetic sample, on the chat-first screen. The request's interpretation is a **recorded live answer, replayed**: the app shows "Recorded answers (test)" and "recorded answer" on each card, and the caption says so.

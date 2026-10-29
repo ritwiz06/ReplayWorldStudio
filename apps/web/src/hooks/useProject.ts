@@ -82,6 +82,7 @@ export const FIXTURE_LABEL: Record<FixtureName, string> = {
   "industrial-demo": "Industrial demo",
   foundation: "Foundation fixture",
   sample: "Sample factory hall",
+  workshop: "Small workshop (example)",
   empty: "New world",
 };
 

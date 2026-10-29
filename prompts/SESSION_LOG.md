@@ -1519,6 +1519,69 @@ Append entries in chronological order. If a live repository session log already 
 - Actual effort: about 2 h of active work (2026-10-25 20:58–21:58 and 2026-10-26 08:23–09:35 America/Phoenix), including CI.
 - Next concrete task: on the user's priority, UX-02 with consenting newcomers, ENR-02, or ENR-01's STEP part.
 
+### 2026-10-28 - Try rearranging a workshop: one task a newcomer can finish (ADR-067)
+
+- Starting commit: `4d6b13a`.
+- Goal: stop expanding the roadmap and make the product demonstrably useful for one task. "I am rearranging a small workshop. Can this workstation go here, can materials still reach the stations, and what changes during the example shift?"
+- **What the user sees:**
+  - `pnpm start` on http://127.0.0.1:8000 serves `dist-local` from this checkout.
+  - An older `pnpm start` was still running on :8001 at contract 0.14.0. Stopping it was refused by the tool's safety check, so it was left for the user.
+  - The page now carries its build (the commit, local changes and the build time) in the name's tooltip and the status details. An API on another contract shows **Old server: restart it**.
+- **The five biggest first-visit obstacles, from using the app:**
+  1. no task on the first screen;
+  2. an example whose racks and boxes were hard to recognise;
+  3. a move form with no visible consequence;
+  4. walls hiding the area that mattered;
+  5. no link from layout to route to shift.
+- **Work completed:**
+  - **The example:**
+    - a synthetic `workshop-mm.dxf` from `build_dxf_fixtures.py`, imported with the upload code and reviewed;
+    - four new in-house models (storage rack, saw bench, assembly workbench, packing table);
+    - an example shift with three workers;
+    - `fixtures/scenes/workshop.json` as a snapshot of `examples/workshop.ts`, whose test asserts the computed readings.
+  - **The task card** (`chat/workshop.ts`, `useChat.ts`):
+    - it re-reads the bench's placement after any change (button, drag, nudge, chat, undo, redo);
+    - it outlines the narrowing objects in red;
+    - **Run before and after** runs the same seed on both layouts and explains the result: blocked, a shorter carried walk, or the pace-setting station;
+    - 0.25 m nudges, Undo, Save and Export;
+    - suggestions are hidden while the card holds the next action.
+  - **The first screen** leads with **Try rearranging a workshop**, a preview still, then upload and the example factory.
+  - **The camera** frames the task from the south-west. A frame-all ignored before the rig mounted is now issued after mount.
+  - The route plan keeps the narrowest passage and its objects for a route that does not fit.
+- **The permitted external DXF** (`garage-and-workshop-72-m2.dxf`, CC0, git-ignored), the same task by hand in the general controls:
+  - Corrections needed:
+    - trace the floor (no closed outline);
+    - mark two title-block shapes "not an object";
+    - accept the rest and the omissions;
+    - mark five layers as drawing symbols;
+    - in the guided setup, rename the stations the drawing calls "Fixtures n", type one pace and accept the examples.
+  - Walls were kept.
+  - Moving the workbench 1.5 m east blocks Workbench ↔ Kit cabinet (66 → 0 kits). The bundle reproduces.
+  - Scripted: 47 clicks and 43 characters typed. The guided card does not cover uploaded plans.
+- **Live AI** (ASU Voyager, text only): **2 calls** (the limit was 2).
+  - One intended: "Move the assembly bench 2 metres to the right" was applied, and the card read "It fits… 8.5 m → 6.6 m".
+  - One sent by mistake (a placeholder message to the chat driver). It is counted.
+  - No image calls.
+- **Proof:**
+  - `docs/demo/workshop-rearranging.mp4`: 65 s, uninterrupted, no captions or injected state; 9 clicks, 1 drag, 8.6 s of waiting (scripted, not a user study).
+  - Stills in `docs/demo/workshop/` at 1440 × 900 and 1280 × 800.
+- **Commands run and outcomes:**
+  - `pnpm check`: exit 0 (pytest 941, Vitest 291, contracts 10);
+  - `pnpm test:e2e`: 85 passed, 24 skipped (two start-screen expectations were updated);
+  - local: 7 passed (including the no-key workshop task);
+  - public: 7 passed, 2 skipped;
+  - external: 10 passed.
+  - Browser suites were run one at a time, after a PaperPlay Playwright run finished.
+- **Known limitations:**
+  - the guided card is for the example workshop only;
+  - no labels on equipment before a run;
+  - nudges are fixed at 0.25 m;
+  - typing a move needs a key;
+  - the task view is applied about 0.4 s after the world appears.
+- CI: recorded below once run.
+- Actual effort: about 1.5 h of active work (2026-10-28 21:38–23:10 America/Phoenix, from the session's timestamps), including checks.
+- Next concrete task: the workshop task with consenting newcomers (UX-02).
+
 ## Copy this template for a coding session
 
 ### YYYY-MM-DD - Short session title

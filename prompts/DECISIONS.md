@@ -1440,3 +1440,31 @@ For a new decision, append: ID, date, status, context, options considered, decis
   - **Live proposals were weak** on a busy machine: the review shows that rather than hiding it. Two prompt revisions were needed (both earlier attempts are kept); 6 calls in all.
   - **ENR-01 stays open** for STEP and accepting checked geometry; ENR-02 covers supplier dimensions.
 
+
+### ADR-067 - One guided task first: "Try rearranging a workshop" (and a visible build)
+
+- Date: 2026-10-28 (America/Phoenix). Status: adopted. Builds on ADR-058 (local v0.1), ADR-063/064 (chat-first screen), GEO-01/02 (route check) and REL-01 (run comparison).
+- **Context.**
+  - The user could not see a convincing use. The first screen offered an upload and an example with no question to answer.
+  - The example factory's racks and boxes were hard to recognise, and a move was a form, not connected to a consequence.
+  - A stale local server (an older contract) could be mistaken for the current app.
+- **Decision.**
+  1. **One task leads the first screen:** *can the assembly bench go beside the doorway, can material still reach the stations, and what changes in the example shift?* Upload and the example factory stay beside it.
+  2. **The example is made like an upload.**
+     - A synthetic DXF (`fixtures/drawings/workshop-mm.dxf`, from `build_dxf_fixtures.py`) goes through the same draft builder and is reviewed as a person would review it: floor, scale, objects and omissions accepted.
+     - Its equipment is drawn with four new in-house catalog models plus two existing ones. The model heights are labelled display defaults.
+     - The shift's times, workers and breaks are labelled `example`.
+     - The saved project (`fixtures/scenes/workshop.json`) is a snapshot test of `examples/workshop.ts`. No reading or result is written in advance.
+  3. **The card follows the bench, not the button.**
+     - After every change, from any source (drag, nudge, outlined-spot button, chat, undo, redo), the card re-reads the placement from the route check that the run uses.
+     - It shows one of: as drawn, fits (with the walk change), blocked (with the passage and the two objects outlined), or too close to tell.
+     - **Run before and after** runs the same process and seed on both layouts, then explains the result: a blocked route, a shorter carried walk, or the pace-setting station when the count does not change.
+     - The one next action is the primary button. Save, Export, Undo and 0.25 m nudges stay beside it, and the full editor is unchanged.
+  4. **No optimiser and no hidden help.** The outlined spot is a proposal to test, not an answer. The correction is the person's (nudges or a drag).
+  5. **A visible build.**
+     - The page carries its build (the commit, local changes and the build time) in the name's tooltip and in the status details.
+     - An API whose contract differs from the page's shows **Old server: restart it**.
+- **Consequences.**
+  - **Three separate things:** the drawing supports a decision about the reviewed layout; the example assumptions support an illustrative shift; neither establishes real performance.
+  - **The guided card is workshop-specific.** An uploaded plan uses the same checks through the conversation, the run panel and the editor, not this card.
+  - Works without a key. Typing a move needs the optional AI.

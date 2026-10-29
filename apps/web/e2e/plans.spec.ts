@@ -125,14 +125,15 @@ test("plan: add a dimensioned packing table beside Machine B from the catalog; u
   await expect(lastCard(page, "done")).toContainText(`Opened ${download.suggestedFilename()}: 13 objects.`);
 });
 
-test("start: the empty world offers the plan drop, the example and the formats; a DWG asks for a DXF", async ({ page }) => {
+test("start: the empty world offers the workshop task, the plan drop, the example and the formats; a DWG asks for a DXF", async ({ page }) => {
   await page.goto("/");
   const start = page.getByTestId("empty-start");
-  await expect(start.getByRole("heading", { name: "Drop your plan here" })).toBeVisible();
+  await expect(start.getByTestId("empty-workshop")).toContainText("Try rearranging a workshop");
+  await expect(start.getByRole("img", { name: /example workshop/ })).toBeVisible();
+  await expect(start.getByRole("heading", { name: "Or start from your own plan" })).toBeVisible();
   await expect(start.getByTestId("empty-upload")).toBeVisible();
   await expect(start.getByTestId("empty-example")).toBeVisible();
   await expect(start.getByTestId("empty-formats")).toContainText("A DWG must be saved as DXF first.");
-  await expect(start.getByRole("img", { name: /example factory/ })).toBeVisible();
   await page.getByTestId("chat-file-input").setInputFiles({ name: "plan.dwg", mimeType: "application/acad", buffer: Buffer.from("AC1032") });
   await expect(start.getByTestId("empty-refused")).toContainText("DXF");
   await expect(objectCount(page)).toHaveText("Scene loaded · 0 objects");

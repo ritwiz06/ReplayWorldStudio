@@ -173,6 +173,84 @@ function palletOfCartons(): ModelBuilder {
   return m;
 }
 
+/** Bench legs, frame and wooden top: `w` × `d`, top surface at `top` metres. */
+function bench(m: ModelBuilder, w: number, d: number, top: number): void {
+  m.box("wood_top", [w, 0.04, d], [0, top - 0.02, 0], 0.004);
+  for (const sx of SIDES) {
+    for (const sz of SIDES) {
+      m.box("steel_dark", [0.05, top - 0.04, 0.05], [sx * (w / 2 - 0.05), (top - 0.04) / 2, sz * (d / 2 - 0.05)], 0.004);
+      m.cylinder("rubber_black", 0.03, 0.02, [sx * (w / 2 - 0.05), 0.01, sz * (d / 2 - 0.05)], "y");
+    }
+    m.box("steel_dark", [0.04, 0.04, d - 0.1], [sx * (w / 2 - 0.05), 0.2, 0]); // side rails
+  }
+  m.box("steel_dark", [w - 0.1, 0.04, 0.04], [0, 0.2, -(d / 2 - 0.05)]); // back rail
+  m.box("paint_light_grey", [w - 0.14, 0.02, d - 0.14], [0, 0.22, 0]); // lower shelf
+}
+
+/** 2 m steel shelving for bar stock and parts: blue uprights, orange beams, four levels. */
+function storageRack(): ModelBuilder {
+  const m = new ModelBuilder();
+  for (const sx of SIDES) for (const sz of SIDES) m.box("rack_blue", [0.06, 2.0, 0.06], [sx * 0.97, 1.0, sz * 0.27], 0.004);
+  for (const y of [0.15, 0.7, 1.25, 1.8]) {
+    for (const sz of SIDES) m.box("rack_orange", [1.88, 0.08, 0.04], [0, y, sz * 0.27], 0.004);
+    m.box("paint_light_grey", [1.88, 0.02, 0.56], [0, y + 0.05, 0]); // deck
+  }
+  // Bar stock on the bottom two levels, cartons of parts above.
+  for (const [y, n] of [[0.2, 7], [0.75, 5]] as const) {
+    for (let i = 0; i < n; i++) m.cylinder("aluminium", 0.025, 1.8, [0, y + 0.03 + (i % 2) * 0.04, -0.18 + i * 0.06], "x", 12);
+  }
+  for (const y of [1.3, 1.85]) for (const x of [-0.65, 0, 0.65]) m.box("cardboard", [0.5, 0.3, 0.45], [x, y + 0.2, 0], 0.008);
+  return m;
+}
+
+/** Cutting bench: a 1.8 × 0.8 m bench with a mitre saw and stock on it. */
+function sawBench(): ModelBuilder {
+  const m = new ModelBuilder();
+  bench(m, 1.8, 0.8, 0.9);
+  // Mitre saw: base, turntable, arm, motor, blade guard and a red handle.
+  m.box("paint_anthracite", [0.5, 0.06, 0.45], [0.1, 0.93, 0], 0.01);
+  m.cylinder("aluminium", 0.16, 0.03, [0.1, 0.975, 0.02], "y");
+  m.box("aluminium", [0.06, 0.32, 0.06], [0.1, 1.12, -0.18], 0.01); // arm
+  m.cylinder("motor_blue", 0.07, 0.22, [0.26, 1.24, -0.02], "x");
+  m.cylinder("safety_yellow", 0.15, 0.05, [0.1, 1.2, 0.02], "x"); // blade guard
+  m.box("estop_red", [0.04, 0.04, 0.2], [0.1, 1.34, 0.1], 0.01); // handle
+  // Fence and stock bars waiting to be cut.
+  m.box("aluminium", [1.6, 0.06, 0.02], [0, 0.95, -0.22]);
+  for (let i = 0; i < 3; i++) m.box("aluminium", [0.7, 0.04, 0.04], [-0.5, 0.92 + i * 0.045, 0.15]);
+  return m;
+}
+
+/** Assembly workbench: bench, drawer unit, a vice and a pegboard with tools behind. */
+function workbench(): ModelBuilder {
+  const m = new ModelBuilder();
+  bench(m, 1.8, 0.8, 0.9);
+  m.box("paint_anthracite", [0.45, 0.6, 0.65], [0.6, 0.55, 0.02], 0.01); // drawer unit
+  for (const y of [0.4, 0.6, 0.78]) m.box("aluminium", [0.2, 0.02, 0.02], [0.6, y, 0.36]);
+  m.box("motor_blue", [0.18, 0.12, 0.16], [-0.6, 0.96, 0.3], 0.01); // vice
+  m.box("steel_dark", [0.22, 0.06, 0.04], [-0.6, 0.96, 0.4]);
+  // Pegboard rising behind the top, with tools.
+  m.box("paint_light_grey", [1.7, 0.6, 0.02], [0, 1.2, -0.37]);
+  for (const x of [-0.85, 0.85]) m.box("steel_dark", [0.04, 0.6, 0.04], [x, 1.2, -0.37]);
+  for (const [x, y, h] of [[-0.6, 1.2, 0.25], [-0.4, 1.25, 0.3], [-0.2, 1.2, 0.22], [0.3, 1.25, 0.2], [0.5, 1.22, 0.26]] as const) {
+    m.box(x < 0 ? "estop_red" : "safety_yellow", [0.03, h, 0.02], [x, y, -0.35]);
+  }
+  m.box("rack_orange", [0.4, 0.25, 0.3], [0.05, 1.03, -0.15], 0.01); // parts bin
+  return m;
+}
+
+/** Packing table: a 1.4 × 0.8 m table with a carton, tape and a roll of wrap. */
+function packingTable(): ModelBuilder {
+  const m = new ModelBuilder();
+  bench(m, 1.4, 0.8, 0.85);
+  m.box("cardboard", [0.45, 0.3, 0.35], [-0.25, 1.0, 0.05], 0.006);
+  m.box("packing_tape", [0.46, 0.003, 0.05], [-0.25, 1.15, 0.05]);
+  for (let i = 0; i < 4; i++) m.box("cardboard", [0.5, 0.012, 0.4], [0.4, 0.86 + i * 0.013, 0.1]); // flat cartons
+  m.box("steel_dark", [0.06, 0.4, 0.06], [0.6, 1.05, -0.3]); // roll holder
+  m.cylinder("polycarbonate", 0.08, 0.6, [0.3, 1.2, -0.3], "x");
+  m.cylinder("steel_dark", 0.015, 1.3, [0, 1.2, -0.3], "x", 12);
+  return m;
+}
+
 export interface CatalogModelDefinition {
   key: string;
   name: string;
@@ -184,4 +262,8 @@ export const MODELS: CatalogModelDefinition[] = [
   { key: "guarded-machine-cell", name: "Guarded machine cell", build: guardedMachineCell },
   { key: "electrical-cabinet-800", name: "Electrical cabinet, 800 mm", build: electricalCabinet },
   { key: "pallet-cartons", name: "Pallet with cartons", build: palletOfCartons },
+  { key: "storage-rack-2m", name: "Storage rack, 2 m", build: storageRack },
+  { key: "saw-bench", name: "Cutting bench with mitre saw", build: sawBench },
+  { key: "assembly-workbench", name: "Assembly workbench", build: workbench },
+  { key: "packing-table", name: "Packing table", build: packingTable },
 ];

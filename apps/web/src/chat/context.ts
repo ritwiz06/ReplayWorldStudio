@@ -45,6 +45,8 @@ export interface WorldFacts {
   outputChanged: boolean | null;
   /** Imported equipment still drawn as a stand-in (UX-05): its look could be improved. */
   canImproveLook?: boolean;
+  /** The workshop task is open: its card holds the next actions, so no others compete. */
+  inTask?: boolean;
 }
 
 export function chatState(f: WorldFacts): ChatState {
@@ -60,9 +62,10 @@ export function chatState(f: WorldFacts): ChatState {
   };
 }
 
-export type SuggestionId = "example" | "upload" | "capabilities" | "move" | "move_any" | "route" | "run" | "run_example" | "run_again" | "why" | "compare" | "undo" | "export" | "appearance";
+export type SuggestionId = "workshop" | "example" | "upload" | "capabilities" | "move" | "move_any" | "route" | "run" | "run_example" | "run_again" | "why" | "compare" | "undo" | "export" | "appearance";
 
 export const SUGGESTION_TEXT: Record<SuggestionId, string> = {
+  workshop: "Try rearranging a workshop",
   example: "Show me the example factory",
   upload: "Upload a drawing and make a world",
   capabilities: "What can I check in this layout?",
@@ -82,7 +85,8 @@ export const SUGGESTION_TEXT: Record<SuggestionId, string> = {
 /** The suggestions that can work now, most useful first (at most four). An empty project
  * offers the three starting points; a world offers what its state allows. */
 export function suggestions(f: WorldFacts, sample: boolean): SuggestionId[] {
-  if (!f.hasWorld) return ["example", "upload", "capabilities"];
+  if (!f.hasWorld) return ["workshop", "upload", "example"];
+  if (f.inTask) return [];
   const out: SuggestionId[] = [];
   if (f.reviewOpen) return ["capabilities"];
   if (f.canExplain) out.push(f.outputChanged ? "why" : "compare");

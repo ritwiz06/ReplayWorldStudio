@@ -37,7 +37,7 @@ test("chat: move a machine, check the route, run the shift, ask why it changed, 
   await page.goto("/");
   const chat = page.getByTestId("chat");
   await expect(chat.getByTestId("chat-ai")).toHaveText(LIVE ? "AI on · ASU Voyager" : "Recorded answers (test)");
-  await expect(chat.getByTestId("chat-suggestions").getByRole("button")).toHaveText(["Show me the example factory", "Upload a drawing and make a world", "What can I check in this layout?"]);
+  await expect(chat.getByTestId("chat-suggestions").getByRole("button")).toHaveText(["Try rearranging a workshop", "Upload a drawing and make a world", "Show me the example factory"]);
   await openExample(page);
 
   // Move: proposed with its effect on the checks, shown in the world, applied only on Apply.

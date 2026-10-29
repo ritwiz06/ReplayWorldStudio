@@ -18,6 +18,7 @@ export default defineConfig(
       "packages/contracts/ts/generated/**",
       ".venv/**",
       "prompts/**",
+      "apps/web/.visit/**",
     ],
   },
   js.configs.recommended,

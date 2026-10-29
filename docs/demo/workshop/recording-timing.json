@@ -1,0 +1,48 @@
+{
+ "clicks": 9,
+ "drags": 1,
+ "waits": [
+  {
+   "action": "open the workshop",
+   "ms": 1097
+  },
+  {
+   "action": "drag the bench (including the drag itself)",
+   "ms": 2058
+  },
+  {
+   "action": "move it to the outlined spot",
+   "ms": 610
+  },
+  {
+   "action": "run before and after (blocked)",
+   "ms": 2089
+  },
+  {
+   "action": "nudge toward the front",
+   "ms": 667
+  },
+  {
+   "action": "nudge toward the front again",
+   "ms": 341
+  },
+  {
+   "action": "run before and after (corrected)",
+   "ms": 1194
+  },
+  {
+   "action": "export the comparison",
+   "ms": 305
+  },
+  {
+   "action": "close the export review",
+   "ms": 103
+  },
+  {
+   "action": "save the project",
+   "ms": 181
+  }
+ ],
+ "waitingMs": 8645,
+ "seconds": "64.9"
+}

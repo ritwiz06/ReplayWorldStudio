@@ -3,6 +3,7 @@ import type { FixtureName } from "../api/client";
 import type { HealthState } from "../hooks/useHealth";
 import { FIXTURE_LABEL, type FileCheck, type SceneState } from "../hooks/useProject";
 import { shortcut } from "../shortcuts";
+import { BUILD } from "../build";
 import { HealthIndicator } from "./HealthIndicator";
 
 interface Props {
@@ -34,7 +35,7 @@ interface Props {
 }
 
 const FIXTURES: FixtureName[] = ["industrial-demo", "foundation"];
-const SHORT_FIXTURE_LABEL: Record<FixtureName, string> = { "industrial-demo": "Demo", foundation: "Foundation", sample: "Sample", empty: "New" };
+const SHORT_FIXTURE_LABEL: Record<FixtureName, string> = { "industrial-demo": "Demo", foundation: "Foundation", sample: "Sample", workshop: "Workshop", empty: "New" };
 
 function sceneStatus(scene: SceneState): [tone: string, text: string] {
   switch (scene.status) {
@@ -61,7 +62,7 @@ export function TopBar({ scene, fixtureName, health, fileCheck, dirty, undoLabel
 
   return (
     <header className="topbar">
-      <div className="brand" title="Replay World Studio">
+      <div className="brand" title={`Replay World Studio · build ${BUILD}`} data-testid="brand" data-build={BUILD}>
         <span className="brand-mark" aria-hidden="true" />
         <span className="brand-text">Replay World Studio</span>
         {onAbout && (

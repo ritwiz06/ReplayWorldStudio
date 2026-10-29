@@ -131,6 +131,125 @@
           "z": 0.402
         }
       }
+    },
+    {
+      "key": "storage-rack-2m",
+      "name": "Storage rack, 2 m",
+      "uri": "models/storage-rack-2m.glb",
+      "sha256": "03fa12c830515ee2e7fd1ce06f7b41a97221b1974736397ab5f1b80f97b2faa1",
+      "bytes": 123400,
+      "triangles": 6024,
+      "materials": [
+        "rack_blue",
+        "rack_orange",
+        "paint_light_grey",
+        "aluminium",
+        "cardboard"
+      ],
+      "bounds_m": {
+        "min": {
+          "x": -1,
+          "y": 0,
+          "z": -0.3
+        },
+        "max": {
+          "x": 1,
+          "y": 2.2,
+          "z": 0.3
+        }
+      }
+    },
+    {
+      "key": "saw-bench",
+      "name": "Cutting bench with mitre saw",
+      "uri": "models/saw-bench.glb",
+      "sha256": "bd1c8eae13e7398f7dcbb7a770d0e122fa8dc7ec6d20f0e61376a1f692b9d387",
+      "bytes": 77768,
+      "triangles": 3168,
+      "materials": [
+        "wood_top",
+        "steel_dark",
+        "rubber_black",
+        "paint_light_grey",
+        "paint_anthracite",
+        "aluminium",
+        "motor_blue",
+        "safety_yellow",
+        "estop_red"
+      ],
+      "bounds_m": {
+        "min": {
+          "x": -0.9,
+          "y": 0,
+          "z": -0.4
+        },
+        "max": {
+          "x": 0.9,
+          "y": 1.36,
+          "z": 0.4
+        }
+      }
+    },
+    {
+      "key": "assembly-workbench",
+      "name": "Assembly workbench",
+      "uri": "models/assembly-workbench.glb",
+      "sha256": "fa6df1514866dc5ea951fc5d6e9763c0fad82ff861242ec24c1afc2283515838",
+      "bytes": 75048,
+      "triangles": 2976,
+      "materials": [
+        "wood_top",
+        "steel_dark",
+        "rubber_black",
+        "paint_light_grey",
+        "paint_anthracite",
+        "aluminium",
+        "motor_blue",
+        "estop_red",
+        "safety_yellow",
+        "rack_orange"
+      ],
+      "bounds_m": {
+        "min": {
+          "x": -0.9,
+          "y": 0,
+          "z": -0.41
+        },
+        "max": {
+          "x": 0.9,
+          "y": 1.5,
+          "z": 0.41
+        }
+      }
+    },
+    {
+      "key": "packing-table",
+      "name": "Packing table",
+      "uri": "models/packing-table.glb",
+      "sha256": "f247589e0054683f1d8e621c2cb28c0478342f01525374021db64bc66fce1d30",
+      "bytes": 61996,
+      "triangles": 2448,
+      "materials": [
+        "wood_top",
+        "steel_dark",
+        "rubber_black",
+        "paint_light_grey",
+        "cardboard",
+        "packing_tape",
+        "polycarbonate"
+      ],
+      "bounds_m": {
+        "min": {
+          "x": -0.7,
+          "y": 0,
+          "z": -0.4
+        },
+        "max": {
+          "x": 0.7,
+          "y": 1.28,
+          "z": 0.4
+        }
+      }
     }
   ]
 }

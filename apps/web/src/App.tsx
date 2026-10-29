@@ -354,9 +354,16 @@ export function App() {
 
   const select = useCallback((id: string | null) => setSelection({ loadId, id }), [loadId]);
 
-  const issue = useCallback((type: ViewCommand["type"], view?: FixedView) => {
-    setCommand((current) => ({ type, nonce: (current?.nonce ?? 0) + 1, ...(view ? { view } : {}) }));
-  }, []);
+  /** A world's preferred direction for "frame all" (the workshop task's view), by load. */
+  const [frameFrom, setFrameFrom] = useState<{ loadId: number; direction: Vec3Tuple } | null>(null);
+  const preferredDirection = frameFrom?.loadId === loadId ? frameFrom.direction : undefined;
+  const issue = useCallback(
+    (type: ViewCommand["type"], view?: FixedView, direction?: Vec3Tuple) => {
+      const towards = type === "frame-all" ? (direction ?? preferredDirection) : undefined;
+      setCommand((current) => ({ type, nonce: (current?.nonce ?? 0) + 1, ...(view ? { view } : {}), ...(towards ? { direction: towards } : {}) }));
+    },
+    [preferredDirection],
+  );
   // A fixed view is shown in orbit mode; from another mode it waits until the orbit camera exists.
   const pendingView = useRef<FixedView | null>(null);
   const showView = useCallback(
@@ -887,6 +894,17 @@ export function App() {
       undoLabel: session.undoLabel,
       fileError: fileCheck.status === "rejected" ? fileCheck.error.message : null,
       loadSample: () => session.loadFixture("sample"),
+      loadExample: (name) => session.loadFixture(name),
+      prepareMove: (objectId, direction) => {
+        // The object the task is about: selected, with the Move handle ready to drag; the whole
+        // floor in view from `direction` (chosen so walls do not hide what the task is about),
+        // once this world's camera exists (a command issued before it mounts is not seen).
+        setTool("move");
+        if (mode === "walk") setMode("orbit");
+        select(objectId);
+        if (direction) setFrameFrom({ loadId, direction });
+        window.setTimeout(() => issue("frame-all", undefined, direction), 400);
+      },
       openFile: (file) => openAny(file),
       createWorld: (created, filename) => {
         setTool("select");
@@ -1233,7 +1251,7 @@ export function App() {
             />
           )}
           {chatView && project && project.scene.objects.length === 0 && scene.status === "loaded" && (
-            <EmptyStart dragging={dropActive} refused={startRefused} onUpload={() => chatFile.current?.click()} onExample={() => chat.controller.suggest("example")} />
+            <EmptyStart dragging={dropActive} refused={startRefused} onWorkshop={() => chat.controller.suggest("workshop")} onUpload={() => chatFile.current?.click()} onExample={() => chat.controller.suggest("example")} />
           )}
           {dropActive && !(chatView && project?.scene.objects.length === 0) && (
             <div className="drop-veil" data-testid="drop-veil">
@@ -1394,7 +1412,7 @@ export function App() {
         <ChatPanel
           project={project}
           entries={chat.entries}
-          suggestions={chatSuggestions(facts, isSample)}
+          suggestions={chatSuggestions({ ...facts, inTask: chat.controller.hasTask(loadId) }, isSample)}
           busy={chat.busy}
           assist={{ available: assistOn, mode: assistMode }}
           collapsed={chatCollapsed}

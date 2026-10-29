@@ -25,6 +25,9 @@ is involved. Run ``uv run python scripts/build_dxf_fixtures.py`` to (re)write th
   just beyond it; a 1.60 m mixer turned 45 degrees whose corner reaches 0.231 m into a control
   panel (an overlap that only the rotation creates); a keep-clear zone 0.80 m from a machine (a
   move changes the result); a round water tank (an approximate obstacle).
+* ``workshop-mm.dxf`` - the "Try rearranging a workshop" example: a 12 m x 8 m room with a
+  partition and a 1.00 m doorway, a material rack, saw bench, assembly bench, packing table,
+  finished goods and an electrical cabinet with a keep-clear zone.
 * ``layout.dwg`` - not a drawing: a DWG signature and filler bytes, to check the DWG message.
 
 ``hall-mm.analysis.json`` and ``room-unitless.analysis.json`` are what the API's reader returns
@@ -433,6 +436,32 @@ def layout_checks_mm() -> bytes:
     return d.render()
 
 
+def workshop_mm() -> bytes:
+    """A small workshop for the "Try rearranging a workshop" example (mm): a 12 m x 8 m room cut
+    by a partition with a 1.00 m doorway (y 3000 to 4000), the only way from the west side
+    (material rack, saw bench, assembly bench) to the east side (packing table, finished goods);
+    an electrical cabinet with a keep-clear zone on the south wall."""
+    layers = ["0", "A-WALL", "EQUIPMENT", "KEEP-CLEAR", "TEXT"]
+    d = Dxf(insunits=4, measurement=1, layers=layers)
+    e = d.entities
+    e.append(d.rect("A-WALL", 0, 0, 12000, 8000))
+    for y0, y1 in ((0, 3000), (4000, 8000)):
+        e.append(d.rect("A-WALL", 7000, y0, 7200, y1))
+        e.append(d.text("TEXT", (7100, (y0 + y1) / 2), "Partition", 60.0))
+    for name, (x0, y0, x1, y1) in (
+        ("Material rack", (400, 7200, 2400, 7800)),
+        ("Saw bench", (3600, 6800, 5400, 7600)),
+        ("Assembly bench", (1200, 2800, 3000, 3600)),
+        ("Packing table", (9600, 5600, 11000, 6400)),
+        ("Finished goods", (10000, 1000, 11200, 1800)),
+        ("Electrical cabinet", (4000, 0, 4800, 300)),
+    ):
+        e.append(d.rect("EQUIPMENT", x0, y0, x1, y1))
+        e.append(d.text("TEXT", ((x0 + x1) / 2, (y0 + y1) / 2), name, 100.0))
+    e.append(d.rect("KEEP-CLEAR", 3700, 300, 5100, 1300))
+    return d.render()
+
+
 def dwg_stub() -> bytes:
     return b"AC1032" + bytes((i * 37) % 251 for i in range(250))
 
@@ -444,6 +473,7 @@ FILES = {
     "unsupported-mm.dxf": unsupported_mm,
     "warehouse-cm.dxf": warehouse_cm,
     "layout-checks-mm.dxf": layout_checks_mm,
+    "workshop-mm.dxf": workshop_mm,
     "layout.dwg": dwg_stub,
 }
 
@@ -490,7 +520,13 @@ def same(name: str, committed: bytes, built: bytes) -> bool:
 
 ANALYSES = {
     f"{name[:-4]}.analysis.json": name
-    for name in ("hall-mm.dxf", "room-unitless.dxf", "warehouse-cm.dxf", "layout-checks-mm.dxf")
+    for name in (
+        "hall-mm.dxf",
+        "room-unitless.dxf",
+        "warehouse-cm.dxf",
+        "layout-checks-mm.dxf",
+        "workshop-mm.dxf",
+    )
 }
 
 

@@ -10,3 +10,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** The commit and time this page was built from (vite.config.ts). */
+declare const __BUILD__: string;

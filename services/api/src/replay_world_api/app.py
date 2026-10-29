@@ -120,6 +120,7 @@ FIXTURES: Final = {
     "foundation": "scenes/foundation-scene.json",
     "industrial-demo": "scenes/industrial-demo.json",
     "sample": "scenes/sample-factory.json",
+    "workshop": "scenes/workshop.json",
 }
 
 OFF_IN_PREVIEW: Final = (

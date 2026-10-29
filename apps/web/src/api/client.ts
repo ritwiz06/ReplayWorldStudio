@@ -54,7 +54,7 @@ export type ApiFailure =
   | { kind: "contract"; message: string; issues: ContractIssue[] };
 
 /** "empty" is a new, empty world made in the browser (the conversation's starting point). */
-export type FixtureName = "industrial-demo" | "foundation" | "sample" | "empty";
+export type FixtureName = "industrial-demo" | "foundation" | "sample" | "workshop" | "empty";
 
 export type ApiResult<T> = { ok: true; value: T } | { ok: false; error: ApiFailure };
 

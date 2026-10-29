@@ -1,0 +1,2054 @@
+{
+  "schema_version": "0.16.0",
+  "id": "proj-example-workshop",
+  "name": "Small workshop (example)",
+  "units": {
+    "length": "m",
+    "time": "s",
+    "mass": "kg",
+    "angle": "rad"
+  },
+  "world_frame": {
+    "handedness": "right",
+    "up_axis": "+Y",
+    "floor_plane": "XZ"
+  },
+  "fixture": {
+    "kind": "demonstration",
+    "note": "A synthetic example: a 12 m x 8 m workshop drawn as a DXF by this repository, reviewed, drawn with in-house catalog models, and given an example shift. Not a real site; sizes are the drawing's, heights are the models' (for display), and the shift's times and workers are made-up assumptions."
+  },
+  "sources": [
+    {
+      "id": "src-dxf-2985ee76c365",
+      "kind": "dxf",
+      "filename": "workshop-mm.dxf",
+      "sha256": "2985ee76c3652400f6acd4b07e65355b417913cc10145e80126df51948d9ab3b",
+      "source_to_world": {
+        "convention": "plan_xy_to_world_x_neg_z",
+        "source_unit": "mm",
+        "metres_per_source_unit": 0.001,
+        "rotation_about_world_y_rad": 0,
+        "translation_m": {
+          "x": -6,
+          "y": 0,
+          "z": 4
+        }
+      },
+      "import_warnings": [],
+      "image": null,
+      "photo_import": null,
+      "drawing": {
+        "reader": "rws-dxf/1",
+        "file": {
+          "uri": "drawings/2985ee76c3652400f6acd4b07e65355b417913cc10145e80126df51948d9ab3b.dxf",
+          "bytes": 3586
+        },
+        "raster": null,
+        "dxf_version": "AC1015",
+        "units": {
+          "insunits": 4,
+          "declared": "mm",
+          "measurement": "metric",
+          "question": null,
+          "basis": "drawing_header"
+        },
+        "layers": [
+          "0",
+          "A-WALL",
+          "EQUIPMENT",
+          "KEEP-CLEAR",
+          "TEXT"
+        ],
+        "extent_min": {
+          "x": 0,
+          "y": 0
+        },
+        "extent_max": {
+          "x": 12000,
+          "y": 8000
+        },
+        "lines": [
+          {
+            "ref": {
+              "handle": "101",
+              "layer": "A-WALL",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 12000,
+                "y": 0
+              },
+              {
+                "x": 12000,
+                "y": 8000
+              },
+              {
+                "x": 0,
+                "y": 8000
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "102",
+              "layer": "A-WALL",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 7000,
+                "y": 0
+              },
+              {
+                "x": 7200,
+                "y": 0
+              },
+              {
+                "x": 7200,
+                "y": 3000
+              },
+              {
+                "x": 7000,
+                "y": 3000
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "104",
+              "layer": "A-WALL",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 7000,
+                "y": 4000
+              },
+              {
+                "x": 7200,
+                "y": 4000
+              },
+              {
+                "x": 7200,
+                "y": 8000
+              },
+              {
+                "x": 7000,
+                "y": 8000
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "106",
+              "layer": "EQUIPMENT",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 400,
+                "y": 7200
+              },
+              {
+                "x": 2400,
+                "y": 7200
+              },
+              {
+                "x": 2400,
+                "y": 7800
+              },
+              {
+                "x": 400,
+                "y": 7800
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "108",
+              "layer": "EQUIPMENT",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 3600,
+                "y": 6800
+              },
+              {
+                "x": 5400,
+                "y": 6800
+              },
+              {
+                "x": 5400,
+                "y": 7600
+              },
+              {
+                "x": 3600,
+                "y": 7600
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "10A",
+              "layer": "EQUIPMENT",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 1200,
+                "y": 2800
+              },
+              {
+                "x": 3000,
+                "y": 2800
+              },
+              {
+                "x": 3000,
+                "y": 3600
+              },
+              {
+                "x": 1200,
+                "y": 3600
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "10C",
+              "layer": "EQUIPMENT",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 9600,
+                "y": 5600
+              },
+              {
+                "x": 11000,
+                "y": 5600
+              },
+              {
+                "x": 11000,
+                "y": 6400
+              },
+              {
+                "x": 9600,
+                "y": 6400
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "10E",
+              "layer": "EQUIPMENT",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 10000,
+                "y": 1000
+              },
+              {
+                "x": 11200,
+                "y": 1000
+              },
+              {
+                "x": 11200,
+                "y": 1800
+              },
+              {
+                "x": 10000,
+                "y": 1800
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "110",
+              "layer": "EQUIPMENT",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 4000,
+                "y": 0
+              },
+              {
+                "x": 4800,
+                "y": 0
+              },
+              {
+                "x": 4800,
+                "y": 300
+              },
+              {
+                "x": 4000,
+                "y": 300
+              }
+            ],
+            "closed": true
+          },
+          {
+            "ref": {
+              "handle": "112",
+              "layer": "KEEP-CLEAR",
+              "entity": "LWPOLYLINE",
+              "block": null
+            },
+            "points": [
+              {
+                "x": 3700,
+                "y": 300
+              },
+              {
+                "x": 5100,
+                "y": 300
+              },
+              {
+                "x": 5100,
+                "y": 1300
+              },
+              {
+                "x": 3700,
+                "y": 1300
+              }
+            ],
+            "closed": true
+          }
+        ],
+        "labels": [
+          {
+            "ref": {
+              "handle": "103",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Partition",
+            "at": {
+              "x": 7100,
+              "y": 1500
+            }
+          },
+          {
+            "ref": {
+              "handle": "105",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Partition",
+            "at": {
+              "x": 7100,
+              "y": 6000
+            }
+          },
+          {
+            "ref": {
+              "handle": "107",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Material rack",
+            "at": {
+              "x": 1400,
+              "y": 7500
+            }
+          },
+          {
+            "ref": {
+              "handle": "109",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Saw bench",
+            "at": {
+              "x": 4500,
+              "y": 7200
+            }
+          },
+          {
+            "ref": {
+              "handle": "10B",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Assembly bench",
+            "at": {
+              "x": 2100,
+              "y": 3200
+            }
+          },
+          {
+            "ref": {
+              "handle": "10D",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Packing table",
+            "at": {
+              "x": 10300,
+              "y": 6000
+            }
+          },
+          {
+            "ref": {
+              "handle": "10F",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Finished goods",
+            "at": {
+              "x": 10600,
+              "y": 1400
+            }
+          },
+          {
+            "ref": {
+              "handle": "111",
+              "layer": "TEXT",
+              "entity": "TEXT",
+              "block": null
+            },
+            "text": "Electrical cabinet",
+            "at": {
+              "x": 4400,
+              "y": 150
+            }
+          }
+        ],
+        "objects": [
+          {
+            "id": "dxf-101",
+            "object_id": "obj-dxf-101",
+            "role": "floor",
+            "label": "Floor",
+            "label_from": "generic",
+            "kind": "structure",
+            "refs": [
+              {
+                "handle": "101",
+                "layer": "A-WALL",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 12000,
+                "y": 0
+              },
+              {
+                "x": 12000,
+                "y": 8000
+              },
+              {
+                "x": 0,
+                "y": 8000
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 6000,
+              "y": 4000
+            },
+            "width": 12000,
+            "depth": 8000,
+            "rotation_rad": 0,
+            "notes": [
+              "The largest closed outline, built as the floor."
+            ]
+          },
+          {
+            "id": "dxf-102",
+            "object_id": "obj-dxf-102",
+            "role": "footprint",
+            "label": "Partition",
+            "label_from": "text",
+            "kind": "structure",
+            "refs": [
+              {
+                "handle": "102",
+                "layer": "A-WALL",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 7000,
+                "y": 0
+              },
+              {
+                "x": 7200,
+                "y": 0
+              },
+              {
+                "x": 7200,
+                "y": 3000
+              },
+              {
+                "x": 7000,
+                "y": 3000
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 7100,
+              "y": 1500
+            },
+            "width": 200,
+            "depth": 3000,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-104",
+            "object_id": "obj-dxf-104",
+            "role": "footprint",
+            "label": "Partition",
+            "label_from": "text",
+            "kind": "structure",
+            "refs": [
+              {
+                "handle": "104",
+                "layer": "A-WALL",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 7000,
+                "y": 4000
+              },
+              {
+                "x": 7200,
+                "y": 4000
+              },
+              {
+                "x": 7200,
+                "y": 8000
+              },
+              {
+                "x": 7000,
+                "y": 8000
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 7100,
+              "y": 6000
+            },
+            "width": 200,
+            "depth": 4000,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-106",
+            "object_id": "obj-dxf-106",
+            "role": "footprint",
+            "label": "Material rack",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "106",
+                "layer": "EQUIPMENT",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 400,
+                "y": 7200
+              },
+              {
+                "x": 2400,
+                "y": 7200
+              },
+              {
+                "x": 2400,
+                "y": 7800
+              },
+              {
+                "x": 400,
+                "y": 7800
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 1400,
+              "y": 7500
+            },
+            "width": 2000,
+            "depth": 600,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-108",
+            "object_id": "obj-dxf-108",
+            "role": "footprint",
+            "label": "Saw bench",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "108",
+                "layer": "EQUIPMENT",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 3600,
+                "y": 6800
+              },
+              {
+                "x": 5400,
+                "y": 6800
+              },
+              {
+                "x": 5400,
+                "y": 7600
+              },
+              {
+                "x": 3600,
+                "y": 7600
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 4500,
+              "y": 7200
+            },
+            "width": 1800,
+            "depth": 800,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-10a",
+            "object_id": "obj-dxf-10a",
+            "role": "footprint",
+            "label": "Assembly bench",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "10A",
+                "layer": "EQUIPMENT",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 1200,
+                "y": 2800
+              },
+              {
+                "x": 3000,
+                "y": 2800
+              },
+              {
+                "x": 3000,
+                "y": 3600
+              },
+              {
+                "x": 1200,
+                "y": 3600
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 2100,
+              "y": 3200
+            },
+            "width": 1800,
+            "depth": 800,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-10c",
+            "object_id": "obj-dxf-10c",
+            "role": "footprint",
+            "label": "Packing table",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "10C",
+                "layer": "EQUIPMENT",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 9600,
+                "y": 5600
+              },
+              {
+                "x": 11000,
+                "y": 5600
+              },
+              {
+                "x": 11000,
+                "y": 6400
+              },
+              {
+                "x": 9600,
+                "y": 6400
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 10300,
+              "y": 6000
+            },
+            "width": 1400,
+            "depth": 800,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-10e",
+            "object_id": "obj-dxf-10e",
+            "role": "footprint",
+            "label": "Finished goods",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "10E",
+                "layer": "EQUIPMENT",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 10000,
+                "y": 1000
+              },
+              {
+                "x": 11200,
+                "y": 1000
+              },
+              {
+                "x": 11200,
+                "y": 1800
+              },
+              {
+                "x": 10000,
+                "y": 1800
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 10600,
+              "y": 1400
+            },
+            "width": 1200,
+            "depth": 800,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-110",
+            "object_id": "obj-dxf-110",
+            "role": "footprint",
+            "label": "Electrical cabinet",
+            "label_from": "text",
+            "kind": "equipment",
+            "refs": [
+              {
+                "handle": "110",
+                "layer": "EQUIPMENT",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 4000,
+                "y": 0
+              },
+              {
+                "x": 4800,
+                "y": 0
+              },
+              {
+                "x": 4800,
+                "y": 300
+              },
+              {
+                "x": 4000,
+                "y": 300
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 4400,
+              "y": 150
+            },
+            "width": 800,
+            "depth": 300,
+            "rotation_rad": 0,
+            "notes": []
+          },
+          {
+            "id": "dxf-112",
+            "object_id": "obj-dxf-112",
+            "role": "footprint",
+            "label": "Keep-clear zone 1",
+            "label_from": "layer",
+            "kind": "keep_clear",
+            "refs": [
+              {
+                "handle": "112",
+                "layer": "KEEP-CLEAR",
+                "entity": "LWPOLYLINE",
+                "block": null
+              }
+            ],
+            "outline": [
+              {
+                "x": 3700,
+                "y": 300
+              },
+              {
+                "x": 5100,
+                "y": 300
+              },
+              {
+                "x": 5100,
+                "y": 1300
+              },
+              {
+                "x": 3700,
+                "y": 1300
+              }
+            ],
+            "footprint_fit": "exact",
+            "tolerance": null,
+            "centre": {
+              "x": 4400,
+              "y": 800
+            },
+            "width": 1400,
+            "depth": 1000,
+            "rotation_rad": 0,
+            "notes": []
+          }
+        ],
+        "skipped": [],
+        "omitted": [],
+        "review": {
+          "floor": {
+            "choice": "outline",
+            "drawn_id": "dxf-101",
+            "object_id": "obj-dxf-floor",
+            "status": "accepted"
+          },
+          "scale": {
+            "basis": "drawing_unit",
+            "unit": "mm",
+            "metres_per_unit": 0.001,
+            "status": "confirmed",
+            "reference": null
+          },
+          "objects": [
+            {
+              "drawn_id": "dxf-101",
+              "status": "used_as_floor"
+            },
+            {
+              "drawn_id": "dxf-102",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-104",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-106",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-108",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-10a",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-10c",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-10e",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-110",
+              "status": "accepted"
+            },
+            {
+              "drawn_id": "dxf-112",
+              "status": "accepted"
+            }
+          ],
+          "omissions": "accepted",
+          "symbol_layers": []
+        }
+      },
+      "reference": null
+    }
+  ],
+  "catalog": [
+    {
+      "id": "asset-storage-rack-2m",
+      "name": "Storage rack, 2 m",
+      "kind": "equipment",
+      "visual": {
+        "type": "gltf",
+        "uri": "models/storage-rack-2m.glb",
+        "sha256": "03fa12c830515ee2e7fd1ce06f7b41a97221b1974736397ab5f1b80f97b2faa1",
+        "metres_per_model_unit": 1,
+        "up_axis": "+Y",
+        "front_axis": "+Z",
+        "origin": "bottom_centre",
+        "model_bounds_m": {
+          "min": {
+            "x": -1,
+            "y": 0,
+            "z": -0.3
+          },
+          "max": {
+            "x": 1,
+            "y": 2.2,
+            "z": 0.3
+          }
+        },
+        "fit": "scale_to_dimensions",
+        "max_fit_distortion": 0.05,
+        "correction": null
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 2,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/storage-rack-2m.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 2.2,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/storage-rack-2m.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 0.6,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/storage-rack-2m.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "in_house",
+        "author": "Replay World Studio project (procedural model generator)",
+        "reference": "apps/web/scripts/catalog/models.ts"
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "Original model generated by code in this repository; no third-party content. The project owner has not chosen a license."
+      },
+      "generation": null,
+      "upload": null
+    },
+    {
+      "id": "asset-saw-bench",
+      "name": "Cutting bench with mitre saw",
+      "kind": "equipment",
+      "visual": {
+        "type": "gltf",
+        "uri": "models/saw-bench.glb",
+        "sha256": "bd1c8eae13e7398f7dcbb7a770d0e122fa8dc7ec6d20f0e61376a1f692b9d387",
+        "metres_per_model_unit": 1,
+        "up_axis": "+Y",
+        "front_axis": "+Z",
+        "origin": "bottom_centre",
+        "model_bounds_m": {
+          "min": {
+            "x": -0.9,
+            "y": 0,
+            "z": -0.4
+          },
+          "max": {
+            "x": 0.9,
+            "y": 1.36,
+            "z": 0.4
+          }
+        },
+        "fit": "scale_to_dimensions",
+        "max_fit_distortion": 0.05,
+        "correction": null
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 1.8,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/saw-bench.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 1.36,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/saw-bench.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 0.8,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/saw-bench.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "in_house",
+        "author": "Replay World Studio project (procedural model generator)",
+        "reference": "apps/web/scripts/catalog/models.ts"
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "Original model generated by code in this repository; no third-party content. The project owner has not chosen a license."
+      },
+      "generation": null,
+      "upload": null
+    },
+    {
+      "id": "asset-assembly-workbench",
+      "name": "Assembly workbench",
+      "kind": "equipment",
+      "visual": {
+        "type": "gltf",
+        "uri": "models/assembly-workbench.glb",
+        "sha256": "fa6df1514866dc5ea951fc5d6e9763c0fad82ff861242ec24c1afc2283515838",
+        "metres_per_model_unit": 1,
+        "up_axis": "+Y",
+        "front_axis": "+Z",
+        "origin": "bottom_centre",
+        "model_bounds_m": {
+          "min": {
+            "x": -0.9,
+            "y": 0,
+            "z": -0.41
+          },
+          "max": {
+            "x": 0.9,
+            "y": 1.5,
+            "z": 0.41
+          }
+        },
+        "fit": "scale_to_dimensions",
+        "max_fit_distortion": 0.05,
+        "correction": null
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 1.8,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/assembly-workbench.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 1.5,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/assembly-workbench.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 0.82,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/assembly-workbench.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "in_house",
+        "author": "Replay World Studio project (procedural model generator)",
+        "reference": "apps/web/scripts/catalog/models.ts"
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "Original model generated by code in this repository; no third-party content. The project owner has not chosen a license."
+      },
+      "generation": null,
+      "upload": null
+    },
+    {
+      "id": "asset-packing-table",
+      "name": "Packing table",
+      "kind": "equipment",
+      "visual": {
+        "type": "gltf",
+        "uri": "models/packing-table.glb",
+        "sha256": "f247589e0054683f1d8e621c2cb28c0478342f01525374021db64bc66fce1d30",
+        "metres_per_model_unit": 1,
+        "up_axis": "+Y",
+        "front_axis": "+Z",
+        "origin": "bottom_centre",
+        "model_bounds_m": {
+          "min": {
+            "x": -0.7,
+            "y": 0,
+            "z": -0.4
+          },
+          "max": {
+            "x": 0.7,
+            "y": 1.28,
+            "z": 0.4
+          }
+        },
+        "fit": "scale_to_dimensions",
+        "max_fit_distortion": 0.05,
+        "correction": null
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 1.4,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/packing-table.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 1.28,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/packing-table.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 0.8,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/packing-table.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "in_house",
+        "author": "Replay World Studio project (procedural model generator)",
+        "reference": "apps/web/scripts/catalog/models.ts"
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "Original model generated by code in this repository; no third-party content. The project owner has not chosen a license."
+      },
+      "generation": null,
+      "upload": null
+    },
+    {
+      "id": "asset-pallet-cartons",
+      "name": "Pallet with cartons",
+      "kind": "equipment",
+      "visual": {
+        "type": "gltf",
+        "uri": "models/pallet-cartons.glb",
+        "sha256": "5a73f5cc79e078f3c70388cebe362f9839db6318aa715882e3b662dcbd2f3f3a",
+        "metres_per_model_unit": 1,
+        "up_axis": "+Y",
+        "front_axis": "+Z",
+        "origin": "bottom_centre",
+        "model_bounds_m": {
+          "min": {
+            "x": -0.601,
+            "y": 0,
+            "z": -0.402
+          },
+          "max": {
+            "x": 0.601,
+            "y": 1.022,
+            "z": 0.402
+          }
+        },
+        "fit": "scale_to_dimensions",
+        "max_fit_distortion": 0.05,
+        "correction": null
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 1.202,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/pallet-cartons.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 1.022,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/pallet-cartons.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 0.804,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/pallet-cartons.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "in_house",
+        "author": "Replay World Studio project (procedural model generator)",
+        "reference": "apps/web/scripts/catalog/models.ts"
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "Original model generated by code in this repository; no third-party content. The project owner has not chosen a license."
+      },
+      "generation": null,
+      "upload": null
+    },
+    {
+      "id": "asset-electrical-cabinet-800",
+      "name": "Electrical cabinet, 800 mm",
+      "kind": "equipment",
+      "visual": {
+        "type": "gltf",
+        "uri": "models/electrical-cabinet-800.glb",
+        "sha256": "955e8b369905ee6d95671db98ce0d323d1bc397e6469f1fa655d2c4cb5b0d2ae",
+        "metres_per_model_unit": 1,
+        "up_axis": "+Y",
+        "front_axis": "+Z",
+        "origin": "bottom_centre",
+        "model_bounds_m": {
+          "min": {
+            "x": -0.4,
+            "y": 0,
+            "z": -0.2705
+          },
+          "max": {
+            "x": 0.4,
+            "y": 2.078,
+            "z": 0.2705
+          }
+        },
+        "fit": "scale_to_dimensions",
+        "max_fit_distortion": 0.05,
+        "correction": null
+      },
+      "nominal_dimensions": {
+        "width": {
+          "value_m": 0.8,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/electrical-cabinet-800.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "height": {
+          "value_m": 2.078,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/electrical-cabinet-800.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        },
+        "depth": {
+          "value_m": 0.541,
+          "origin": "user_supplied",
+          "source_ref": "Authored extent of the procedural model models/electrical-cabinet-800.glb",
+          "review_status": "unreviewed",
+          "uncertainty_m": null
+        }
+      },
+      "source": {
+        "kind": "in_house",
+        "author": "Replay World Studio project (procedural model generator)",
+        "reference": "apps/web/scripts/catalog/models.ts"
+      },
+      "rights": {
+        "license": "NOASSERTION",
+        "redistribution": "unknown",
+        "attribution": null,
+        "terms_ref": "Original model generated by code in this repository; no third-party content. The project owner has not chosen a license."
+      },
+      "generation": null,
+      "upload": null
+    }
+  ],
+  "scene": {
+    "id": "scene-example-workshop",
+    "name": "Small workshop (example)",
+    "revision": 0,
+    "objects": [
+      {
+        "id": "obj-dxf-floor",
+        "name": "Floor",
+        "kind": "structure",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 0,
+            "y": -0.1,
+            "z": 0
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 12,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 101 on layer A-WALL, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.1,
+            "origin": "default",
+            "source_ref": "Floor slab thickness for display; a drawing gives no thickness",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 8,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 101 on layer A-WALL, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-102",
+        "name": "Partition",
+        "kind": "structure",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 1.1,
+            "y": 0,
+            "z": 2.5
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.2,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 102 on layer A-WALL, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 3,
+            "origin": "default",
+            "source_ref": "Display height for the draft (typical for a column or wall): not in the drawing and not measured. A check that needs the height says \"height needed\".",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 3,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 102 on layer A-WALL, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-104",
+        "name": "Partition",
+        "kind": "structure",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": 1.1,
+            "y": 0,
+            "z": -2
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.2,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 104 on layer A-WALL, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 3,
+            "origin": "default",
+            "source_ref": "Display height for the draft (typical for a column or wall): not in the drawing and not measured. A check that needs the height says \"height needed\".",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 4,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 104 on layer A-WALL, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-106",
+        "name": "Material rack",
+        "kind": "equipment",
+        "asset_id": "asset-storage-rack-2m",
+        "transform": {
+          "position_m": {
+            "x": -4.6,
+            "y": 0,
+            "z": -3.5
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 2,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 106 on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 2.2,
+            "origin": "default",
+            "source_ref": "Display height for this example: the height of the catalog model drawn for it (an illustration). Not in the drawing and not measured.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.6,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 106 on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-108",
+        "name": "Saw bench",
+        "kind": "equipment",
+        "asset_id": "asset-saw-bench",
+        "transform": {
+          "position_m": {
+            "x": -1.5,
+            "y": 0,
+            "z": -3.2
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.8,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 108 on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.36,
+            "origin": "default",
+            "source_ref": "Display height for this example: the height of the catalog model drawn for it (an illustration). Not in the drawing and not measured.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.8,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 108 on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-10a",
+        "name": "Assembly bench",
+        "kind": "equipment",
+        "asset_id": "asset-assembly-workbench",
+        "transform": {
+          "position_m": {
+            "x": -3.9,
+            "y": 0,
+            "z": 0.8
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.8,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 10A on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.5,
+            "origin": "default",
+            "source_ref": "Display height for this example: the height of the catalog model drawn for it (an illustration). Not in the drawing and not measured.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.8,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 10A on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-10c",
+        "name": "Packing table",
+        "kind": "equipment",
+        "asset_id": "asset-packing-table",
+        "transform": {
+          "position_m": {
+            "x": 4.3,
+            "y": 0,
+            "z": -2
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.4,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 10C on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.28,
+            "origin": "default",
+            "source_ref": "Display height for this example: the height of the catalog model drawn for it (an illustration). Not in the drawing and not measured.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.8,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 10C on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-10e",
+        "name": "Finished goods",
+        "kind": "equipment",
+        "asset_id": "asset-pallet-cartons",
+        "transform": {
+          "position_m": {
+            "x": 4.6,
+            "y": 0,
+            "z": 2.6
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.2,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 10E on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 1.022,
+            "origin": "default",
+            "source_ref": "Display height for this example: the height of the catalog model drawn for it (an illustration). Not in the drawing and not measured.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.8,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 10E on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-110",
+        "name": "Electrical cabinet",
+        "kind": "equipment",
+        "asset_id": "asset-electrical-cabinet-800",
+        "transform": {
+          "position_m": {
+            "x": -1.6,
+            "y": 0,
+            "z": 3.85
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 0.8,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 110 on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 2.078,
+            "origin": "default",
+            "source_ref": "Display height for this example: the height of the catalog model drawn for it (an illustration). Not in the drawing and not measured.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 0.3,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 110 on layer EQUIPMENT, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      },
+      {
+        "id": "obj-dxf-112",
+        "name": "Keep-clear zone 1",
+        "kind": "keep_clear",
+        "asset_id": null,
+        "transform": {
+          "position_m": {
+            "x": -1.6,
+            "y": 0,
+            "z": 3.2
+          },
+          "rotation_rad": {
+            "order": "XYZ",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "dimensions": {
+          "width": {
+            "value_m": 1.4,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 112 on layer KEEP-CLEAR, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "height": {
+            "value_m": 0.005,
+            "origin": "default",
+            "source_ref": "Drawn as a marking on the floor; a drawing gives no height",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          },
+          "depth": {
+            "value_m": 1,
+            "origin": "drawn",
+            "source_ref": "Drawn in workshop-mm.dxf: LWPOLYLINE 112 on layer KEEP-CLEAR, the outline as drawn; 1 unit = 1 mm (the drawing's own unit, $INSUNITS). A design drawing's size, not a site measurement.",
+            "review_status": "unreviewed",
+            "uncertainty_m": null
+          }
+        },
+        "parameters": []
+      }
+    ],
+    "edit_log": []
+  },
+  "process": {
+    "format": "rws-process/1",
+    "name": "Example shift: cutting, assembly and packing",
+    "item_name": "frame",
+    "example_note": "An example to show how a layout change affects a shift. Every time, speed, break and worker assignment here is an assumption made up for this synthetic workshop: not data from a real workshop, and nothing is read from the drawing.",
+    "shift": {
+      "start_clock_s": {
+        "value": 25200,
+        "basis": "example"
+      },
+      "duration_s": {
+        "value": 28800,
+        "basis": "example"
+      },
+      "breaks": [
+        {
+          "id": "break-morning",
+          "name": "Morning break",
+          "start_s": {
+            "value": 10800,
+            "basis": "example"
+          },
+          "duration_s": {
+            "value": 900,
+            "basis": "example"
+          }
+        },
+        {
+          "id": "break-lunch",
+          "name": "Lunch",
+          "start_s": {
+            "value": 19800,
+            "basis": "example"
+          },
+          "duration_s": {
+            "value": 1800,
+            "basis": "example"
+          }
+        }
+      ]
+    },
+    "stations": [
+      {
+        "id": "rack",
+        "object_id": "obj-dxf-106",
+        "name": "Material rack",
+        "role": "supply",
+        "access_m": {
+          "x": 0,
+          "z": 0.9
+        },
+        "access_basis": "example",
+        "worker_s": null,
+        "machine_s": null,
+        "input_capacity": null,
+        "output_capacity": null,
+        "planned_stops": [],
+        "random_stops": null
+      },
+      {
+        "id": "saw",
+        "object_id": "obj-dxf-108",
+        "name": "Saw bench",
+        "role": "process",
+        "access_m": {
+          "x": 0,
+          "z": 1
+        },
+        "access_basis": "example",
+        "worker_s": {
+          "value": 30,
+          "basis": "example"
+        },
+        "machine_s": {
+          "value": 60,
+          "basis": "example"
+        },
+        "input_capacity": {
+          "value": 1,
+          "basis": "example"
+        },
+        "output_capacity": {
+          "value": 1,
+          "basis": "example"
+        },
+        "planned_stops": [],
+        "random_stops": null
+      },
+      {
+        "id": "assembly",
+        "object_id": "obj-dxf-10a",
+        "name": "Assembly bench",
+        "role": "process",
+        "access_m": {
+          "x": 0,
+          "z": -1
+        },
+        "access_basis": "example",
+        "worker_s": {
+          "value": 120,
+          "basis": "example"
+        },
+        "machine_s": {
+          "value": 0,
+          "basis": "example"
+        },
+        "input_capacity": {
+          "value": 1,
+          "basis": "example"
+        },
+        "output_capacity": {
+          "value": 1,
+          "basis": "example"
+        },
+        "planned_stops": [],
+        "random_stops": null
+      },
+      {
+        "id": "packing",
+        "object_id": "obj-dxf-10c",
+        "name": "Packing table",
+        "role": "process",
+        "access_m": {
+          "x": 0,
+          "z": 1
+        },
+        "access_basis": "example",
+        "worker_s": {
+          "value": 60,
+          "basis": "example"
+        },
+        "machine_s": {
+          "value": 0,
+          "basis": "example"
+        },
+        "input_capacity": {
+          "value": 1,
+          "basis": "example"
+        },
+        "output_capacity": {
+          "value": 1,
+          "basis": "example"
+        },
+        "planned_stops": [],
+        "random_stops": null
+      }
+    ],
+    "transfers": [
+      {
+        "id": "carry-stock",
+        "from_station": "rack",
+        "to_station": "saw",
+        "method": "carry",
+        "item_width_m": {
+          "value": 0.6,
+          "basis": "example"
+        },
+        "allowance_m": {
+          "value": 0.05,
+          "basis": "example"
+        },
+        "speed_m_s": {
+          "value": 1,
+          "basis": "example"
+        },
+        "handling_s": {
+          "value": 10,
+          "basis": "example"
+        }
+      },
+      {
+        "id": "carry-cut",
+        "from_station": "saw",
+        "to_station": "assembly",
+        "method": "carry",
+        "item_width_m": {
+          "value": 0.6,
+          "basis": "example"
+        },
+        "allowance_m": {
+          "value": 0.05,
+          "basis": "example"
+        },
+        "speed_m_s": {
+          "value": 1,
+          "basis": "example"
+        },
+        "handling_s": {
+          "value": 10,
+          "basis": "example"
+        }
+      },
+      {
+        "id": "carry-assembled",
+        "from_station": "assembly",
+        "to_station": "packing",
+        "method": "carry",
+        "item_width_m": {
+          "value": 0.6,
+          "basis": "example"
+        },
+        "allowance_m": {
+          "value": 0.05,
+          "basis": "example"
+        },
+        "speed_m_s": {
+          "value": 1,
+          "basis": "example"
+        },
+        "handling_s": {
+          "value": 10,
+          "basis": "example"
+        }
+      }
+    ],
+    "workers": [
+      {
+        "id": "worker-1",
+        "name": "Worker 1 (cutting)",
+        "tasks": [
+          "transfer:carry-cut",
+          "station:saw",
+          "transfer:carry-stock"
+        ],
+        "walk_speed_m_s": {
+          "value": 1.2,
+          "basis": "example"
+        },
+        "width_m": {
+          "value": 0.8,
+          "basis": "example"
+        }
+      },
+      {
+        "id": "worker-2",
+        "name": "Worker 2 (assembly)",
+        "tasks": [
+          "transfer:carry-assembled",
+          "station:assembly"
+        ],
+        "walk_speed_m_s": {
+          "value": 1.2,
+          "basis": "example"
+        },
+        "width_m": {
+          "value": 0.8,
+          "basis": "example"
+        }
+      },
+      {
+        "id": "worker-3",
+        "name": "Worker 3 (packing)",
+        "tasks": [
+          "station:packing"
+        ],
+        "walk_speed_m_s": {
+          "value": 1.2,
+          "basis": "example"
+        },
+        "width_m": {
+          "value": 0.8,
+          "basis": "example"
+        }
+      }
+    ],
+    "seed": 1
+  }
+}
