@@ -1578,8 +1578,11 @@ Append entries in chronological order. If a live repository session log already 
   - nudges are fixed at 0.25 m;
   - typing a move needs a key;
   - the task view is applied about 0.4 s after the world appears.
-- CI: recorded below once run.
-- Actual effort: about 1.5 h of active work (2026-10-28 21:38–23:10 America/Phoenix, from the session's timestamps), including checks.
+- CI:
+  - **`f2aaeac`:** https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/40826751092 failed. `photo.spec.ts` deleted the shared `factory-walk.png`, and three other smoke specs upload the same file, so a parallel upload put it back before the reopen.
+  - **`6d27315`:** photo.spec now removes and reopens until the file is refused. https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/40828761847 then failed on `enrich.spec.ts`, which ran out of its 4-minute budget. Its CI times were 1.9, 2.9, 3.9 and 4.1 min across recent runs; locally it takes about 30 s before and after this work.
+  - **`d1c1b7d`:** enrich now has 6 minutes on CI. https://github.com/ritwiz06/ReplayWorldStudio/actions/runs/40830658444 passed all three jobs (smoke 23, including the workshop task in 2.6 min; enrich took 4.3 min).
+- Actual effort: about 2.4 h of active work (2026-10-28 21:38 to 2026-10-29 00:00 America/Phoenix, from the session's timestamps), including CI.
 - Next concrete task: the workshop task with consenting newcomers (UX-02).
 
 ## Copy this template for a coding session
