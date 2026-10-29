@@ -62,7 +62,8 @@ async function deselect(page: Page) {
 }
 
 test("enrich: a detailed model for Machine B, reviewed and applied to that object; the run, a move, why, undo/redo, save and reopen", { tag: "@smoke" }, async ({ page }) => {
-  test.setTimeout(process.env.CI ? 240_000 : 120_000);
+  // About 30 s with a GPU; 2-4 min with CI's software WebGL, depending on the runner.
+  test.setTimeout(process.env.CI ? 360_000 : 120_000);
   await openExample(page);
   await page.getByTestId("chat-suggest-run_example").click();
   await expect(card(page, "run")).toContainText("Whole-shift result: 102 batches");
