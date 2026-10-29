@@ -217,15 +217,23 @@ test("a photo becomes a reviewed, editable 3D world that saves, reopens and surv
 
   // Without the photo the file is refused at the photo's location, never shown with a substitute.
   const stored = join(E2E_SOURCES_DIR, "photos", `${FACTORY_SHA}.png`);
-  rmSync(stored);
-  await reopen(page, file);
   const rejected = page.getByTestId("file-rejected");
+  // Other tests upload the same photo into the shared store, so one may put it back between the
+  // removal and the reopen: remove it and reopen until the file is refused.
+  const reopenWithoutPhoto = () =>
+    expect(async () => {
+      rmSync(stored, { force: true });
+      await reopen(page, file);
+      await expect(rejected).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 60_000 });
+  await reopenWithoutPhoto();
   await expect(rejected).toContainText("/sources/0/image/uri");
   await expect(rejected.getByTestId("photo-missing")).toContainText("factory-walk.png");
   // A different file is not accepted as the original.
   await rejected.getByTestId("attach-photo-input").setInputFiles(photoPath("living-room.webp"));
   await expect(rejected.getByTestId("photo-missing-message")).toContainText("is not the original photo");
-  expect(existsSync(stored)).toBe(false);
+  // Never stored under the original's name (another test may have stored the original itself).
+  expect(!existsSync(stored) || createHash("sha256").update(readFileSync(stored)).digest("hex") === FACTORY_SHA).toBe(true);
   // The original is: the project opens with its photo again.
   await rejected.getByTestId("attach-photo-input").setInputFiles(FACTORY);
   await expect(rejected).toBeHidden();
@@ -233,8 +241,7 @@ test("a photo becomes a reviewed, editable 3D world that saves, reopens and surv
   expect(existsSync(stored)).toBe(true);
 
   // Or the project opens without it: objects and evidence stay, the photo is reported missing.
-  rmSync(stored);
-  await reopen(page, file);
+  await reopenWithoutPhoto();
   await rejected.getByTestId("open-without-photo").click();
   await objects(page, 6);
   await expect(page.getByTestId("source-photo-missing")).toBeVisible();
